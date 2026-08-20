@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Guia dos alunos
+    url: https://github.com/Campus-CEUB
+    about: Leia o guia dos alunos (docs/guia-alunos.md) antes de abrir uma issue. Substitua esta URL pelo link do repositório da turma.

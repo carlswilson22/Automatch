@@ -1,0 +1,36 @@
+name: Pesquisa
+description: Registre uma investigação, um estudo ou uma prova de conceito.
+#title: '[pesquisa] ' sem necessidade, pois já temos o label
+labels: 'research'
+body:
+  - type: textarea
+    id: pergunta
+    attributes:
+      label: Pergunta de pesquisa
+      description: Explique o que precisa ser investigado e por quê.
+    validations:
+      required: true
+  - type: textarea
+    id: abordagem
+    attributes:
+      label: Abordagem
+      description: Descreva as fontes, os métodos ou os experimentos previstos.
+    validations:
+      required: true
+  - type: textarea
+    id: resultado
+    attributes:
+      label: Resultado esperado
+      description: Indique qual conclusão, recomendação ou artefato encerra esta pesquisa.
+    validations:
+      required: true
+  - type: dropdown
+    id: prioridade
+    attributes:
+      label: Prioridade
+      options:
+        - Alta
+        - Média
+        - Baixa
+    validations:
+      required: true

@@ -1,0 +1,36 @@
+name: Requisito
+description: Registre uma necessidade, funcionalidade ou item do backlog.
+#title: '[requisito] ' sem necessidade, pois já tem o label
+labels: 'enhancement'
+body:
+  - type: textarea
+    id: contexto
+    attributes:
+      label: Contexto
+      description: Explique o problema, o usuário ou a necessidade.
+    validations:
+      required: true
+  - type: textarea
+    id: proposta
+    attributes:
+      label: Proposta
+      description: Descreva o resultado esperado.
+    validations:
+      required: true
+  - type: textarea
+    id: aceite
+    attributes:
+      label: Critérios de aceite
+      description: Liste critérios verificáveis para concluir este item.
+    validations:
+      required: true
+  - type: dropdown
+    id: prioridade
+    attributes:
+      label: Prioridade
+      options:
+        - Alta
+        - Média
+        - Baixa
+    validations:
+      required: true

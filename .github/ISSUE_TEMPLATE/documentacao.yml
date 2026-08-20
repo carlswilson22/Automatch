@@ -1,0 +1,36 @@
+name: Documentação
+description: Solicite a criação, a revisão ou a melhoria de documentação.
+#title: '[docs] ' (versão anterior.  Desnecessário pois já está colocando o label)
+labels: 'documentation'
+body:
+  - type: textarea
+    id: necessidade
+    attributes:
+      label: Necessidade
+      description: Informe qual documento precisa ser criado ou atualizado.
+    validations:
+      required: true
+  - type: textarea
+    id: escopo
+    attributes:
+      label: Escopo da alteração
+      description: Descreva o conteúdo esperado.
+    validations:
+      required: true
+  - type: textarea
+    id: criterios_conclusao
+    attributes:
+      label: Critérios de conclusão
+      description: Defina como a alteração será validada de forma objetiva.
+    validations:
+      required: true
+  - type: dropdown
+    id: prioridade
+    attributes:
+      label: Prioridade
+      options:
+        - Alta
+        - Média
+        - Baixa
+    validations:
+      required: true

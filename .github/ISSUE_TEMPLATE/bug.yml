@@ -1,0 +1,48 @@
+name: Bug
+description: Registre um erro, uma falha ou um comportamento inesperado.
+#title: '[bug] ' (desnecessário pois já coloca bug no label)
+labels: 'bug'
+body:
+  - type: textarea
+    id: comportamento
+    attributes:
+      label: Comportamento observado
+      description: Explique o que aconteceu.
+    validations:
+      required: true
+  - type: textarea
+    id: esperado
+    attributes:
+      label: Comportamento esperado
+      description: Explique o que deveria acontecer.
+    validations:
+      required: true
+  - type: textarea
+    id: reproducao
+    attributes:
+      label: Como reproduzir ou verificar
+      description: Liste os passos, as evidências ou o contexto.
+    validations:
+      required: true
+  - type: textarea
+    id: criterios_conclusao
+    attributes:
+      label: Critérios de conclusão
+      description: Defina como a correção será verificada de forma objetiva.
+    validations:
+      required: true
+  - type: textarea
+    id: impacto
+    attributes:
+      label: Impacto
+      description: Explique como isso afeta a sprint ou a entrega.
+  - type: dropdown
+    id: prioridade
+    attributes:
+      label: Prioridade
+      options:
+        - Alta
+        - Média
+        - Baixa
+    validations:
+      required: true
