@@ -96,6 +96,16 @@ automatch_postgres_data/
 postgres-data/
 
 # ------------------------------------------------------------------------------
+# 4b. DOCKER E INFRAESTRUTURA (NÃO EXPOR PUBLICAMENTE)
+# ------------------------------------------------------------------------------
+docker-compose.yml
+docker-compose.*.yml
+*/Dockerfile
+Dockerfile
+gateway/
+.dockerignore
+
+# ------------------------------------------------------------------------------
 # 5. ARQUIVOS DE SISTEMA OPERACIONAL E EDITORES/IDES
 # ------------------------------------------------------------------------------
 # macOS

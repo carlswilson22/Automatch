@@ -1,43 +1,143 @@
-# 🚗 AutoMatch — Plataforma Inteligente de Compra e Venda de Veículos
+# 🚗 Automatch — Plataforma Inteligente de Compra e Venda de Veículos
 
-O **AutoMatch** é uma plataforma moderna e inteligente para o mercado automotivo. O grande diferencial do projeto é a integração com a **API do Google Gemini**, oferecendo aos usuários um assistente virtual capaz de analisar dados técnicos, tirar dúvidas sobre consumo, manutenção e fornecer insights reais sobre os veículos anunciados.
+<div align="center">
 
-O projeto utiliza uma arquitetura robusta, totalmente conteinerizada com Docker, integrando um ecossistema Single Page Application (SPA) com um back-end de alta performance em Python.
+![Automatch Banner](https://img.shields.io/badge/Automatch-Plataforma%20Automotiva%20Inteligente-blue?style=for-the-badge&logo=car&logoColor=white)
+
+[![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-5-646CFF?style=flat-square&logo=vite)](https://vitejs.dev/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.104-009688?style=flat-square&logo=fastapi)](https://fastapi.tiangolo.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-336791?style=flat-square&logo=postgresql)](https://www.postgresql.org/)
+[![Gemini AI](https://img.shields.io/badge/Google%20Gemini-AI-4285F4?style=flat-square&logo=google)](https://ai.google.dev/)
+
+</div>
+
+---
+
+## 📖 Sobre o Projeto
+
+O **Automatch** é uma plataforma full-stack moderna para o mercado automotivo brasileiro, focada em **transparência e confiança** na compra e venda de veículos seminovos.
+
+### ✨ Diferenciais
+
+| Funcionalidade | Descrição |
+|---|---|
+| 🤖 **IA Damage Scanner** | Análise pericial automatizada da lataria via Google Gemini Vision |
+| 🛡️ **TrustScore™** | Índice de transparência 0–100 baseado em laudo, histórico e débitos |
+| 📋 **Dossiê de Procedência** | Timeline de histórico completo: laudo cautelar, leilão, multas |
+| 💳 **Checkout Integrado** | Reserva de veículo com sinal online via PIX, Cartão ou Boleto |
+| 🏪 **Painel B2B** | Dashboard para lojistas e concessionárias com gestão de estoque |
+| 💰 **Simulador de Financiamento** | Cálculo de parcelas em tempo real com taxa a partir de 1,49% a.m. |
 
 ---
 
 ## 🛠️ Stack Tecnológica
 
-A estrutura do ecossistema foi dividida e organizada da seguinte forma:
+### Frontend
+- **React 18** com hooks modernos e Context API
+- **Vite 5** — build ultrarrápido com HMR
+- **TailwindCSS** — design system utilitário
+- **Framer Motion** — animações e transições fluidas
+- **React Router v6** — roteamento SPA
 
-* **Front-end:** React.js, Vite, JavaScript (executando na porta `5173` nativamente).
-* **Back-end API:** Python (Uvicorn / FastAPI), estruturado dentro da pasta `/server` (porta `8000`).
-* **Banco de Dados:** PostgreSQL 15 (Alpine) gerenciado via Docker.
-* **Proxy/Gateway:** Nginx (Atua como proxy reverso unificando a aplicação na porta padrão `80`).
-* **Orquestração:** Docker & Docker Compose.
-* **Inteligência Artificial:** Google Gemini API, YoloV8 (Modelos `gemini-pro` / `gemini-1.5-flash`).
+### Backend
+- **FastAPI** (Python) — API REST assíncrona de alta performance
+- **SQLAlchemy** — ORM com migrations e seed de dados
+- **PostgreSQL 15** — banco de dados relacional
+- **Pydantic v2** — validação de schemas
 
----
-
-## 📁 Estrutura de Pastas de Scripts
-
-O projeto conta com um gerenciamento centralizado na raiz para facilitar o desenvolvimento local sem Docker, delegando comandos para a subpasta do projeto principal:
-
-* `npm run install-all` — Instala as dependências do projeto.
-* `npm run dev` — Inicia o servidor de desenvolvimento do Front-end.
-* `npm run server` — Inicia os serviços de API dedicados.
+### Inteligência Artificial
+- **Google Gemini 1.5 Flash** — Chat consultivo e análise visual de veículos
 
 ---
 
-## 🚀 Como Executar o Projeto
+## 📁 Estrutura do Projeto
 
-Você pode rodar o AutoMatch localmente de duas formas: utilizando o ambiente Docker (recomendado) ou de forma nativa na sua máquina.
+```
+ProjetoPI/
+├── 📄 .env.example          # Template de variáveis de ambiente
+├── 📄 .gitignore            # Regras de segurança Git
+├── 📄 README.md
+│
+├── 🌐 frontend/             # React 18 + Vite + TailwindCSS
+│   ├── src/
+│   │   ├── components/      # TrustScore, Timeline, DamageScanner, Chat IA
+│   │   ├── contexts/        # AuthContext (autenticação global)
+│   │   ├── data/            # Mock data, inventário, newCarsManager
+│   │   └── pages/           # Home, Vitrine, Checkout, Planos, Dashboard...
+│   └── public/images/       # Fotos dos veículos
+│
+└── ⚙️ backend/              # FastAPI + SQLAlchemy + PostgreSQL
+    ├── main.py              # Rotas e endpoints REST
+    ├── models.py            # Modelos ORM (Store, Car, User)
+    ├── schemas.py           # Validação Pydantic
+    ├── database.py          # Conexão com o banco de dados
+    ├── seed.py              # Dados iniciais para desenvolvimento
+    └── requirements.txt     # Dependências Python
+```
 
-### Opção 1: Via Docker Compose (Recomendado e Completo)
+---
 
-Certifique-se de ter o **Docker** e o **Docker Compose** instalados na sua máquina.
+## 🚀 Como Executar Localmente
 
-1. Clone o repositório para a sua máquina:
-   ```bash
-   git clone [https://github.com/SEU_USUARIO/automatch.git](https://github.com/SEU_USUARIO/automatch.git)
-   cd automatch
+### Pré-requisitos
+- **Node.js** 18+ e **npm**
+- **Python** 3.11+
+- **PostgreSQL** 15+ (ou acesso a uma instância)
+
+### 1. Clone o repositório
+```bash
+git clone https://github.com/carlswilson22/ProjetoPI.git
+cd ProjetoPI
+```
+
+### 2. Configure as variáveis de ambiente
+```bash
+cp .env.example .env
+# Edite .env com suas credenciais reais (banco de dados, chave Gemini, etc.)
+```
+
+### 3. Inicialize o Backend (FastAPI)
+```bash
+cd backend
+pip install -r requirements.txt
+python migrate.py       # Cria as tabelas no banco de dados
+python seed.py          # Popula dados iniciais
+uvicorn main:app --reload --port 8000
+```
+
+### 4. Inicialize o Frontend (React + Vite)
+```bash
+cd frontend
+npm install
+npm run dev             # Disponível em http://localhost:5173
+```
+
+---
+
+## 🔐 Variáveis de Ambiente
+
+Consulte o arquivo [`.env.example`](./.env.example) para ver todas as variáveis necessárias.
+
+As principais são:
+
+```env
+DATABASE_URL=postgresql://usuario:senha@localhost:5432/automatch
+GEMINI_API_KEY=sua_chave_gemini_aqui
+JWT_SECRET=seu_jwt_secret_aqui
+VITE_API_BASE_URL=http://localhost:3000/api
+```
+
+> ⚠️ **Nunca** envie o arquivo `.env` preenchido para o repositório. Ele está bloqueado pelo `.gitignore`.
+
+---
+
+## 📄 Licença
+
+Este projeto foi desenvolvido como **Projeto Integrador** para fins acadêmicos.
+
+---
+
+<div align="center">
+  <sub>Desenvolvido com ❤️ pela equipe <strong>Automatch</strong></sub>
+</div>
