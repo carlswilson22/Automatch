@@ -1,143 +1,61 @@
-# 🚗 Automatch — Plataforma Inteligente de Compra e Venda de Veículos
+# 🚗 Automatch - Plataforma Inteligente de Veículos
 
-<div align="center">
+O **Automatch** é uma solução Fullstack moderna projetada para revolucionar a forma como usuários interagem com dados automotivos. A plataforma integra informações oficiais de mercado (como a Tabela FIPE via BrasilAPI) com um motor de simulação de Laudos Cautelares, entregando um ecossistema completo para análise de veículos.
 
-![Automatch Banner](https://img.shields.io/badge/Automatch-Plataforma%20Automotiva%20Inteligente-blue?style=for-the-badge&logo=car&logoColor=white)
+## 🛠️ Tecnologias e Arquitetura
 
-[![React](https://img.shields.io/badge/React-18-61DAFB?style=flat-square&logo=react)](https://react.dev/)
-[![Vite](https://img.shields.io/badge/Vite-5-646CFF?style=flat-square&logo=vite)](https://vitejs.dev/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.104-009688?style=flat-square&logo=fastapi)](https://fastapi.tiangolo.com/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-336791?style=flat-square&logo=postgresql)](https://www.postgresql.org/)
-[![Gemini AI](https://img.shields.io/badge/Google%20Gemini-AI-4285F4?style=flat-square&logo=google)](https://ai.google.dev/)
+Este projeto foi construído utilizando uma arquitetura baseada em microsserviços, totalmente conteinerizada para garantir consistência entre os ambientes de desenvolvimento e produção.
 
-</div>
+* **Frontend:** React.js + Vite
+* **Backend:** Python + FastAPI
+* **Orquestração e Infraestrutura:** Docker, Docker Compose e Nginx (Gateway)
+* **Integrações:** HTTPX para consumo assíncrono de APIs externas (BrasilAPI)
 
----
+## 📂 Estrutura do Projeto
 
-## 📖 Sobre o Projeto
-
-O **Automatch** é uma plataforma full-stack moderna para o mercado automotivo brasileiro, focada em **transparência e confiança** na compra e venda de veículos seminovos.
-
-### ✨ Diferenciais
-
-| Funcionalidade | Descrição |
-|---|---|
-| 🤖 **IA Damage Scanner** | Análise pericial automatizada da lataria via Google Gemini Vision |
-| 🛡️ **TrustScore™** | Índice de transparência 0–100 baseado em laudo, histórico e débitos |
-| 📋 **Dossiê de Procedência** | Timeline de histórico completo: laudo cautelar, leilão, multas |
-| 💳 **Checkout Integrado** | Reserva de veículo com sinal online via PIX, Cartão ou Boleto |
-| 🏪 **Painel B2B** | Dashboard para lojistas e concessionárias com gestão de estoque |
-| 💰 **Simulador de Financiamento** | Cálculo de parcelas em tempo real com taxa a partir de 1,49% a.m. |
-
----
-
-## 🛠️ Stack Tecnológica
-
-### Frontend
-- **React 18** com hooks modernos e Context API
-- **Vite 5** — build ultrarrápido com HMR
-- **TailwindCSS** — design system utilitário
-- **Framer Motion** — animações e transições fluidas
-- **React Router v6** — roteamento SPA
-
-### Backend
-- **FastAPI** (Python) — API REST assíncrona de alta performance
-- **SQLAlchemy** — ORM com migrations e seed de dados
-- **PostgreSQL 15** — banco de dados relacional
-- **Pydantic v2** — validação de schemas
-
-### Inteligência Artificial
-- **Google Gemini 1.5 Flash** — Chat consultivo e análise visual de veículos
-
----
-
-## 📁 Estrutura do Projeto
-
-```
+```text
 ProjetoPI/
-├── 📄 .env.example          # Template de variáveis de ambiente
-├── 📄 .gitignore            # Regras de segurança Git
-├── 📄 README.md
-│
-├── 🌐 frontend/             # React 18 + Vite + TailwindCSS
-│   ├── src/
-│   │   ├── components/      # TrustScore, Timeline, DamageScanner, Chat IA
-│   │   ├── contexts/        # AuthContext (autenticação global)
-│   │   ├── data/            # Mock data, inventário, newCarsManager
-│   │   └── pages/           # Home, Vitrine, Checkout, Planos, Dashboard...
-│   └── public/images/       # Fotos dos veículos
-│
-└── ⚙️ backend/              # FastAPI + SQLAlchemy + PostgreSQL
-    ├── main.py              # Rotas e endpoints REST
-    ├── models.py            # Modelos ORM (Store, Car, User)
-    ├── schemas.py           # Validação Pydantic
-    ├── database.py          # Conexão com o banco de dados
-    ├── seed.py              # Dados iniciais para desenvolvimento
-    └── requirements.txt     # Dependências Python
+├── backend/        # API FastAPI, rotas híbridas e modelos de dados
+├── frontend/       # Aplicação React SPA
+├── gateway/        # Configurações de proxy reverso (Nginx)
+├── docker-compose.yml
+└── .env.example
 ```
 
----
+## 🚀 Como Executar o Projeto Localmente
 
-## 🚀 Como Executar Localmente
+Tudo o que você precisa é ter o **Docker** e o **Docker Desktop** instalados na sua máquina. O projeto inteiro sobe com apenas um comando.
 
-### Pré-requisitos
-- **Node.js** 18+ e **npm**
-- **Python** 3.11+
-- **PostgreSQL** 15+ (ou acesso a uma instância)
+### 1. Clone o repositório:
 
-### 1. Clone o repositório
 ```bash
 git clone https://github.com/carlswilson22/ProjetoPI.git
 cd ProjetoPI
 ```
 
-### 2. Configure as variáveis de ambiente
+### 2. Configure as variáveis de ambiente:
+
+Crie um arquivo `.env` na raiz do projeto baseado no exemplo fornecido:
+
 ```bash
 cp .env.example .env
-# Edite .env com suas credenciais reais (banco de dados, chave Gemini, etc.)
 ```
 
-### 3. Inicialize o Backend (FastAPI)
+### 3. Suba os containers:
+
 ```bash
-cd backend
-pip install -r requirements.txt
-python migrate.py       # Cria as tabelas no banco de dados
-python seed.py          # Popula dados iniciais
-uvicorn main:app --reload --port 8000
+docker-compose up -d --build
 ```
 
-### 4. Inicialize o Frontend (React + Vite)
-```bash
-cd frontend
-npm install
-npm run dev             # Disponível em http://localhost:5173
-```
+## 🔗 Acessando a Aplicação
 
----
+Com os containers rodando, acesse os seguintes endereços no seu navegador:
 
-## 🔐 Variáveis de Ambiente
+| Serviço | URL |
+|---|---|
+| **Aplicação Web (Frontend)** | http://localhost |
+| **Documentação da API (Swagger)** | http://localhost:8000/docs |
 
-Consulte o arquivo [`.env.example`](./.env.example) para ver todas as variáveis necessárias.
+## 🧪 Destaque Técnico: API Híbrida de Laudo Cautelar
 
-As principais são:
-
-```env
-DATABASE_URL=postgresql://usuario:senha@localhost:5432/automatch
-GEMINI_API_KEY=sua_chave_gemini_aqui
-JWT_SECRET=seu_jwt_secret_aqui
-VITE_API_BASE_URL=http://localhost:3000/api
-```
-
-> ⚠️ **Nunca** envie o arquivo `.env` preenchido para o repositório. Ele está bloqueado pelo `.gitignore`.
-
----
-
-## 📄 Licença
-
-Este projeto foi desenvolvido como **Projeto Integrador** para fins acadêmicos.
-
----
-
-<div align="center">
-  <sub>Desenvolvido com ❤️ pela equipe <strong>Automatch</strong></sub>
-</div>
+A plataforma conta com um endpoint avançado (`/api/v1/laudo-cautelar/{codigo_fipe}`) que realiza o cruzamento de dados em tempo real. Ele busca informações oficiais (Marca, Modelo, Ano, Valor) e injeta no motor interno para simular uma inspeção estrutural, histórico de leilão e numeração de chassi/motor, entregando um JSON consolidado para a interface.
