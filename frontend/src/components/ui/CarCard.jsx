@@ -42,7 +42,7 @@ const CarCard = ({ data, index = 0 }) => {
       {/* Image Section (16:9) */}
       <div className="relative aspect-[16/9] overflow-hidden bg-slate-100">
         <img
-          src={image}
+          src={image || '/images/FotoGolfGTI.jpeg'}
           alt={`${brand} ${model}`}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
         />

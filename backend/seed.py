@@ -38,33 +38,33 @@ def seed_db():
         
         # Initial Cars
         car1 = models.Car(
-            brand="BMW", model="320i M Sport", year=2023, km=15000, price=315000.0,
-            image="https://images.unsplash.com/photo-1555215695-3004980ad54e?auto=format&fit=crop&q=80&w=800",
+            brand="Volkswagen", model="Golf GTI 2.0 TSI", year=2022, km=12300, price=215000.0,
+            image="/images/FotoGolfGTI.jpeg",
             store_id=store1.id
         )
         car2 = models.Car(
-            brand="Porsche", model="911 Carrera", year=2022, km=8000, price=950000.0,
-            image="https://images.unsplash.com/photo-1503376713356-ea6752700a70?auto=format&fit=crop&q=80&w=800",
+            brand="Honda", model="Civic Touring 1.5 Turbo", year=2023, km=18500, price=165000.0,
+            image="/images/FotoHondaCivic.jpeg",
             store_id=store2.id
         )
         car3 = models.Car(
             brand="Tesla", model="Model 3", year=2024, km=5200, price=289000.0,
-            image="https://images.unsplash.com/photo-1560958089-b8a1929cea89?auto=format&fit=crop&q=80&w=800",
+            image="/images/FotoTeslaModel3.jpeg",
             store_id=store3.id
         )
         car4 = models.Car(
-            brand="BMW", model="X5 xDrive45e", year=2023, km=21000, price=650000.0,
-            image="https://images.unsplash.com/photo-1549399542-7e3f8b79c341?auto=format&fit=crop&q=80&w=800",
+            brand="Jeep", model="Compass Limited T270", year=2023, km=22000, price=189900.0,
+            image="/images/FotoJeepCompassLimited.jpeg",
             store_id=store1.id
         )
         car5 = models.Car(
-            brand="Porsche", model="Cayenne", year=2021, km=35000, price=580000.0,
-            image="https://images.unsplash.com/photo-1580273916550-e323be2a9baf?auto=format&fit=crop&q=80&w=800",
+            brand="Toyota", model="Hilux SRX 2.8 Diesel", year=2022, km=38000, price=285000.0,
+            image="/images/FotoNovaHilux.jpeg",
             store_id=store2.id
         )
         car6 = models.Car(
-            brand="Tesla", model="Model Y", year=2023, km=18000, price=340000.0,
-            image="https://images.unsplash.com/photo-1619767886558-efdc259cde1a?auto=format&fit=crop&q=80&w=800",
+            brand="Tesla", model="Model 3 Long Range", year=2023, km=18000, price=310000.0,
+            image="/images/FotoTeslaModel3.jpeg",
             store_id=store3.id
         )
         

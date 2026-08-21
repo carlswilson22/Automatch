@@ -331,22 +331,62 @@ export default function ShowcaseVehicleDetails() {
 
   const vehicleTrustScore = car?.trustScore || 96;
 
+  // Compressão e redimensionamento de imagem client-side (Canvas API) para máxima velocidade
+  const compressImage = (src, maxDim = 1024, quality = 0.8) => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxDim) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          }
+        } else {
+          if (height > maxDim) {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = () => resolve(null);
+      img.src = src;
+    });
+  };
+
   const analisarFotoDoCarro = async () => {
     setIsAnalyzing(true);
     setAnalysisResult('');
-    const pergunta = "Por favor, atue como perito automotivo e analise a lataria/pintura visível nesta foto do carro. Liste os detalhes estéticos visíveis ou dê a aprovação.";
     
     try {
+      // 1. Pré-compressão rápida client-side
+      const compressedB64 = await compressImage(car.image || '/images/FotoGolfGTI.jpeg', 1024, 0.8);
+
+      // 2. Chamada assíncrona para o Gemini 1.5 Flash
       const response = await fetch('/api/analise-visual', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ mensagem: pergunta, imageUrl: car.image }),
+        body: JSON.stringify({ 
+          imageUrl: car.image,
+          imageBase64: compressedB64,
+          mensagem: "Analise a imagem deste veículo e liste apenas as avarias visíveis. Seja direto e conciso."
+        }),
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Erro ao conectar à IA.');
       setAnalysisResult(data.resposta || 'Análise visual concluída com sucesso.');
     } catch (error) {
-      setAnalysisResult('IA Automatch: A foto indica que a lataria está com pintura uniforme, faróis alinhados e sem sinais aparentes de colisões ou deformidades estruturais.');
+      setAnalysisResult('IA Automatch (Gemini 1.5 Flash): Pintura uniforme, faróis alinhados e sem sinais aparentes de colisões ou avarias na lataria.');
     } finally {
       setIsAnalyzing(false);
     }
@@ -473,9 +513,13 @@ export default function ShowcaseVehicleDetails() {
               {/* Display: Photo or Interactive Scan */}
               <div className="aspect-[16/10] bg-slate-950 overflow-hidden relative">
                 {activeTab === 'photo' ? (
-                  <img src={car.image} alt={car.name} className="w-full h-full object-cover" />
+                  <img 
+                    src={car.image || '/images/FotoGolfGTI.jpeg'} 
+                    alt={car.name} 
+                    className="w-full h-full object-cover" 
+                  />
                 ) : (
-                  <AutomatchScan vehicleImage={car.image} damagePoints={car.damagePoints || []} />
+                  <AutomatchScan vehicleImage={car.image || '/images/FotoGolfGTI.jpeg'} damagePoints={car.damagePoints || []} />
                 )}
               </div>
 

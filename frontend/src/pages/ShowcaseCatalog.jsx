@@ -89,7 +89,11 @@ const CarCard = ({ car, index, viewMode }) => {
         onClick={() => navigate(`/encontrar/${car.id}`)}
       >
         <div className="relative w-full md:w-80 aspect-[16/10] md:aspect-auto shrink-0 overflow-hidden bg-slate-100">
-          <img src={car.image} alt={car.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+          <img 
+            src={car.image || '/images/FotoGolfGTI.jpeg'} 
+            alt={car.name} 
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+          />
           {car.featured && (
             <div className="absolute top-3 left-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md shadow-lg flex items-center gap-1">
               <Star className="w-3 h-3 fill-white" /> Destaque
@@ -137,7 +141,11 @@ const CarCard = ({ car, index, viewMode }) => {
       onClick={() => navigate(`/encontrar/${car.id}`)}
     >
       <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
-        <img src={car.image} alt={car.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+        <img 
+          src={car.image || '/images/FotoGolfGTI.jpeg'} 
+          alt={car.name} 
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+        />
         {car.featured && (
           <div className="absolute top-3 left-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md shadow-lg flex items-center gap-1">
             <Star className="w-3 h-3 fill-white" /> Destaque

@@ -92,16 +92,11 @@ const NewCarCatalog = () => {
                   className="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl transition-all cursor-pointer group flex flex-col"
                 >
                   <div className="relative aspect-[4/3] overflow-hidden bg-slate-100 flex items-center justify-center">
-                    {car.imagem ? (
-                      <img
-                        src={car.imagem}
-                        alt={`${car.marca} ${car.modelo}`}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                        onError={(e) => { e.target.onerror = null; e.target.src = 'https://via.placeholder.com/400x300?text=Sem+Foto'; }}
-                      />
-                    ) : (
-                      <Car className="w-16 h-16 text-slate-300" />
-                    )}
+                    <img
+                      src={car.imagem || '/images/FotoGolfGTI.jpeg'}
+                      alt={`${car.marca} ${car.modelo}`}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                    />
                   </div>
 
                   <div className="p-4 flex-1 flex flex-col">

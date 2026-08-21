@@ -3,11 +3,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { mockCars } from '../data/mockData';
 import { ArrowLeft, Check, Calendar, Settings, Fuel } from 'lucide-react';
 import StoreIdentifier from '../components/ui/StoreIdentifier';
-import AutomatchScan from '../components/vehicle/AutomatchScan';
-import TrustScore from '../components/trust/TrustScore';
 import Timeline from '../components/trust/Timeline';
 import OpinionCompare from '../components/trust/OpinionCompare';
-import AutomatchAI from '../components/ai/AutomatchAI';
 
 const VehicleDetails = () => {
   const { id } = useParams();
@@ -22,11 +19,11 @@ const VehicleDetails = () => {
   }, [id]);
 
   if (!vehicle) {
-    return <div className="min-h-screen flex items-center justify-center bg-slate-50">Carregando...</div>;
+    return <div className="min-h-screen flex items-center justify-center bg-white">Carregando...</div>;
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-24">
+    <div className="min-h-screen bg-white pb-16">
       {/* Header */}
       <nav className="w-full px-4 sm:px-6 py-4 bg-white border-b border-slate-200 sticky top-0 z-40 flex items-center gap-4">
         <button 
@@ -57,13 +54,16 @@ const VehicleDetails = () => {
 
         {/* Main Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
-          {/* Left Column (Images & Scan) */}
+          {/* Left Column (Images & Dossier) */}
           <div className="lg:col-span-2 space-y-8">
-             {/* Automatch Scan Component acts as main gallery here */}
-             <div className="bg-white p-2 rounded-2xl shadow-sm border border-slate-200">
-               <AutomatchScan vehicleImage={vehicle.images[0]} damagePoints={vehicle.damagePoints} />
-             </div>
+            {/* Main vehicle photo */}
+            <div className="bg-white p-2 rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+              <img 
+                src={vehicle.images?.[0] || vehicle.image || '/images/FotoGolfGTI.jpeg'} 
+                alt={`${vehicle.brand} ${vehicle.model}`} 
+                className="w-full h-auto max-h-[480px] rounded-xl object-cover"
+              />
+            </div>
 
              {/* Dossiê - Opinions & Timeline */}
              <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 md:p-8">
@@ -79,10 +79,8 @@ const VehicleDetails = () => {
              </div>
           </div>
 
-          {/* Right Column (Info, Specs, TrustScore) */}
+          {/* Right Column (Specs only) */}
           <div className="space-y-6">
-            
-            <TrustScore score={vehicle.trustScore} />
             
             {/* Specs Card */}
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
@@ -128,21 +126,9 @@ const VehicleDetails = () => {
               </div>
             </div>
 
-            {/* CTA */}
-            <div className="bg-gradient-to-br from-brand-navy to-slate-800 rounded-2xl shadow-lg p-6 text-white text-center border border-slate-700">
-              <h3 className="text-xl font-bold mb-2">Gostou deste {vehicle.brand}?</h3>
-              <p className="text-slate-300 text-sm mb-6">Bloqueie este veículo mediante sinal reembolsável.</p>
-              <button className="w-full bg-brand-emerald hover:bg-emerald-400 text-white font-bold py-4 rounded-xl transition-colors shadow-[0_0_15px_rgba(16,185,129,0.3)]">
-                Reservar Veículo
-              </button>
-            </div>
-
           </div>
         </div>
       </div>
-
-      {/* Persistent AI Assistant connected to this vehicle's data */}
-      <AutomatchAI vehicle={vehicle} />
     </div>
   );
 };

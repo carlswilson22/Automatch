@@ -149,7 +149,11 @@ export default function Dashboard() {
                     />
                     
                     <div className="aspect-[16/9] overflow-hidden bg-slate-100 relative">
-                      <img src={item.image} alt={item.model} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      <img 
+                        src={item.image || '/images/FotoGolfGTI.jpeg'} 
+                        alt={item.model} 
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                      />
                       
                       {/* Floating Badge */}
                       <div className="absolute top-3 right-3 z-20">
@@ -211,7 +215,11 @@ export default function Dashboard() {
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-slate-200">
-                              <img src={item.image} alt="" className="w-full h-full object-cover" />
+                              <img 
+                                src={item.image || '/images/FotoGolfGTI.jpeg'} 
+                                alt="" 
+                                className="w-full h-full object-cover" 
+                              />
                             </div>
                             <span className="font-bold text-slate-700">{item.brand} {item.model}</span>
                           </div>

@@ -419,7 +419,7 @@ export default function CheckoutPage() {
                     <div className="space-y-4 mb-6">
                       <div className="aspect-video rounded-xl overflow-hidden bg-slate-900 border border-slate-700">
                         <img 
-                          src={selectedVehicle.image} 
+                          src={selectedVehicle.image || selectedVehicle.images?.[0] || '/images/FotoGolfGTI.jpeg'} 
                           alt={selectedVehicle.name} 
                           className="w-full h-full object-cover"
                         />

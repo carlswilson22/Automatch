@@ -67,18 +67,11 @@ const NewCarDetails = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-0">
             {/* Image Section */}
             <div className="w-full h-64 md:h-full min-h-[400px] bg-slate-100 relative">
-              {car.imagem ? (
-                <img
-                  src={car.imagem}
-                  alt={`${car.marca} ${car.modelo}`}
-                  className="w-full h-full object-cover absolute inset-0"
-                  onError={(e) => { e.target.style.display = 'none'; }}
-                />
-              ) : (
-                <div className="w-full h-full absolute inset-0 flex items-center justify-center">
-                  <Car className="w-24 h-24 text-slate-300" />
-                </div>
-              )}
+              <img
+                src={car.imagem || '/images/FotoGolfGTI.jpeg'}
+                alt={`${car.marca} ${car.modelo}`}
+                className="w-full h-full object-cover absolute inset-0"
+              />
             </div>
 
             {/* Content Section */}

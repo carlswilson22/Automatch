@@ -16,7 +16,7 @@ export const showcaseCars = [
   {
     id: 'sc-002', name: 'Jeep Compass Limited', brand: 'Jeep', model: 'Compass Limited',
     year: 2023, price: 189900, fipePrice: 198000, color: 'Preto Fosco',
-    mileage: 22000, image: 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?auto=format&fit=crop&q=80&w=1200',
+    mileage: 22000, image: '/images/FotoJeepCompassLimited.jpeg',
     bodyType: 'SUV',
     icon: Car, featured: false, location: 'Rio de Janeiro, RJ', storeId: 'store-1',
     description: 'SUV com motor 1.3 turbo flex de 185cv, tração 4x4 e teto panorâmico.',
@@ -40,7 +40,7 @@ export const showcaseCars = [
   {
     id: 'sc-004', name: 'Toyota Hilux SRX', brand: 'Toyota', model: 'Hilux SRX',
     year: 2022, price: 285000, fipePrice: 295000, color: 'Branco Pérola',
-    mileage: 38000, image: 'https://images.unsplash.com/photo-1594976612316-9b9b1d05423f?auto=format&fit=crop&q=80&w=1200',
+    mileage: 38000, image: '/images/FotoNovaHilux.jpeg',
     bodyType: 'Picape',
     icon: Truck, featured: false, location: 'Curitiba, PR', storeId: 'store-1',
     description: 'Picape diesel 2.8 de 204cv e 500 Nm, tração 4x4 com reduzida e Toyota Safety Sense.',
@@ -52,7 +52,7 @@ export const showcaseCars = [
   {
     id: 'sc-005', name: 'Tesla Model 3', brand: 'Tesla', model: 'Model 3',
     year: 2024, price: 289000, fipePrice: 305000, color: 'Cinza Grafite',
-    mileage: 5200, image: 'https://images.unsplash.com/photo-1560958089-b8a1929cea89?auto=format&fit=crop&q=80&w=1200',
+    mileage: 5200, image: '/images/FotoTeslaModel3.jpeg',
     bodyType: '100% Elétrico',
     icon: Battery, featured: true, location: 'São Paulo, SP', storeId: 'store-3',
     description: 'Sedã elétrico com 283cv, autonomia de 510 km e Autopilot.',
