@@ -2,14 +2,13 @@
 # .gitignore Definitivo - Stack: Python (FastAPI) + Node.js (React/Vite) + Docker
 # ==============================================================================
 
-# ------------------------------------------------------------------------------
-# 1. SEGREDOS, CREDENCIAIS E VARIÁVEIS DE AMBIENTE LOCAIS (CRÍTICO)
-# ------------------------------------------------------------------------------
+# Segurança e Segredos
+.env
+.env.*
+!.env.example
 *.env
 *.env.*
-!.env.example
 !.env.template
-.env
 .env.local
 .env.development.local
 .env.test.local
@@ -96,14 +95,10 @@ automatch_postgres_data/
 postgres-data/
 
 # ------------------------------------------------------------------------------
-# 4b. DOCKER E INFRAESTRUTURA (NÃO EXPOR PUBLICAMENTE)
+# 4b. DOCKER E INFRAESTRUTURA (ARQUIVOS LOCAIS / VOLUMES)
 # ------------------------------------------------------------------------------
-docker-compose.yml
-docker-compose.*.yml
-*/Dockerfile
-Dockerfile
-gateway/
-.dockerignore
+docker-compose.override.yml
+.docker/
 
 # ------------------------------------------------------------------------------
 # 5. ARQUIVOS DE SISTEMA OPERACIONAL E EDITORES/IDES
