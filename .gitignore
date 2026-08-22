@@ -143,3 +143,10 @@ gemini_error.txt
 models.json
 test_gemini*.js
 meu_gemini.py
+
+
+# Ignorar pasta de uploads do backend
+backend/uploads/
+
+# Ignorar PDFs de teste
+*.pdf

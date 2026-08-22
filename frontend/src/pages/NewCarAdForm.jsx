@@ -47,6 +47,10 @@ const NewCarAdForm = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [laudoPdf, setLaudoPdf] = useState(null);
   const [isDraggingPdf, setIsDraggingPdf] = useState(false);
+  const [laudoUploadStatus, setLaudoUploadStatus] = useState('idle'); // 'idle' | 'uploading' | 'uploaded' | 'error'
+  const [laudoUploadedUrl, setLaudoUploadedUrl] = useState(null);
+  const [laudoUploadError, setLaudoUploadError] = useState('');
+  const [yoloFeedback, setYoloFeedback] = useState(null);
 
   const formatProtocol = (uuid) => {
     if (!uuid) return '';
@@ -96,15 +100,42 @@ const NewCarAdForm = () => {
     processFile(e.dataTransfer.files?.[0]);
   };
 
+  const uploadLaudoFile = async (file) => {
+    setLaudoUploadStatus('uploading');
+    setLaudoUploadError('');
+    try {
+      const formDataUpload = new FormData();
+      formDataUpload.append('file', file);
+      const response = await fetch('/api/v1/laudos/upload', {
+        method: 'POST',
+        body: formDataUpload,
+      });
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.detail || `Erro ${response.status} ao enviar laudo.`);
+      }
+      const data = await response.json();
+      setLaudoUploadedUrl(data.url);
+      setYoloFeedback(data.yolo_feedback || null);
+      setLaudoUploadStatus('uploaded');
+    } catch (err) {
+      setLaudoUploadError(err.message || 'Erro ao enviar o laudo.');
+      setLaudoUploadStatus('error');
+    }
+  };
+
   const processPdfFile = (file) => {
     if (file) {
-      if (file.type !== 'application/pdf') {
-        setErrorMessage('Apenas arquivos PDF são aceitos para o laudo.');
+      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+      if (!allowedTypes.includes(file.type)) {
+        setErrorMessage('Apenas arquivos PDF, JPG ou PNG são aceitos para o laudo.');
         setStatus('error');
         setTimeout(() => setStatus('idle'), 4000);
         return;
       }
       setLaudoPdf(file);
+      setYoloFeedback(null);
+      uploadLaudoFile(file);
     }
   };
 
@@ -431,32 +462,96 @@ const NewCarAdForm = () => {
                           >
                             <input 
                               type="file" 
-                              accept=".pdf"
+                              accept=".pdf,.jpg,.jpeg,.png"
                               onChange={(e) => processPdfFile(e.target.files?.[0])}
                               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                             />
                             <div className="flex flex-col items-center justify-center p-4 text-slate-500 pointer-events-none">
                               <FileText className={`w-8 h-8 mb-2 ${isDraggingPdf ? 'text-blue-500' : 'text-slate-400'}`} />
                               <p className="text-xs font-semibold text-slate-600 text-center">
-                                Anexar PDF do Laudo <span className="text-slate-400 font-normal">(opcional)</span>
+                                Anexar Laudo (PDF ou Imagem) <span className="text-slate-400 font-normal">(opcional)</span>
                               </p>
+                              <p className="text-[10px] text-slate-400 mt-1">PDF, JPG ou PNG • Máx. 10MB</p>
                             </div>
                           </div>
                         ) : (
-                          <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-100 rounded-xl">
+                          <div className={`flex items-center justify-between p-3 rounded-xl border transition-all ${
+                            laudoUploadStatus === 'uploading' ? 'bg-amber-50 border-amber-200' :
+                            laudoUploadStatus === 'uploaded' ? 'bg-green-50 border-green-200' :
+                            laudoUploadStatus === 'error' ? 'bg-red-50 border-red-200' :
+                            'bg-blue-50 border-blue-100'
+                          }`}>
                             <div className="flex items-center gap-3 overflow-hidden">
-                              <FileText className="w-5 h-5 text-blue-500 shrink-0" />
-                              <span className="text-sm font-semibold text-slate-700 truncate">{laudoPdf.name}</span>
+                              {laudoUploadStatus === 'uploading' ? (
+                                <Loader2 className="w-5 h-5 text-amber-500 shrink-0 animate-spin" />
+                              ) : laudoUploadStatus === 'uploaded' ? (
+                                <CheckCircle className="w-5 h-5 text-green-500 shrink-0" />
+                              ) : laudoUploadStatus === 'error' ? (
+                                <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
+                              ) : (
+                                <FileText className="w-5 h-5 text-blue-500 shrink-0" />
+                              )}
+                              <div className="min-w-0">
+                                <span className="text-sm font-semibold text-slate-700 truncate block">{laudoPdf.name}</span>
+                                {laudoUploadStatus === 'uploading' && (
+                                  <span className="text-[11px] text-amber-600 font-medium">Enviando ao servidor...</span>
+                                )}
+                                {laudoUploadStatus === 'uploaded' && (
+                                  <span className="text-[11px] text-green-600 font-medium">✓ Laudo salvo com sucesso</span>
+                                )}
+                                {laudoUploadStatus === 'error' && (
+                                  <span className="text-[11px] text-red-600 font-medium">{laudoUploadError}</span>
+                                )}
+                              </div>
                             </div>
                             <button 
                               type="button" 
-                              onClick={() => setLaudoPdf(null)}
-                              className="p-1 hover:bg-blue-100 rounded-lg text-slate-500 transition-colors shrink-0 ml-2"
+                              onClick={() => { setLaudoPdf(null); setLaudoUploadStatus('idle'); setLaudoUploadedUrl(null); setLaudoUploadError(''); setYoloFeedback(null); }}
+                              className="p-1 hover:bg-slate-200/60 rounded-lg text-slate-500 transition-colors shrink-0 ml-2"
+                              disabled={laudoUploadStatus === 'uploading'}
                             >
                               <X className="w-4 h-4" />
                             </button>
                           </div>
                         )}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* YOLO Feedback Alert */}
+                  <AnimatePresence>
+                    {yoloFeedback && !yoloFeedback.info && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0, marginTop: 0 }}
+                        animate={{ opacity: 1, height: 'auto', marginTop: 12 }}
+                        exit={{ opacity: 0, height: 0, marginTop: 0 }}
+                        className="overflow-hidden"
+                      >
+                        <div className="bg-indigo-50 border border-indigo-200 rounded-xl p-4">
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-lg">🤖</span>
+                            <span className="text-xs font-bold text-indigo-700 uppercase tracking-widest">Análise da IA Automatch (YOLOv8)</span>
+                          </div>
+                          {yoloFeedback.error ? (
+                            <p className="text-sm text-red-600 font-medium">{yoloFeedback.error}</p>
+                          ) : (
+                            <div>
+                              <p className="text-sm text-indigo-900 font-medium mb-1">
+                                O sistema detectou os seguintes elementos na imagem:
+                              </p>
+                              <div className="flex flex-wrap gap-2 mt-2">
+                                {yoloFeedback.detected_items?.map((item, i) => (
+                                  <span key={i} className="bg-white border border-indigo-200 text-indigo-700 px-2 py-1 rounded-md text-xs font-semibold shadow-sm">
+                                    {item}
+                                  </span>
+                                ))}
+                                <span className="bg-indigo-600 text-white px-2 py-1 rounded-md text-xs font-bold shadow-sm">
+                                  Confiança: {yoloFeedback.confidence}
+                                </span>
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </motion.div>
                     )}
                   </AnimatePresence>
