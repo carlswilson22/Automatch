@@ -100,29 +100,37 @@ const NewCarAdForm = () => {
     processFile(e.dataTransfer.files?.[0]);
   };
 
-  const uploadLaudoFile = async (file) => {
+  const uploadLaudoFile = (file) => {
     setLaudoUploadStatus('uploading');
     setLaudoUploadError('');
-    try {
-      const formDataUpload = new FormData();
-      formDataUpload.append('file', file);
-      const response = await fetch('/api/v1/laudos/upload', {
-        method: 'POST',
-        body: formDataUpload,
+    const formDataUpload = new FormData();
+    formDataUpload.append('file', file);
+    
+    fetch('/api/v1/laudos/upload', {
+      method: 'POST',
+      body: formDataUpload,
+    })
+      .then((response) => {
+        if (!response.ok) {
+          return response.json().then((errData) => {
+            throw new Error(errData.detail || `Erro ${response.status} ao enviar laudo.`);
+          }).catch((err) => {
+            throw err.message ? err : new Error(`Erro ${response.status} ao enviar laudo.`);
+          });
+        }
+        return response.json();
+      })
+      .then((data) => {
+        setLaudoUploadedUrl(data.url);
+        setYoloFeedback(data.yolo_feedback || null);
+        setLaudoUploadStatus('uploaded');
+      })
+      .catch((err) => {
+        setLaudoUploadError(err.message || 'Erro ao enviar o laudo.');
+        setLaudoUploadStatus('error');
       });
-      if (!response.ok) {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.detail || `Erro ${response.status} ao enviar laudo.`);
-      }
-      const data = await response.json();
-      setLaudoUploadedUrl(data.url);
-      setYoloFeedback(data.yolo_feedback || null);
-      setLaudoUploadStatus('uploaded');
-    } catch (err) {
-      setLaudoUploadError(err.message || 'Erro ao enviar o laudo.');
-      setLaudoUploadStatus('error');
-    }
   };
+
 
   const processPdfFile = (file) => {
     if (file) {

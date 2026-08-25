@@ -13,6 +13,10 @@ import httpx
 import re
 import asyncio
 from datetime import datetime
+try:
+    from ultralytics import YOLO
+except ImportError:
+    YOLO = None
 
 import models
 import schemas
@@ -565,9 +569,11 @@ def get_yolo_model():
     global yolo_model
     if yolo_model is None:
         try:
-            from ultralytics import YOLO
+            cls = YOLO
+            if cls is None:
+                from ultralytics import YOLO as cls
             # yolov8n.pt será baixado automaticamente na primeira execução
-            yolo_model = YOLO('yolov8n.pt')
+            yolo_model = cls('yolov8n.pt')
         except Exception as e:
             print(f"Erro ao instanciar YOLO: {e}")
             return None
