@@ -42,10 +42,31 @@ Crie um arquivo `.env` na raiz do projeto baseado no exemplo fornecido:
 cp .env.example .env
 ```
 
-### 3. Suba os containers:
+### 3. Suba os containers (Recomendado):
 
 ```bash
 docker-compose up -d --build
+```
+
+### 4. Executando sem Docker (Desenvolvimento Local):
+
+Caso prefira rodar os serviços separadamente na sua máquina para desenvolvimento:
+
+**Backend (FastAPI):**
+```bash
+cd backend
+python -m venv venv
+# No Windows: venv\Scripts\activate
+# No Linux/Mac: source venv/bin/activate
+pip install -r requirements.txt
+uvicorn main:app --reload --port 8000
+```
+
+**Frontend (React/Vite):**
+```bash
+cd frontend
+npm install
+npm run dev
 ```
 
 ## 🔗 Acessando a Aplicação
