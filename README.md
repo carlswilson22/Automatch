@@ -7,7 +7,8 @@ O **Automatch** é uma solução Fullstack moderna projetada para revolucionar a
 Este projeto foi construído utilizando uma arquitetura baseada em microsserviços, totalmente conteinerizada para garantir consistência entre os ambientes de desenvolvimento e produção.
 
 * **Frontend:** React.js + Vite
-* **Backend:** Python + FastAPI
+* **Backend:** Python + FastAPI (com suporte a Multipart para uploads e persistência local)
+* **Inteligência Artificial:** YOLOv8 (Ultralytics) para Visão Computacional e Google Gemini 1.5 Flash
 * **Orquestração e Infraestrutura:** Docker, Docker Compose e Nginx (Gateway)
 * **Integrações:** HTTPX para consumo assíncrono de APIs externas (BrasilAPI)
 
@@ -56,6 +57,14 @@ Com os containers rodando, acesse os seguintes endereços no seu navegador:
 | **Aplicação Web (Frontend)** | http://localhost |
 | **Documentação da API (Swagger)** | http://localhost:8000/docs |
 
-## 🧪 Destaque Técnico: API Híbrida de Laudo Cautelar
+## 🧪 Destaques Técnicos
 
+### API Híbrida de Laudo Cautelar
 A plataforma conta com um endpoint avançado (`/api/v1/laudo-cautelar/{codigo_fipe}`) que realiza o cruzamento de dados em tempo real. Ele busca informações oficiais (Marca, Modelo, Ano, Valor) e injeta no motor interno para simular uma inspeção estrutural, histórico de leilão e numeração de chassi/motor, entregando um JSON consolidado para a interface.
+
+### 🧠 Pipeline de IA e Visão Computacional
+A plataforma agora possui:
+
+- **Upload Seguro de Documentos:** Suporte nativo para envio e armazenamento estruturado de Laudos Cautelares.
+- **Feedback em Tempo Real (YOLOv8):** Motor de inferência local acoplado à esteira de upload que realiza análise de imagens para detecção de avarias ou validação de documentos de forma instantânea.
+- **Análise Generativa de Alta Velocidade:** Uso do Gemini 1.5 Flash para varredura semântica leve e rápida do contexto veicular.
