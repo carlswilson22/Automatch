@@ -17,8 +17,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Install python dependencies
-COPY requirements.txt .
-RUN pip install --no-cache-dir --default-timeout=1000 -r requirements.txt
+RUN pip install --no-cache-dir --default-timeout=1000 --retries=3 -r requirements.txt
 
 # Copy application source code
 COPY . .

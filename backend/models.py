@@ -1,7 +1,8 @@
 # pyrefly: ignore [missing-import]
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, Float
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, Float, DateTime
 from sqlalchemy.orm import relationship
 import uuid
+from datetime import datetime
 from database import Base
 
 class Store(Base):
@@ -28,3 +29,15 @@ class Car(Base):
     store_id = Column(Integer, ForeignKey("stores.id"))
 
     store = relationship("Store", back_populates="cars")
+
+class LaudoWatchlist(Base):
+    __tablename__ = "laudo_watchlist"
+
+    id = Column(Integer, primary_key=True, index=True)
+    placa = Column(String(10), index=True, nullable=False)
+    codigo_fipe = Column(String(20), nullable=True)
+    user_email = Column(String(100), nullable=True)
+    status = Column(String(50), default="MONITORANDO")  # MONITORANDO, ATUALIZADO, ALERTA
+    ultima_verificacao = Column(DateTime, default=datetime.utcnow)
+    criado_em = Column(DateTime, default=datetime.utcnow)
+
