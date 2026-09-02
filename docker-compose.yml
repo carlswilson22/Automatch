@@ -20,6 +20,21 @@ services:
     networks:
       - automatch-network
 
+  # Redis Service (Cache & Messaging)
+  redis:
+    image: redis:7-alpine
+    container_name: automatch-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - automatch-network
+
   # Backend Service (FastAPI)
   backend:
     build:
@@ -29,6 +44,7 @@ services:
     restart: unless-stopped
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-automatch}
+      - REDIS_URL=${REDIS_URL:-redis://redis:6379/0}
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
       - JWT_SECRET=${JWT_SECRET:-automatch_secret_key_123}
       - PORT=8000
@@ -41,8 +57,11 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      redis:
+        condition: service_healthy
     networks:
       - automatch-network
+
 
   # Frontend Service (React + Vite)
   frontend:

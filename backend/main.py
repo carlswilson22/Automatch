@@ -1,5 +1,6 @@
 import os
 import uuid
+import json
 import aiofiles
 from pathlib import Path
 from fastapi import FastAPI, Depends, Query, HTTPException, UploadFile, File
@@ -13,10 +14,31 @@ import httpx
 import re
 import asyncio
 from datetime import datetime
+try:
+    from ultralytics import YOLO
+except ImportError:
+    YOLO = None
+import redis.asyncio as aioredis
+
 
 import models
 import schemas
 from database import engine, get_db
+from tasks import start_scheduler, shutdown_scheduler
+
+# Redis configuration
+REDIS_URL = os.getenv("REDIS_URL", "redis://redis:6379/0")
+redis_client = None
+
+async def get_redis():
+    global redis_client
+    if redis_client is None:
+        try:
+            redis_client = aioredis.from_url(REDIS_URL, decode_responses=True)
+        except Exception as e:
+            print(f"Aviso: Não foi possível conectar ao Redis ({REDIS_URL}): {e}")
+            return None
+    return redis_client
 
 # Diretório de uploads de laudos
 UPLOADS_DIR = Path("/app/uploads/laudos")
@@ -31,6 +53,14 @@ app = FastAPI(
     version="1.0.0"
 )
 
+@app.on_event("startup")
+def startup_event():
+    start_scheduler()
+
+@app.on_event("shutdown")
+def shutdown_event():
+    shutdown_scheduler()
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"], 
@@ -38,6 +68,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
 
 class LoginRequest(BaseModel):
     email: str
@@ -283,42 +314,66 @@ async def consultar_detran(placa: str) -> Dict[str, Any]:
 async def gerar_laudo_cautelar(codigo_fipe: str) -> Dict[str, Any]:
     """
     API Híbrida de Laudo Cautelar:
-    Consome os dados oficiais de mercado da Tabela FIPE via BrasilAPI
+    Consome os dados oficiais de mercado da Tabela FIPE via BrasilAPI (com Cache Redis)
     e cruza com o motor pericial de procedência e integridade veicular.
     """
     clean_fipe = re.sub(r'[^0-9\-]', '', codigo_fipe)
     
-    # 1. Consulta BrasilAPI FIPE de forma assíncrona
-    fipe_data = None
-    try:
-        async with httpx.AsyncClient(timeout=6.0) as client:
-            resp = await client.get(f"https://brasilapi.com.br/api/fipe/preco/v1/{clean_fipe}")
-            if resp.status_code == 200:
-                fipe_data = resp.json()
-    except Exception:
+    # 1. Tenta recuperar do Cache do Redis
+    redis_conn = await get_redis()
+    cache_key = f"fipe:{clean_fipe}"
+    fipe_info = None
+    cache_status = "MISS"
+
+    if redis_conn:
+        try:
+            cached_val = await redis_conn.get(cache_key)
+            if cached_val:
+                fipe_info = json.loads(cached_val)
+                cache_status = "HIT"
+        except Exception as e:
+            print(f"Aviso ao consultar Redis: {e}")
+
+    # 2. Se não estiver no cache, consulta BrasilAPI FIPE de forma assíncrona
+    if not fipe_info:
         fipe_data = None
+        try:
+            async with httpx.AsyncClient(timeout=6.0) as client:
+                resp = await client.get(f"https://brasilapi.com.br/api/fipe/preco/v1/{clean_fipe}")
+                if resp.status_code == 200:
+                    fipe_data = resp.json()
+        except Exception:
+            fipe_data = None
+
+        # Se não retornar da API externa, provê fallback estruturado seguro
+        if not fipe_data or not isinstance(fipe_data, list) or len(fipe_data) == 0:
+            fipe_info = {
+                "valor": "R$ 165.000,00",
+                "marca": "Honda",
+                "modelo": "Civic Sedan Touring 1.5 Turbo 16V Aut.",
+                "anoModelo": 2023,
+                "combustivel": "Gasolina",
+                "codigoFipe": clean_fipe or "004487-3",
+                "mesReferencia": "agosto de 2026",
+                "siglaCombustivel": "G"
+            }
+        else:
+            fipe_info = fipe_data[0]
+
+        # Salva o resultado no Redis por 1 hora (3600s)
+        if redis_conn and fipe_info:
+            try:
+                await redis_conn.set(cache_key, json.dumps(fipe_info), ex=3600)
+            except Exception as e:
+                print(f"Aviso ao salvar no Redis: {e}")
         
-    # Se não retornar da API externa, provê fallback estruturado seguro
-    if not fipe_data or not isinstance(fipe_data, list) or len(fipe_data) == 0:
-        fipe_info = {
-            "valor": "R$ 165.000,00",
-            "marca": "Honda",
-            "modelo": "Civic Sedan Touring 1.5 Turbo 16V Aut.",
-            "anoModelo": 2023,
-            "combustivel": "Gasolina",
-            "codigoFipe": clean_fipe or "004487-3",
-            "mesReferencia": "agosto de 2026",
-            "siglaCombustivel": "G"
-        }
-    else:
-        fipe_info = fipe_data[0]
-        
-    # 2. Motor Pericial Automatch™ (Estrutura, Histórico e TrustScore)
+    # 3. Motor Pericial Automatch™ (Estrutura, Histórico e TrustScore)
     laudo_pericial = {
         "laudo_id": f"LAUDO-AM-{abs(hash(clean_fipe)) % 100000:05d}",
         "data_emissao": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
         "resultado_geral": "APROVADO COM EXCELÊNCIA",
         "trust_score": 98,
+        "cache_status": cache_status,
         "dados_oficiais_fipe": fipe_info,
         "analise_estrutural": {
             "longarinas_dianteiras": "INTACTAS (ORIGINAIS)",
@@ -352,6 +407,35 @@ async def gerar_laudo_cautelar(codigo_fipe: str) -> Dict[str, Any]:
         "mensagem": "Laudo Cautelar emitido com sucesso.",
         "laudo": laudo_pericial
     }
+
+
+
+# ==============================================================================
+# ENDPOINTS LAUDO WATCHLIST (MONITORAMENTO DETRAN)
+# ==============================================================================
+
+@app.post("/api/v1/laudos/watchlist", response_model=schemas.LaudoWatchlistSchema)
+def add_to_watchlist(item: schemas.LaudoWatchlistBase, db: Session = Depends(get_db)):
+    """Adiciona um veículo para monitoramento contínuo no DETRAN."""
+    clean_placa = item.placa.strip().upper().replace("-", "").replace(" ", "")
+    db_item = models.LaudoWatchlist(
+        placa=clean_placa,
+        codigo_fipe=item.codigo_fipe,
+        user_email=item.user_email,
+        status="MONITORANDO",
+        ultima_verificacao=datetime.utcnow(),
+        criado_em=datetime.utcnow()
+    )
+    db.add(db_item)
+    db.commit()
+    db.refresh(db_item)
+    return db_item
+
+@app.get("/api/v1/laudos/watchlist", response_model=List[schemas.LaudoWatchlistSchema])
+def list_watchlist(db: Session = Depends(get_db)):
+    """Lista todos os veículos cadastrados no monitoramento DETRAN."""
+    return db.query(models.LaudoWatchlist).all()
+
 
 
 # ==============================================================================
@@ -565,9 +649,11 @@ def get_yolo_model():
     global yolo_model
     if yolo_model is None:
         try:
-            from ultralytics import YOLO
+            cls = YOLO
+            if cls is None:
+                from ultralytics import YOLO as cls
             # yolov8n.pt será baixado automaticamente na primeira execução
-            yolo_model = YOLO('yolov8n.pt')
+            yolo_model = cls('yolov8n.pt')
         except Exception as e:
             print(f"Erro ao instanciar YOLO: {e}")
             return None

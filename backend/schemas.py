@@ -1,4 +1,5 @@
 from typing import List, Optional
+from datetime import datetime
 # pyrefly: ignore [missing-import]
 from pydantic import BaseModel
 
@@ -29,3 +30,18 @@ class StoreSchema(StoreBase):
 
     class Config:
         from_attributes = True
+
+class LaudoWatchlistBase(BaseModel):
+    placa: str
+    codigo_fipe: Optional[str] = None
+    user_email: Optional[str] = None
+
+class LaudoWatchlistSchema(LaudoWatchlistBase):
+    id: int
+    status: str
+    ultima_verificacao: Optional[datetime] = None
+    criado_em: Optional[datetime] = None
+
+    class Config:
+        from_attributes = True
+
