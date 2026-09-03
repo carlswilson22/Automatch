@@ -210,6 +210,7 @@ const NewCarAdForm = () => {
       storeId: formData.store_id || 'store-1'
     });
 
+    const storeNumericId = formData.store_id ? Number(String(formData.store_id).replace(/\D/g, '')) || 1 : 1;
     const payload = {
       brand: formData.marca,
       model: formData.modelo,
@@ -217,7 +218,14 @@ const NewCarAdForm = () => {
       km: formData.km ? Number(formData.km) : 0,
       price: numericPrice,
       image: formData.imagem || '',
-      store_id: formData.store_id ? Number(String(formData.store_id).replace(/\D/g, '')) || 1 : 1
+      store_id: storeNumericId,
+      color: formData.cor,
+      transmission: formData.transmissao,
+      description: formData.descricao,
+      location: formData.localizacao,
+      laudo_status: formData.laudo,
+      debt_status: formData.debitos,
+      auction_history: formData.leilao
     };
 
     fetch('/api/cars', {

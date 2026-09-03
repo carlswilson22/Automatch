@@ -38,7 +38,7 @@ services:
   # Backend Service (FastAPI)
   backend:
     build:
-      context: ./backend
+      context: "./Projeto pi/backend"
       dockerfile: Dockerfile
     container_name: automatch-backend
     restart: unless-stopped
@@ -51,8 +51,8 @@ services:
     ports:
       - "8000:8000"
     volumes:
-      - ./backend:/app
-      - ./backend/uploads:/app/uploads
+      - "./Projeto pi/backend:/app"
+      - "./Projeto pi/backend/uploads:/app/uploads"
     depends_on:
       db:
         condition: service_healthy
@@ -62,7 +62,7 @@ services:
   # Frontend Service (React + Vite)
   frontend:
     build:
-      context: ./frontend
+      context: "./Projeto pi/frontend"
       dockerfile: Dockerfile
     container_name: automatch-frontend
     restart: unless-stopped
@@ -74,7 +74,7 @@ services:
     ports:
       - "5173:5173"
     volumes:
-      - ./frontend:/app
+      - "./Projeto pi/frontend:/app"
       - /app/node_modules
     depends_on:
       - backend
@@ -84,7 +84,7 @@ services:
   # API Gateway / Reverse Proxy (Nginx)
   gateway:
     build:
-      context: ./gateway
+      context: "./Projeto pi/gateway"
       dockerfile: Dockerfile
     container_name: automatch-gateway
     restart: unless-stopped

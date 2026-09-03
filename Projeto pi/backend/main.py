@@ -21,6 +21,8 @@ from fastapi.middleware.cors import CORSMiddleware
 
 import models
 import schemas
+import security
+import tasks
 from database import engine, get_db
 
 logger = logging.getLogger("automatch")
@@ -46,25 +48,155 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-class LoginRequest(BaseModel):
-    email: str
-    password: str
-
-@app.post("/api/login")
-def login(request: LoginRequest) -> Dict[str, Any]:
-    if request.email == "admin@automatch.com" and request.password == "admin123":
-        return {
-            "id": "user-1",
-            "name": "Admin",
-            "email": request.email,
-            "memberSince": "Abril 2024",
-            "photo": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200"
-        }
+@app.on_event("startup")
+def on_startup():
+    """Inicialização dos serviços de banco e tarefas agendadas."""
+    models.Base.metadata.create_all(bind=engine)
     
-    raise HTTPException(
-        status_code=401,
-        detail="E-mail ou senha incorretos."
+    # Auto-seed admin user se não existir
+    db = next(get_db())
+    try:
+        admin_user = db.query(models.User).filter(models.User.email == "admin@automatch.com").first()
+        if not admin_user:
+            admin_user = models.User(
+                id="user-1",
+                name="Admin",
+                email="admin@automatch.com",
+                hashed_password=security.hash_password("admin123"),
+                member_since="Abril 2024",
+                photo="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200"
+            )
+            db.add(admin_user)
+            db.commit()
+            logger.info("Admin padrão cadastrado com sucesso.")
+    except Exception as e:
+        logger.warning(f"Aviso na verificação de admin: {e}")
+        db.rollback()
+    finally:
+        db.close()
+        
+    tasks.start_scheduler()
+
+@app.on_event("shutdown")
+def on_shutdown():
+    tasks.shutdown_scheduler()
+
+@app.post("/api/register", response_model=schemas.UserResponse)
+def register(request: schemas.UserCreate, db: Session = Depends(get_db)) -> Dict[str, Any]:
+    email = request.email.strip().lower()
+    existing = db.query(models.User).filter(models.User.email == email).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Este e-mail já está cadastrado no sistema.")
+    
+    user = models.User(
+        name=request.name.strip(),
+        email=email,
+        hashed_password=security.hash_password(request.password),
+        member_since="Março 2024",
+        photo="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200"
     )
+    db.add(user)
+    db.commit()
+    db.refresh(user)
+    
+    token = security.create_access_token({"sub": user.id, "email": user.email})
+    return {
+        "id": user.id,
+        "name": user.name,
+        "email": user.email,
+        "memberSince": user.member_since,
+        "photo": user.photo,
+        "token": token
+    }
+
+@app.post("/api/login", response_model=schemas.UserResponse)
+def login(request: schemas.UserLogin, db: Session = Depends(get_db)) -> Dict[str, Any]:
+    email = request.email.strip().lower()
+    user = db.query(models.User).filter(models.User.email == email).first()
+    
+    if not user or not security.verify_password(request.password, user.hashed_password):
+        # Suporte retrocompatível com seed em memória
+        if email == "admin@automatch.com" and request.password == "admin123":
+            if not user:
+                user = models.User(
+                    id="user-1",
+                    name="Admin",
+                    email="admin@automatch.com",
+                    hashed_password=security.hash_password("admin123"),
+                    member_since="Abril 2024",
+                    photo="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200"
+                )
+                db.add(user)
+                db.commit()
+                db.refresh(user)
+        else:
+            raise HTTPException(
+                status_code=401,
+                detail="E-mail ou senha incorretos."
+            )
+    
+    token = security.create_access_token({"sub": user.id, "email": user.email})
+    return {
+        "id": user.id,
+        "name": user.name,
+        "email": user.email,
+        "memberSince": user.member_since,
+        "photo": user.photo,
+        "token": token
+    }
+
+@app.put("/api/users/profile", response_model=schemas.UserResponse)
+def update_profile(request: schemas.UserProfileUpdate, db: Session = Depends(get_db)) -> Dict[str, Any]:
+    user = db.query(models.User).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+    
+    if request.name:
+        user.name = request.name
+    if request.email:
+        user.email = request.email.strip().lower()
+    if request.photo:
+        user.photo = request.photo
+        
+    db.commit()
+    db.refresh(user)
+    
+    return {
+        "id": user.id,
+        "name": user.name,
+        "email": user.email,
+        "memberSince": user.member_since,
+        "photo": user.photo,
+        "token": None
+    }
+
+@app.post("/api/checkout", response_model=schemas.CheckoutResponse)
+def checkout(request: schemas.CheckoutRequest, db: Session = Depends(get_db)) -> Dict[str, Any]:
+    protocol = f"ATM-{int(datetime.now().timestamp()) % 1000000:06d}"
+    now_str = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    
+    order = models.PaymentOrder(
+        protocol=protocol,
+        customer_name=request.customer_name,
+        customer_email=request.customer_email,
+        item_description=request.item_description,
+        amount=request.amount,
+        payment_method=request.payment_method,
+        status="Aprovado",
+        created_at=now_str
+    )
+    db.add(order)
+    db.commit()
+    
+    return {
+        "protocol": protocol,
+        "date": now_str,
+        "item": request.item_description,
+        "amount": request.amount,
+        "method": request.payment_method.upper(),
+        "customer": request.customer_name,
+        "status": "Aprovado"
+    }
 
 @app.get("/api/stores", response_model=List[schemas.StoreSchema])
 def get_stores(db: Session = Depends(get_db)) -> List[schemas.StoreSchema]:
@@ -94,6 +226,13 @@ def get_cars(
     cars = query.all()
     return cars
 
+@app.get("/api/cars/{car_id}", response_model=schemas.CarSchema)
+def get_car_by_id(car_id: str, db: Session = Depends(get_db)) -> schemas.CarSchema:
+    car = db.query(models.Car).filter(models.Car.id == car_id).first()
+    if not car:
+        raise HTTPException(status_code=404, detail="Veículo não encontrado.")
+    return car
+
 @app.post("/api/cars", response_model=schemas.CarSchema)
 def create_car(car: schemas.CarBase, db: Session = Depends(get_db)) -> schemas.CarSchema:
     db_car = models.Car(**car.dict())
@@ -101,6 +240,7 @@ def create_car(car: schemas.CarBase, db: Session = Depends(get_db)) -> schemas.C
     db.commit()
     db.refresh(db_car)
     return db_car
+
 
 
 # ==============================================================================

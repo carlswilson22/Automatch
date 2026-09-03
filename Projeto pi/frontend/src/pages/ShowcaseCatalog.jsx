@@ -238,28 +238,84 @@ const ShowcaseCatalog = () => {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [allCars, setAllCars] = useState(showcaseCars);
 
-  // Load new cars from localStorage / manager
+  // Load cars from PostgreSQL Backend API + localStorage / fallback
   useEffect(() => {
-    const local = getNewCars();
-    const formatted = local.map(c => ({
-      id: c.id,
-      name: `${c.marca} ${c.modelo}`,
-      brand: c.marca,
-      year: c.ano,
-      price: c.preco,
-      color: c.cor || 'Prata',
-      mileage: c.km ? Number(c.km) : 0,
-      image: c.imagem || '/images/FotoHondaCivic.jpeg',
-      bodyType: 'Particular',
-      icon: Car,
-      featured: true,
-      seller: 'Vendedor Particular',
-      location: c.localizacao || 'São Paulo, SP',
-      description: c.descricao || 'Veículo anunciado pelo proprietário.',
-      tags: [c.transmissao || 'Automático', 'Novidade'],
-      storeId: c.storeId || 'store-1'
-    }));
-    setAllCars([...formatted, ...showcaseCars]);
+    fetch('/api/cars')
+      .then(res => res.ok ? res.json() : [])
+      .then(apiCars => {
+        const local = getNewCars();
+        let apiFormatted = [];
+        if (Array.isArray(apiCars) && apiCars.length > 0) {
+          apiFormatted = apiCars.map(c => ({
+            id: c.id,
+            name: `${c.brand} ${c.model}`,
+            brand: c.brand,
+            year: c.year,
+            price: typeof c.price === 'number' ? `R$ ${c.price.toLocaleString('pt-BR')}` : c.price,
+            rawPrice: c.price,
+            color: c.color || 'Prata',
+            mileage: c.km ? Number(c.km) : 0,
+            image: c.image || '/images/FotoHondaCivic.jpeg',
+            bodyType: c.body_type || 'Particular',
+            icon: Car,
+            featured: true,
+            seller: 'Veículo Verificado',
+            location: c.location || 'São Paulo, SP',
+            description: c.description || 'Veículo com laudo cautelar aprovado.',
+            tags: [c.transmission || 'Automático', 'Certificado'],
+            storeId: c.store_id ? `store-${c.store_id}` : 'store-1',
+            plate: c.plate || 'ABC1234',
+            fipeCode: c.fipe_code || '004487-3'
+          }));
+        }
+
+        const localFormatted = local.map(c => ({
+          id: c.id,
+          name: `${c.marca} ${c.modelo}`,
+          brand: c.marca,
+          year: c.ano,
+          price: c.preco,
+          color: c.cor || 'Prata',
+          mileage: c.km ? Number(c.km) : 0,
+          image: c.imagem || '/images/FotoHondaCivic.jpeg',
+          bodyType: 'Particular',
+          icon: Car,
+          featured: true,
+          seller: 'Vendedor Particular',
+          location: c.localizacao || 'São Paulo, SP',
+          description: c.descricao || 'Veículo anunciado pelo proprietário.',
+          tags: [c.transmissao || 'Automático', 'Novidade'],
+          storeId: c.storeId || 'store-1',
+          plate: 'ABC1234',
+          fipeCode: '004487-3'
+        }));
+
+        const combined = [...apiFormatted, ...localFormatted, ...showcaseCars];
+        const unique = Array.from(new Map(combined.map(item => [item.id, item])).values());
+        setAllCars(unique);
+      })
+      .catch(() => {
+        const local = getNewCars();
+        const formatted = local.map(c => ({
+          id: c.id,
+          name: `${c.marca} ${c.modelo}`,
+          brand: c.marca,
+          year: c.ano,
+          price: c.preco,
+          color: c.cor || 'Prata',
+          mileage: c.km ? Number(c.km) : 0,
+          image: c.imagem || '/images/FotoHondaCivic.jpeg',
+          bodyType: 'Particular',
+          icon: Car,
+          featured: true,
+          seller: 'Vendedor Particular',
+          location: c.localizacao || 'São Paulo, SP',
+          description: c.descricao || 'Veículo anunciado pelo proprietário.',
+          tags: [c.transmissao || 'Automático', 'Novidade'],
+          storeId: c.storeId || 'store-1'
+        }));
+        setAllCars([...formatted, ...showcaseCars]);
+      });
   }, []);
 
   // Filter states
