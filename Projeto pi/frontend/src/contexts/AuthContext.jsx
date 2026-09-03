@@ -38,40 +38,72 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (name, email, password) => {
-    return new Promise((resolve, reject) => {
-      setTimeout(() => {
-        if (name && email && password.length >= 6) {
-          const userData = {
-            id: 'user-' + Date.now(),
-            name,
-            email,
-            memberSince: 'Março 2024',
-            photo: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200'
-          };
-          setUser(userData);
-          localStorage.setItem('automatch_user', JSON.stringify(userData));
-          resolve(userData);
-        } else {
-          reject(new Error('Por favor, preencha todos os campos corretamente.'));
-        }
-      }, 800);
-    });
+    try {
+      const response = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password })
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.detail || 'Erro ao realizar cadastro.');
+      }
+
+      const userData = await response.json();
+      setUser(userData);
+      localStorage.setItem('automatch_user', JSON.stringify(userData));
+      if (userData.token) {
+        localStorage.setItem('automatch_token', userData.token);
+      }
+      return userData;
+    } catch (error) {
+      // Fallback local se a API estiver fora do ar
+      if (name && email && password.length >= 6) {
+        const fallbackUser = {
+          id: 'user-' + Date.now(),
+          name,
+          email,
+          memberSince: 'Março 2024',
+          photo: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200'
+        };
+        setUser(fallbackUser);
+        localStorage.setItem('automatch_user', JSON.stringify(fallbackUser));
+        return fallbackUser;
+      }
+      throw error;
+    }
   };
 
   const logout = () => {
     setUser(null);
     localStorage.removeItem('automatch_user');
+    localStorage.removeItem('automatch_token');
   };
 
   const updateProfile = async (updates) => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const newUser = { ...user, ...updates };
-        setUser(newUser);
-        localStorage.setItem('automatch_user', JSON.stringify(newUser));
-        resolve(newUser);
-      }, 800);
-    });
+    try {
+      const response = await fetch('/api/users/profile', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      });
+
+      if (response.ok) {
+        const updated = await response.json();
+        const merged = { ...user, ...updated };
+        setUser(merged);
+        localStorage.setItem('automatch_user', JSON.stringify(merged));
+        return merged;
+      }
+    } catch (e) {
+      // Continua com atualização local se falhar
+    }
+
+    const newUser = { ...user, ...updates };
+    setUser(newUser);
+    localStorage.setItem('automatch_user', JSON.stringify(newUser));
+    return newUser;
   };
 
   return (

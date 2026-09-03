@@ -37,7 +37,7 @@ def verificar_watchlist_detran():
 
         for item in watchlist_items:
             detran_data = consultar_detran_mock(item.placa)
-            item.ultima_verificacao = datetime.utcnow()
+            item.last_check = datetime.utcnow().strftime("%d/%m/%Y %H:%M:%S")
             
             if detran_data.get("debitos_novos"):
                 item.status = "ALERTA"

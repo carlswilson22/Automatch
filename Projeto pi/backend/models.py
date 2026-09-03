@@ -1,4 +1,4 @@
-﻿# pyrefly: ignore [missing-import]
+# pyrefly: ignore [missing-import]
 from sqlalchemy import Column, Integer, String, Text, ForeignKey, Float
 from sqlalchemy.orm import relationship
 import uuid
@@ -53,3 +53,27 @@ class LaudoWatchlist(Base):
     placa = Column(String, index=True)
     last_check = Column(String, nullable=True)
     status = Column(String, nullable=True)
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()), index=True)
+    name = Column(String, nullable=False)
+    email = Column(String, unique=True, index=True, nullable=False)
+    hashed_password = Column(String, nullable=False)
+    photo = Column(String, nullable=True)
+    member_since = Column(String, default="Março 2024")
+
+class PaymentOrder(Base):
+    __tablename__ = "payment_orders"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()), index=True)
+    protocol = Column(String, unique=True, index=True, nullable=False)
+    customer_name = Column(String, nullable=False)
+    customer_email = Column(String, nullable=True)
+    item_description = Column(String, nullable=False)
+    amount = Column(Float, nullable=False)
+    payment_method = Column(String, nullable=False)
+    status = Column(String, default="Aprovado")
+    created_at = Column(String, nullable=False)
+

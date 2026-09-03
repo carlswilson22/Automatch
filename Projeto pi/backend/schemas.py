@@ -1,4 +1,4 @@
-﻿from typing import List, Optional
+from typing import List, Optional
 # pyrefly: ignore [missing-import]
 from pydantic import BaseModel
 
@@ -55,3 +55,45 @@ class LaudoWatchlistSchema(BaseModel):
 
     class Config:
         from_attributes = True
+
+class UserCreate(BaseModel):
+    name: str
+    email: str
+    password: str
+
+class UserLogin(BaseModel):
+    email: str
+    password: str
+
+class UserResponse(BaseModel):
+    id: str
+    name: str
+    email: str
+    photo: Optional[str] = None
+    memberSince: Optional[str] = "Março 2024"
+    token: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+class UserProfileUpdate(BaseModel):
+    name: Optional[str] = None
+    email: Optional[str] = None
+    photo: Optional[str] = None
+
+class CheckoutRequest(BaseModel):
+    customer_name: str
+    customer_email: Optional[str] = None
+    item_description: str
+    amount: float
+    payment_method: str
+
+class CheckoutResponse(BaseModel):
+    protocol: str
+    date: str
+    item: str
+    amount: float
+    method: str
+    customer: str
+    status: str
+

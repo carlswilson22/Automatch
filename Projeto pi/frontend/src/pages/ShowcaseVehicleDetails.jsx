@@ -30,7 +30,7 @@ const AIChatBox = ({ car }) => {
     setMessages(m => [...m, { from: 'ai', text: 'Pensando...', isLoading: true }]);
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000'}/api/chat`, {
+      const response = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
@@ -374,6 +374,72 @@ export default function ShowcaseVehicleDetails() {
     });
   };
 
+  // ── Integrações de Laudo, DETRAN e AutoPrice ──
+  const [laudoData, setLaudoData] = useState(null);
+  const [isLaudoLoading, setIsLaudoLoading] = useState(false);
+  const [detranData, setDetranData] = useState(null);
+  const [isDetranLoading, setIsDetranLoading] = useState(false);
+  const [autoPriceData, setAutoPriceData] = useState(null);
+  const [isAutoPriceLoading, setIsAutoPriceLoading] = useState(false);
+
+  const consultarLaudoOficial = async () => {
+    setIsLaudoLoading(true);
+    try {
+      const fipe = car?.fipeCode || '004487-3';
+      const res = await fetch(`/api/v1/laudo-cautelar/${fipe}`);
+      if (res.ok) {
+        const data = await res.json();
+        setLaudoData(data.laudo);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLaudoLoading(false);
+    }
+  };
+
+  const consultarDetranOficial = async () => {
+    setIsDetranLoading(true);
+    try {
+      const plate = car?.plate || 'ABC1234';
+      const res = await fetch(`/api/detran/${plate}`);
+      if (res.ok) {
+        const data = await res.json();
+        setDetranData(data.dados_veiculo);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsDetranLoading(false);
+    }
+  };
+
+  const calcularPrecoJusto = async () => {
+    setIsAutoPriceLoading(true);
+    try {
+      const numericPrice = typeof car?.price === 'number' ? car.price : Number(String(car?.price || 0).replace(/\D/g, '')) || 165000;
+      const km = typeof car?.mileage === 'number' ? car.mileage : Number(String(car?.mileage || 0).replace(/\D/g, '')) || 18500;
+      const res = await fetch('/api/v1/precificacao', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fipe_price: numericPrice,
+          km: km,
+          year: car?.year || 2023,
+          damages: car?.damagePoints?.map(d => d.description || d.type) || []
+        })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setAutoPriceData(data);
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsAutoPriceLoading(false);
+    }
+  };
+
   const analisarFotoDoCarro = async () => {
     setIsAnalyzing(true);
     setAnalysisResult('');
@@ -556,19 +622,165 @@ export default function ShowcaseVehicleDetails() {
             </div>
 
             {/* Dossiê de Transparência Automatch */}
-            <div className="bg-slate-900/80 rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-xl space-y-8">
+            <div className="bg-slate-900/80 rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-xl space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-800">
                 <div>
                   <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-black uppercase tracking-wider mb-2 border border-emerald-500/20">
                     <ShieldCheck className="w-4 h-4" /> Procedência 100% Auditada
                   </div>
                   <h2 className="text-2xl font-black text-white">Dossiê de Transparência</h2>
+                  <p className="text-xs text-slate-400 mt-1">Dados periciais oficiais cruzados com órgãos reguladores em tempo real.</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Unidade:</span>
                   <StoreIdentifier storeId={car.storeId} />
                 </div>
               </div>
+
+              {/* Botões de Ação das APIs Oficiais */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <button
+                  type="button"
+                  onClick={consultarLaudoOficial}
+                  disabled={isLaudoLoading}
+                  className="p-3.5 rounded-2xl bg-blue-950/50 hover:bg-blue-900/60 border border-blue-800/50 text-left transition-all flex flex-col justify-between group"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <Award className="w-5 h-5 text-blue-400 group-hover:scale-110 transition-transform" />
+                    <span className="text-[10px] bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full font-bold">FIPE + Laudo</span>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-white">Laudo Cautelar</h4>
+                    <p className="text-[11px] text-slate-400">{isLaudoLoading ? 'Consultando FIPE...' : 'Verificar estrutura e pintura'}</p>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={consultarDetranOficial}
+                  disabled={isDetranLoading}
+                  className="p-3.5 rounded-2xl bg-emerald-950/40 hover:bg-emerald-900/50 border border-emerald-800/50 text-left transition-all flex flex-col justify-between group"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <ShieldCheck className="w-5 h-5 text-emerald-400 group-hover:scale-110 transition-transform" />
+                    <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-bold">DETRAN</span>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-white">Certidão DETRAN</h4>
+                    <p className="text-[11px] text-slate-400">{isDetranLoading ? 'Consultando órgão...' : 'Checar chassi, débitos e gravame'}</p>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={calcularPrecoJusto}
+                  disabled={isAutoPriceLoading}
+                  className="p-3.5 rounded-2xl bg-purple-950/40 hover:bg-purple-900/50 border border-purple-800/50 text-left transition-all flex flex-col justify-between group"
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <DollarSign className="w-5 h-5 text-purple-400 group-hover:scale-110 transition-transform" />
+                    <span className="text-[10px] bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded-full font-bold">AutoPrice™</span>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-white">Preço Justo</h4>
+                    <p className="text-[11px] text-slate-400">{isAutoPriceLoading ? 'Calculando...' : 'Avaliação pericial de mercado'}</p>
+                  </div>
+                </button>
+              </div>
+
+              {/* Resultado: Laudo Cautelar */}
+              {laudoData && (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-5 rounded-2xl bg-slate-950 border border-blue-900/40 space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <div className="flex items-center gap-2">
+                      <Award className="w-5 h-5 text-blue-400" />
+                      <h4 className="font-bold text-sm text-white">Resultado da Perícia Cautelar ({laudoData.laudo_id})</h4>
+                    </div>
+                    <span className="text-xs bg-emerald-500/20 text-emerald-400 font-bold px-3 py-1 rounded-full border border-emerald-500/30">
+                      TrustScore: {laudoData.trust_score}/100
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                    <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+                      <span className="text-slate-400 block mb-1 font-semibold">Integridade Estrutural:</span>
+                      <span className="text-emerald-400 font-bold block">{laudoData.analise_estrutural?.longarinas_dianteiras}</span>
+                      <span className="text-slate-300 mt-1 block">Espessura de tinta: {laudoData.analise_estrutural?.espessura_media_tinta_micras} micras (Padrão de fábrica)</span>
+                    </div>
+                    <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+                      <span className="text-slate-400 block mb-1 font-semibold">Referência FIPE Oficial:</span>
+                      <span className="text-white font-bold block">{laudoData.dados_oficiais_fipe?.valor || 'R$ 165.000,00'}</span>
+                      <span className="text-slate-400 mt-1 block">Código: {laudoData.dados_oficiais_fipe?.codigoFipe} ({laudoData.dados_oficiais_fipe?.mesReferencia})</span>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Resultado: DETRAN */}
+              {detranData && (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-5 rounded-2xl bg-slate-950 border border-emerald-900/40 space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <div className="flex items-center gap-2">
+                      <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                      <h4 className="font-bold text-sm text-white">Certidão Cadastral - DETRAN ({detranData.uf})</h4>
+                    </div>
+                    <span className="text-xs bg-emerald-500/20 text-emerald-400 font-bold px-3 py-1 rounded-full border border-emerald-500/30">
+                      {detranData.situacao_veiculo}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+                    <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+                      <span className="text-slate-400 block mb-0.5">Placa / Chassi:</span>
+                      <span className="text-white font-bold">{detranData.placa}</span>
+                      <span className="text-[10px] text-slate-500 block truncate">{detranData.chassi}</span>
+                    </div>
+                    <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+                      <span className="text-slate-400 block mb-0.5">IPVA / Licenciamento:</span>
+                      <span className="text-emerald-400 font-bold">{detranData.debitos?.ipva}</span>
+                      <span className="text-[10px] text-slate-400 block">{detranData.debitos?.licenciamento_exercicio}: {detranData.debitos?.licenciamento_status}</span>
+                    </div>
+                    <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+                      <span className="text-slate-400 block mb-0.5">Gravame / Alienação:</span>
+                      <span className="text-white font-bold">{detranData.restricoes?.gravame}</span>
+                    </div>
+                    <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+                      <span className="text-slate-400 block mb-0.5">Multas Ativas:</span>
+                      <span className="text-emerald-400 font-bold">R$ {detranData.debitos?.total_multas?.toFixed(2)}</span>
+                      <span className="text-[10px] text-slate-500 block">Nenhuma infração</span>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Resultado: AutoPrice */}
+              {autoPriceData && (
+                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-5 rounded-2xl bg-slate-950 border border-purple-900/40 space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <div className="flex items-center gap-2">
+                      <DollarSign className="w-5 h-5 text-purple-400" />
+                      <h4 className="font-bold text-sm text-white">AutoPrice™ - Avaliação Precisa de Mercado</h4>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-[10px] text-slate-400 block">Preço Sugerido</span>
+                      <span className="text-base font-black text-purple-400">R$ {autoPriceData.suggested_price?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                  </div>
+                  <div className="space-y-1.5 text-xs">
+                    <div className="flex justify-between py-1 border-b border-slate-800/60 text-slate-300">
+                      <span>Valor de Referência FIPE:</span>
+                      <span className="font-semibold text-white">R$ {autoPriceData.fipe_price?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                    <div className="flex justify-between py-1 border-b border-slate-800/60 text-slate-300">
+                      <span>Desconto Total Aplicado (KM + Avarias):</span>
+                      <span className="font-semibold text-rose-400">- R$ {autoPriceData.total_discount?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</span>
+                    </div>
+                    {autoPriceData.details?.map((detail, idx) => (
+                      <p key={idx} className="text-[11px] text-slate-400 pl-2 border-l border-purple-500/40">
+                        • {detail}
+                      </p>
+                    ))}
+                  </div>
+                </motion.div>
+              )}
             </div>
 
             {/* Ficha Técnica Grid */}
