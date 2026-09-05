@@ -7,8 +7,11 @@ import time
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 
-# Chave secreta obtida do ambiente ou fallback
-SECRET_KEY = os.getenv("JWT_SECRET", "automatch_secret_key_123")
+# Chave secreta obtida do ambiente
+SECRET_KEY = os.getenv("JWT_SECRET")
+if not SECRET_KEY:
+    raise ValueError("Variável de ambiente JWT_SECRET não configurada. A aplicação não pode iniciar de forma segura.")
+
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 dias
 
