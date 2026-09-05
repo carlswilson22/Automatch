@@ -20,6 +20,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application source code
 COPY . .
 
+# Pre-download YOLOv8 model weights
+RUN curl -L -o yolov8n.pt https://github.com/ultralytics/assets/releases/download/v8.1.0/yolov8n.pt
+
 EXPOSE 8000
 
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]

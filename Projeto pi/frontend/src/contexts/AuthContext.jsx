@@ -58,19 +58,6 @@ export const AuthProvider = ({ children }) => {
       }
       return userData;
     } catch (error) {
-      // Fallback local se a API estiver fora do ar
-      if (name && email && password.length >= 6) {
-        const fallbackUser = {
-          id: 'user-' + Date.now(),
-          name,
-          email,
-          memberSince: 'Março 2024',
-          photo: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200'
-        };
-        setUser(fallbackUser);
-        localStorage.setItem('automatch_user', JSON.stringify(fallbackUser));
-        return fallbackUser;
-      }
       throw error;
     }
   };
