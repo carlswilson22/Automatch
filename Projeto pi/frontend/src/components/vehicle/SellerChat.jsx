@@ -7,7 +7,11 @@ const SellerChat = ({ seller }) => {
   ]);
   const [input, setInput] = useState('');
   const endRef = useRef(null);
-  useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
+  useEffect(() => { 
+    if (messages.length > 1) {
+      endRef.current?.scrollIntoView({ behavior: 'smooth' }); 
+    }
+  }, [messages]);
 
   const handleSend = () => {
     if (!input.trim()) return;
