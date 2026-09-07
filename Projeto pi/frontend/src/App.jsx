@@ -5,7 +5,7 @@ import ShowcaseCatalog from './pages/ShowcaseCatalog';
 import ShowcaseVehicleDetails from './pages/ShowcaseVehicleDetails';
 import AuthPage from './pages/AuthPage';
 import ProfilePage from './pages/ProfilePage';
-import PlansPage from './pages/PlansPage';
+import HowItWorksPage from './pages/HowItWorksPage';
 import CheckoutPage from './pages/CheckoutPage';
 import Dashboard from './pages/Dashboard';
 import NewCarAdForm from './pages/NewCarAdForm';
@@ -22,7 +22,7 @@ function App() {
           <Route path="/login" element={<AuthPage />} />
           <Route path="/encontrar" element={<ShowcaseCatalog />} />
           <Route path="/encontrar/:id" element={<ShowcaseVehicleDetails />} />
-          <Route path="/planos" element={<PlansPage />} />
+          <Route path="/como-funciona" element={<HowItWorksPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/novo-anuncio" element={<NewCarAdForm />} />
           

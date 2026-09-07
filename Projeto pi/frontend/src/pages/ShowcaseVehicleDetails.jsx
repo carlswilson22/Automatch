@@ -45,7 +45,6 @@ export default function ShowcaseVehicleDetails() {
         image: mock.images?.[0] || '/images/FotoHondaCivic.jpeg',
         bodyType: mock.metadata?.bodyType || 'Sedã',
         storeId: mock.storeId || 'store-1',
-        storeId: mock.storeId || 'store-1',
         damagePoints: mock.damagePoints || [],
         description: 'Veículo com laudo cautelar aprovado e procedência garantida.',
         fullDescription: 'Excelente estado de conservação, revisões em dia e garantia de procedência Automatch.',
@@ -175,13 +174,13 @@ export default function ShowcaseVehicleDetails() {
   const [isAutoPriceLoading, setIsAutoPriceLoading] = useState(false);
 
   const consultarLaudoOficial = async () => {
+    if (laudoData) { setLaudoData(null); return; }
     setIsLaudoLoading(true);
     try {
-      const fipe = car?.fipeCode || '004487-3';
-      const res = await fetch(`/api/v1/laudo-cautelar/${fipe}`);
+      const res = await fetch('/api/v1/integracoes/laudo-cautelar/004487-3');
       if (res.ok) {
         const data = await res.json();
-        setLaudoData(data.laudo);
+        setLaudoData(data);
       }
     } catch (e) {
       console.error(e);
@@ -191,13 +190,13 @@ export default function ShowcaseVehicleDetails() {
   };
 
   const consultarDetranOficial = async () => {
+    if (detranData) { setDetranData(null); return; }
     setIsDetranLoading(true);
     try {
-      const plate = car?.plate || 'ABC1234';
-      const res = await fetch(`/api/detran/${plate}`);
+      const res = await fetch('/api/v1/integracoes/detran/ABC1234');
       if (res.ok) {
         const data = await res.json();
-        setDetranData(data.dados_veiculo);
+        setDetranData(data);
       }
     } catch (e) {
       console.error(e);
@@ -207,6 +206,7 @@ export default function ShowcaseVehicleDetails() {
   };
 
   const calcularPrecoJusto = async () => {
+    if (autoPriceData) { setAutoPriceData(null); return; }
     setIsAutoPriceLoading(true);
     try {
       const numericPrice = typeof car?.price === 'number' ? car.price : Number(String(car?.price || 0).replace(/\D/g, '')) || 165000;
@@ -339,33 +339,8 @@ export default function ShowcaseVehicleDetails() {
           {/* ── LEFT COLUMN: Gallery, IA Scanner, Dossier, Specs ── */}
           <div className="space-y-8">
             
-            {/* View Switcher (HD Photo vs Laser Scan) */}
+            {/* View Switcher (HD Photo) */}
             <div className="relative rounded-3xl overflow-hidden bg-slate-900 border border-slate-800 shadow-2xl">
-              <div className="absolute top-4 left-4 z-20 flex gap-2">
-                <button
-                  onClick={() => setActiveTab('photo')}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 backdrop-blur-md ${
-                    activeTab === 'photo'
-                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/40'
-                      : 'bg-slate-900/70 text-slate-300 hover:bg-slate-800'
-                  }`}
-                >
-                  <Car className="w-4 h-4" />
-                  <span>Foto HD</span>
-                </button>
-                <button
-                  onClick={() => setActiveTab('scanner')}
-                  className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 backdrop-blur-md ${
-                    activeTab === 'scanner'
-                      ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/40'
-                      : 'bg-slate-900/70 text-slate-300 hover:bg-slate-800'
-                  }`}
-                >
-                  <Scan className="w-4 h-4 text-cyan-400" />
-                  <span>IA Laser Scanner</span>
-                </button>
-              </div>
-
               {/* Action: Perícia IA Gemini */}
               <div className="absolute top-4 right-4 z-20">
                 <button 
@@ -378,17 +353,13 @@ export default function ShowcaseVehicleDetails() {
                 </button>
               </div>
 
-              {/* Display: Photo or Interactive Scan */}
+              {/* Display: Photo */}
               <div className="aspect-[16/10] bg-slate-950 overflow-hidden relative">
-                {activeTab === 'photo' ? (
-                  <img 
-                    src={car.image || '/images/FotoGolfGTI.jpeg'} 
-                    alt={car.name} 
-                    className="w-full h-full object-cover" 
-                  />
-                ) : (
-                  <AutomatchScan vehicleImage={car.image || '/images/FotoGolfGTI.jpeg'} damagePoints={car.damagePoints || []} />
-                )}
+                <img 
+                  src={car.image || '/images/FotoGolfGTI.jpeg'} 
+                  alt={car.name} 
+                  className="w-full h-full object-cover" 
+                />
               </div>
 
               {/* Perícia AI Result Alert */}
