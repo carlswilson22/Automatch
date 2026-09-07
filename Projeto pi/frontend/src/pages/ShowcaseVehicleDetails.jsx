@@ -576,7 +576,7 @@ export default function ShowcaseVehicleDetails() {
             <div className="bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-2xl space-y-6">
               <div>
                 <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-1">
-                  Preço Automatch
+                  Valor do veículo
                 </span>
                 <p className="text-4xl sm:text-5xl font-black text-white">
                   R$ {car.price.toLocaleString('pt-BR')}
@@ -614,6 +614,17 @@ export default function ShowcaseVehicleDetails() {
                 >
                   <MessageCircle className="w-4 h-4 text-emerald-400" />
                   <span>Falar com Vendedor</span>
+                </button>
+                
+                <button
+                  onClick={() => {
+                    if (window.confirm("Tem certeza que deseja excluir este anúncio?")) {
+                      navigate('/encontrar');
+                    }
+                  }}
+                  className="w-full py-3 bg-red-950/40 hover:bg-red-900/60 text-red-400 rounded-2xl font-bold text-xs uppercase tracking-wider transition-all border border-red-900/50"
+                >
+                  Excluir Anúncio
                 </button>
               </div>
             </div>
