@@ -43,7 +43,7 @@ export const inventory = [
   {
     id: 'inv-003',
     storeId: 'store-2',
-    model: 'Jeep Compass',
+    model: 'Compass',
     brand: 'Jeep',
     plate: 'LUX-0001',
     sale_value: 189900,
@@ -63,21 +63,11 @@ export const inventory = [
   {
     id: 'inv-005',
     storeId: 'store-3',
-    model: 'Tesla Model 3',
+    model: 'Model 3',
     brand: 'Tesla',
     plate: 'ECO-9999',
     sale_value: 289000,
     financial_status: 'paid',
     image: '/images/FotoTeslaModel3.jpeg',
-  },
-  {
-    id: 'inv-006',
-    storeId: 'store-3',
-    model: 'BYD Dolphin',
-    brand: 'BYD',
-    plate: 'ELT-4444',
-    sale_value: 149800,
-    financial_status: 'pending',
-    image: 'https://images.unsplash.com/photo-1681283627993-9c84e1b9b1e5?auto=format&fit=crop&q=80&w=400',
   }
 ];

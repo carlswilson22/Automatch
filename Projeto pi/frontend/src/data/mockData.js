@@ -1,14 +1,14 @@
 /* eslint-disable no-unused-vars */
 export const mockCars = [
   {
-    id: 'auto-001',
-    brand: 'Honda',
-    model: 'Civic Touring 1.5 Turbo',
-    year: 2023,
-    price: 165000,
-    mileage: 18500,
+    id: 'sc-001',
+    brand: 'Toyota',
+    model: 'Corolla Cross',
+    year: 2024,
+    price: 185000,
+    mileage: 12000,
     images: [
-      '/images/FotoHondaCivic.jpeg',
+      '/images/FotoCorollaCross.jpg',
     ],
     trustScore: 99,
     storeId: 'store-1',
@@ -19,44 +19,44 @@ export const mockCars = [
     ],
     opinions: {
       owner: {
-        text: "O melhor carro que já tive. Potente, seguro e lindíssimo. Só usava gasolina Podium e nunca deixei tomar sol.",
+        text: "O melhor SUV que já tive. Muito econômico por ser híbrido.",
         rating: 5,
         avatar: "https://images.unsplash.com/photo-1543610892-0b1f7e6d8ac1?auto=format&fit=crop&w=100&h=100"
       },
       inspector: {
-        text: "Uma verdadeira joia rara no mercado de usados. O carro está em estado de zero KM. Revisões todas na concessionária.",
+        text: "O carro está em estado de zero KM. Bateria híbrida em 100%.",
         rating: 5,
         avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=100&h=100"
       }
     },
     damagePoints: [],
     metadata: {
-      engine: '1.5 Turbo',
+      engine: '1.8 Híbrido',
       transmission: 'CVT',
-      bodyType: 'Sedan',
-      fuel: 'Gasolina'
+      bodyType: 'SUV',
+      fuel: 'Flex Híbrido'
     }
   },
   {
-    id: 'auto-002',
+    id: 'sc-002',
     brand: 'Volkswagen',
-    model: 'Golf GTI 2.0 TSI',
-    year: 2022,
-    price: 215000,
-    mileage: 12300,
+    model: 'Polo TSI',
+    year: 2023,
+    price: 98000,
+    mileage: 18500,
     images: [
-      '/images/FotoGolfGTI.jpeg',
+      '/images/FotoPoloTSI.jpg',
     ],
     trustScore: 94,
-    storeId: 'store-1',
+    storeId: 'store-2',
     timeline: [
-      { id: 't1', type: 'laudo', status: 'approved', title: 'Laudo Cautelar', description: 'Aprovado 100%. Nenhuma alteração estrutural.' },
+      { id: 't1', type: 'laudo', status: 'approved', title: 'Laudo Cautelar', description: 'Aprovado 100%.' },
       { id: 't2', type: 'leilao', status: 'approved', title: 'Histórico de Leilão', description: 'Não possui passagem por leilões.' },
       { id: 't3', type: 'debitos', status: 'approved', title: 'Multas e Débitos', description: 'IPVA quitado. Sem débitos.' },
     ],
     opinions: {
       owner: {
-        text: "Hatch esportivo icônico. A performance do motor 2.0 TSI com câmbio DSG é algo inexplicável. Muito bem cuidado.",
+        text: "Hatch excelente e econômico. Motor 1.0 turbo responde super bem.",
         rating: 4.9,
         avatar: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=100&h=100"
       },
