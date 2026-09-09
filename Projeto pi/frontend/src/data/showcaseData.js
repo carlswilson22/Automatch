@@ -1,4 +1,4 @@
-import { Car, Truck, Battery } from 'lucide-react';
+import { Car } from 'lucide-react';
 
 export const showcaseCars = [
   {
