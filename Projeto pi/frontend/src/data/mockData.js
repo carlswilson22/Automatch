@@ -68,60 +68,60 @@ export const mockCars = [
     },
     damagePoints: [],
     metadata: {
-      engine: '2.0 TSI',
-      transmission: 'DSG 6M',
-      bodyType: 'Hatch Esportivo',
-      fuel: 'Gasolina'
+      engine: '1.0 TSI',
+      transmission: 'Automático 6M',
+      bodyType: 'Hatch',
+      fuel: 'Flex'
     }
   },
   {
-    id: 'auto-003',
-    brand: 'Tesla',
-    model: 'Model 3 Standard Range',
+    id: 'sc-003',
+    brand: 'Hyundai',
+    model: 'HB20 Platinum',
     year: 2024,
-    price: 289000,
-    mileage: 5200,
+    price: 105000,
+    mileage: 5000,
     images: [
-      '/images/FotoTeslaModel3.jpeg',
+      '/images/FotoHyundaiHB20.jpg',
     ],
     trustScore: 98,
     storeId: 'store-3',
     timeline: [
-      { id: 't1', type: 'laudo', status: 'approved', title: 'Laudo Cautelar', description: 'Veículo novo, aprovado integralmente.' },
+      { id: 't1', type: 'laudo', status: 'approved', title: 'Laudo Cautelar', description: 'Veículo seminovo, aprovado integralmente.' },
       { id: 't2', type: 'leilao', status: 'approved', title: 'Histórico de Leilão', description: 'Sem passagem.' },
       { id: 't3', type: 'debitos', status: 'approved', title: 'Multas e Débitos', description: 'Livre de ônus.' },
     ],
     opinions: {
       owner: {
-        text: "Experiência de condução única com o Autopilot. Carregamento muito barato em casa. Estou vendendo para pegar um Model Y.",
+        text: "Carro praticamente zero, vendo porque ganhei um da empresa. Design lindo e muito econômico.",
         rating: 5,
-        avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&h=100"
+        avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=100&h=100"
       },
       inspector: {
-        text: "Estado térmico das baterias excelente. Sem nenhum detalhe na lataria ou interior.",
+        text: "Estado impecável, sem detalhes na lataria ou interior. Revisões em dia na concessionária.",
         rating: 5,
         avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&h=100"
       }
     },
     damagePoints: [],
     metadata: {
-      engine: 'Elétrico 283cv',
-      transmission: 'Redução Fixa',
-      bodyType: 'Sedan',
-      fuel: '100% Elétrico'
+      engine: '1.0 TGDI',
+      transmission: 'Automático 6M',
+      bodyType: 'Hatch',
+      fuel: 'Flex'
     }
   },
   {
-    id: 'auto-004',
-    brand: 'Jeep',
-    model: 'Compass Limited T270',
-    year: 2023,
-    price: 189900,
-    mileage: 22000,
+    id: 'sc-004',
+    brand: 'Chevrolet',
+    model: 'Tracker Premier',
+    year: 2024,
+    price: 152000,
+    mileage: 8500,
     images: [
-      '/images/FotoJeepCompassLimited.jpeg',
+      '/images/FotoChevroletTracker.jpg',
     ],
-    trustScore: 92,
+    trustScore: 96,
     storeId: 'store-1',
     timeline: [
       { id: 't1', type: 'laudo', status: 'approved', title: 'Laudo Cautelar', description: 'Aprovado sem apontamentos.' },
@@ -130,36 +130,36 @@ export const mockCars = [
     ],
     opinions: {
       owner: {
-        text: "SUV muito confortável e tecnológico. O teto panorâmico é o diferencial. Revisões em dia na concessionária.",
-        rating: 4.7,
-        avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=100&h=100"
+        text: "SUV muito completo para a família. Wi-Fi nativo e teto panorâmico fazem toda a diferença.",
+        rating: 4.8,
+        avatar: "https://images.unsplash.com/photo-1543610892-0b1f7e6d8ac1?auto=format&fit=crop&w=100&h=100"
       },
       inspector: {
-        text: "Conjunto mecânico 1.3 Turbo muito eficiente. Acabamento interno preservado sem marcas de uso.",
-        rating: 4.6,
+        text: "Motor 1.2 turbo eficiente e silencioso. Acabamento interno bem preservado.",
+        rating: 4.7,
         avatar: "https://images.unsplash.com/photo-1560250097-0b93528c311a?auto=format&fit=crop&w=100&h=100"
       }
     },
     damagePoints: [],
     metadata: {
-      engine: '1.3 T270 Turbo',
-      transmission: 'Automática 6M',
+      engine: '1.2 Turbo',
+      transmission: 'Automático',
       bodyType: 'SUV',
       fuel: 'Flex'
     }
   },
   {
-    id: 'auto-005',
-    brand: 'Toyota',
-    model: 'Hilux SRX 2.8 Diesel 4x4',
-    year: 2022,
-    price: 285000,
-    mileage: 38000,
+    id: 'sc-005',
+    brand: 'Fiat',
+    model: 'Pulse Abarth',
+    year: 2024,
+    price: 145000,
+    mileage: 3200,
     images: [
-      '/images/FotoNovaHilux.jpeg',
+      '/images/FotoFiatPulse.jpg',
     ],
     trustScore: 95,
-    storeId: 'store-1',
+    storeId: 'store-2',
     timeline: [
       { id: 't1', type: 'laudo', status: 'approved', title: 'Laudo Cautelar', description: 'Aprovado com maestria.' },
       { id: 't2', type: 'leilao', status: 'approved', title: 'Histórico de Leilão', description: 'Sem registro de leilão.' },
@@ -167,22 +167,22 @@ export const mockCars = [
     ],
     opinions: {
       owner: {
-        text: "Tanque de guerra. Nunca me deixou na mão em viagens longas. Uso predominantemente em asfalto.",
-        rating: 4.8,
-        avatar: "https://images.unsplash.com/photo-1543610892-0b1f7e6d8ac1?auto=format&fit=crop&w=100&h=100"
+        text: "Carro extremamente divertido de dirigir. Performance Abarth é viciante, escapamento esportivo incrível.",
+        rating: 4.9,
+        avatar: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=100&h=100"
       },
       inspector: {
-        text: "Motor diesel respondendo perfeitamente. Sistema 4x4 testado e operante. Chassi impecável.",
+        text: "Motor T270 perfeito. Suspensão esportiva calibrada de fábrica. Pneus com 90% de vida útil.",
         rating: 4.9,
         avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=100&h=100"
       }
     },
     damagePoints: [],
     metadata: {
-      engine: '2.8 Diesel',
-      transmission: 'Automática 6M',
-      bodyType: 'Picape',
-      fuel: 'Diesel'
+      engine: '1.3 Turbo 270',
+      transmission: 'Automático',
+      bodyType: 'SUV',
+      fuel: 'Flex'
     }
   }
 ];

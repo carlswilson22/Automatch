@@ -9,7 +9,7 @@ const SellerChat = ({ seller }) => {
   const endRef = useRef(null);
   useEffect(() => { 
     if (messages.length > 1) {
-      endRef.current?.scrollIntoView({ behavior: 'smooth' }); 
+      endRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); 
     }
   }, [messages]);
 

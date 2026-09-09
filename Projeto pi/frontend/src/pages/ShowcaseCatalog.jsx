@@ -8,7 +8,7 @@ import { getNewCars } from '../data/newCarsManager';
 import {
   ShieldCheck, Search, ChevronRight, Calendar, Gauge, Palette,
   MapPin, Heart, Eye, Zap, Filter, ArrowLeft, SlidersHorizontal,
-  Car, Truck, Battery, ChevronDown, X, Star, RotateCcw, Tag, UserPlus, LogIn, Sparkles
+  Car, ChevronDown, X, Star, RotateCcw, Tag, UserPlus, LogIn, Sparkles
 } from 'lucide-react';
 
 // ─── DATA ────────────────────────────────────────────────────────────────────
@@ -57,7 +57,7 @@ const showcaseCars = [
 ];
 
 const BRANDS = ['Todas', ...new Set(showcaseCars.map(c => c.brand))];
-const BODY_TYPES = ['Todos', 'Sedã', 'SUV', 'Hatch', 'Pickup', 'Elétrico'];
+const BODY_TYPES = ['Todos', 'Sedã', 'SUV', 'Hatch', 'Picape'];
 const YEAR_OPTIONS = ['Todos', '2024', '2023', '2022', '2021', '2020'];
 const KM_RANGES = [
   { label: 'Qualquer', max: Infinity },
