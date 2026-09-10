@@ -198,10 +198,90 @@ def run_tests():
     assert len(data7.get("hotspots_360")) == 1
     print("✅ TESTE 7 PASSOU COM SUCESSO!")
 
+    # -------------------------------------------------------------------------
+    # TESTE 8: Simulador 'Troca com Troco' (POST /api/troca-com-troco)
+    # -------------------------------------------------------------------------
+    print("\n[TESTE 8] Simulador Instantâneo 'Troca com Troco'...")
+    # Caso A: Saldo a Financiar (carro de entrada de menor valor)
+    resp8a = client.post("/api/troca-com-troco", json={
+        "target_price": 140000.0,
+        "tradein_brand": "Volkswagen",
+        "tradein_model": "Polo 1.0 TSI",
+        "tradein_year": 2020,
+        "tradein_km": 40000,
+        "tradein_fipe": 78000.0
+    })
+    assert resp8a.status_code == 200, f"Falha na rota troca-com-troco: {resp8a.text}"
+    data8a = resp8a.json()
+    print(f"Tipo: {data8a.get('tipo_operacao')} | Avaliação: R$ {data8a['veiculo_entrada']['valor_avaliacao']} | Saldo a Financiar: R$ {data8a.get('saldo_financiar')}")
+    assert data8a.get("tipo_operacao") == "saldo_a_financiar"
+    assert len(data8a.get("bancos")) >= 3
+
+    # Caso B: Troco a Receber (carro de entrada de maior valor)
+    resp8b = client.post("/api/troca-com-troco", json={
+        "target_price": 60000.0,
+        "tradein_brand": "BMW",
+        "tradein_model": "320i M Sport",
+        "tradein_year": 2022,
+        "tradein_km": 20000,
+        "tradein_fipe": 240000.0
+    })
+    assert resp8b.status_code == 200
+    data8b = resp8b.json()
+    print(f"Tipo: {data8b.get('tipo_operacao')} | Troco via Pix: R$ {data8b.get('troco_pix')}")
+    assert data8b.get("tipo_operacao") == "troco_a_receber"
+    assert data8b.get("troco_pix") > 0
+    print("✅ TESTE 8 PASSOU COM SUCESSO!")
+
+    # -------------------------------------------------------------------------
+    # TESTE 9: Radar de Oportunidades & Alerta de Preço (POST /api/alerts)
+    # -------------------------------------------------------------------------
+    print("\n[TESTE 9] Radar de Oportunidades & Alertas de Preço...")
+    resp9 = client.post("/api/alerts", json={
+        "car_id": "1",
+        "car_name": "Golf GTI 2021",
+        "current_price": 142000.0,
+        "target_price": 135000.0,
+        "contact_type": "whatsapp",
+        "contact_value": "(11) 99999-8888"
+    })
+    assert resp9.status_code == 200, f"Falha ao criar alerta: {resp9.text}"
+    data9 = resp9.json()
+    print(f"Alerta ID: {data9.get('alerta_id')} | Msg: {data9.get('mensagem')}")
+    assert data9.get("status") == "success"
+
+    resp9_list = client.get("/api/alerts")
+    assert resp9_list.status_code == 200
+    assert resp9_list.json().get("total_alertas") >= 1
+    print("✅ TESTE 9 PASSOU COM SUCESSO!")
+
+    # -------------------------------------------------------------------------
+    # TESTE 10: Sincronizador Multicanal B2B (GET/POST /api/integrations)
+    # -------------------------------------------------------------------------
+    print("\n[TESTE 10] Sincronizador Multicanal B2B (Webmotors, OLX, iCarros, ML)...")
+    resp10_ch = client.get("/api/integrations/channels")
+    assert resp10_ch.status_code == 200, f"Falha ao listar canais: {resp10_ch.text}"
+    data10_ch = resp10_ch.json()
+    print(f"Canais Disponíveis: {data10_ch.get('total_canais')} parceiros integrados")
+    assert data10_ch.get("total_canais") == 4
+
+    resp10_sync = client.post("/api/integrations/sync", json={
+        "car_id": "1",
+        "car_name": "Golf GTI 2.0 TSI",
+        "channels": ["webmotors", "olx", "icarros", "mercadolivre"]
+    })
+    assert resp10_sync.status_code == 200, f"Falha na sincronização multicanal: {resp10_sync.text}"
+    data10_sync = resp10_sync.json()
+    print(f"Protocolo: {data10_sync.get('protocolo')} | Sincronizados: {data10_sync.get('total_sincronizados')} canais")
+    assert data10_sync.get("status") == "success"
+    assert data10_sync.get("total_sincronizados") == 4
+    print("✅ TESTE 10 PASSOU COM SUCESSO!")
+
     print("\n" + "=" * 70)
-    print("🎉 TODOS OS 7 TESTES FORAM CONCLUÍDOS COM 100% DE SUCESSO!")
+    print("🎉 TODOS OS 10 TESTES FORAM CONCLUÍDOS COM 100% DE SUCESSO!")
     print("=" * 70)
 
 if __name__ == "__main__":
     run_tests()
+
 

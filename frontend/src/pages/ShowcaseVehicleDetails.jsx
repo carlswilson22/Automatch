@@ -7,7 +7,7 @@ import {
   TrendingDown, TrendingUp, Minus, Car, Truck, Battery, Share2,
   CheckCircle2, AlertTriangle, Clock, Fuel, Settings, Award, Zap, X, 
   UserPlus, LogIn, DollarSign, Calculator, Lock, Check, Scan, Wrench, Tag,
-  RotateCw, Volume2, Disc, Camera
+  RotateCw, Volume2, Disc, Camera, Bell, Globe2
 } from 'lucide-react';
 import StoreIdentifier from '../components/ui/StoreIdentifier';
 import { showcaseCars } from '../data/showcaseData';
@@ -16,7 +16,9 @@ import { getNewCarById, deleteNewCar, isCarDeleted } from '../data/newCarsManage
 import AutomatchScan from '../components/vehicle/AutomatchScan';
 import AIChatBox from '../components/vehicle/AIChatBox';
 import SellerChat from '../components/vehicle/SellerChat';
-import FinancingSimulator from '../components/vehicle/FinancingSimulator';
+import TradeInSimulator from '../components/vehicle/TradeInSimulator';
+import PriceAlertModal from '../components/vehicle/PriceAlertModal';
+import MultichannelSyncModal from '../components/vehicle/MultichannelSyncModal';
 import Vehicle360Viewer from '../components/vehicle/Vehicle360Viewer';
 import EngineAcousticScanner from '../components/vehicle/EngineAcousticScanner';
 import TireDepthScanner from '../components/vehicle/TireDepthScanner';
@@ -33,6 +35,8 @@ export default function ShowcaseVehicleDetails() {
   const [fipeInfoOpen, setFipeInfoOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [inspectionTab, setInspectionTab] = useState('body'); // 'body' | '360' | 'engine' | 'tires'
+  const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
+  const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
 
   // Unify vehicle search from all stores/origins
   let car = null;
@@ -860,6 +864,26 @@ export default function ShowcaseVehicleDetails() {
                   <MessageCircle className="w-4 h-4 text-emerald-400" />
                   <span>Falar com Vendedor</span>
                 </button>
+
+                {/* Radar de Oportunidades / Alerta de Preço */}
+                <button
+                  type="button"
+                  onClick={() => setIsAlertModalOpen(true)}
+                  className="w-full py-3.5 bg-cyan-950/40 hover:bg-cyan-900/50 text-cyan-300 rounded-2xl font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 border border-cyan-800/50"
+                >
+                  <Bell className="w-4 h-4 text-cyan-400 animate-pulse" />
+                  <span>Ativar Alerta de Queda de Preço</span>
+                </button>
+
+                {/* Sincronizador Multicanal B2B */}
+                <button
+                  type="button"
+                  onClick={() => setIsSyncModalOpen(true)}
+                  className="w-full py-3.5 bg-indigo-950/40 hover:bg-indigo-900/50 text-indigo-300 rounded-2xl font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 border border-indigo-800/50"
+                >
+                  <Globe2 className="w-4 h-4 text-indigo-400" />
+                  <span>Sincronizar Anúncio (Webmotors, OLX, iCarros, ML)</span>
+                </button>
                 
                 <button
                   type="button"
@@ -885,8 +909,11 @@ export default function ShowcaseVehicleDetails() {
               </div>
             </div>
 
-            {/* Financiamento Simulator */}
-            <FinancingSimulator price={car.price} />
+            {/* Simulador Inteligente: Financiamento Multi-Bancos + Troca com Troco */}
+            <TradeInSimulator 
+              price={typeof car.price === 'number' ? car.price : 142000} 
+              carName={car.name} 
+            />
 
             {/* Interactive Live Chat (AI / Seller) */}
             <div className="space-y-3">
@@ -915,6 +942,19 @@ export default function ShowcaseVehicleDetails() {
           </div>
         </div>
       </main>
+
+      {/* Modais Globais de Funcionalidades */}
+      <PriceAlertModal
+        isOpen={isAlertModalOpen}
+        onClose={() => setIsAlertModalOpen(false)}
+        car={car}
+      />
+
+      <MultichannelSyncModal
+        isOpen={isSyncModalOpen}
+        onClose={() => setIsSyncModalOpen(false)}
+        car={car}
+      />
     </div>
   );
 }

@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import models
 import tasks
 from database import engine, get_db
-from routers import auth, cars, detran, ai_vision, uploads
+from routers import auth, cars, detran, ai_vision, uploads, tradein, alerts, integrations
 import security
 
 logger = logging.getLogger("automatch")
@@ -21,7 +21,7 @@ models.Base.metadata.create_all(bind=engine)
 app = FastAPI(
     title="Automatch API",
     description="API de Gestão Automotiva, Laudos Cautelares, Integração FIPE e Consulta DETRAN",
-    version="2.0.0"  # Version bump após refatoração estrutural
+    version="2.1.0"
 )
 
 app.add_middleware(
@@ -38,6 +38,9 @@ app.include_router(cars.router)
 app.include_router(detran.router)
 app.include_router(ai_vision.router)
 app.include_router(uploads.router)
+app.include_router(tradein.router)
+app.include_router(alerts.router)
+app.include_router(integrations.router)
 
 
 @app.on_event("startup")
