@@ -1,0 +1,108 @@
+services:
+  # Database Service (PostgreSQL 15)
+  db:
+    image: postgres:15-alpine
+    container_name: automatch-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-automatch}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-automatch}" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - automatch-network
+
+  # Redis Service (Cache & Task Messaging)
+  redis:
+    image: redis:7-alpine
+    container_name: automatch-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - automatch-network
+
+  # Backend Service (FastAPI / Python 3.11)
+  backend:
+    image: automatch-backend:latest
+    build:
+      context: "./backend"
+      dockerfile: Dockerfile
+    container_name: automatch-backend
+    restart: unless-stopped
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-automatch}
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - JWT_SECRET=${JWT_SECRET:-automatch_secret_key_123}
+      - PORT=8000
+    command: [ "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload" ]
+    ports:
+      - "8000:8000"
+    volumes:
+      - "./backend:/app"
+      - "./backend/uploads:/app/uploads"
+      - "./frontend/public/images:/app/public_images:ro"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - automatch-network
+
+  # Frontend Service (React 18 / Vite SPA)
+  frontend:
+    image: automatch-frontend:latest
+    build:
+      context: "./frontend"
+      dockerfile: Dockerfile
+    container_name: automatch-frontend
+    restart: unless-stopped
+    ports:
+      - "5173:5173"
+    volumes:
+      - "./frontend:/app"
+      - "/app/node_modules"
+    environment:
+      - VITE_API_URL=http://backend:8000
+    depends_on:
+      - backend
+    networks:
+      - automatch-network
+
+  # Central API Gateway (Nginx Reverse Proxy)
+  gateway:
+    image: automatch-gateway:latest
+    build:
+      context: "./gateway"
+      dockerfile: Dockerfile
+    container_name: automatch-gateway
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "3000:80"
+    depends_on:
+      - backend
+      - frontend
+    networks:
+      - automatch-network
+
+networks:
+  automatch-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

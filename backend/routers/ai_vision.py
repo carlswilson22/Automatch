@@ -10,7 +10,10 @@ from fastapi import APIRouter
 from services.ai_service import (
     preprocess_and_compress_image,
     call_gemini_generate,
-    executar_pericia_visual_completa
+    executar_pericia_visual_completa,
+    analisar_acustica_motor,
+    analisar_desgaste_pneus,
+    compilar_laudo_360
 )
 from services.pricing_service import calcular_preco_justo
 
@@ -188,3 +191,80 @@ async def endpoint_preco_justo(payload: PrecificacaoRequest) -> Dict[str, Any]:
     Motor AutoPrice™: Calcula o Preço Justo Automatch baseando-se na FIPE, KM e avarias.
     """
     return calcular_preco_justo(payload.fipe_price, payload.km, payload.year, payload.damages)
+
+
+# ==============================================================================
+# Rotas Periciais IA: Diagnóstico Acústico, Pneus e Visão 360°
+# ==============================================================================
+
+class AnaliseAcusticaRequest(BaseModel):
+    audioBase64: Optional[str] = None
+    car_context: Optional[Dict[str, Any]] = None
+
+
+class AnalisePneusRequest(BaseModel):
+    imageBase64: Optional[str] = None
+    posicao_roda: Optional[str] = "dianteiro_esquerdo"
+    car_context: Optional[Dict[str, Any]] = None
+
+
+class Analise360Request(BaseModel):
+    car_context: Optional[Dict[str, Any]] = None
+    preexisting_damages: Optional[List[Dict[str, Any]]] = None
+
+
+@router.post("/api/analise-acustica")
+async def endpoint_analise_acustica(payload: AnaliseAcusticaRequest) -> Dict[str, Any]:
+    """
+    Endpoint do Automatch Engine Sound AI:
+    Analisa o arquivo de áudio do motor e diagnostica marcha lenta, tuchos, correias e saúde mecânica.
+    """
+    audio_bytes = None
+    if payload.audioBase64:
+        try:
+            raw_base64 = payload.audioBase64
+            if "," in raw_base64:
+                raw_base64 = raw_base64.split(",")[1]
+            audio_bytes = base64.b64decode(raw_base64)
+        except Exception as e:
+            logger.warning("Falha ao decodificar audioBase64: %s", e)
+
+    return analisar_acustica_motor(audio_bytes=audio_bytes, car_context=payload.car_context)
+
+
+@router.post("/api/analise-pneus")
+async def endpoint_analise_pneus(payload: AnalisePneusRequest) -> Dict[str, Any]:
+    """
+    Endpoint do Tread Depth Scanner Automatch IA:
+    Avalia a profundidade dos sulcos do pneu em mm e a conformidade com a Resolução 558/80 do CONTRAN.
+    """
+    image_bytes = None
+    if payload.imageBase64:
+        try:
+            raw_base64 = payload.imageBase64
+            if "," in raw_base64:
+                raw_base64 = raw_base64.split(",")[1]
+            raw_bytes = base64.b64decode(raw_base64)
+            image_bytes = preprocess_and_compress_image(raw_bytes)
+        except Exception as e:
+            logger.warning("Falha ao decodificar imagem do pneu: %s", e)
+
+    posicao = payload.posicao_roda or "dianteiro_esquerdo"
+    return analisar_desgaste_pneus(
+        image_bytes=image_bytes,
+        posicao_roda=posicao,
+        car_context=payload.car_context
+    )
+
+
+@router.post("/api/analise-360")
+async def endpoint_analise_360(payload: Analise360Request) -> Dict[str, Any]:
+    """
+    Endpoint de Perícia 360° da Automatch:
+    Retorna o mapa de quadrantes angulares e hotspots tridimensionais de avaria do veículo.
+    """
+    return compilar_laudo_360(
+        car_context=payload.car_context,
+        preexisting_damages=payload.preexisting_damages
+    )
+

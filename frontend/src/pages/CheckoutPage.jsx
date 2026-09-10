@@ -7,7 +7,7 @@ import {
   Sparkles, Car, Loader2, ArrowRight, Printer, ExternalLink
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import { PLANS_DATA } from './PlansPage';
+import { PLANS_DATA } from '../data/plansData';
 import { showcaseCars } from '../data/showcaseData';
 
 const CheckoutPage = () => {

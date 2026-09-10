@@ -9,6 +9,7 @@ import HowItWorksPage from './pages/HowItWorksPage';
 import CheckoutPage from './pages/CheckoutPage';
 import Dashboard from './pages/Dashboard';
 import NewCarAdForm from './pages/NewCarAdForm';
+import PlansPage from './pages/PlansPage';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -23,6 +24,7 @@ function App() {
           <Route path="/encontrar" element={<ShowcaseCatalog />} />
           <Route path="/encontrar/:id" element={<ShowcaseVehicleDetails />} />
           <Route path="/como-funciona" element={<HowItWorksPage />} />
+          <Route path="/planos" element={<PlansPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/novo-anuncio" element={<NewCarAdForm />} />
           

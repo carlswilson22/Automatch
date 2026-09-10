@@ -6,7 +6,8 @@ import {
   Phone, MessageCircle, Send, Bot, User, Star, ChevronRight,
   TrendingDown, TrendingUp, Minus, Car, Truck, Battery, Share2,
   CheckCircle2, AlertTriangle, Clock, Fuel, Settings, Award, Zap, X, 
-  UserPlus, LogIn, DollarSign, Calculator, Lock, Check, Scan, Wrench, Tag
+  UserPlus, LogIn, DollarSign, Calculator, Lock, Check, Scan, Wrench, Tag,
+  RotateCw, Volume2, Disc, Camera
 } from 'lucide-react';
 import StoreIdentifier from '../components/ui/StoreIdentifier';
 import { showcaseCars } from '../data/showcaseData';
@@ -16,6 +17,9 @@ import AutomatchScan from '../components/vehicle/AutomatchScan';
 import AIChatBox from '../components/vehicle/AIChatBox';
 import SellerChat from '../components/vehicle/SellerChat';
 import FinancingSimulator from '../components/vehicle/FinancingSimulator';
+import Vehicle360Viewer from '../components/vehicle/Vehicle360Viewer';
+import EngineAcousticScanner from '../components/vehicle/EngineAcousticScanner';
+import TireDepthScanner from '../components/vehicle/TireDepthScanner';
 
 // ─── MAIN COMPONENT ──────────────────────────────────────────────────────────
 export default function ShowcaseVehicleDetails() {
@@ -28,6 +32,7 @@ export default function ShowcaseVehicleDetails() {
   const [activeDamage, setActiveDamage] = useState(null);
   const [fipeInfoOpen, setFipeInfoOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [inspectionTab, setInspectionTab] = useState('body'); // 'body' | '360' | 'engine' | 'tires'
 
   // Unify vehicle search from all stores/origins
   let car = null;
@@ -354,10 +359,83 @@ export default function ShowcaseVehicleDetails() {
           {/* ── LEFT COLUMN: Gallery, IA Scanner, Dossier, Specs ── */}
           <div className="space-y-8">
             
-            {/* Unified Scanner Pericial IA Viewer */}
-            <div className="relative rounded-3xl overflow-hidden bg-slate-900 border border-slate-800 shadow-2xl">
-              {/* Top Bar: Scanner Pericial IA Status & Action */}
-              <div className="p-4 bg-slate-950/95 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
+            {/* Hub Pericial Multidimensional IA: Abas Seletoras */}
+            <div className="flex items-center gap-2 p-1.5 bg-slate-950/80 rounded-2xl border border-slate-800 overflow-x-auto shadow-lg">
+              <button
+                type="button"
+                onClick={() => setInspectionTab('body')}
+                className={`px-3.5 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition-all whitespace-nowrap ${
+                  inspectionTab === 'body'
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-900/40'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                }`}
+              >
+                <Scan className="w-3.5 h-3.5 text-cyan-300" />
+                <span>Carroceria HD & Laser</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setInspectionTab('360')}
+                className={`px-3.5 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition-all whitespace-nowrap ${
+                  inspectionTab === '360'
+                    ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/30 font-black'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                }`}
+              >
+                <RotateCw className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Varredura 360°</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setInspectionTab('engine')}
+                className={`px-3.5 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition-all whitespace-nowrap ${
+                  inspectionTab === 'engine'
+                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-900/40'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                }`}
+              >
+                <Volume2 className="w-3.5 h-3.5 text-indigo-300" />
+                <span>Diagnóstico do Motor</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setInspectionTab('tires')}
+                className={`px-3.5 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition-all whitespace-nowrap ${
+                  inspectionTab === 'tires'
+                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-900/40'
+                    : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                }`}
+              >
+                <Disc className="w-3.5 h-3.5 text-emerald-300" />
+                <span>Scanner de Pneus</span>
+              </button>
+            </div>
+
+            {/* Renderização Condicional da Inspeção Selecionada */}
+            {inspectionTab === '360' && (
+              <Vehicle360Viewer
+                vehicleImage={car.image || car.imagem}
+                carName={car.name}
+                damagePoints={currentDamagePoints}
+              />
+            )}
+
+            {inspectionTab === 'engine' && (
+              <EngineAcousticScanner car={car} />
+            )}
+
+            {inspectionTab === 'tires' && (
+              <TireDepthScanner car={car} />
+            )}
+
+            {inspectionTab === 'body' && (
+              /* Unified Scanner Pericial IA Viewer */
+              <div className="relative rounded-3xl overflow-hidden bg-slate-900 border border-slate-800 shadow-2xl">
+                {/* Top Bar: Scanner Pericial IA Status & Action */}
+                <div className="p-4 bg-slate-950/95 border-b border-slate-800 flex flex-wrap items-center justify-between gap-3">
                 <div className="flex items-center gap-3">
                   <div className="p-2.5 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 shrink-0">
                     <Scan className="w-5 h-5" />
@@ -519,6 +597,7 @@ export default function ShowcaseVehicleDetails() {
                 )}
               </AnimatePresence>
             </div>
+            )}
 
             {/* Dossiê de Transparência Automatch */}
             <div className="bg-slate-900/80 rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-xl space-y-6">

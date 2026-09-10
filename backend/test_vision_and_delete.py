@@ -140,9 +140,68 @@ def run_tests():
     print(f"Veículo com ID {car_id} confirmado como excluído (404 Not Found)!")
     print("✅ TESTE 4 PASSOU COM SUCESSO!")
 
+    # -------------------------------------------------------------------------
+    # TESTE 5: Diagnóstico Acústico do Motor por IA (POST /api/analise-acustica)
+    # -------------------------------------------------------------------------
+    print("\n[TESTE 5] Diagnóstico Acústico do Motor por IA (Automatch Engine Sound)...")
+    resp5 = client.post("/api/analise-acustica", json={
+        "car_context": {
+            "km": 42000,
+            "specs": {
+                "motor": "2.0 TSI Turbo",
+                "combustivel": "Gasolina"
+            }
+        }
+    })
+    assert resp5.status_code == 200, f"Falha na rota acústica: {resp5.text}"
+    data5 = resp5.json()
+    print(f"Score do Motor: {data5.get('score_motor')}% | Status: {data5.get('status_geral')}")
+    print(f"Laudo Acústico: {data5.get('laudo_resumo')}")
+    assert data5.get("status") == "success"
+    assert data5.get("score_motor") >= 90
+    assert len(data5.get("itens_checados")) >= 4
+    assert len(data5.get("waveform_data")) > 0
+    print("✅ TESTE 5 PASSOU COM SUCESSO!")
+
+    # -------------------------------------------------------------------------
+    # TESTE 6: Scanner IA de Desgaste de Pneus (POST /api/analise-pneus)
+    # -------------------------------------------------------------------------
+    print("\n[TESTE 6] Scanner IA de Desgaste de Pneus (Tread Depth Scanner)...")
+    resp6 = client.post("/api/analise-pneus", json={
+        "posicao_roda": "dianteiro_esquerdo",
+        "car_context": {"km": 42000}
+    })
+    assert resp6.status_code == 200, f"Falha na rota de pneus: {resp6.text}"
+    data6 = resp6.json()
+    print(f"Posição: {data6.get('posicao_label')} | Sulco: {data6.get('profundidade_mm')}mm | CONTRAN: {data6.get('aprovado_contran')}")
+    assert data6.get("status") == "success"
+    assert data6.get("profundidade_mm") >= 1.6
+    assert data6.get("aprovado_contran") is True
+    assert data6.get("km_estimado_restante") > 0
+    print("✅ TESTE 6 PASSOU COM SUCESSO!")
+
+    # -------------------------------------------------------------------------
+    # TESTE 7: Perícia 360° do Veículo (POST /api/analise-360)
+    # -------------------------------------------------------------------------
+    print("\n[TESTE 7] Perícia 360° Interativa do Veículo...")
+    resp7 = client.post("/api/analise-360", json={
+        "car_context": {"km": 42000},
+        "preexisting_damages": [
+            {"id": 1, "x": 35.0, "y": 55.0, "type": "arranhão", "description": "Arranhão lateral"}
+        ]
+    })
+    assert resp7.status_code == 200, f"Falha na rota 360: {resp7.text}"
+    data7 = resp7.json()
+    print(f"Total Ângulos Mapeados: {data7.get('total_angulos')} | Score 360: {data7.get('score_geral_360')}%")
+    assert data7.get("status") == "success"
+    assert data7.get("total_angulos") == 8
+    assert len(data7.get("hotspots_360")) == 1
+    print("✅ TESTE 7 PASSOU COM SUCESSO!")
+
     print("\n" + "=" * 70)
-    print("🎉 TODOS OS TESTES FORAM CONCLUÍDOS COM 100% DE SUCESSO!")
+    print("🎉 TODOS OS 7 TESTES FORAM CONCLUÍDOS COM 100% DE SUCESSO!")
     print("=" * 70)
 
 if __name__ == "__main__":
     run_tests()
+
