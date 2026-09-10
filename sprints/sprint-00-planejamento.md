@@ -1,37 +1,36 @@
-# Sprint 00 - Planejamento
+# Sprint 00 — Planejamento Inicial do Projeto Automatch
 
-## Contexto
+## 1. Contexto
+Início do Projeto Integrador no curso de Análise e Desenvolvimento de Sistemas (CEUB). A equipe identificou a dor crítica no mercado de seminovos de compra e venda sem laudo técnico pericial confiável e a falta de ferramentas digitais avançadas para análise remota de lataria, motor e pneus.
 
-Descreva o ponto de partida da disciplina, as restrições iniciais, as premissas conhecidas e o escopo que motivou a organização da sprint de planejamento.
+## 2. Equipe & Papéis
+- **Carlos Wilson**: Arquiteto de Software, Engenheiro Fullstack e Especialista em IA / Visão Computacional.
+- **Prof. Flávio César**: Professor Orientador da Disciplina de Projeto Integrador.
+- **Equipe Automatch**: Desenvolvimento, testes de integração e documentação técnica.
 
-## Equipe
+## 3. Cadência Escolhida
+- **Duração das Sprints**: Sprints quinzenais com entregas contínuas.
+- **Checkpoints**: Revisões de sprint e alinhamento de entregáveis.
+- **Versionamento**: Git com commits semânticos e branches por feature.
 
-Liste os participantes, a turma, a disciplina e demais informações relevantes para identificar o grupo responsável.
+## 4. Problema Central da Sprint
+Estruturar a base arquitetural conteinerizada com Docker Compose, definir a stack tecnológica e projetar os microsserviços de Backend (FastAPI), Frontend (React/Vite), Banco de Dados (PostgreSQL), Cache (Redis) e Gateway de Entrada (Nginx).
 
-## Papéis
+## 5. Objetivo da Sprint
+Entregar o ambiente de desenvolvimento 100% funcional com o catálogo inicial, integração com a Tabela FIPE, banco de dados inicializado com seed e a suíte de testes de integração automatizados.
 
-Registre os papéis assumidos pelo grupo, como responsável por produto, facilitação, documentação, desenvolvimento, validação ou comunicação.
+## 6. Riscos Iniciais e Mitigações
+- *Risco de dependência de APIs externas*: Criação de camada de fallback no backend para consultas FIPE e DETRAN.
+- *Risco de desempenho no upload de imagens*: Implantação de compressão automática LANCZOS no backend.
 
-## Cadência escolhida
+## 7. Backlog Inicial Priorizado
+1. `[US-01]` Configuração da orquestração Docker Compose com 5 serviços.
+2. `[US-02]` Criação da API REST assíncrona com FastAPI e autenticação JWT.
+3. `[US-03]` Desenvolvimento do catálogo vitrine com filtros e busca.
+4. `[US-04]` Implementação do Hub Pericial com Visão Computacional, Varredura 360°, Diagnóstico Acústico e Scanner de Pneus.
+5. `[US-05]` Desenvolvimento do simulador "Troca com Troco" e Sincronizador Multicanal B2B.
 
-Explique a duração da sprint, a frequência de checkpoints, os momentos de revisão e o formato de acompanhamento adotado.
-
-## Problema
-
-Explique o desafio principal que a equipe precisa resolver durante o ciclo inicial de organização.
-
-## Objetivo
-
-Defina o resultado esperado para encerrar o planejamento com clareza e critério verificável.
-
-## Riscos
-
-Liste os riscos iniciais, as dependências, as restrições de prazo, as lacunas de conhecimento ou os fatores que possam comprometer a execução.
-
-## Backlog inicial
-
-Relacione os itens priorizados para o início do trabalho, com breve descrição e referência para as `issues`, quando existirem.
-
-## Acordos de trabalho
-
-Documente os combinados de comunicação, a definição de pronto, a revisão, o registro de evidências e os critérios de colaboração da equipe.
+## 8. Acordos de Trabalho (Definition of Done)
+- Código fonte versionado e limpo sem dependências órfãs.
+- Suíte de testes automatizados com 100% de aprovação.
+- Documentação sincronizada com o template institucional do CEUB.
