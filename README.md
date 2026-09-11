@@ -8,7 +8,7 @@
 [![Redis](https://img.shields.io/badge/Redis-7-DC382D?logo=redis&logoColor=white)](https://redis.io/)
 [![OpenCV](https://img.shields.io/badge/OpenCV-Computer%20Vision-5C3EE8?logo=opencv&logoColor=white)](https://opencv.org/)
 
-O **Automatch** é um ecossistema digital automotivo Fullstack de alto padrão projetado para transformar a compra, venda e auditoria de veículos seminovos e usados no Brasil. A plataforma combina **visão computacional pericial**, **diagnóstico acústico do motor por IA**, **medição micrométrica de pneus**, **varredura 360° interativa** e **cruzamento cadastral em tempo real (DETRAN e Tabela FIPE)**.
+O **Automatch** é um ecossistema digital automotivo Fullstack de alto padrão projetado para transformar a compra, venda e auditoria de veículos seminovos e usados no Brasil. A plataforma combina **visão computacional pericial**, **varredura 360° interativa** e **cruzamento cadastral em tempo real (DETRAN e Tabela FIPE)**.
 
 ---
 
@@ -16,15 +16,13 @@ O **Automatch** é um ecossistema digital automotivo Fullstack de alto padrão p
 
 O sistema adota uma arquitetura conteinerizada em microsserviços com isolamento de rede orquestrada por um **API Gateway centralizado (Nginx)**:
 
-* **Frontend:** React 18, Vite, Framer Motion, Lucide Icons, Tailwind CSS e Web Audio DSP.
+* **Frontend:** React 18, Vite, Framer Motion, Lucide Icons e Tailwind CSS.
 * **Backend:** Python 3.11, FastAPI assíncrono, SQLAlchemy ORM e Pydantic v2.
 * **Banco de Dados:** PostgreSQL 15 (persistência relacional) e Redis 7 (cache de placas e sessões).
 * **Segurança & Criptografia:** Hash seguro de senhas com **PBKDF2-HMAC-SHA256** (salt aleatório) e autenticação stateless com **JWT (RFC 7519)** assinado via HMAC-SHA256.
 * **Hub Pericial IA Multidimensional:**
   * **Ultralytics YOLOv8 & OpenCV:** Detecção de classes veiculares, contornos e deformidades de lataria.
   * **Google Gemini 1.5 Flash Vision:** Scanner pericial visual com pré-compressão e Chatbot Consultivo (RAG).
-  * **Automatch Engine Sound AI:** Análise espectral de áudio da marcha lenta com síntese sonora via Web Audio API.
-  * **Tread Depth Scanner:** Medição digital de sulcos de pneus em mm conforme a Resolução 558/80 do CONTRAN.
 * **Agendador em Background:** APScheduler para auditoria periódica (a cada 60s) de veículos na Watchlist DETRAN.
 * **Gateway & Infraestrutura:** Docker Compose unificando portas e rotas com Nginx Reverse Proxy.
 
@@ -37,8 +35,7 @@ Automatch/
 ├── docker-compose.yml              # Orquestração dos 5 containers (db, redis, backend, frontend, gateway)
 ├── .env.example                    # Template de variáveis de ambiente
 ├── .gitignore                      # Regras de exclusão Git padronizadas
-├── README.md                       # Documentação principal e guia do projeto
-├── BACKLOG.md                      # Backlog de requisitos e sprints
+├── README.md                       # Documentação principal e guia do projeto                      
 ├── backend/                        # Microsserviço de API (FastAPI / Python 3.11)
 │   ├── main.py                     # Entrypoint da aplicação, ciclo de vida e rotas
 │   ├── models.py                   # Modelos relacionais SQLAlchemy (Store, Car, User, etc.)
@@ -52,7 +49,7 @@ Automatch/
 │   ├── Dockerfile                  # Imagem conteinerizada do Backend
 │   ├── alembic/                    # Migrações versionadas do banco de dados
 │   ├── routers/                    # Endpoints modularizados (auth, cars, detran, ai_vision, uploads)
-│   └── services/                   # Motores de IA (ai_service com 360, motor e pneus, pricing_service)
+│   └── services/                   # Motores de IA (ai_service com 360 e pricing_service)
 ├── frontend/                       # Aplicação Web SPA (React 18 / Vite / Tailwind)
 │   ├── package.json                # Dependências Node.js
 │   ├── vite.config.js              # Configuração do Vite e plugins
@@ -62,7 +59,7 @@ Automatch/
 │       ├── contexts/               # AuthContext para gestão de sessão e autenticação
 │       ├── pages/                  # Telas ativas (Home, ShowcaseCatalog, ShowcaseVehicleDetails, etc.)
 │       ├── components/             # Componentes modulares
-│       │   ├── vehicle/            # Vehicle360Viewer, EngineAcousticScanner, TireDepthScanner, etc.
+│       │   ├── vehicle/            # Vehicle360Viewer, etc.
 │       │   ├── ui/                 # Componentes visuais, modais e seletores
 │       │   └── layout/             # Navbar unificada e Footer
 │       └── data/                   # Gerenciadores de estoque, plansData e mocks oficiais
@@ -120,7 +117,7 @@ docker compose ps
 ```
 
 #### 6. Executar a Suíte de Testes Automatizados:
-O projeto conta com testes de integração cobrindo visão computacional, ciclo de exclusão de anúncios, diagnóstico acústico, scanner de pneus, visão 360°, simulador Troca com Troco, radar de alertas e integrações multicanal:
+O projeto conta com testes de integração cobrindo visão computacional, ciclo de exclusão de anúncios, visão 360°, simulador Troca com Troco, radar de alertas e integrações multicanal:
 ```bash
 docker compose exec backend python test_vision_and_delete.py
 ```
@@ -187,8 +184,6 @@ O banco de dados é inicializado automaticamente com o usuário administrador:
 ### 1. Hub Pericial Multidimensional IA
 * **Scanner de Carroceria HD:** Mapeamento de riscos e amassados com pins (X, Y), classificação de gravidade e custo de reparo em R$.
 * **Varredura 360° Interativa (`POST /api/analise-360`):** Controle contínuo de rotação por arraste ou giro automático com distribuição de avarias em 8 quadrantes angulares.
-* **Diagnóstico Acústico do Motor (`POST /api/analise-acustica`):** Espectrograma dinâmico com medição de RPM (~820 RPM), frequência fundamental (27.3 Hz), checklist mecânico e sintetizador de áudio via Web Audio API.
-* **Tread Depth Scanner de Pneus (`POST /api/analise-pneus`):** Medição de sulco em mm com régua colorida, validação do limite mínimo de 1.6mm da Resolução 558/80 do CONTRAN e projeção de km restante.
 
 ### 2. Vitrine, Preço FIPE & Dossiê de Transparência
 * **Catálogo Multifacetado:** Busca com filtros por marca, modelo, ano, faixa de preço, transmissão e combustível.
@@ -204,7 +199,6 @@ O banco de dados é inicializado automaticamente com o usuário administrador:
 * **Consultor Virtual IA (RAG / Gemini):** Assistente contextualizado nos dados do automóvel visualizado.
 * **Negociação Direta:** Chat em tempo real com o vendedor e integração para contato via WhatsApp.
 * **Login/Cadastro Unificado:** Modal centralizado no cabeçalho com autenticação criptografada BCrypt e tokens JWT.
-* **Planos de Assinatura & Checkout:** 4 modalidades (Gratuito, Pro, Revenda, Concessionária) integradas com fluxo de pagamento.
 
 ### 5. Negociação Avançada & Fintech Automotiva
 * **Simulador 'Troca com Troco' (`POST /api/troca-com-troco`):** Avaliação instantânea do veículo usado do comprador via placa/modelo/km. Calcula se o comprador tem troco a receber em dinheiro via Pix ou saldo a financiar, integrando simulador multi-bancos com Itaú, Santander e BV Financeira.
