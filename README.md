@@ -59,7 +59,7 @@ Automatch/
 │       ├── contexts/               # AuthContext para gestão de sessão e autenticação
 │       ├── pages/                  # Telas ativas (Home, ShowcaseCatalog, ShowcaseVehicleDetails, etc.)
 │       ├── components/             # Componentes modulares
-│       │   ├── vehicle/            # Vehicle360Viewer, etc.
+│       │   ├── vehicle/            # Vehicle360Viewer, Automatch Scan, PriceAlertModal, AIChatBox, etc.
 │       │   ├── ui/                 # Componentes visuais, modais e seletores
 │       │   └── layout/             # Navbar unificada e Footer
 │       └── data/                   # Gerenciadores de estoque, plansData e mocks oficiais
@@ -201,11 +201,10 @@ O banco de dados é inicializado automaticamente com o usuário administrador:
 * **Login/Cadastro Unificado:** Modal centralizado no cabeçalho com autenticação criptografada BCrypt e tokens JWT.
 
 ### 5. Negociação Avançada & Fintech Automotiva
-* **Simulador 'Troca com Troco' (`POST /api/troca-com-troco`):** Avaliação instantânea do veículo usado do comprador via placa/modelo/km. Calcula se o comprador tem troco a receber em dinheiro via Pix ou saldo a financiar, integrando simulador multi-bancos com Itaú, Santander e BV Financeira.
 * **Radar de Oportunidades & Alerta de Queda de Preço (`POST /api/alerts`):** Ativação de alertas inteligentes por veículo com notificações via WhatsApp, E-mail ou WebPush.
 
 ### 6. Integrações B2B & Exportação Multicanal
-* **Sincronizador Multicanal de Estoque (`GET/POST /api/integrations`):** Hub de integração B2B que sincroniza anúncios em 1 clique para Webmotors, OLX Autos, iCarros e Mercado Livre Veículos.
+* **Sincronizador Multicanal de Estoque (`GET/POST /api/integrations`):** Hub de integração B2B que sincroniza anúncios em 1 clique para Webmotors, OLX Autos e Autocerto
 * **Feed XML Automotivo (`GET /api/integrations/feed.xml`):** Exportação padronizada compatível com os principais agregadores automotivos.
 
 ---
