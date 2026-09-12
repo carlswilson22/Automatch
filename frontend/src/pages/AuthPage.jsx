@@ -84,10 +84,18 @@ const AuthPage = () => {
       setTimeout(() => {
         if (selectedPlanId && selectedPlanId !== 'free') {
           navigate(`/checkout?type=plan&planId=${selectedPlanId}`);
+        } else if (!isLogin) {
+          if (accountType === 'seller') {
+            navigate('/novo-anuncio');
+          } else if (accountType === 'store') {
+            navigate('/dashboard');
+          } else {
+            navigate('/encontrar');
+          }
         } else {
           navigate(from, { replace: true });
         }
-      }, 1200);
+      }, 1000);
     } catch (err) {
       setError(err.message || 'Ocorreu um erro inesperado.');
       setIsLoading(false);
