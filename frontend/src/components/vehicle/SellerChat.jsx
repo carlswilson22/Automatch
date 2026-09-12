@@ -22,7 +22,7 @@ const SellerChat = ({ seller }) => {
         'Excelente! O carro está disponível para vistoria presencial e test-drive.',
         'Aceito proposta de troca com avaliação justa da sua entrada.',
         'Todas as revisões foram feitas na concessionária e temos o manual com chave reserva.',
-        'Caso queira, você pode efetuar a reserva online com sinal reembolsável para garantir exclusividade!',
+        'O carro está 100% revisado e disponível para visita presencial e test-drive! Podemos agendar?',
       ];
       setMessages(m => [...m, { from: 'seller', text: replies[Math.floor(Math.random() * replies.length)] }]);
     }, 1000);

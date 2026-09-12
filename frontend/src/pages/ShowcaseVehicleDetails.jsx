@@ -360,11 +360,15 @@ export default function ShowcaseVehicleDetails() {
               <Globe2 className="w-5 h-5" />
             </button>
             <button 
-              onClick={() => navigate(`/checkout?type=vehicle&vehicleId=${car.id}`)}
-              className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-full font-black text-xs uppercase tracking-wider transition-all shadow-lg shadow-emerald-900/40 flex items-center gap-2"
+              onClick={() => {
+                setActiveChat('seller');
+                const chatEl = document.getElementById('chat-section');
+                if (chatEl) chatEl.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-5 py-2.5 rounded-full font-black text-xs uppercase tracking-wider transition-all shadow-lg shadow-emerald-900/40 flex items-center gap-2 active:scale-95"
             >
-              <Lock className="w-4 h-4" />
-              <span>Reservar</span>
+              <MessageCircle className="w-4 h-4" />
+              <span>Falar com Vendedor</span>
             </button>
           </div>
         </div>
@@ -841,18 +845,14 @@ export default function ShowcaseVehicleDetails() {
               {/* Main CTAs */}
               <div className="space-y-3 pt-4">
                 <button
-                  onClick={() => navigate(`/checkout?type=vehicle&vehicleId=${car.id}`)}
-                  className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-black text-sm uppercase tracking-wider transition-all shadow-xl shadow-emerald-900/40 flex items-center justify-center gap-2 transform active:scale-95"
+                  onClick={() => {
+                    setActiveChat('seller');
+                    const chatEl = document.getElementById('chat-section');
+                    if (chatEl) chatEl.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="w-full py-4 bg-gradient-to-r from-emerald-500 via-teal-600 to-emerald-600 hover:opacity-95 text-white rounded-2xl font-black text-sm uppercase tracking-wider transition-all shadow-xl shadow-emerald-950/50 flex items-center justify-center gap-2.5 transform active:scale-95"
                 >
-                  <Lock className="w-4 h-4" />
-                  <span>Reservar com Sinal Online</span>
-                </button>
-
-                <button
-                  onClick={() => setActiveChat('seller')}
-                  className="w-full py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-2xl font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 border border-slate-700"
-                >
-                  <MessageCircle className="w-4 h-4 text-emerald-400" />
+                  <MessageCircle className="w-5 h-5 text-emerald-200" />
                   <span>Falar com Vendedor</span>
                 </button>
 
@@ -889,7 +889,7 @@ export default function ShowcaseVehicleDetails() {
             />
 
             {/* Interactive Live Chat (AI / Seller) */}
-            <div className="space-y-3">
+            <div id="chat-section" className="space-y-3 scroll-mt-24">
               <div className="flex gap-2 p-1.5 bg-slate-900 rounded-2xl border border-slate-800">
                 <button
                   onClick={() => setActiveChat('ai')}

@@ -174,10 +174,10 @@ O **Automatch** tem como missão eliminar a assimetria de informações e fraude
   - [x] Dedução estimada por tipo de avaria (arranhão: R$ 300, amassado: R$ 1.200, farol: R$ 800).
   - [x] Piso de segurança impedindo valores abaixo de 50% da FIPE.
 
-#### 🏷️ [ATM-FIN-02] Checkout Transacional com Emissão de Protocolo
+#### 🏷️ [ATM-FIN-02] Checkout Transacional com Emissão de Protocolo (Assinaturas de Planos)
 * **Prioridade:** 🔴 `P0 - Must Have` | **Esforço:** 5 SP | **Status:** ✅ `Concluído`
 * **Camada:** Fullstack
-* **Descrição:** *Como* comprador, *quero* reservar um veículo com sinal reembolsável de R$ 1.500 via Pix ou Cartão, *para que* o automóvel fique reservado para mim com garantia documental.
+* **Descrição:** *Como* usuário ou lojista, *quero* assinar planos profissionais e concessionária via Pix ou Cartão com emissão de protocolo, *para que* tenha acesso a recursos premium de publicação e inteligência de mercado. (Nos anúncios, a negociação ocorre diretamente com o vendedor).
 * **Critérios de Aceite:**
   - [x] Endpoint `POST /api/checkout` persistindo a transação na tabela `payment_orders`.
   - [x] Emissão de protocolo autenticado (`ATM-XXXXXX`) e comprovante na interface.

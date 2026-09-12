@@ -20,6 +20,13 @@ const CheckoutPage = () => {
   const billing = searchParams.get('billing') || 'monthly';
   const vehicleId = searchParams.get('vehicleId');
 
+  // Redireciona tentativa de reserva com sinal para a vitrine
+  useEffect(() => {
+    if (type === 'vehicle') {
+      navigate(vehicleId ? `/encontrar/${vehicleId}` : '/encontrar', { replace: true });
+    }
+  }, [type, vehicleId, navigate]);
+
   const selectedPlan = PLANS_DATA.find(p => p.id === planId) || PLANS_DATA[1];
   const selectedVehicle = showcaseCars.find(c => c.id === vehicleId) || showcaseCars[0];
 
