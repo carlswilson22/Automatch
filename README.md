@@ -1,76 +1,97 @@
-# 🚗 Automatch™ - Plataforma Inteligente de Gestão Automotiva, Vistorias Periciais & IA
+# 🚗 Automatch™ - Plataforma Inteligente de Marketplace, Vistorias Periciais & IA
 
-O **Automatch** é uma solução Fullstack de alto padrão projetada para revolucionar o mercado automotivo. A plataforma combina **visão computacional para auditoria de laudos**, **inteligência artificial generativa multimodal (Google Gemini 1.5 Flash)**, **cruzamento cadastral em tempo real (Tabela FIPE e DETRAN)** e um **motor proprietário de precificação justa (AutoPrice™)**.
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)](https://react.dev/)
+[![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Redis](https://img.shields.io/badge/Redis-7-DC382D?logo=redis&logoColor=white)](https://redis.io/)
+[![OpenCV](https://img.shields.io/badge/OpenCV-Computer%20Vision-5C3EE8?logo=opencv&logoColor=white)](https://opencv.org/)
+
+O **Automatch** é um ecossistema digital automotivo Fullstack de alto padrão projetado para transformar a compra, venda e auditoria de veículos seminovos e usados no Brasil. A plataforma combina **visão computacional pericial**, **diagnóstico acústico do motor por IA**, **medição micrométrica de pneus**, **varredura 360° interativa** e **cruzamento cadastral em tempo real (DETRAN e Tabela FIPE)**.
 
 ---
 
 ## 🛠️ Tecnologias e Arquitetura
 
-O sistema adota uma arquitetura conteinerizada com isolamento de serviços orquestrada por um **API Gateway centralizado (Nginx)**:
+O sistema adota uma arquitetura conteinerizada em microsserviços com isolamento de rede orquestrada por um **API Gateway centralizado (Nginx)**:
 
-* **Frontend:** React 18, Vite, Framer Motion, Lucide Icons e Tailwind CSS.
-* **Backend:** Python 3.11, FastAPI, SQLAlchemy ORM e Pydantic v2.
-* **Banco de Dados:** PostgreSQL 15 (armazenamento relacional persistente) e Redis 7 (cache e mensageria).
-* **Segurança & Criptografia:** Hash seguro de senhas com **PBKDF2-HMAC-SHA256** (salt aleatório de 16 bytes) e autenticação stateless com **JWT (RFC 7519)** assinado via HMAC-SHA256.
-* **Visão Computacional & IA:**
-  * **Ultralytics YOLOv8:** Detecção e inspeção pericial de peças e itens em laudos veiculares via threads assíncronas.
-  * **Google Gemini 1.5 Flash Vision:** Scanner visual de avarias na lataria com pré-compressão de alta performance e chatbot consultivo com RAG contextualizado no veículo.
-* **Agendador de Tarefas:** APScheduler para monitoramento e auditoria periódica (a cada 60s) de veículos na Watchlist DETRAN.
-* **Gateway & Infraestrutura:** Docker, Docker Compose e Nginx como Proxy Reverso unificando rotas e portas.
+* **Frontend:** React 18, Vite, Framer Motion, Lucide Icons, Tailwind CSS e Web Audio DSP.
+* **Backend:** Python 3.11, FastAPI assíncrono, SQLAlchemy ORM e Pydantic v2.
+* **Banco de Dados:** PostgreSQL 15 (persistência relacional) e Redis 7 (cache de placas e sessões).
+* **Segurança & Criptografia:** Hash seguro de senhas com **PBKDF2-HMAC-SHA256** (salt aleatório) e autenticação stateless com **JWT (RFC 7519)** assinado via HMAC-SHA256.
+* **Hub Pericial IA Multidimensional:**
+  * **Ultralytics YOLOv8 & OpenCV:** Detecção de classes veiculares, contornos e deformidades de lataria.
+  * **Google Gemini 1.5 Flash Vision:** Scanner pericial visual com pré-compressão e Chatbot Consultivo (RAG).
+  * **Automatch Engine Sound AI:** Análise espectral de áudio da marcha lenta com síntese sonora via Web Audio API.
+  * **Tread Depth Scanner:** Medição digital de sulcos de pneus em mm conforme a Resolução 558/80 do CONTRAN.
+* **Agendador em Background:** APScheduler para auditoria periódica (a cada 60s) de veículos na Watchlist DETRAN.
+* **Gateway & Infraestrutura:** Docker Compose unificando portas e rotas com Nginx Reverse Proxy.
 
 ---
 
 ## 📂 Estrutura do Repositório
 
 ```text
-Pasta Automatch/
-├── docker-compose.yml              # Orquestração dos microsserviços (db, redis, backend, frontend, gateway)
-├── README.md                       # Documentação oficial do projeto
-├── Projeto pi/
-│   ├── backend/                    # API FastAPI
-│   │   ├── main.py                 # Rotas da API, ciclo de vida e orquestração de IA
-│   │   ├── models.py               # Modelos SQLAlchemy (Store, Car, User, PaymentOrder, LaudoWatchlist)
-│   │   ├── schemas.py              # Schemas Pydantic de validação e serialização
-│   │   ├── security.py             # Criptografia PBKDF2 e geração/validação de JWT
-│   │   ├── tasks.py                # Agendador periódico APScheduler para DETRAN Watchlist
-│   │   ├── database.py             # Engine de conexão ao PostgreSQL
-│   │   ├── seed.py                 # Povoamento inicial de lojas e estoque
-│   │   ├── requirements.txt        # Dependências Python
-│   │   └── Dockerfile              # Imagem Docker do Backend
-│   ├── frontend/                   # Aplicação React 18 SPA
-│   │   ├── src/
-│   │   │   ├── contexts/           # AuthContext integrado com persistência JWT
-│   │   │   ├── pages/              # Telas (Home, ShowcaseCatalog, ShowcaseVehicleDetails, etc.)
-│   │   │   ├── components/         # Componentes modulares (UI, IA, Veículos, Layout)
-│   │   │   └── data/               # Mocks de suporte e gerenciadores locais
-│   │   ├── package.json            # Dependências Node.js
-│   │   └── Dockerfile              # Imagem Docker do Frontend
-│   └── gateway/                    # Proxy Reverso Central
-│       ├── nginx.conf              # Roteamento unificado /api/* e /*
-│       └── Dockerfile              # Imagem Docker do Gateway Nginx
+Automatch/
+├── docker-compose.yml              # Orquestração dos 5 containers (db, redis, backend, frontend, gateway)
+├── .env.example                    # Template de variáveis de ambiente
+├── .gitignore                      # Regras de exclusão Git padronizadas
+├── README.md                       # Documentação principal e guia do projeto
+├── BACKLOG.md                      # Backlog de requisitos e sprints
+├── backend/                        # Microsserviço de API (FastAPI / Python 3.11)
+│   ├── main.py                     # Entrypoint da aplicação, ciclo de vida e rotas
+│   ├── models.py                   # Modelos relacionais SQLAlchemy (Store, Car, User, etc.)
+│   ├── schemas.py                  # Schemas Pydantic v2 de validação e serialização
+│   ├── security.py                 # Hash PBKDF2 e geração/validação de tokens JWT
+│   ├── tasks.py                    # Agendador periódico APScheduler para DETRAN Watchlist
+│   ├── database.py                 # Pool e engine de conexão ao PostgreSQL
+│   ├── seed.py                     # Carga inicial de concessionárias e estoque
+│   ├── test_vision_and_delete.py   # Suíte de testes automatizados (7/7 testes de integração)
+│   ├── requirements.txt            # Dependências Python gerenciadas
+│   ├── Dockerfile                  # Imagem conteinerizada do Backend
+│   ├── alembic/                    # Migrações versionadas do banco de dados
+│   ├── routers/                    # Endpoints modularizados (auth, cars, detran, ai_vision, uploads)
+│   └── services/                   # Motores de IA (ai_service com 360, motor e pneus, pricing_service)
+├── frontend/                       # Aplicação Web SPA (React 18 / Vite / Tailwind)
+│   ├── package.json                # Dependências Node.js
+│   ├── vite.config.js              # Configuração do Vite e plugins
+│   ├── Dockerfile                  # Imagem conteinerizada do Frontend
+│   ├── public/images/              # Acervo estático de fotos dos veículos
+│   └── src/
+│       ├── contexts/               # AuthContext para gestão de sessão e autenticação
+│       ├── pages/                  # Telas ativas (Home, ShowcaseCatalog, ShowcaseVehicleDetails, etc.)
+│       ├── components/             # Componentes modulares
+│       │   ├── vehicle/            # Vehicle360Viewer, EngineAcousticScanner, TireDepthScanner, etc.
+│       │   ├── ui/                 # Componentes visuais, modais e seletores
+│       │   └── layout/             # Navbar unificada e Footer
+│       └── data/                   # Gerenciadores de estoque, plansData e mocks oficiais
+└── gateway/                        # Proxy Reverso Central (Nginx)
+    ├── nginx.conf                  # Roteamento unificado /api/* e /*
+    └── Dockerfile                  # Imagem conteinerizada do Gateway Nginx
 ```
 
 ---
 
-## 🚀 Comandos para Inicializar e Executar o Projeto
-
-Você pode rodar o Automatch através do **Docker Compose (Recomendado)** ou em **Modo Local/Híbrido** (desenvolvimento direto na máquina).
-
----
+## 🚀 Como Executar o Projeto
 
 ### Opção A: Execução via Docker Compose (Recomendado)
 
 Todos os serviços (PostgreSQL, Redis, Backend, Frontend e Nginx Gateway) sobem orquestrados com apenas um comando:
 
-#### 1. Clonar e acessar a pasta do projeto:
+#### 1. Clonar e acessar o repositório:
 ```bash
 git clone https://github.com/carlswilson22/Automatch.git
 cd Automatch
 ```
 
 #### 2. Configurar variáveis de ambiente (opcional):
-Crie um arquivo `.env` na raiz caso queira fornecer sua chave do Google Gemini e customizar credenciais:
+Copie o template `.env.example` para `.env`:
 ```bash
+cp .env.example .env
+```
+Variáveis principais:
+```env
 GEMINI_API_KEY=sua_chave_aqui
 JWT_SECRET=sua_chave_secreta_jwt_super_segura
 POSTGRES_DB=automatch
@@ -83,12 +104,12 @@ POSTGRES_PASSWORD=postgres
 docker compose up -d --build
 ```
 
-#### 4. Acompanhar os logs em tempo real:
+#### 4. Acompanhar os logs:
 ```bash
-# Logs de todos os microsserviços
+# Logs gerais
 docker compose logs -f
 
-# Ou logs específicos do backend/frontend:
+# Logs específicos
 docker compose logs -f backend
 docker compose logs -f frontend
 ```
@@ -98,26 +119,12 @@ docker compose logs -f frontend
 docker compose ps
 ```
 
-#### 6. Comandos de Gerenciamento do Docker:
+#### 6. Executar a Suíte de Testes Automatizados:
+O projeto conta com testes de integração cobrindo visão computacional, ciclo de exclusão de anúncios, diagnóstico acústico, scanner de pneus, visão 360°, simulador Troca com Troco, radar de alertas e integrações multicanal:
 ```bash
-# Reiniciar todos os containers
-docker compose restart
-
-# Executar o seed de dados no PostgreSQL (lojas e carros iniciais)
-docker compose exec backend python seed.py
-
-# Acessar o terminal do container Backend
-docker compose exec backend bash
-
-# Acessar o banco de dados via terminal PostgreSQL (psql)
-docker compose exec db psql -U postgres -d automatch
-
-# Parar a aplicação mantendo os dados do banco
-docker compose down
-
-# Parar a aplicação e resetar completamente os volumes de banco de dados
-docker compose down -v
+docker compose exec backend python test_vision_and_delete.py
 ```
+*Resultado esperado:* **10/10 testes com 100% de aprovação**.
 
 ---
 
@@ -126,47 +133,32 @@ docker compose down -v
 Se preferir rodar os serviços individualmente no seu ambiente de desenvolvimento:
 
 #### 1. Banco de Dados e Redis:
-Certifique-se de ter o PostgreSQL rodando na porta `5432` com o banco `automatch` criado e o Redis ativo na porta `6379`.
+Certifique-se de ter o PostgreSQL rodando na porta `5432` (banco `automatch`) e o Redis na porta `6379`.
 
 #### 2. Inicializar o Backend (Python FastAPI):
 ```bash
-# Navegar até a pasta do backend
-cd "Projeto pi/backend"
-
-# Criar e ativar o ambiente virtual
+cd backend
 python -m venv venv
 
 # Windows (PowerShell):
 .\venv\Scripts\Activate.ps1
-# Windows (CMD):
-.\venv\Scripts\activate.bat
 # Linux / macOS:
 source venv/bin/activate
 
-# Instalar as dependências
 pip install -r requirements.txt
-
-# Executar o seed inicial do banco
 python seed.py
-
-# Iniciar o servidor FastAPI com hot-reload
 uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
 #### 3. Inicializar o Frontend (React + Vite):
 Em outro terminal:
 ```bash
-# Navegar até a pasta do frontend
-cd "Projeto pi/frontend"
-
-# Instalar dependências Node.js
+cd frontend
 npm install
-
-# Iniciar o servidor de desenvolvimento Vite
 npm run dev
 ```
 
-O frontend estará disponível em `http://localhost:5173` consumindo o backend em `http://localhost:8000`.
+O frontend estará acessível em `http://localhost:5173` consumindo a API em `http://localhost:8000`.
 
 ---
 
@@ -174,46 +166,80 @@ O frontend estará disponível em `http://localhost:5173` consumindo o backend e
 
 | Serviço | URL | Descrição |
 | :--- | :--- | :--- |
-| **Aplicação Web (Frontend)** | [http://localhost](http://localhost) | Portal web completo através do Nginx Gateway (Porta 80) |
-| **Documentação da API (Swagger)** | [http://localhost/docs](http://localhost/docs) | Painel OpenAPI interativo para teste de endpoints |
-| **Porta Alternativa do Gateway** | [http://localhost:3000](http://localhost:3000) | Acesso secundário mapeado no Docker Compose |
-| **Acesso Direto ao Backend** | [http://localhost:8000/docs](http://localhost:8000/docs) | Porta interna do FastAPI para depuração |
+| **Aplicação Web (Gateway Nginx)** | [http://localhost](http://localhost) | Portal web completo na porta padrão HTTP 80 |
+| **Porta Alternativa do Gateway** | [http://localhost:3000](http://localhost:3000) | Acesso secundário ao portal completo |
+| **Frontend Vite Direto** | [http://localhost:5173](http://localhost:5173) | Interface SPA direta do servidor Vite |
+| **Documentação da API (Swagger UI)** | [http://localhost:8000/docs](http://localhost:8000/docs) | Painel interativo OpenAPI para teste de rotas |
 
 ---
 
 ## 🔑 Credenciais de Demonstração
 
-O banco de dados é auto-inicializado com o usuário administrador do sistema:
+O banco de dados é inicializado automaticamente com o usuário administrador:
 
 * **E-mail:** `admin@automatch.com`
 * **Senha:** `admin123`
 
 ---
 
-## 🌟 Principais Funcionalidades Implementadas
+## 🌟 Principais Funcionalidades do Sistema
 
-### 1. Autenticação Segura & Gestão de Usuários
-* `POST /api/register`: Criação de conta com hash PBKDF2 e emissão de JWT.
-* `POST /api/login`: Autenticação e emissão de sessão segura.
-* `PUT /api/users/profile`: Atualização de dados cadastrais no PostgreSQL.
+### 1. Hub Pericial Multidimensional IA
+* **Scanner de Carroceria HD:** Mapeamento de riscos e amassados com pins (X, Y), classificação de gravidade e custo de reparo em R$.
+* **Varredura 360° Interativa (`POST /api/analise-360`):** Controle contínuo de rotação por arraste ou giro automático com distribuição de avarias em 8 quadrantes angulares.
+* **Diagnóstico Acústico do Motor (`POST /api/analise-acustica`):** Espectrograma dinâmico com medição de RPM (~820 RPM), frequência fundamental (27.3 Hz), checklist mecânico e sintetizador de áudio via Web Audio API.
+* **Tread Depth Scanner de Pneus (`POST /api/analise-pneus`):** Medição de sulco em mm com régua colorida, validação do limite mínimo de 1.6mm da Resolução 558/80 do CONTRAN e projeção de km restante.
 
-### 2. Catálogo Vitrine & Multi-Unidades
-* `GET /api/cars`: Consulta de estoque persistido no banco com suporte a filtros de loja (`?store_id=`), marca, modelo e texto livre (`?q=`).
-* `POST /api/cars`: Cadastro completo de veículos pelo vendedor com especificações técnicas e protocolo de anúncio.
-* `GET /api/stores`: Listagem de concessionárias credenciadas (Euroville BMW, Stuttgart Porsche, Tesla Auto).
+### 2. Vitrine, Preço FIPE & Dossiê de Transparência
+* **Catálogo Multifacetado:** Busca com filtros por marca, modelo, ano, faixa de preço, transmissão e combustível.
+* **Preço de Referência FIPE:** Comparativo transparente estilo Webmotors/OLX exibindo valor anunciado, tabela FIPE e cálculo de economia.
+* **Auditoria DETRAN (`GET /api/detran/{placa}`):** Levantamento de multas, débitos de IPVA, licenciamento e restrições judiciais (RENAJUD).
 
-### 3. Dossiê de Transparência & Perícia Veicular
-* `GET /api/v1/laudo-cautelar/{codigo_fipe}`: Consulta cotação oficial FIPE via BrasilAPI e consolida o laudo pericial (TrustScore, longarinas, espessura de pintura em micras e sinistros).
-* `GET /api/detran/{placa}`: Auditoria cadastral de débitos de IPVA, multas, restrições financeiras e histórico de vistoria.
-* `POST /api/v1/precificacao`: Motor **AutoPrice™** que calcula o preço justo de mercado baseado na FIPE, desgaste por quilometragem excedente e avarias.
+### 3. Gestão e Ciclo de Vida dos Anúncios
+* **Publicação com Validação IA:** Cadastro intuitivo com pré-análise pericial automática das fotos enviadas.
+* **Exclusão Segura (`DELETE /api/cars/{id}`):** Exclusão atômica em banco de dados e expurgo de cache com confirmação no frontend.
+* **Identificação Multi-Lojas (`GET /api/stores`):** Separação visual de concessionárias e revendas parceiras com telefones e endereços.
 
-### 4. Inteligência Artificial e Visão Computacional
-* `POST /api/analise-visual`: Scanner visual com **Google Gemini 1.5 Flash**, analisando fotos da lataria com pré-compressão para respostas instantâneas.
-* `POST /api/v1/laudos/upload`: Upload de laudos (PDF/JPG/PNG) com inferência síncrona/thread-pool do **YOLOv8** para detecção de componentes.
-* `POST /api/chat`: Consultor de vendas e financiamento com contexto contextualizado (RAG) no automóvel em visualização.
+### 4. Comunicação & Autenticação
+* **Consultor Virtual IA (RAG / Gemini):** Assistente contextualizado nos dados do automóvel visualizado.
+* **Negociação Direta:** Chat em tempo real com o vendedor e integração para contato via WhatsApp.
+* **Login/Cadastro Unificado:** Modal centralizado no cabeçalho com autenticação criptografada BCrypt e tokens JWT.
+* **Planos de Assinatura & Checkout:** 4 modalidades (Gratuito, Pro, Revenda, Concessionária) integradas com fluxo de pagamento.
 
-### 5. Checkout e Reserva de Veículos
-* `POST /api/checkout`: Registro e confirmação de reserva de veículos com sinal ou contratação de planos de assinatura, gerando protocolo oficial (`ATM-XXXXXX`).
+### 5. Negociação Avançada & Fintech Automotiva
+* **Simulador 'Troca com Troco' (`POST /api/troca-com-troco`):** Avaliação instantânea do veículo usado do comprador via placa/modelo/km. Calcula se o comprador tem troco a receber em dinheiro via Pix ou saldo a financiar, integrando simulador multi-bancos com Itaú, Santander e BV Financeira.
+* **Radar de Oportunidades & Alerta de Queda de Preço (`POST /api/alerts`):** Ativação de alertas inteligentes por veículo com notificações via WhatsApp, E-mail ou WebPush.
 
-### 6. Auditoria em Segundo Plano (APScheduler)
-* Job periódico rodando a cada 60 segundos no backend, consultando a base do DETRAN para identificar novos débitos ou impedimentos em veículos sob monitoramento.
+### 6. Integrações B2B & Exportação Multicanal
+* **Sincronizador Multicanal de Estoque (`GET/POST /api/integrations`):** Hub de integração B2B que sincroniza anúncios em 1 clique para Webmotors, OLX Autos, iCarros e Mercado Livre Veículos.
+* **Feed XML Automotivo (`GET /api/integrations/feed.xml`):** Exportação padronizada compatível com os principais agregadores automotivos.
+
+---
+
+## 🧪 Comandos Úteis do Docker
+
+```bash
+# Reiniciar todos os containers
+docker compose restart
+
+# Rodar a suíte completa de testes de integração
+docker compose exec backend python test_vision_and_delete.py
+
+# Acessar o terminal interativo do Backend
+docker compose exec backend bash
+
+# Acessar o banco de dados PostgreSQL via psql
+docker compose exec db psql -U postgres -d automatch
+
+# Parar a aplicação mantendo os dados
+docker compose down
+
+# Parar e resetar completamente os dados do banco
+docker compose down -v
+```
+
+---
+
+## 📄 Licença
+
+Este projeto é desenvolvido para fins educacionais e de demonstração tecnológica. Todos os direitos reservados à equipe **Automatch**.

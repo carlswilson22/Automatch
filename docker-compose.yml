@@ -1,5 +1,5 @@
 services:
-  # Database Service (PostgreSQL)
+  # Database Service (PostgreSQL 15)
   db:
     image: postgres:15-alpine
     container_name: automatch-db
@@ -20,7 +20,7 @@ services:
     networks:
       - automatch-network
 
-  # Redis Service (Cache & Messaging)
+  # Redis Service (Cache & Task Messaging)
   redis:
     image: redis:7-alpine
     container_name: automatch-redis
@@ -35,10 +35,11 @@ services:
     networks:
       - automatch-network
 
-  # Backend Service (FastAPI)
+  # Backend Service (FastAPI / Python 3.11)
   backend:
+    image: automatch-backend:latest
     build:
-      context: "./Projeto pi/backend"
+      context: "./backend"
       dockerfile: Dockerfile
     container_name: automatch-backend
     restart: unless-stopped
@@ -47,44 +48,46 @@ services:
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
       - JWT_SECRET=${JWT_SECRET:-automatch_secret_key_123}
       - PORT=8000
-    command: [ "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000" ]
+    command: [ "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload" ]
     ports:
       - "8000:8000"
     volumes:
-      - "./Projeto pi/backend:/app"
-      - "./Projeto pi/backend/uploads:/app/uploads"
+      - "./backend:/app"
+      - "./backend/uploads:/app/uploads"
+      - "./frontend/public/images:/app/public_images:ro"
     depends_on:
       db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - automatch-network
 
-  # Frontend Service (React + Vite)
+  # Frontend Service (React 18 / Vite SPA)
   frontend:
+    image: automatch-frontend:latest
     build:
-      context: "./Projeto pi/frontend"
+      context: "./frontend"
       dockerfile: Dockerfile
     container_name: automatch-frontend
     restart: unless-stopped
-    environment:
-      - VITE_API_BASE_URL=/api
-      - VITE_ENABLE_AI_SCANNER=true
-      - VITE_APP_NAME=Automatch
-      - VITE_BACKEND_URL=http://backend:8000
     ports:
       - "5173:5173"
     volumes:
-      - "./Projeto pi/frontend:/app"
-      - /app/node_modules
+      - "./frontend:/app"
+      - "/app/node_modules"
+    environment:
+      - VITE_API_URL=http://backend:8000
     depends_on:
       - backend
     networks:
       - automatch-network
 
-  # API Gateway / Reverse Proxy (Nginx)
+  # Central API Gateway (Nginx Reverse Proxy)
   gateway:
+    image: automatch-gateway:latest
     build:
-      context: "./Projeto pi/gateway"
+      context: "./gateway"
       dockerfile: Dockerfile
     container_name: automatch-gateway
     restart: unless-stopped
@@ -92,15 +95,14 @@ services:
       - "80:80"
       - "3000:80"
     depends_on:
-      - frontend
       - backend
+      - frontend
     networks:
       - automatch-network
-
-volumes:
-  postgres_data:
-    driver: local
 
 networks:
   automatch-network:
     driver: bridge
+
+volumes:
+  postgres_data:
