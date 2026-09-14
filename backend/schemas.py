@@ -26,6 +26,8 @@ class CarBase(BaseModel):
     auction_history: Optional[str] = None
     fipe_price: Optional[float] = None
     auto_price: Optional[float] = None
+    laudo_url: Optional[str] = None
+    laudo_feedback: Optional[str] = None
 
 class CarSchema(CarBase):
     id: str
