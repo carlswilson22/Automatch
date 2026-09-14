@@ -41,6 +41,8 @@ class Car(Base):
     auction_history = Column(String, nullable=True)
     fipe_price = Column(Float, nullable=True)
     auto_price = Column(Float, nullable=True)
+    laudo_url = Column(String, nullable=True)
+    laudo_feedback = Column(Text, nullable=True)
 
     store_id = Column(Integer, ForeignKey("stores.id"))
     store = relationship("Store", back_populates="cars")

@@ -7,7 +7,7 @@ import {
   TrendingDown, TrendingUp, Minus, Car, Truck, Battery, Share2,
   CheckCircle2, AlertTriangle, Clock, Fuel, Settings, Award, Zap, X, 
   UserPlus, LogIn, DollarSign, Calculator, Lock, Check, Scan, Wrench, Tag,
-  RotateCw, Bell, Globe2
+  RotateCw, Bell, Globe2, FileText
 } from 'lucide-react';
 import StoreIdentifier from '../components/ui/StoreIdentifier';
 import { showcaseCars } from '../data/showcaseData';
@@ -106,6 +106,8 @@ export default function ShowcaseVehicleDetails() {
           bodyType: 'Particular',
           storeId: local.storeId || 'store-1',
           trustScore: 92,
+          laudoUrl: local.laudo_url || null,
+          laudoFeedback: local.laudo_feedback || null,
           timeline: [
             { id: 't1', type: 'laudo', status: local.laudo === 'Não possui' ? 'attention' : 'approved', title: 'Laudo Cautelar', description: local.laudo || 'Aprovado' },
             { id: 't2', type: 'debitos', status: local.debitos === 'Com débitos' ? 'attention' : 'approved', title: 'Multas e Débitos', description: local.debitos || 'Sem débitos' },
@@ -692,6 +694,20 @@ export default function ShowcaseVehicleDetails() {
                       <span className="text-slate-400 mt-1 block">Código: {laudoData.dados_oficiais_fipe?.codigoFipe} ({laudoData.dados_oficiais_fipe?.mesReferencia})</span>
                     </div>
                   </div>
+
+                  {car.laudoUrl && (
+                    <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between">
+                      <span className="text-xs text-slate-400">Documento oficial anexado pelo anunciante:</span>
+                      <a
+                        href={car.laudoUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-400 hover:text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 px-3 py-1.5 rounded-xl border border-blue-500/30 transition-all"
+                      >
+                        <FileText className="w-3.5 h-3.5" /> Acessar Laudo em PDF
+                      </a>
+                    </div>
+                  )}
                 </motion.div>
               )}
 

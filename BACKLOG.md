@@ -124,6 +124,16 @@ O **Automatch** tem como missão eliminar a assimetria de informações e fraude
   - Geração de PDF padronizado com cabeçalho oficial Automatch e dados FIPE/DETRAN.
   - QR Code apontando para rota pública de validação `https://automatch.com.br/validar/{protocolo}`.
 
+#### 🏷️ [ATM-LAUDO-04] Auditoria de Laudo Cautelar em PDF com IA Multimodal
+* **Prioridade:** 🔴 `P0 - Must Have` | **Esforço:** 5 SP | **Status:** ✅ `Concluído`
+* **Camada:** Backend (Gemini 1.5 Flash + Heurística Local) + Frontend (React)
+* **Descrição:** *Como* vendedor ou comprador, *quero* que a IA audite instantaneamente documentos PDF de laudos cautelares anexados, *para que* inconsistências, sinistros ou histórico de leilão sejam identificados e apresentados visualmente.
+* **Critérios de Aceite:**
+  - [x] Validação de cabeçalho e magic bytes (`%PDF-`) impedindo arquivos corrompidos ou adulterados.
+  - [x] Extração e inspeção profunda de laudos via Google Gemini 1.5 Flash Document AI com fallback para motor pericial heurístico local.
+  - [x] Retorno de veredito, score de procedência (0-100), síntese pericial e checklist dos 4 pilares (Identificação, Estrutura, Sinistros/Leilão, Pintura).
+  - [x] Card visual interativo de alta fidelidade (`LaudoFeedbackCard.jsx`) integrado ao formulário de anúncio e página de detalhes.
+
 ---
 
 ### 🤖 ÉPICO 4: Inteligência Artificial & Visão Computacional
