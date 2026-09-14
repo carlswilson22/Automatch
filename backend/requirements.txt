@@ -14,3 +14,5 @@ opencv-python-headless>=4.9.0
 apscheduler>=3.10.0
 alembic>=1.13.0
 redis>=5.0.0
+reportlab>=4.0
+qrcode[pil]>=7.4

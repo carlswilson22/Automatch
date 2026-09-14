@@ -50,13 +50,14 @@ O **Automatch** tem como missão eliminar a assimetria de informações e fraude
   - [x] Proteção das rotas `/perfil` e `/dashboard` via `ProtectedRoute.jsx`.
 
 #### 🏷️ [ATM-AUTH-02] Recuperação de Senha via E-mail (Magic Link / OTP)
-* **Prioridade:** 🟡 `P1 - Should Have` | **Esforço:** 5 SP | **Status:** ⏳ `A Fazer`
-* **Camada:** Backend + Serviço SMTP/SES
-* **Descrição:** *Como* usuário que esqueceu a senha, *quero* receber um link temporário com token de recuperação por e-mail, *para que* eu possa redefinir meu acesso sem depender do suporte.
+* **Prioridade:** 🟡 `P1 - Should Have` | **Esforço:** 5 SP | **Status:** ✅ `Concluído`
+* **Camada:** Backend + Frontend + OTP Service
+* **Descrição:** *Como* usuário que esqueceu a senha, *quero* receber um código OTP de recuperação temporário, *para que* eu possa redefinir meu acesso com segurança.
 * **Critérios de Aceite:**
-  - Token de uso único com expiração em 15 minutos.
-  - Endpoint `POST /api/auth/forgot-password` e `POST /api/auth/reset-password`.
-  - Rate limiting (máximo 3 solicitações por hora por IP).
+  - [x] Token OTP numérico de 6 dígitos com expiração em 15 minutos e hash SHA-256 no banco.
+  - [x] Endpoints `POST /api/auth/forgot-password` e `POST /api/auth/reset-password`.
+  - [x] Rate limiting (máximo 3 solicitações por hora por e-mail).
+  - [x] Modal interativo no frontend com feedback visual e toast/popup de código em modo desenvolvimento.
 
 #### 🏷️ [ATM-AUTH-03] Controle de Acesso Baseado em Perfis (RBAC - Admin, Lojista, Cliente)
 * **Prioridade:** 🟡 `P1 - Should Have` | **Esforço:** 8 SP | **Status:** ⏳ `A Fazer`
@@ -89,12 +90,14 @@ O **Automatch** tem como missão eliminar a assimetria de informações e fraude
   - [x] Suporte a imagens em base64 e upload local.
 
 #### 🏷️ [ATM-CAT-03] Paginação no Servidor e Otimização de Busca (Full-Text Search)
-* **Prioridade:** 🟡 `P1 - Should Have` | **Esforço:** 5 SP | **Status:** ⏳ `A Fazer`
-* **Camada:** Backend + PostgreSQL
-* **Descrição:** *Como* comprador, *quero* que o catálogo carregue instantaneamente mesmo com milhares de veículos cadastrados, *para que* a navegação seja fluida.
+* **Prioridade:** 🟡 `P1 - Should Have` | **Esforço:** 5 SP | **Status:** ✅ `Concluído`
+* **Camada:** Backend + PostgreSQL + Frontend
+* **Descrição:** *Como* comprador, *quero* navegar no catálogo por páginas numéricas com filtros e busca rápida, *para que* o carregamento seja ágil e estruturado.
 * **Critérios de Aceite:**
-  - Paginação com `limit` e `offset` ou Cursor Pagination em `GET /api/cars`.
-  - Índice GIN no PostgreSQL para busca textual em `brand`, `model` e `description`.
+  - [x] Paginação com envelope `{ items, total, page, pages, limit }` em `GET /api/cars`.
+  - [x] Busca textual ilike combinada em `brand`, `model` e `description`.
+  - [x] Filtros combinados no servidor (`brand`, `year_min`, `year_max`, `price_min`, `price_max`, `store_id`).
+  - [x] Componente de paginação numérica interativa no frontend (`[1] [2] [3]...`) com contadores e scroll suave.
 
 ---
 
@@ -117,12 +120,13 @@ O **Automatch** tem como missão eliminar a assimetria de informações e fraude
   - [x] Retorno consolidado de situação cadastral, débitos de licenciamento e restrições judiciais.
 
 #### 🏷️ [ATM-LAUDO-03] Exportação de Laudo Cautelar em PDF com QR Code de Autenticidade
-* **Prioridade:** 🟡 `P1 - Should Have` | **Esforço:** 8 SP | **Status:** ⏳ `A Fazer`
-* **Camada:** Backend (ReportLab / WeasyPrint)
-* **Descrição:** *Como* cliente ou lojista, *quero* baixar um PDF assinado digitalmente com o laudo pericial completo e QR Code de autenticação, *para que* eu possa utilizá-lo como comprovante de garantia.
+* **Prioridade:** 🟡 `P1 - Should Have` | **Esforço:** 8 SP | **Status:** ✅ `Concluído`
+* **Camada:** Backend (ReportLab / QrCode) + Frontend
+* **Descrição:** *Como* cliente ou lojista, *quero* baixar um PDF oficial vetorial A4 do laudo pericial com QR Code de autenticação, *para que* eu possa utilizá-lo como comprovante de garantia.
 * **Critérios de Aceite:**
-  - Geração de PDF padronizado com cabeçalho oficial Automatch e dados FIPE/DETRAN.
-  - QR Code apontando para rota pública de validação `https://automatch.com.br/validar/{protocolo}`.
+  - [x] Geração de PDF vetorial A4 com ReportLab (cabeçalho oficial Automatch, tabelas estilizadas, dados FIPE/DETRAN e parecer de IA).
+  - [x] QR Code em alta resolução apontando para rota pública de validação `https://automatch.com.br/validar/{protocolo}`.
+  - [x] Endpoint `GET /api/v1/laudos/{car_id}/pdf` com download direto e cabeçalho `application/pdf`.
 
 #### 🏷️ [ATM-LAUDO-04] Auditoria de Laudo Cautelar em PDF com IA Multimodal
 * **Prioridade:** 🔴 `P0 - Must Have` | **Esforço:** 5 SP | **Status:** ✅ `Concluído`
