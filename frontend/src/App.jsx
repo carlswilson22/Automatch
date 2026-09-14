@@ -11,6 +11,7 @@ import CheckoutPage from './pages/CheckoutPage';
 import Dashboard from './pages/Dashboard';
 import NewCarAdForm from './pages/NewCarAdForm';
 import PlansPage from './pages/PlansPage';
+import PublicValidationPage from './pages/PublicValidationPage';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -38,6 +39,7 @@ function App() {
           <Route path="/planos" element={<PlansPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/novo-anuncio" element={<NewCarAdForm />} />
+          <Route path="/validar/:protocolo" element={<PublicValidationPage />} />
           
           {/* Protected Routes */}
           <Route path="/perfil" element={

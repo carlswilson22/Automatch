@@ -4,7 +4,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   ShieldCheck, Mail, Lock, User, ArrowRight, Eye, EyeOff, 
   XCircle, CheckCircle2, Loader2, Home, Phone, Building2, 
-  MapPin, Sparkles, FileText
+  MapPin, Sparkles, FileText, KeyRound, ArrowLeft, Clock,
+  Copy, AlertTriangle
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -14,24 +15,27 @@ const AuthPage = () => {
   const { login, register } = useAuth();
 
   const [isLogin, setIsLogin] = useState(true);
-  const [accountType, setAccountType] = useState('buyer'); // 'buyer' | 'seller' | 'store'
+  const [accountType, setAccountType] = useState('buyer');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
-  // Preselected plan if coming from plans page
+  // Recovery flow state
+  const [recoveryMode, setRecoveryMode] = useState(false);  // 'forgot' modal active
+  const [recoveryStep, setRecoveryStep] = useState(1);       // 1=email, 2=otp+new_password
+  const [recoveryEmail, setRecoveryEmail] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [recoveryLoading, setRecoveryLoading] = useState(false);
+  const [recoveryError, setRecoveryError] = useState('');
+  const [recoverySuccess, setRecoverySuccess] = useState('');
+  const [otpPopup, setOtpPopup] = useState('');              // Código OTP para exibir no popup
+
   const selectedPlanId = location.state?.planId;
 
-  // Form states
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    phone: '',
-    document: '',
-    storeName: '',
-    city: '',
+    name: '', email: '', password: '', phone: '', document: '', storeName: '', city: '',
   });
 
   const from = location.state?.from?.pathname || '/';
@@ -100,6 +104,104 @@ const AuthPage = () => {
       setError(err.message || 'Ocorreu um erro inesperado.');
       setIsLoading(false);
     }
+  };
+
+  // ─── Recovery Handlers ─────────────────────────────────────────────────────
+  const handleForgotPassword = async () => {
+    if (!recoveryEmail.trim()) {
+      setRecoveryError('Digite seu e-mail cadastrado.');
+      return;
+    }
+    setRecoveryLoading(true);
+    setRecoveryError('');
+    setRecoverySuccess('');
+    setOtpPopup('');
+
+    try {
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: recoveryEmail.trim() })
+      });
+      const data = await res.json();
+      
+      if (!res.ok) {
+        throw new Error(data.detail || 'Erro ao solicitar recuperação.');
+      }
+
+      // Extrair OTP do message (modo dev)
+      const otpMatch = data.message?.match(/(\d{6})/);
+      if (otpMatch) {
+        setOtpPopup(otpMatch[1]);
+      }
+      
+      setRecoverySuccess(data.message);
+      setRecoveryStep(2);
+    } catch (err) {
+      setRecoveryError(err.message);
+    } finally {
+      setRecoveryLoading(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    if (!otpCode.trim() || otpCode.length !== 6) {
+      setRecoveryError('Digite o código de 6 dígitos.');
+      return;
+    }
+    if (newPassword.length < 6) {
+      setRecoveryError('A nova senha deve ter no mínimo 6 caracteres.');
+      return;
+    }
+    setRecoveryLoading(true);
+    setRecoveryError('');
+
+    try {
+      const res = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: recoveryEmail.trim(),
+          otp: otpCode.trim(),
+          new_password: newPassword
+        })
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.detail || 'Erro ao redefinir senha.');
+      }
+
+      setRecoverySuccess(data.message);
+      setTimeout(() => {
+        setRecoveryMode(false);
+        setRecoveryStep(1);
+        setOtpCode('');
+        setNewPassword('');
+        setOtpPopup('');
+        setRecoverySuccess('');
+        setSuccess('Senha redefinida! Faça login com sua nova senha.');
+      }, 2000);
+    } catch (err) {
+      setRecoveryError(err.message);
+    } finally {
+      setRecoveryLoading(false);
+    }
+  };
+
+  const closeRecovery = () => {
+    setRecoveryMode(false);
+    setRecoveryStep(1);
+    setRecoveryEmail('');
+    setOtpCode('');
+    setNewPassword('');
+    setRecoveryError('');
+    setRecoverySuccess('');
+    setOtpPopup('');
+  };
+
+  const copyOtp = () => {
+    navigator.clipboard?.writeText(otpPopup);
   };
 
   return (
@@ -315,7 +417,11 @@ const AuthPage = () => {
               <div className="flex justify-between items-center">
                 <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Senha</label>
                 {isLogin && (
-                  <button type="button" className="text-[11px] font-bold text-blue-400 uppercase hover:underline">
+                  <button 
+                    type="button" 
+                    onClick={() => { setRecoveryMode(true); setRecoveryEmail(formData.email); }}
+                    className="text-[11px] font-bold text-blue-400 uppercase hover:underline"
+                  >
                     Esqueceu a senha?
                   </button>
                 )}
@@ -372,6 +478,200 @@ const AuthPage = () => {
           </div>
         </div>
       </motion.div>
+
+      {/* ─── Recovery Password Modal ────────────────────────────────────────── */}
+      <AnimatePresence>
+        {recoveryMode && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50"
+              onClick={closeRecovery}
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            >
+              <div className="w-full max-w-md bg-slate-800 border border-slate-700 rounded-2xl shadow-2xl overflow-hidden">
+                {/* Header */}
+                <div className="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
+                      <KeyRound className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-white">Recuperar Senha</h3>
+                      <p className="text-blue-200 text-xs font-medium">
+                        {recoveryStep === 1 ? 'Etapa 1 de 2 — Identificação' : 'Etapa 2 de 2 — Redefinição'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-6 space-y-4">
+                  {/* Messages */}
+                  <AnimatePresence mode="wait">
+                    {recoveryError && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="p-3 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center gap-2 text-red-400 text-sm font-semibold"
+                      >
+                        <AlertTriangle className="w-4 h-4 shrink-0" />
+                        {recoveryError}
+                      </motion.div>
+                    )}
+                    {recoverySuccess && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center gap-2 text-emerald-400 text-sm font-semibold"
+                      >
+                        <CheckCircle2 className="w-4 h-4 shrink-0" />
+                        {recoverySuccess}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* OTP Popup Toast (modo dev) */}
+                  <AnimatePresence>
+                    {otpPopup && (
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/40 space-y-2"
+                      >
+                        <div className="flex items-center gap-2 text-amber-400 text-xs font-bold uppercase tracking-wider">
+                          <Clock className="w-3.5 h-3.5" />
+                          Código OTP (Modo Desenvolvimento)
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span className="text-3xl font-black tracking-[0.3em] text-white font-mono">
+                            {otpPopup}
+                          </span>
+                          <button
+                            onClick={copyOtp}
+                            className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 rounded-lg text-xs font-bold transition-colors"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                            Copiar
+                          </button>
+                        </div>
+                        <p className="text-amber-400/70 text-[10px] font-medium">
+                          Expira em 15 minutos • Em produção, este código seria enviado por e-mail
+                        </p>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Step 1: Email */}
+                  {recoveryStep === 1 && (
+                    <div className="space-y-4">
+                      <p className="text-slate-400 text-sm">
+                        Digite o e-mail cadastrado na sua conta. Enviaremos um código de recuperação.
+                      </p>
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">E-mail</label>
+                        <div className="relative group">
+                          <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-hover:text-blue-400 transition-colors" />
+                          <input
+                            type="email"
+                            value={recoveryEmail}
+                            onChange={(e) => { setRecoveryEmail(e.target.value); setRecoveryError(''); }}
+                            placeholder="exemplo@email.com"
+                            className="w-full bg-slate-900 border border-slate-700 rounded-xl py-3 pl-11 pr-4 text-sm text-white placeholder:text-slate-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                            autoFocus
+                          />
+                        </div>
+                      </div>
+                      <button
+                        onClick={handleForgotPassword}
+                        disabled={recoveryLoading}
+                        className="w-full bg-blue-600 hover:bg-blue-500 text-white py-3.5 rounded-xl font-bold text-sm uppercase tracking-wider shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                      >
+                        {recoveryLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <ArrowRight className="w-4 h-4" />}
+                        Enviar Código
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Step 2: OTP + New Password */}
+                  {recoveryStep === 2 && (
+                    <div className="space-y-4">
+                      <p className="text-slate-400 text-sm">
+                        Digite o código de 6 dígitos e sua nova senha.
+                      </p>
+
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Código OTP</label>
+                        <div className="relative group">
+                          <KeyRound className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-hover:text-blue-400 transition-colors" />
+                          <input
+                            type="text"
+                            value={otpCode}
+                            onChange={(e) => { setOtpCode(e.target.value.replace(/\D/g, '').substring(0, 6)); setRecoveryError(''); }}
+                            placeholder="000000"
+                            maxLength={6}
+                            className="w-full bg-slate-900 border border-slate-700 rounded-xl py-3 pl-11 pr-4 text-sm text-white placeholder:text-slate-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none tracking-[0.3em] font-mono text-lg text-center"
+                            autoFocus
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider">Nova Senha</label>
+                        <div className="relative group">
+                          <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-hover:text-blue-400 transition-colors" />
+                          <input
+                            type="password"
+                            value={newPassword}
+                            onChange={(e) => { setNewPassword(e.target.value); setRecoveryError(''); }}
+                            placeholder="Mínimo 6 caracteres"
+                            className="w-full bg-slate-900 border border-slate-700 rounded-xl py-3 pl-11 pr-4 text-sm text-white placeholder:text-slate-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+                          />
+                        </div>
+                      </div>
+
+                      <button
+                        onClick={handleResetPassword}
+                        disabled={recoveryLoading}
+                        className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-3.5 rounded-xl font-bold text-sm uppercase tracking-wider shadow-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                      >
+                        {recoveryLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4" />}
+                        Redefinir Senha
+                      </button>
+
+                      <button
+                        onClick={() => { setRecoveryStep(1); setOtpPopup(''); setRecoveryError(''); setRecoverySuccess(''); }}
+                        className="w-full text-slate-400 hover:text-white text-xs font-medium flex items-center justify-center gap-1.5 py-2 transition-colors"
+                      >
+                        <ArrowLeft className="w-3.5 h-3.5" />
+                        Voltar e reenviar código
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Close */}
+                  <button
+                    onClick={closeRecovery}
+                    className="w-full text-slate-500 hover:text-slate-300 text-xs font-medium py-2 transition-colors"
+                  >
+                    Cancelar e voltar ao login
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
 
       {/* Footer link to home */}
       <button 

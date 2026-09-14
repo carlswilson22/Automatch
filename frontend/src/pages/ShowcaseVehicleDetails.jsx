@@ -7,7 +7,7 @@ import {
   TrendingDown, TrendingUp, Minus, Car, Truck, Battery, Share2,
   CheckCircle2, AlertTriangle, Clock, Fuel, Settings, Award, Zap, X, 
   UserPlus, LogIn, DollarSign, Calculator, Lock, Check, Scan, Wrench, Tag,
-  RotateCw, Bell, Globe2, FileText
+  RotateCw, Bell, Globe2, FileText, Download, FileDown
 } from 'lucide-react';
 import StoreIdentifier from '../components/ui/StoreIdentifier';
 import { showcaseCars } from '../data/showcaseData';
@@ -36,6 +36,7 @@ export default function ShowcaseVehicleDetails() {
   const [inspectionTab, setInspectionTab] = useState('body'); // 'body' | '360'
   const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
   const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
 
   // Scroll to top on mount & initialize favorite state
   useEffect(() => {
@@ -248,6 +249,30 @@ export default function ShowcaseVehicleDetails() {
       console.error(e);
     } finally {
       setIsDetranLoading(false);
+    }
+  };
+
+  const handleDownloadOfficialPdf = async () => {
+    setIsDownloadingPdf(true);
+    try {
+      const res = await fetch(`/api/v1/laudos/${id}/pdf`);
+      if (!res.ok) {
+        throw new Error('Falha ao gerar o PDF oficial.');
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const cleanName = (car?.name || car?.marca || 'Veiculo').replace(/\s+/g, '_');
+      a.download = `Laudo_Oficial_Automatch_${cleanName}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert('Não foi possível baixar o PDF oficial no momento. Tente novamente.');
+    } finally {
+      setIsDownloadingPdf(false);
     }
   };
 
@@ -667,6 +692,43 @@ export default function ShowcaseVehicleDetails() {
                     <h4 className="text-sm font-bold text-white">Preço FIPE</h4>
                     <p className="text-[11px] text-slate-400">Referência oficial de mercado</p>
                   </div>
+                </button>
+              </div>
+
+              {/* Barra de Ação Oficial: Download do Laudo Certificado com QR Code */}
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-950/60 via-slate-900/80 to-cyan-950/60 border border-blue-800/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/30 text-blue-400 flex items-center justify-center shrink-0">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-white">Dossiê Oficial Automatch™</span>
+                      <span className="text-[10px] bg-cyan-500/20 text-cyan-300 font-bold px-2 py-0.5 rounded-full border border-cyan-500/30">
+                        PDF com QR Code
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      Documento padronizado em A4 com dados FIPE, certidão DETRAN e autenticidade eletrônica.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleDownloadOfficialPdf}
+                  disabled={isDownloadingPdf}
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white text-xs font-bold shadow-md shadow-blue-500/25 transition-all disabled:opacity-50 shrink-0 cursor-pointer"
+                >
+                  {isDownloadingPdf ? (
+                    <>
+                      <RotateCw className="w-4 h-4 animate-spin" /> Gerando PDF...
+                    </>
+                  ) : (
+                    <>
+                      <FileDown className="w-4 h-4" /> Baixar Dossiê Oficial
+                    </>
+                  )}
                 </button>
               </div>
 
