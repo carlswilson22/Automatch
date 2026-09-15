@@ -5,10 +5,11 @@ import StoreIdentifier from '../components/ui/StoreIdentifier';
 import { stores } from '../data/inventoryData';
 import { useAuth } from '../contexts/AuthContext';
 import { getNewCars, isCarDeleted } from '../data/newCarsManager';
+import { toggleFavorite, isFavorite } from '../data/favoritesManager';
 import {
-  ShieldCheck, Search, ChevronRight, Calendar, Gauge, Palette,
+  ShieldCheck, Search, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight, Calendar, Gauge, Palette,
   MapPin, Heart, Eye, Zap, Filter, ArrowLeft, SlidersHorizontal,
-  Car, ChevronDown, X, Star, RotateCcw, Tag, UserPlus, LogIn, Sparkles
+  Car, ChevronDown, X, Star, RotateCcw, Tag, UserPlus, LogIn, Sparkles, Loader2
 } from 'lucide-react';
 
 // ─── DATA ────────────────────────────────────────────────────────────────────
@@ -56,7 +57,7 @@ const showcaseCars = [
   }
 ];
 
-const BRANDS = ['Todas', ...new Set(showcaseCars.map(c => c.brand))];
+const BRANDS = ['Todas', 'Chevrolet', 'Fiat', 'Ford', 'Honda', 'Hyundai', 'Jeep', 'Nissan', 'Renault', 'Tesla', 'Toyota', 'Volkswagen', 'BMW', 'Porsche'];
 const BODY_TYPES = ['Todos', 'Sedã', 'SUV', 'Hatch', 'Picape'];
 const YEAR_OPTIONS = ['Todos', '2024', '2023', '2022', '2021', '2020'];
 const KM_RANGES = [
@@ -76,7 +77,13 @@ const PRICE_RANGES = [
 // ─── CAR CARD ────────────────────────────────────────────────────────────────
 const CarCard = ({ car, index, viewMode }) => {
   const navigate = useNavigate();
-  const [liked, setLiked] = useState(false);
+  const [liked, setLiked] = useState(() => isFavorite(car.id));
+
+  const handleLike = (e) => {
+    e.stopPropagation();
+    const updated = toggleFavorite(car.id);
+    setLiked(updated.includes(car.id));
+  };
 
   // ── LIST VIEW ──
   if (viewMode === 'list') {
@@ -98,9 +105,10 @@ const CarCard = ({ car, index, viewMode }) => {
               <Star className="w-3 h-3 fill-white" /> Destaque
             </div>
           )}
-          <button onClick={(e) => { e.stopPropagation(); setLiked(!liked); }}
+          <button onClick={handleLike}
+            title={liked ? "Remover dos favoritos" : "Curtir veículo"}
             className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors shadow-md z-10">
-            <Heart className={`w-4 h-4 transition-colors ${liked ? 'fill-red-500 text-red-500' : 'text-slate-400'}`} />
+            <Heart className={`w-4 h-4 transition-all ${liked ? 'fill-red-500 text-red-500 scale-110' : 'text-slate-400 hover:text-red-500'}`} />
           </button>
 
           {/* Store Branding */}
@@ -153,9 +161,10 @@ const CarCard = ({ car, index, viewMode }) => {
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-4 pt-10">
           <p className="text-2xl font-black text-white drop-shadow-md">R$ {car.price.toLocaleString('pt-BR')}</p>
         </div>
-        <button onClick={(e) => { e.stopPropagation(); setLiked(!liked); }}
+        <button onClick={handleLike}
+          title={liked ? "Remover dos favoritos" : "Curtir veículo"}
           className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors shadow-md z-10">
-          <Heart className={`w-4 h-4 transition-colors ${liked ? 'fill-red-500 text-red-500' : 'text-slate-400'}`} />
+          <Heart className={`w-4 h-4 transition-all ${liked ? 'fill-red-500 text-red-500 scale-110' : 'text-slate-400 hover:text-red-500'}`} />
         </button>
 
         {/* Store Branding */}
@@ -237,87 +246,12 @@ const ShowcaseCatalog = () => {
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [allCars, setAllCars] = useState(showcaseCars);
 
-  // Load cars from PostgreSQL Backend API + localStorage / fallback
-  useEffect(() => {
-    fetch('/api/cars')
-      .then(res => res.ok ? res.json() : [])
-      .then(apiCars => {
-        const local = getNewCars();
-        let apiFormatted = [];
-        if (Array.isArray(apiCars) && apiCars.length > 0) {
-          apiFormatted = apiCars.map(c => ({
-            id: c.id,
-            name: `${c.brand} ${c.model}`,
-            brand: c.brand,
-            year: c.year,
-            price: typeof c.price === 'number' ? `R$ ${c.price.toLocaleString('pt-BR')}` : c.price,
-            rawPrice: c.price,
-            color: c.color || 'Prata',
-            mileage: c.km ? Number(c.km) : 0,
-            image: c.image || '/images/FotoHondaCivic.jpeg',
-            bodyType: c.body_type || 'Particular',
-            icon: Car,
-            featured: true,
-            seller: 'Veículo Verificado',
-            location: c.location || 'São Paulo, SP',
-            description: c.description || 'Veículo com laudo cautelar aprovado.',
-            tags: [c.transmission || 'Automático', 'Certificado'],
-            storeId: c.store_id ? `store-${c.store_id}` : 'store-1',
-            plate: c.plate || 'ABC1234',
-            fipeCode: c.fipe_code || '004487-3'
-          }));
-        }
-
-        const localFormatted = local.map(c => ({
-          id: c.id,
-          name: `${c.marca} ${c.modelo}`,
-          brand: c.marca,
-          year: c.ano,
-          price: c.preco,
-          color: c.cor || 'Prata',
-          mileage: c.km ? Number(c.km) : 0,
-          image: c.imagem || '/images/FotoHondaCivic.jpeg',
-          bodyType: 'Particular',
-          icon: Car,
-          featured: true,
-          seller: 'Vendedor Particular',
-          location: c.localizacao || 'São Paulo, SP',
-          description: c.descricao || 'Veículo anunciado pelo proprietário.',
-          tags: [c.transmissao || 'Automático', 'Novidade'],
-          storeId: c.storeId || 'store-1',
-          plate: 'ABC1234',
-          fipeCode: '004487-3'
-        }));
-
-        const combined = [...apiFormatted, ...localFormatted, ...showcaseCars];
-        const unique = Array.from(new Map(combined.map(item => [item.id, item])).values());
-        const activeCars = unique.filter(c => !isCarDeleted(c.id));
-        setAllCars(activeCars);
-      })
-      .catch(() => {
-        const local = getNewCars();
-        const formatted = local.map(c => ({
-          id: c.id,
-          name: `${c.marca} ${c.modelo}`,
-          brand: c.marca,
-          year: c.ano,
-          price: c.preco,
-          color: c.cor || 'Prata',
-          mileage: c.km ? Number(c.km) : 0,
-          image: c.imagem || '/images/FotoHondaCivic.jpeg',
-          bodyType: 'Particular',
-          icon: Car,
-          featured: true,
-          seller: 'Vendedor Particular',
-          location: c.localizacao || 'São Paulo, SP',
-          description: c.descricao || 'Veículo anunciado pelo proprietário.',
-          tags: [c.transmissao || 'Automático', 'Novidade'],
-          storeId: c.storeId || 'store-1'
-        }));
-        const fallbackActive = [...formatted, ...showcaseCars].filter(c => !isCarDeleted(c.id));
-        setAllCars(fallbackActive);
-      });
-  }, []);
+  // Pagination states
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalItems, setTotalItems] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const itemsPerPage = 20; // Default 20 items per page
 
   // Filter states
   const [searchParams] = useSearchParams();
@@ -335,6 +269,156 @@ const ShowcaseCatalog = () => {
     }
   }, [urlStoreId]);
 
+  // Debounce search query so we don't spam the API on every keystroke
+  const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(searchQuery);
+    }, 300);
+    return () => clearTimeout(handler);
+  }, [searchQuery]);
+
+  // Reset page to 1 when any filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch, filterStore, filterBrand, filterType, filterYear, filterPrice, filterKm]);
+
+  // Load cars from PostgreSQL Backend API with server-side pagination & filters
+  useEffect(() => {
+    setIsLoading(true);
+    const params = new URLSearchParams();
+    params.set('page', currentPage.toString());
+    params.set('limit', itemsPerPage.toString());
+
+    if (debouncedSearch.trim()) {
+      params.set('q', debouncedSearch.trim());
+    }
+    if (filterBrand !== 'Todas') {
+      params.set('brand', filterBrand);
+    }
+    if (filterYear !== 'Todos') {
+      params.set('year_min', filterYear);
+      params.set('year_max', filterYear);
+    }
+    if (filterPrice !== 'Qualquer') {
+      const pr = PRICE_RANGES.find(r => r.label === filterPrice);
+      if (pr) {
+        if (pr.min > 0) params.set('price_min', pr.min.toString());
+        if (pr.max < Infinity) params.set('price_max', pr.max.toString());
+      }
+    }
+    if (filterStore !== 'Todas') {
+      const storeNum = parseInt(filterStore.replace('store-', ''));
+      if (!isNaN(storeNum)) params.set('store_id', storeNum.toString());
+    }
+
+    fetch(`/api/cars?${params.toString()}`)
+      .then(res => {
+        if (!res.ok) throw new Error('Falha ao consultar API');
+        return res.json();
+      })
+      .then(apiData => {
+        // Support enveloped response: { items, total, page, pages, limit } or plain array
+        const rawItems = Array.isArray(apiData) ? apiData : (apiData?.items || []);
+        const serverTotal = typeof apiData?.total === 'number' ? apiData.total : rawItems.length;
+        const serverPages = typeof apiData?.pages === 'number' ? apiData.pages : (Math.ceil(serverTotal / itemsPerPage) || 1);
+
+        const local = getNewCars();
+        const apiFormatted = rawItems.map(c => ({
+          id: c.id,
+          name: `${c.brand} ${c.model}`,
+          brand: c.brand,
+          year: c.year,
+          price: typeof c.price === 'number' ? c.price : (parseFloat(c.price) || 0),
+          color: c.color || 'Prata',
+          mileage: c.km ? Number(c.km) : 0,
+          image: c.image || '/images/FotoHondaCivic.jpeg',
+          bodyType: c.body_type || 'Particular',
+          icon: Car,
+          featured: true,
+          seller: 'Veículo Verificado',
+          location: c.location || 'São Paulo, SP',
+          description: c.description || 'Veículo com laudo cautelar aprovado.',
+          tags: [c.transmission || 'Automático', 'Certificado'],
+          storeId: c.store_id ? `store-${c.store_id}` : 'store-1',
+          plate: c.plate || 'ABC1234',
+          fipeCode: c.fipe_code || '004487-3'
+        }));
+
+        const localFormatted = local.map(c => {
+          const numPrice = typeof c.preco === 'number' ? c.preco : (parseFloat(String(c.preco).replace(/[^\d]/g, '')) || 0);
+          return {
+            id: c.id,
+            name: `${c.marca} ${c.modelo}`,
+            brand: c.marca,
+            year: c.ano,
+            price: numPrice,
+            color: c.cor || 'Prata',
+            mileage: c.km ? Number(c.km) : 0,
+            image: c.imagem || '/images/FotoHondaCivic.jpeg',
+            bodyType: 'Particular',
+            icon: Car,
+            featured: true,
+            seller: 'Vendedor Particular',
+            location: c.localizacao || 'São Paulo, SP',
+            description: c.descricao || 'Veículo anunciado pelo proprietário.',
+            tags: [c.transmissao || 'Automático', 'Novidade'],
+            storeId: c.storeId || 'store-1',
+            plate: 'ABC1234',
+            fipeCode: '004487-3'
+          };
+        });
+
+        // Merge local & static fallback if needed
+        let listToUse = [...apiFormatted];
+        if (apiFormatted.length === 0 && !debouncedSearch.trim() && filterBrand === 'Todas') {
+          listToUse = [...localFormatted, ...showcaseCars];
+        } else if (currentPage === 1 && localFormatted.length > 0) {
+          listToUse = [...localFormatted, ...apiFormatted];
+        }
+
+        const unique = Array.from(new Map(listToUse.map(item => [item.id, item])).values());
+        const activeCars = unique.filter(c => !isCarDeleted(c.id));
+
+        setAllCars(activeCars);
+        setTotalItems(serverTotal > 0 ? serverTotal : activeCars.length);
+        setTotalPages(serverPages > 0 ? serverPages : (Math.ceil(activeCars.length / itemsPerPage) || 1));
+        setIsLoading(false);
+      })
+      .catch(() => {
+        // Fallback for offline / mock mode
+        const local = getNewCars();
+        const localFormatted = local.map(c => {
+          const numPrice = typeof c.preco === 'number' ? c.preco : (parseFloat(String(c.preco).replace(/[^\d]/g, '')) || 0);
+          return {
+            id: c.id,
+            name: `${c.marca} ${c.modelo}`,
+            brand: c.marca,
+            year: c.ano,
+            price: numPrice,
+            color: c.cor || 'Prata',
+            mileage: c.km ? Number(c.km) : 0,
+            image: c.imagem || '/images/FotoHondaCivic.jpeg',
+            bodyType: 'Particular',
+            icon: Car,
+            featured: true,
+            seller: 'Vendedor Particular',
+            location: c.localizacao || 'São Paulo, SP',
+            description: c.descricao || 'Veículo anunciado pelo proprietário.',
+            tags: [c.transmissao || 'Automático', 'Novidade'],
+            storeId: c.storeId || 'store-1',
+            plate: 'ABC1234',
+            fipeCode: '004487-3'
+          };
+        });
+        const fallbackActive = [...localFormatted, ...showcaseCars].filter(c => !isCarDeleted(c.id));
+        setAllCars(fallbackActive);
+        setTotalItems(fallbackActive.length);
+        setTotalPages(Math.ceil(fallbackActive.length / itemsPerPage) || 1);
+        setIsLoading(false);
+      });
+  }, [currentPage, debouncedSearch, filterBrand, filterYear, filterPrice, filterStore]);
+
   const activeFilterCount = [filterStore !== 'Todas', filterBrand !== 'Todas', filterType !== 'Todos', filterYear !== 'Todos', filterPrice !== 'Qualquer', filterKm !== 'Qualquer'].filter(Boolean).length;
 
   const resetFilters = () => {
@@ -345,31 +429,16 @@ const ShowcaseCatalog = () => {
     setFilterPrice('Qualquer');
     setFilterKm('Qualquer');
     setSearchQuery('');
+    setCurrentPage(1);
   };
 
   const results = useMemo(() => {
     let cars = allCars;
 
-    // Search
-    if (searchQuery) {
-      const q = searchQuery.toLowerCase();
-      cars = cars.filter(c => `${c.name} ${c.bodyType} ${c.color} ${c.brand}`.toLowerCase().includes(q));
-    }
-    // Store Filter
-    if (filterStore !== 'Todas') cars = cars.filter(c => c.storeId === filterStore);
-
-    // Brand
-    if (filterBrand !== 'Todas') cars = cars.filter(c => c.brand === filterBrand);
-    // Type
+    // Client-side complementary filters
     if (filterType !== 'Todos') cars = cars.filter(c => c.bodyType === filterType);
-    // Year
-    if (filterYear !== 'Todos') cars = cars.filter(c => c.year === parseInt(filterYear));
-    // Price
-    const priceRange = PRICE_RANGES.find(r => r.label === filterPrice);
-    if (priceRange) cars = cars.filter(c => c.price >= priceRange.min && c.price <= priceRange.max);
-    // KM
     const kmRange = KM_RANGES.find(r => r.label === filterKm);
-    if (kmRange) cars = cars.filter(c => c.mileage <= kmRange.max);
+    if (kmRange && kmRange.max < Infinity) cars = cars.filter(c => c.mileage <= kmRange.max);
 
     // Sort
     return [...cars].sort((a, b) => {
@@ -379,7 +448,29 @@ const ShowcaseCatalog = () => {
       if (sortBy === 'km') return a.mileage - b.mileage;
       return (b.featured ? 1 : 0) - (a.featured ? 1 : 0);
     });
-  }, [searchQuery, filterStore, filterBrand, filterType, filterYear, filterPrice, filterKm, sortBy]);
+  }, [allCars, filterType, filterKm, sortBy]);
+
+  // Page change handler with smooth scroll to top of catalog
+  const handlePageChange = (newPage) => {
+    if (newPage >= 1 && newPage <= totalPages && newPage !== currentPage) {
+      setCurrentPage(newPage);
+      catalogRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  // Generate numeric page array e.g. [1, 2, 3, '...', 10]
+  const pageNumbers = useMemo(() => {
+    if (totalPages <= 7) {
+      return Array.from({ length: totalPages }, (_, i) => i + 1);
+    }
+    if (currentPage <= 3) {
+      return [1, 2, 3, 4, '...', totalPages];
+    }
+    if (currentPage >= totalPages - 2) {
+      return [1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages];
+    }
+    return [1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages];
+  }, [currentPage, totalPages]);
 
   // ── Filter Sidebar content (reused for desktop & mobile drawer) ──
   const FilterPanel = () => (
@@ -443,6 +534,13 @@ const ShowcaseCatalog = () => {
           </div>
 
           <div className="flex items-center gap-2">
+            <button
+              onClick={() => navigate('/favoritos')}
+              className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
+              title="Carros Curtidos"
+            >
+              <Heart className="w-5 h-5" />
+            </button>
             {isAuthenticated ? (
               <button
                 onClick={() => navigate('/perfil')}
@@ -522,7 +620,7 @@ const ShowcaseCatalog = () => {
         </AnimatePresence>
 
         {/* ── Main Content ── */}
-        <main className="flex-1 min-w-0">
+        <main ref={catalogRef} className="flex-1 min-w-0">
           {/* Title bar */}
           <div className="flex flex-col sm:flex-row sm:items-end justify-between mb-6 gap-4">
             <div>
@@ -530,7 +628,14 @@ const ShowcaseCatalog = () => {
                 <Zap className="w-3 h-3" /> Vitrine Digital
               </div>
               <h1 className="text-2xl md:text-3xl font-black text-slate-800">Encontre Seu Carro</h1>
-              <p className="text-slate-500 text-sm mt-1">{results.length} veículo{results.length !== 1 ? 's' : ''} encontrado{results.length !== 1 ? 's' : ''}</p>
+              <p className="text-slate-500 text-sm mt-1">
+                {totalItems} veículo{totalItems !== 1 ? 's' : ''} encontrado{totalItems !== 1 ? 's' : ''}
+                {totalPages > 1 && (
+                  <span className="text-slate-400 font-normal ml-2">
+                    • Página <span className="font-semibold text-slate-700">{currentPage}</span> de <span className="font-semibold text-slate-700">{totalPages}</span>
+                  </span>
+                )}
+              </p>
             </div>
             <div className="flex items-center gap-3 shrink-0">
               <div className="relative">
@@ -570,22 +675,30 @@ const ShowcaseCatalog = () => {
             </div>
           )}
 
+          {/* Loading Indicator */}
+          {isLoading && (
+            <div className="py-6 flex items-center justify-center gap-2 text-slate-500">
+              <Loader2 className="w-5 h-5 text-brand-blue animate-spin" />
+              <span className="text-xs font-semibold">Carregando catálogo...</span>
+            </div>
+          )}
+
           {/* Results */}
           <AnimatePresence mode="wait">
             {viewMode === 'grid' ? (
-              <motion.div key="grid" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              <motion.div key={`grid-page-${currentPage}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                 {results.map((c, i) => <CarCard key={c.id} car={c} index={i} viewMode="grid" />)}
               </motion.div>
             ) : (
-              <motion.div key="list" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              <motion.div key={`list-page-${currentPage}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="flex flex-col gap-5">
                 {results.map((c, i) => <CarCard key={c.id} car={c} index={i} viewMode="list" />)}
               </motion.div>
             )}
           </AnimatePresence>
 
-          {results.length === 0 && (
+          {results.length === 0 && !isLoading && (
             <div className="w-full py-20 flex flex-col items-center justify-center text-slate-500">
               <Search className="w-12 h-12 mb-4 text-slate-300" />
               <p className="text-lg font-medium text-slate-600">Nenhum veículo encontrado.</p>
@@ -594,6 +707,87 @@ const ShowcaseCatalog = () => {
                 className="mt-4 text-brand-blue font-semibold text-sm hover:underline flex items-center gap-1">
                 <RotateCcw className="w-4 h-4" /> Limpar filtros
               </button>
+            </div>
+          )}
+
+          {/* ── Numeric Pagination Bar ── */}
+          {totalPages > 1 && (
+            <div className="mt-10 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white px-6 py-4 rounded-2xl border border-slate-200 shadow-sm">
+              <div className="text-sm text-slate-500 font-medium">
+                Página <span className="font-bold text-slate-800">{currentPage}</span> de{' '}
+                <span className="font-bold text-slate-800">{totalPages}</span>
+                <span className="text-slate-400 mx-2">•</span>
+                Total de <span className="font-bold text-slate-800">{totalItems}</span> veículo{totalItems !== 1 ? 's' : ''}
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                {/* Primeiro */}
+                <button
+                  onClick={() => handlePageChange(1)}
+                  disabled={currentPage === 1}
+                  className="p-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                  title="Primeira página"
+                >
+                  <ChevronsLeft className="w-4 h-4" />
+                </button>
+
+                {/* Anterior */}
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="flex items-center gap-1 px-3 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:border-slate-300 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  <span className="hidden sm:inline">Anterior</span>
+                </button>
+
+                {/* Números de Página */}
+                <div className="flex items-center gap-1">
+                  {pageNumbers.map((p, idx) => {
+                    if (p === '...') {
+                      return (
+                        <span key={`ellipsis-${idx}`} className="px-2 text-slate-400 font-bold select-none">
+                          ...
+                        </span>
+                      );
+                    }
+                    const isActive = p === currentPage;
+                    return (
+                      <button
+                        key={`page-${p}`}
+                        onClick={() => handlePageChange(p)}
+                        className={`w-9 h-9 rounded-xl text-sm font-bold transition-all ${
+                          isActive
+                            ? 'bg-brand-blue text-white shadow-md shadow-blue-500/25 scale-105'
+                            : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900 border border-transparent hover:border-slate-200'
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Próximo */}
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="flex items-center gap-1 px-3 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:border-slate-300 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                >
+                  <span className="hidden sm:inline">Próximo</span>
+                  <ChevronRight className="w-4 h-4" />
+                </button>
+
+                {/* Último */}
+                <button
+                  onClick={() => handlePageChange(totalPages)}
+                  disabled={currentPage === totalPages}
+                  className="p-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                  title="Última página"
+                >
+                  <ChevronsRight className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           )}
 

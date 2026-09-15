@@ -34,9 +34,11 @@ graph TD
 | **Backend API** | FastAPI / Python 3.11 | API RESTful assíncrona, validação de esquemas com Pydantic v2, autenticação JWT e orquestração de microsserviços. |
 | **Motor de Visão Computacional** | OpenCV + YOLOv8 + PIL | Pré-processamento e compressão de fotos (*LANCZOS*), detecção de classes automotivas e mapeamento de avarias na lataria. |
 | **Motor de Diagnóstico Acústico** | Python DSP + FFT / Web Audio | Análise espectral de frequências sonoras da marcha lenta e simulação de áudio mecânico. |
-| **Banco de Dados Relacional** | PostgreSQL 15 | Armazenamento de dados persistentes de veículos, lojas, laudos periciais e usuários com SQLAlchemy ORM. |
+| **Banco de Dados Relacional** | PostgreSQL 15 | Armazenamento de dados persistentes de veículos, lojas, laudos periciais, tokens de recuperação e usuários com SQLAlchemy ORM. |
 | **Cache & Mensageria** | Redis 7 Alpine | Cache em memória de consultas veiculares de placas, cotas FIPE e controle de sessões. |
 | **Agendador em Background** | APScheduler | Monitoramento periódico assíncrono (a cada 60 segundos) de débitos da Watchlist DETRAN. |
+| **Gerador de Dossiê & QR Code** | ReportLab + qrcode + Pillow | Emissão de laudo pericial oficial em PDF vetorial A4 com QR Code dinâmico apontando para `/validar/:protocolo`. |
+| **Módulo de Recuperação (OTP)** | PBKDF2 + Hash SHA-256 + Rate Limiting | Emissão de OTP de 6 dígitos com expiração de 15 minutos e proteção contra brute-force (3 req/hora). |
 
 ---
 
@@ -48,9 +50,9 @@ graph TD
 2. **DETRAN / SENATRAN (Bases Governamentais)**:
    - *Finalidade*: Checagem cadastral de débitos (IPVA, licenciamento e multas) e auditoria de restrições administrativas/judiciais (RENAJUD).
 3. **Google Gemini Multimodal API (v1beta)**:
-   - *Finalidade*: Laudo pericial visual descritivo e assistente virtual consultivo especializado no veículo via RAG.
-4. **Agregadores Automotivos B2B (Webmotors, OLX, iCarros, Mercado Livre)**:
-   - *Finalidade*: Sincronização automatizada de anúncios em múltiplos portais e exportação de Feed XML padronizado (`/api/integrations/feed.xml`).
+   - *Finalidade*: Laudo pericial visual descritivo, auditoria inteligente de documentos PDF e assistente virtual consultivo especializado no veículo via RAG.
+4. **Agregadores Automotivos B2B Homologados (Webmotors, OLX Autos e AutoCerto DMS)**:
+   - *Finalidade*: Sincronização automatizada de anúncios nos 3 portais oficiais e exportação de Feed XML padronizado (`/api/integrations/autocerto/feed.xml`).
 
 ---
 
@@ -91,6 +93,15 @@ sequenceDiagram
 - **ADR-03: Motor Híbrido de Visão Computacional (Edge/Local + Cloud Fallback)**:
   - *Decisão*: Suportar inferência com YOLOv8/OpenCV local e Google Gemini Cloud.
   - *Justificativa*: Garante que a perícia visual funcione mesmo em ambientes sem conectividade com APIs de terceiros.
+- **ADR-04: Emissão de Dossiês em PDF Vetorial A4 com ReportLab e QR Code**:
+  - *Decisão*: Abandonar renderização HTML/rasterizada e implementar geração vetorial pura em ReportLab com QR Code de 300 DPI.
+  - *Justificativa*: Permite fidelidade gráfica impressa, texto selecionável, conformidade com padrões de perícia judicial e verificação instantânea via scanner.
+- **ADR-05: Autenticação Defensiva com Recuperação de Senha por OTP e Rate Limiting**:
+  - *Decisão*: Implementar OTP de 6 dígitos persistido com hash SHA-256 (`otp:email`), validade de 15 minutos e bloqueio após 3 tentativas/hora.
+  - *Justificativa*: Protege os usuários contra invasões e sequestro de contas sem onerar a experiência de uso.
+- **ADR-06: Paginação Orientada a Banco de Dados com Envelope Padronizado**:
+  - *Decisão*: Adotar paginação server-side via SQL `OFFSET`/`LIMIT` com envelope `{ items, total, page, pages, limit }` e busca debounced.
+  - *Justificativa*: Elimina overhead de tráfego de rede e consumo excessivo de memória em clientes móveis, suportando catálogos de grande porte.
 
 ---
 

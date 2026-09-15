@@ -42,9 +42,16 @@ O **Automatch** é um ecossistema digital Fullstack de alta tecnologia que integ
   - *Tread Depth Scanner de Pneus*: Medição de sulco em milímetros com régua colorida e conformidade com a Resolução 558/80 do CONTRAN.
 - **Fintech & Negociação**:
   - *Simulador "Troca com Troco"*: Avalia o seminovo do cliente e calcula troco em dinheiro via Pix ou parcelamento da diferença em multi-bancos (Itaú, Santander, BV).
-  - *Radar de Oportunidades*: Alertas inteligentes de queda de preço e ofertas FIPE via WhatsApp, E-mail e WebPush.
+  - *Negociação Direta ("Falar com Vendedor")*: Contato direto via chat interno e WhatsApp sem taxas de reserva online.
+  - *Radar de Oportunidades & Favoritos*: Alertas de queda de preço e central de favoritos (`/favoritos`).
+- **Dossiê Pericial & Segurança**:
+  - *Dossiê em PDF Vetorial A4*: Emissão oficial com ReportLab e QR Code de 300 DPI com validação pública (`/validar/:protocolo`).
+  - *Auditoria IA de Laudos*: Análise documental com Gemini AI e validação de Magic Bytes (`%PDF-`).
+  - *Autenticação com OTP*: Recuperação de senha segura com código de 6 dígitos e rate limiting.
 - **B2B & Sincronizador Multicanal**:
-  - Sincronização em 1 clique para Webmotors, OLX Autos, iCarros e Mercado Livre com exportação de Feed XML padronizado.
+  - Sincronização em 1 clique para os 3 canais homologados: **Webmotors**, **OLX Autos** e **AutoCerto DMS** com carga de estoque direta (`/api/integrations/autocerto/feed.xml`).
+- **Catálogo Escalável**:
+  - Paginação nativa no servidor (`limit=20`, `offset`), busca unificada `ilike` e navegação numérica.
 
 ---
 
@@ -52,11 +59,13 @@ O **Automatch** é um ecossistema digital Fullstack de alta tecnologia que integ
 
 | Item | Descrição / Link |
 | :--- | :--- |
-| **Requisitos do Sistema** | [docs/requisitos.md](docs/requisitos.md) — Matriz completa de Requisitos Funcionais (RF-01 a RF-20) e Não Funcionais |
-| **Arquitetura de Software** | [docs/arquitetura.md](docs/arquitetura.md) — Diagrama de componentes, modelo de dados, integrações e ADRs |
-| **Sprints e Ciclos Ágeis** | [sprints/README.md](sprints/README.md) e [sprints/sprint-00-planejamento.md](sprints/sprint-00-planejamento.md) |
+| **Requisitos do Sistema** | [docs/requisitos.md](docs/requisitos.md) — Matriz completa de Requisitos Funcionais (RF-01 a RF-26) e Não Funcionais |
+| **Arquitetura de Software** | [docs/arquitetura.md](docs/arquitetura.md) — Diagrama de componentes, modelo de dados, integrações e ADRs (ADR-01 a ADR-06) |
+| **Backlog Priorizado** | [BACKLOG.md](BACKLOG.md) — Rastreabilidade completa de US, tarefas técnicas e DoD |
+| **Sprints e Ciclos Ágeis** | [sprints/README.md](sprints/README.md) — Histórico das Sprints 00, 01, 02 e 03 |
 | **Entregas Avaliativas** | [entregas/README.md](entregas/README.md) |
 | **Decisões Técnicas (ADRs)** | [docs/decisoes/README.md](docs/decisoes/README.md) |
+| **Histórico de Versões** | [CHANGELOG.md](CHANGELOG.md) |
 | **Backend (FastAPI)** | [backend/](backend/) — REST API assíncrona, SQLAlchemy, Pydantic v2 e serviços de IA |
 | **Frontend (React / Vite)** | [frontend/](frontend/) — SPA React 18, TailwindCSS, Framer Motion e Web Audio DSP |
 | **API Gateway (Nginx)** | [gateway/](gateway/) — Proxy reverso centralizado unificando portas e rotas |

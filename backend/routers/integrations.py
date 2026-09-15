@@ -26,22 +26,13 @@ CHANNELS = [
         "badge_cor": "#6e0ad6"
     },
     {
-        "id": "icarros",
-        "nome": "iCarros (Itaú)",
+        "id": "autocerto",
+        "nome": "AutoCerto DMS",
         "status": "conectado",
-        "tipo_integracao": "Feed Automotivo Carga Rápida",
-        "anuncios_sincronizados": 15,
-        "ultima_sincronizacao": "Há 35 minutos",
-        "badge_cor": "#ff5b00"
-    },
-    {
-        "id": "mercadolivre",
-        "nome": "Mercado Livre Veículos",
-        "status": "conectado",
-        "tipo_integracao": "Mercado Livre Motors API",
+        "tipo_integracao": "Carga Direta DMS / Feed XML + REST",
         "anuncios_sincronizados": 18,
-        "ultima_sincronizacao": "Há 5 minutos",
-        "badge_cor": "#ffe600"
+        "ultima_sincronizacao": "Há 2 minutos",
+        "badge_cor": "#0066cc"
     }
 ]
 
@@ -50,7 +41,7 @@ class SyncRequest(BaseModel):
     car_id: Optional[str] = None
     car_name: Optional[str] = "Veículo"
     store_id: Optional[int] = 1
-    channels: Optional[List[str]] = ["webmotors", "olx", "icarros", "mercadolivre"]
+    channels: Optional[List[str]] = ["webmotors", "olx", "autocerto"]
 
 
 @router.get("/channels")
@@ -66,11 +57,11 @@ async def listar_canais_integracao() -> Dict[str, Any]:
 @router.post("/sync")
 async def sincronizar_estoque_multicanal(payload: SyncRequest) -> Dict[str, Any]:
     """
-    Dispara a sincronização de estoque multi-plataforma com Webmotors, OLX, iCarros e Mercado Livre.
+    Dispara a sincronização de estoque multi-plataforma com Webmotors, OLX e AutoCerto DMS.
     Gera protocolo de envio e links de confirmação.
     """
     protocolo = f"SYNC-{uuid.uuid4().hex[:8].upper()}"
-    selected = payload.channels or ["webmotors", "olx", "icarros", "mercadolivre"]
+    selected = payload.channels or ["webmotors", "olx", "autocerto"]
 
     resultados = []
     for cid in selected:
@@ -117,4 +108,28 @@ async def gerar_feed_xml():
         </veiculo>
     </concessionaria>
 </estoque>"""
+    return Response(content=xml_content, media_type="application/xml")
+
+
+@router.get("/autocerto/feed.xml")
+async def gerar_feed_autocerto():
+    """Gera o Feed XML no padrão homologado pelo AutoCerto DMS."""
+    xml_content = """<?xml version="1.0" encoding="UTF-8"?>
+<carga_autocerto versao="3.1">
+    <identificador_loja>AUTOMATCH-B2B-01</identificador_loja>
+    <timestamp>""" + datetime.utcnow().isoformat() + """Z</timestamp>
+    <veiculos>
+        <veiculo id="1" status="disponivel">
+            <marca>Volkswagen</marca>
+            <modelo>Golf GTI 2.0 TSI</modelo>
+            <ano_fab>2021</ano_fab>
+            <ano_mod>2021</ano_mod>
+            <valor>142000.00</valor>
+            <valor_fipe>145800.00</valor_fipe>
+            <km>42000</km>
+            <integrador>AutoCerto DMS</integrador>
+            <laudo_cautelar_status>APROVADO</laudo_cautelar_status>
+        </veiculo>
+    </veiculos>
+</carga_autocerto>"""
     return Response(content=xml_content, media_type="application/xml")

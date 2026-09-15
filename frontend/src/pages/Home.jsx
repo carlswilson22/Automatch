@@ -12,6 +12,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { stores } from '../data/inventoryData';
 import StoreIdentifier from '../components/ui/StoreIdentifier';
 import { getNewCars } from '../data/newCarsManager';
+import { toggleFavorite, isFavorite } from '../data/favoritesManager';
 
 // SE O CARCARD ESTIVER EM OUTRO ARQUIVO, DESCOMENTE A LINHA ABAIXO:
 // import CarCard from '../components/CarCard';
@@ -91,11 +92,18 @@ const showcaseCars = [
 
 const CarCard = ({ car, index }) => {
   const navigate = useNavigate();
+  const [fav, setFav] = useState(() => isFavorite(car.id));
 
   // Função para navegar evitando repetição de código
   const handleDetails = (e) => {
     e?.stopPropagation();
     navigate(`/encontrar/${car.id}`);
+  };
+
+  const handleFavorite = (e) => {
+    e.stopPropagation();
+    const updated = toggleFavorite(car.id);
+    setFav(updated.includes(car.id));
   };
 
   return (
@@ -132,13 +140,13 @@ const CarCard = ({ car, index }) => {
 
           {/* Wishlist */}
           <button
-            className="w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors shadow-md group/heart"
-            onClick={(e) => {
-              e.stopPropagation();
-              // Lógica de favorito aqui
-            }}
+            className={`w-9 h-9 rounded-full backdrop-blur-sm flex items-center justify-center transition-colors shadow-md ${
+              fav ? 'bg-red-50 text-red-500' : 'bg-white/90 text-slate-500 hover:bg-white'
+            }`}
+            title={fav ? "Remover dos favoritos" : "Curtir veículo"}
+            onClick={handleFavorite}
           >
-            <Heart className="w-4 h-4 text-slate-500 group-hover/heart:text-red-500 group-hover/heart:fill-red-500 transition-all" />
+            <Heart className={`w-4 h-4 transition-all ${fav ? 'fill-red-500 text-red-500 scale-110' : 'hover:text-red-500'}`} />
           </button>
         </div>
 
@@ -313,7 +321,7 @@ const Home = () => {
 
           <div className="flex items-center gap-3">
             <button 
-              onClick={() => navigate('/perfil?tab=favoritos')} 
+              onClick={() => navigate('/favoritos')} 
               className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
               title="Carros Curtidos"
             >
@@ -459,7 +467,7 @@ const Home = () => {
         <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-12">
           <FeatureItem
             icon={<TrendingDown className="w-7 h-7" />}
-            title="Preço Justo Automatch"
+            title="Preço FIPE Automatch"
             description="Nossa inteligência artificial analisa FIPE, quilometragem e estado de conservação para sugerir o preço real."
             color="text-blue-600"
             bg="bg-blue-50"

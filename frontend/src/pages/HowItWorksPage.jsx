@@ -24,7 +24,7 @@ export default function HowItWorksPage() {
     {
       icon: Banknote,
       title: "4. Negocie e Feche",
-      description: "Converse com o vendedor diretamente pelo chat. Simule financiamentos na hora e, se quiser, reserve online pagando um sinal seguro."
+      description: "Converse com o vendedor diretamente pelo chat ou WhatsApp. Simule financiamentos na hora e agende sua visita presencial para test-drive."
     }
   ];
 

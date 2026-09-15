@@ -19,28 +19,71 @@ def get_stores(db: Session = Depends(get_db)) -> List[schemas.StoreSchema]:
     return stores
 
 
-@router.get("/cars", response_model=List[schemas.CarSchema])
+@router.get("/cars")
 def get_cars(
     db: Session = Depends(get_db),
     store_id: Optional[int] = None,
-    q: Optional[str] = None
-) -> List[schemas.CarSchema]:
+    q: Optional[str] = None,
+    brand: Optional[str] = None,
+    year_min: Optional[int] = None,
+    year_max: Optional[int] = None,
+    price_min: Optional[float] = None,
+    price_max: Optional[float] = None,
+    page: Optional[int] = 1,
+    limit: Optional[int] = 20
+):
+    """
+    Retorna catálogo de veículos com paginação server-side, busca textual e filtros combinados.
+    Envelope: { items: [...], total: N, page: P, pages: T, limit: L }
+    """
     query = db.query(models.Car)
     
     if store_id is not None:
         query = query.filter(models.Car.store_id == store_id)
         
     if q is not None and len(q.strip()) > 0:
-        search_term = f"%{q}%"
+        search_term = f"%{q.strip()}%"
         query = query.filter(
             or_(
                 models.Car.brand.ilike(search_term),
-                models.Car.model.ilike(search_term)
+                models.Car.model.ilike(search_term),
+                models.Car.description.ilike(search_term)
             )
         )
-        
-    cars = query.all()
-    return cars
+
+    if brand is not None and brand.strip():
+        query = query.filter(models.Car.brand.ilike(f"%{brand.strip()}%"))
+
+    if year_min is not None:
+        query = query.filter(models.Car.year >= year_min)
+
+    if year_max is not None:
+        query = query.filter(models.Car.year <= year_max)
+
+    if price_min is not None:
+        query = query.filter(models.Car.price >= price_min)
+
+    if price_max is not None:
+        query = query.filter(models.Car.price <= price_max)
+
+    # Total antes da paginação
+    total = query.count()
+
+    # Sanitizar parâmetros de paginação
+    page = max(1, page or 1)
+    limit = max(1, min(100, limit or 20))
+    pages = max(1, (total + limit - 1) // limit)
+    offset = (page - 1) * limit
+
+    cars = query.offset(offset).limit(limit).all()
+
+    return {
+        "items": [schemas.CarSchema.model_validate(c) for c in cars],
+        "total": total,
+        "page": page,
+        "pages": pages,
+        "limit": limit
+    }
 
 
 @router.get("/cars/{car_id}", response_model=schemas.CarSchema)

@@ -4,15 +4,14 @@ import { Share2, X, CheckCircle2, RefreshCw, ExternalLink, Globe2, FileCode, Che
 import axios from 'axios';
 
 const CHANNELS_CONFIG = [
-  { id: 'webmotors', name: 'Webmotors', color: '#e01931', type: 'API REST v2 + Feed XML', iconText: 'WM' },
-  { id: 'olx', name: 'OLX Autos', color: '#6e0ad6', type: 'AutoXML / Carga de Estoque', iconText: 'OLX' },
-  { id: 'icarros', name: 'iCarros (Itaú)', color: '#ff5b00', type: 'Feed Carga Rápida', iconText: 'iC' },
-  { id: 'mercadolivre', name: 'Mercado Livre Motors', color: '#e5c200', type: 'Mercado Livre Motors API', iconText: 'ML' }
+  { id: 'webmotors', name: 'Webmotors', color: '#e01931', type: 'API REST v2 + Feed XML', iconText: 'WM', portalUrl: 'https://www.webmotors.com.br' },
+  { id: 'olx', name: 'OLX Autos', color: '#6e0ad6', type: 'AutoXML / Carga de Estoque', iconText: 'OLX', portalUrl: 'https://www.olx.com.br/autos' },
+  { id: 'autocerto', name: 'AutoCerto DMS', color: '#0066cc', type: 'Carga Direta DMS / Feed XML', iconText: 'AC', portalUrl: 'https://www.autocerto.com' }
 ];
 
 const MultichannelSyncModal = ({ isOpen, onClose, car }) => {
   const [channelsStatus, setChannelsStatus] = useState(
-    CHANNELS_CONFIG.map(c => ({ ...c, status: 'sincronizado', lastSync: 'Há 15 min' }))
+    CHANNELS_CONFIG.map(c => ({ ...c, status: 'sincronizado', lastSync: 'Há 10 min' }))
   );
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncProtocol, setSyncProtocol] = useState(null);
@@ -25,7 +24,7 @@ const MultichannelSyncModal = ({ isOpen, onClose, car }) => {
       const resp = await axios.post('/api/integrations/sync', {
         car_id: car?.id || '1',
         car_name: car?.name || 'Veículo',
-        channels: ['webmotors', 'olx', 'icarros', 'mercadolivre']
+        channels: ['webmotors', 'olx', 'autocerto']
       });
 
       if (resp.data && resp.data.status === 'success') {
@@ -103,11 +102,11 @@ const MultichannelSyncModal = ({ isOpen, onClose, car }) => {
                   Conectado
                 </span>
                 <a
-                  href={`https://www.${ch.id}.com.br`}
+                  href={ch.portalUrl || `https://www.${ch.id}.com.br`}
                   target="_blank"
                   rel="noreferrer"
                   className="text-slate-400 hover:text-white p-1"
-                  title="Acessar portal"
+                  title={`Acessar portal ${ch.name}`}
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
                 </a>
@@ -133,17 +132,18 @@ const MultichannelSyncModal = ({ isOpen, onClose, car }) => {
             className="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-500 via-blue-600 to-cyan-500 hover:opacity-90 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-indigo-900/40 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
           >
             <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-            <span>{isSyncing ? 'Transmitindo para 4 canais...' : 'Sincronizar em Todos os Canais'}</span>
+            <span>{isSyncing ? 'Transmitindo para 3 canais...' : 'Sincronizar em Todos os 3 Canais'}</span>
           </button>
 
           <a
-            href="http://localhost:8000/api/integrations/feed.xml"
+            href="/api/integrations/autocerto/feed.xml"
             target="_blank"
             rel="noreferrer"
             className="w-full sm:w-auto px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs flex items-center justify-center gap-2 border border-slate-700 transition-all whitespace-nowrap"
+            title="Visualizar Feed XML do AutoCerto"
           >
             <FileCode className="w-4 h-4 text-cyan-400" />
-            <span>Feed XML</span>
+            <span>Feed AutoCerto XML</span>
           </a>
         </div>
       </motion.div>

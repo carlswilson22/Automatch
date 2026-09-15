@@ -256,25 +256,31 @@ def run_tests():
     print("✅ TESTE 9 PASSOU COM SUCESSO!")
 
     # -------------------------------------------------------------------------
-    # TESTE 10: Sincronizador Multicanal B2B (GET/POST /api/integrations)
+    # TESTE 10: Sincronizador Multicanal B2B (Webmotors, OLX, AutoCerto)
     # -------------------------------------------------------------------------
-    print("\n[TESTE 10] Sincronizador Multicanal B2B (Webmotors, OLX, iCarros, ML)...")
+    print("\n[TESTE 10] Sincronizador Multicanal B2B (Webmotors, OLX, AutoCerto)...")
     resp10_ch = client.get("/api/integrations/channels")
     assert resp10_ch.status_code == 200, f"Falha ao listar canais: {resp10_ch.text}"
     data10_ch = resp10_ch.json()
     print(f"Canais Disponíveis: {data10_ch.get('total_canais')} parceiros integrados")
-    assert data10_ch.get("total_canais") == 4
+    assert data10_ch.get("total_canais") == 3, f"Esperado 3 canais, obtido {data10_ch.get('total_canais')}"
+    
+    # Valida presença do AutoCerto, Webmotors e OLX
+    nomes_canais = [c["id"] for c in data10_ch.get("canais", [])]
+    assert "autocerto" in nomes_canais, "AutoCerto deve estar presente nos canais integrados"
+    assert "webmotors" in nomes_canais, "Webmotors deve estar presente nos canais integrados"
+    assert "olx" in nomes_canais, "OLX deve estar presente nos canais integrados"
 
     resp10_sync = client.post("/api/integrations/sync", json={
         "car_id": "1",
         "car_name": "Golf GTI 2.0 TSI",
-        "channels": ["webmotors", "olx", "icarros", "mercadolivre"]
+        "channels": ["webmotors", "olx", "autocerto"]
     })
     assert resp10_sync.status_code == 200, f"Falha na sincronização multicanal: {resp10_sync.text}"
     data10_sync = resp10_sync.json()
     print(f"Protocolo: {data10_sync.get('protocolo')} | Sincronizados: {data10_sync.get('total_sincronizados')} canais")
     assert data10_sync.get("status") == "success"
-    assert data10_sync.get("total_sincronizados") == 4
+    assert data10_sync.get("total_sincronizados") == 3
     print("✅ TESTE 10 PASSOU COM SUCESSO!")
 
     print("\n" + "=" * 70)
