@@ -2,9 +2,7 @@
 
 Repositório institucional de Projeto Integrador criado a partir do template do CEUB.
 
-> **Professor(a):** Leia as DIRETRIZES INSTITUCIONAIS constantes no repositório [DIRETRIZES](https://github.com/CAMPUSCEUB/DIRETRIZES), em especial o [Guia dos Professores](https://github.com/CAMPUSCEUB/DIRETRIZES/guias/github-enterprise-campus-ceub.md) e o [checklist do GitHub Enterprise](https://github.com/CAMPUSCEUB/DIRETRIZES/guias/github-enterprise-campus-ceub.md).
->
-> **Estudante:** Consulte os guias de desenvolvimento e documentação técnica em [docs/](docs/).
+Estudante:** Consulte os guias de desenvolvimento e documentação técnica em [docs/](docs/).
 
 ---
 
@@ -16,9 +14,8 @@ Repositório institucional de Projeto Integrador criado a partir do template do 
 | **Curso** | Análise e Desenvolvimento de Sistemas (ADS) |
 | **Organização no GitHub** | [CampusCEUB](https://github.com/CAMPUSCEUB) |
 | **Repositório Oficial** | [ADS-AUTOMATCH](https://github.com/CAMPUSCEUB/ADS-AUTOMATCH) |
-| **Professor(a) Orientador(a)** | Prof. Flávio César |
-| **Equipe** | Carlos Wilson e Equipe Automatch |
-| **ID do Projeto** | ADS-AUTOMATCH-2024 |
+| **Equipe** | Carlos Wilson, Matheus, Paulo Arthur e Vinicius Aurelio |
+| **ID do Projeto** | ADS-AUTOMATCH-2026 |
 
 ---
 
