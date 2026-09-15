@@ -7,6 +7,10 @@ import time
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 # Chave secreta obtida do ambiente
 SECRET_KEY = os.getenv("JWT_SECRET")
 if not SECRET_KEY:
