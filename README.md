@@ -16,7 +16,7 @@ Repositório institucional de Projeto Integrador criado a partir do template do 
 | **Curso** | Análise e Desenvolvimento de Sistemas (ADS) |
 | **Organização no GitHub** | [CampusCEUB](https://github.com/CAMPUSCEUB) |
 | **Repositório Oficial** | [ADS-AUTOMATCH](https://github.com/CAMPUSCEUB/ADS-AUTOMATCH) |
-| **Professor(a) Orientador(a)** | Prof. Flávio César |
+| **Professor(a) Orientador(a)** | Prof. Valdemir dos Santos |
 | **Equipe** | Carlos Wilson e Equipe Automatch |
 | **ID do Projeto** | ADS-AUTOMATCH-2024 |
 
