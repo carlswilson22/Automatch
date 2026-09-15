@@ -5,6 +5,7 @@ import logging
 import base64
 import re
 import zlib
+import asyncio
 from typing import Any, Dict, Optional, List
 
 import httpx
@@ -42,6 +43,47 @@ GEMINI_MODELS = [
     "gemini-1.5-flash-latest"
 ]
 
+# Timeout reduzido para evitar travamento do Event Loop em caso de overload
+_GEMINI_TIMEOUT = 6.0
+# Máximo de retentativas por modelo em caso de 503
+_GEMINI_MAX_RETRIES = 2
+
+
+async def _try_gemini_model(
+    client: httpx.AsyncClient,
+    model_name: str,
+    url: str,
+    body: dict
+) -> Optional[str]:
+    """Tenta um único modelo Gemini com exponential backoff em 503."""
+    for attempt in range(_GEMINI_MAX_RETRIES):
+        try:
+            response = await client.post(url, json=body)
+            if response.status_code == 200:
+                res_json = response.json()
+                candidates = res_json.get("candidates", [])
+                if candidates:
+                    texto = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+                    if texto:
+                        return texto.strip()
+            elif response.status_code == 503:
+                # Sobrecarga — aguarda antes de tentar novamente
+                wait = 0.5 * (2 ** attempt)
+                logger.warning("Gemini [%s] 503 (sobrecarga). Tentativa %d/%d. Aguardando %.1fs.",
+                               model_name, attempt + 1, _GEMINI_MAX_RETRIES, wait)
+                await asyncio.sleep(wait)
+                continue
+            else:
+                logger.warning(
+                    "Gemini [%s] retornou status %s: %s",
+                    model_name, response.status_code, response.text[:200]
+                )
+                return None
+        except Exception as e:
+            logger.warning("Falha ao comunicar com Gemini [%s]: %s", model_name, e)
+            return None
+    return None
+
 
 async def call_gemini_generate(
     api_key: str,
@@ -52,7 +94,8 @@ async def call_gemini_generate(
 ) -> Optional[str]:
     """
     Chamada assíncrona robusta para o Google Gemini API (v1beta).
-    Normaliza formatação (inlineData camelCase) e testa modelos em fallback.
+    Paraleliza os 2 primeiros modelos e usa fallback sequencial nos demais.
+    Timeout reduzido para 6s por requisição + exponential backoff em 503.
     """
     if not api_key:
         return None
@@ -85,27 +128,29 @@ async def call_gemini_generate(
     if system_prompt:
         body["system_instruction"] = {"parts": [{"text": system_prompt}]}
 
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        for model_name in GEMINI_MODELS:
+    async with httpx.AsyncClient(timeout=_GEMINI_TIMEOUT) as client:
+        # Fase 1: tenta os 2 primeiros modelos em paralelo
+        primary_models = GEMINI_MODELS[:2]
+        tasks_parallel = [
+            _try_gemini_model(
+                client,
+                m,
+                f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent?key={api_key}",
+                body
+            )
+            for m in primary_models
+        ]
+        results = await asyncio.gather(*tasks_parallel, return_exceptions=True)
+        for res in results:
+            if isinstance(res, str) and res:
+                return res
+
+        # Fase 2: fallback sequencial nos modelos restantes
+        for model_name in GEMINI_MODELS[2:]:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
-            try:
-                response = await client.post(url, json=body)
-                if response.status_code == 200:
-                    res_json = response.json()
-                    candidates = res_json.get("candidates", [])
-                    if candidates:
-                        texto = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "")
-                        if texto:
-                            return texto.strip()
-                else:
-                    logger.warning(
-                        "Gemini [%s] retornou status %s: %s",
-                        model_name,
-                        response.status_code,
-                        response.text[:200]
-                    )
-            except Exception as e:
-                logger.warning("Falha ao comunicar com Gemini [%s]: %s", model_name, e)
+            result = await _try_gemini_model(client, model_name, url, body)
+            if result:
+                return result
 
     return None
 

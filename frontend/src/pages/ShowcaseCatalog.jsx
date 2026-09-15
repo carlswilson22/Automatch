@@ -74,6 +74,71 @@ const PRICE_RANGES = [
   { label: 'Acima de R$ 200.000', min: 200000, max: Infinity },
 ];
 
+// ─── HELPER: Formatação de Carros Locais ─────────────────────────────────────
+const formatLocalCar = (c) => {
+  const numPrice = typeof c.preco === 'number' ? c.preco : (parseFloat(String(c.preco).replace(/[^\d]/g, '')) || 0);
+  return {
+    id: c.id,
+    name: `${c.marca} ${c.modelo}`,
+    brand: c.marca,
+    year: c.ano,
+    price: numPrice,
+    color: c.cor || 'Prata',
+    mileage: c.km ? Number(c.km) : 0,
+    image: c.imagem || '/images/FotoHondaCivic.jpeg',
+    bodyType: 'Particular',
+    icon: Car,
+    featured: true,
+    seller: 'Vendedor Particular',
+    location: c.localizacao || 'São Paulo, SP',
+    description: c.descricao || 'Veículo anunciado pelo proprietário.',
+    tags: [c.transmissao || 'Automático', 'Novidade'],
+    storeId: c.storeId || 'store-1',
+    plate: 'ABC1234',
+    fipeCode: '004487-3'
+  };
+};
+
+// ─── SKELETON LOADER CARD ───────────────────────────────────────────────────
+const CatalogSkeleton = ({ viewMode }) => {
+  if (viewMode === 'list') {
+    return (
+      <div className="bg-white rounded-2xl overflow-hidden border border-slate-200 p-4 animate-pulse flex flex-col md:flex-row gap-5 shadow-sm">
+        <div className="w-full md:w-80 h-48 bg-slate-200 rounded-xl shrink-0" />
+        <div className="flex-1 flex flex-col justify-between py-2 space-y-3">
+          <div className="space-y-2">
+            <div className="h-6 bg-slate-200 rounded-lg w-2/3" />
+            <div className="h-4 bg-slate-100 rounded w-1/4" />
+          </div>
+          <div className="grid grid-cols-3 gap-2 py-2">
+            <div className="h-8 bg-slate-100 rounded-lg" />
+            <div className="h-8 bg-slate-100 rounded-lg" />
+            <div className="h-8 bg-slate-100 rounded-lg" />
+          </div>
+          <div className="h-4 bg-slate-100 rounded w-full" />
+          <div className="h-10 bg-slate-200 rounded-xl w-1/3" />
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="bg-white rounded-2xl overflow-hidden border border-slate-200 animate-pulse flex flex-col shadow-sm">
+      <div className="aspect-[16/10] bg-slate-200 w-full" />
+      <div className="p-4 flex-1 flex flex-col space-y-3">
+        <div className="h-6 bg-slate-200 rounded-lg w-3/4" />
+        <div className="h-4 bg-slate-100 rounded w-1/3" />
+        <div className="grid grid-cols-3 gap-2 py-2">
+          <div className="h-8 bg-slate-100 rounded-lg" />
+          <div className="h-8 bg-slate-100 rounded-lg" />
+          <div className="h-8 bg-slate-100 rounded-lg" />
+        </div>
+        <div className="h-4 bg-slate-100 rounded w-full" />
+        <div className="h-10 bg-slate-200 rounded-xl mt-auto" />
+      </div>
+    </div>
+  );
+};
+
 // ─── CAR CARD ────────────────────────────────────────────────────────────────
 const CarCard = ({ car, index, viewMode }) => {
   const navigate = useNavigate();
@@ -98,6 +163,9 @@ const CarCard = ({ car, index, viewMode }) => {
           <img 
             src={car.image || '/images/FotoGolfGTI.jpeg'} 
             alt={car.name} 
+            loading="lazy"
+            width="320"
+            height="200"
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
           />
           {car.featured && (
@@ -106,6 +174,7 @@ const CarCard = ({ car, index, viewMode }) => {
             </div>
           )}
           <button onClick={handleLike}
+            aria-label={liked ? "Remover dos favoritos" : "Adicionar aos favoritos"}
             title={liked ? "Remover dos favoritos" : "Curtir veículo"}
             className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors shadow-md z-10">
             <Heart className={`w-4 h-4 transition-all ${liked ? 'fill-red-500 text-red-500 scale-110' : 'text-slate-400 hover:text-red-500'}`} />
@@ -151,6 +220,9 @@ const CarCard = ({ car, index, viewMode }) => {
         <img 
           src={car.image || '/images/FotoGolfGTI.jpeg'} 
           alt={car.name} 
+          loading="lazy"
+          width="400"
+          height="250"
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
         />
         {car.featured && (
@@ -162,6 +234,7 @@ const CarCard = ({ car, index, viewMode }) => {
           <p className="text-2xl font-black text-white drop-shadow-md">R$ {car.price.toLocaleString('pt-BR')}</p>
         </div>
         <button onClick={handleLike}
+          aria-label={liked ? "Remover dos favoritos" : "Adicionar aos favoritos"}
           title={liked ? "Remover dos favoritos" : "Curtir veículo"}
           className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors shadow-md z-10">
           <Heart className={`w-4 h-4 transition-all ${liked ? 'fill-red-500 text-red-500 scale-110' : 'text-slate-400 hover:text-red-500'}`} />
@@ -345,29 +418,7 @@ const ShowcaseCatalog = () => {
           fipeCode: c.fipe_code || '004487-3'
         }));
 
-        const localFormatted = local.map(c => {
-          const numPrice = typeof c.preco === 'number' ? c.preco : (parseFloat(String(c.preco).replace(/[^\d]/g, '')) || 0);
-          return {
-            id: c.id,
-            name: `${c.marca} ${c.modelo}`,
-            brand: c.marca,
-            year: c.ano,
-            price: numPrice,
-            color: c.cor || 'Prata',
-            mileage: c.km ? Number(c.km) : 0,
-            image: c.imagem || '/images/FotoHondaCivic.jpeg',
-            bodyType: 'Particular',
-            icon: Car,
-            featured: true,
-            seller: 'Vendedor Particular',
-            location: c.localizacao || 'São Paulo, SP',
-            description: c.descricao || 'Veículo anunciado pelo proprietário.',
-            tags: [c.transmissao || 'Automático', 'Novidade'],
-            storeId: c.storeId || 'store-1',
-            plate: 'ABC1234',
-            fipeCode: '004487-3'
-          };
-        });
+        const localFormatted = local.map(formatLocalCar);
 
         // Merge local & static fallback if needed
         let listToUse = [...apiFormatted];
@@ -388,29 +439,7 @@ const ShowcaseCatalog = () => {
       .catch(() => {
         // Fallback for offline / mock mode
         const local = getNewCars();
-        const localFormatted = local.map(c => {
-          const numPrice = typeof c.preco === 'number' ? c.preco : (parseFloat(String(c.preco).replace(/[^\d]/g, '')) || 0);
-          return {
-            id: c.id,
-            name: `${c.marca} ${c.modelo}`,
-            brand: c.marca,
-            year: c.ano,
-            price: numPrice,
-            color: c.cor || 'Prata',
-            mileage: c.km ? Number(c.km) : 0,
-            image: c.imagem || '/images/FotoHondaCivic.jpeg',
-            bodyType: 'Particular',
-            icon: Car,
-            featured: true,
-            seller: 'Vendedor Particular',
-            location: c.localizacao || 'São Paulo, SP',
-            description: c.descricao || 'Veículo anunciado pelo proprietário.',
-            tags: [c.transmissao || 'Automático', 'Novidade'],
-            storeId: c.storeId || 'store-1',
-            plate: 'ABC1234',
-            fipeCode: '004487-3'
-          };
-        });
+        const localFormatted = local.map(formatLocalCar);
         const fallbackActive = [...localFormatted, ...showcaseCars].filter(c => !isCarDeleted(c.id));
         setAllCars(fallbackActive);
         setTotalItems(fallbackActive.length);
@@ -685,7 +714,13 @@ const ShowcaseCatalog = () => {
 
           {/* Results */}
           <AnimatePresence mode="wait">
-            {viewMode === 'grid' ? (
+            {isLoading ? (
+              <div className={viewMode === 'grid' ? "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6" : "flex flex-col gap-5"}>
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <CatalogSkeleton key={`skeleton-${i}`} viewMode={viewMode} />
+                ))}
+              </div>
+            ) : viewMode === 'grid' ? (
               <motion.div key={`grid-page-${currentPage}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                 className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
                 {results.map((c, i) => <CarCard key={c.id} car={c} index={i} viewMode="grid" />)}
@@ -727,6 +762,7 @@ const ShowcaseCatalog = () => {
                   disabled={currentPage === 1}
                   className="p-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                   title="Primeira página"
+                  aria-label="Primeira página"
                 >
                   <ChevronsLeft className="w-4 h-4" />
                 </button>
@@ -736,6 +772,7 @@ const ShowcaseCatalog = () => {
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
                   className="flex items-center gap-1 px-3 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:border-slate-300 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                  aria-label="Página anterior"
                 >
                   <ChevronLeft className="w-4 h-4" />
                   <span className="hidden sm:inline">Anterior</span>
@@ -756,6 +793,7 @@ const ShowcaseCatalog = () => {
                       <button
                         key={`page-${p}`}
                         onClick={() => handlePageChange(p)}
+                        aria-label={`Página ${p}`}
                         className={`w-9 h-9 rounded-xl text-sm font-bold transition-all ${
                           isActive
                             ? 'bg-brand-blue text-white shadow-md shadow-blue-500/25 scale-105'
@@ -773,6 +811,7 @@ const ShowcaseCatalog = () => {
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
                   className="flex items-center gap-1 px-3 py-2 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600 hover:bg-slate-50 hover:border-slate-300 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                  aria-label="Próxima página"
                 >
                   <span className="hidden sm:inline">Próximo</span>
                   <ChevronRight className="w-4 h-4" />
@@ -784,6 +823,7 @@ const ShowcaseCatalog = () => {
                   disabled={currentPage === totalPages}
                   className="p-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
                   title="Última página"
+                  aria-label="Última página"
                 >
                   <ChevronsRight className="w-4 h-4" />
                 </button>
