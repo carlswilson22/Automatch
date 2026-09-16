@@ -1,4 +1,4 @@
-# Template de ADR
+# ADR-007: Refatoração e Implementação de Novas Funcionalidades
 
 ## Título
 
