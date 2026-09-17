@@ -235,8 +235,8 @@ O banco de dados é inicializado automaticamente com o usuário administrador pa
 ### 1. Hub Pericial Multidimensional IA
 * **Scanner de Carroceria HD:** Mapeamento pericial de riscos e amassados com coordenadas $(X, Y)$, classificação de gravidade e estimativa de reparo em R$.
 * **Varredura 360° Interativa (`POST /api/analise-360`):** Inspeção com rotação contínua por arraste e mapeamento de avarias em 8 quadrantes angulares.
-* **Vídeo Pericial de 15 Segundos (`PericialVideoViewer`):** Player interativo dedicado com linha do tempo de 15s e 3 checkpoints periciais (0-5s Frente & Óptica, 5-10s Linha de Cintura & Pneus, 10-15s Traseira & Motor), com upload de mídias de vistoria no backend (`POST /api/v1/pericia/video/upload`).
-* **Comparador Multidimensional Lado a Lado (`VehicleComparatorModal`):** Comparação dinâmica de até 3 veículos simultaneamente sem uso de TrustScore, avaliando Preço vs Tabela FIPE Oficial, Quilometragem e Média Anual (km/ano), Integridade Estrutural do Laudo (100% Aprovado), Situação DETRAN e Ficha Mecânica.
+* **Vídeo Pericial de 15 Segundos (`PericialVideoViewer`):** Player interativo dedicado com linha do tempo de 15s e 3 checkpoints periciais (0-5s Frente & Óptica, 5-10s Linha Central do Veículo & Pneus, 10-15s Traseira & Motor), com upload de mídias de vistoria no backend (`POST /api/v1/pericia/video/upload`).
+* **Comparador Multidimensional Lado a Lado (`VehicleComparatorModal`):** Comparação dinâmica de até 3 veículos simultaneamente avaliando Preço vs Tabela FIPE Oficial, Quilometragem e Média Anual (km/ano), Integridade Estrutural do Laudo (100% Aprovado), Situação DETRAN e Ficha Mecânica.
 * **Pre-warm do Modelo YOLOv8:** Inicialização em thread assíncrona durante o startup do servidor, eliminando picos de latência na primeira análise do usuário.
 * **Gemini Paralelizado com Fallback:** Execução paralela dos modelos de IA (`asyncio.gather`), timeout otimizado de 6s e retry automático com exponential backoff para erros 503.
 
