@@ -20,7 +20,7 @@ O **Automatch** é um ecossistema digital automotivo Fullstack de alto padrão p
 | **Curso** | Análise e Desenvolvimento de Sistemas (ADS) |
 | **Organização no GitHub** | [CampusCEUB](https://github.com/CAMPUSCEUB) |
 | **Repositório Oficial** | [ADS-AUTOMATCH](https://github.com/CAMPUSCEUB/ADS-AUTOMATCH) |
-| **Equipe** | Carlos Wilson, Matheus, Paulo Arthur e Vinicius Aurelio |
+| **Equipe** | Carlos Wilson, Matheus Porto, Paulo Arthur e Vinicius Aurelio |
 | **ID do Projeto** | ADS-AUTOMATCH-2026 |
 
 ---
