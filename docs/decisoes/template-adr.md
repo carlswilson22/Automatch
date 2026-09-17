@@ -2,32 +2,37 @@
 
 ## Título
 
-Informe um título curto e objetivo para a decisão.
+Refatoração e adição de funcionalidades
 
 ## Status
 
-Exemplo: proposto, aprovado, substituído ou descontinuado.
+Aprovado
 
 ## Data
 
-Registre a data da decisão no formato AAAA-MM-DD.
+15/09/26
 
 ## Contexto
 
-Descreva o problema, a restrição, a necessidade ou a oportunidade que motivou a decisão.
+As funcionalidades de vizualização de carros curtidos, visão pericial não estavam agindo conforme o planejado; Será adicionado a função de visão pericial em vídeo de 15s que será colocado dentro do anuncio de qualquer veículo e recebimento de feedback da ia após inserção de laudo cautelar
 
 ## Decisão
 
-Explique a escolha feita de forma clara e verificável.
+Após a equipe discutir sobre o contexto e o status do problema, a equipe decidiu seguir com a resolução do contexto
 
 ## Alternativas consideradas
 
-Liste as principais alternativas avaliadas e por que não foram escolhidas.
+Não teve outras alternativas consideradas
 
 ## Consequências
 
-Registre os impactos esperados, os trade-offs, os riscos, os custos ou os ajustes necessários após a decisão.
+Melhoria das funcionalidades e status do sistema
 
 ## Links relacionados
 
-Inclua links para `issues`, `pull requests`, documentos, evidências ou reuniões associadas.
+- **Issue relacionada:** [#2 - [ADR] Refatoração e adição de funcionalidades](https://github.com/CAMPUSCEUB/ADS-AUTOMATCH/issues/2)
+- **Pull Request:** [#3 - feat(docs): atas de reunião, ADRs e melhorias no sistema](https://github.com/CAMPUSCEUB/ADS-AUTOMATCH/pull/3)
+- **Ata de Reunião Associada:** [docs/reunioes/template-reuniao.md](https://github.com/CAMPUSCEUB/ADS-AUTOMATCH/blob/main/docs/reunioes/template-reuniao.md)
+- **Documento de Arquitetura:** [docs/arquitetura.md](https://github.com/CAMPUSCEUB/ADS-AUTOMATCH/blob/main/docs/arquitetura.md)
+- **Documento de Requisitos:** [docs/requisitos.md](https://github.com/CAMPUSCEUB/ADS-AUTOMATCH/blob/main/docs/requisitos.md)
+- **Relatório de Sprint 03:** [sprints/sprint-03.md](https://github.com/CAMPUSCEUB/ADS-AUTOMATCH/blob/main/sprints/sprint-03.md)
