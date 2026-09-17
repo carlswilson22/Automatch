@@ -1,5 +1,8 @@
 import logging
+import asyncio
+from contextlib import asynccontextmanager
 from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -27,38 +30,30 @@ def _resolve_uploads_dir() -> Path:
 
 UPLOADS_DIR = _resolve_uploads_dir()
 
-# Create tables
-models.Base.metadata.create_all(bind=engine)
 
-app = FastAPI(
-    title="Automatch API",
-    description="API de Gestão Automotiva, Laudos Cautelares, Integração FIPE e Consulta DETRAN",
-    version="2.1.0"
-)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"], 
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-# Registra as rotas
-app.include_router(auth.router)
-app.include_router(cars.router)
-app.include_router(detran.router)
-app.include_router(ai_vision.router)
-app.include_router(uploads.router)
-app.include_router(tradein.router)
-app.include_router(alerts.router)
-app.include_router(integrations.router)
-app.include_router(laudos_export.router)
+async def _prewarm_yolo():
+    """Carrega o modelo YOLOv8 em background thread no startup para eliminar cold-start."""
+    try:
+        loop = asyncio.get_event_loop()
+        await loop.run_in_executor(None, _load_yolo_sync)
+        logger.info("YOLOv8 pré-carregado com sucesso no startup.")
+    except Exception as e:
+        logger.warning("Pre-warm do YOLOv8 falhou (modo sem GPU): %s", e)
 
 
-@app.on_event("startup")
-def on_startup():
-    """Inicialização dos serviços de banco e tarefas agendadas."""
+def _load_yolo_sync():
+    from services.ai_service import get_yolo_model
+    get_yolo_model()
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Lifespan context manager (substitui @on_event deprecated do FastAPI ≥ 0.93).
+    Inicializa banco, seed de admin, scheduler e pre-warm do modelo YOLO.
+    """
+    # ── Startup ────────────────────────────────────────────────────────────────
+    models.Base.metadata.create_all(bind=engine)
     # Auto-seed admin user se não existir
     db = SessionLocal()
     try:
@@ -76,13 +71,54 @@ def on_startup():
             db.commit()
             logger.info("Admin padrão cadastrado com sucesso.")
     except Exception as e:
-        logger.warning(f"Aviso na verificação de admin: {e}")
+        logger.warning("Aviso na verificação de admin: %s", e)
         db.rollback()
     finally:
         db.close()
-        
+
+    # Inicializa tarefas agendadas
     tasks.start_scheduler()
 
-@app.on_event("shutdown")
-def on_shutdown():
+    # Pre-warm do YOLO em background (não bloqueia o startup)
+    asyncio.create_task(_prewarm_yolo())
+
+    yield  # Aplicação rodando
+
+    # ── Shutdown ───────────────────────────────────────────────────────────────
     tasks.shutdown_scheduler()
+
+
+app = FastAPI(
+    title="Automatch API",
+    description="API de Gestão Automotiva, Laudos Cautelares, Integração FIPE e Consulta DETRAN",
+    version="2.2.0",
+    lifespan=lifespan,
+)
+
+# ── CORS seguro: origens explícitas via variável de ambiente ───────────────────
+import os
+
+_raw_origins = os.getenv(
+    "ALLOWED_ORIGINS",
+    "http://localhost:5173,http://localhost:3000,http://frontend:5173"
+)
+ALLOWED_ORIGINS = [o.strip() for o in _raw_origins.split(",") if o.strip()]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Authorization", "Content-Type", "X-Requested-With"],
+)
+
+# ── Registra as rotas ─────────────────────────────────────────────────────────
+app.include_router(auth.router)
+app.include_router(cars.router)
+app.include_router(detran.router)
+app.include_router(ai_vision.router)
+app.include_router(uploads.router)
+app.include_router(tradein.router)
+app.include_router(alerts.router)
+app.include_router(integrations.router)
+app.include_router(laudos_export.router)

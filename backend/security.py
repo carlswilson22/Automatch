@@ -7,8 +7,12 @@ import time
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 
-# Chave secreta obtida do ambiente com fallback seguro de contingência
-SECRET_KEY = os.getenv("JWT_SECRET", "automatch-jwt-secret-key-production-ceub-2026")
+from dotenv import load_dotenv
+
+load_dotenv()
+
+# Chave secreta obtida do ambiente com fallback seguro de contingencia
+SECRET_KEY = os.getenv("JWT_SECRET") or "automatch-jwt-secret-key-production-ceub-2026"
 
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 dias

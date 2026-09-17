@@ -237,9 +237,9 @@ export default function PlansPage() {
               <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-6">
                 <Award className="w-6 h-6" />
               </div>
-              <h3 className="text-xl font-bold text-white mb-2">Preço Justo Automatch</h3>
+              <h3 className="text-xl font-bold text-white mb-2">Preço FIPE Automatch</h3>
               <p className="text-slate-400 text-sm leading-relaxed">
-                Carros com Preço Justo Automatch vendem em média 3.8x mais rápido porque eliminam a desconfiança e garantem avaliação em tempo real baseada na FIPE e no estado do veículo.
+                Carros com Preço FIPE Automatch vendem em média 3.8x mais rápido porque eliminam a desconfiança e garantem avaliação em tempo real baseada na FIPE e no estado do veículo.
               </p>
             </div>
 

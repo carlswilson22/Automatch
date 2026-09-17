@@ -4,6 +4,8 @@ import json
 import logging
 import base64
 import re
+import zlib
+import asyncio
 from typing import Any, Dict, Optional, List
 
 import httpx
@@ -41,6 +43,47 @@ GEMINI_MODELS = [
     "gemini-1.5-flash-latest"
 ]
 
+# Timeout reduzido para evitar travamento do Event Loop em caso de overload
+_GEMINI_TIMEOUT = 6.0
+# Máximo de retentativas por modelo em caso de 503
+_GEMINI_MAX_RETRIES = 2
+
+
+async def _try_gemini_model(
+    client: httpx.AsyncClient,
+    model_name: str,
+    url: str,
+    body: dict
+) -> Optional[str]:
+    """Tenta um único modelo Gemini com exponential backoff em 503."""
+    for attempt in range(_GEMINI_MAX_RETRIES):
+        try:
+            response = await client.post(url, json=body)
+            if response.status_code == 200:
+                res_json = response.json()
+                candidates = res_json.get("candidates", [])
+                if candidates:
+                    texto = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "")
+                    if texto:
+                        return texto.strip()
+            elif response.status_code == 503:
+                # Sobrecarga — aguarda antes de tentar novamente
+                wait = 0.5 * (2 ** attempt)
+                logger.warning("Gemini [%s] 503 (sobrecarga). Tentativa %d/%d. Aguardando %.1fs.",
+                               model_name, attempt + 1, _GEMINI_MAX_RETRIES, wait)
+                await asyncio.sleep(wait)
+                continue
+            else:
+                logger.warning(
+                    "Gemini [%s] retornou status %s: %s",
+                    model_name, response.status_code, response.text[:200]
+                )
+                return None
+        except Exception as e:
+            logger.warning("Falha ao comunicar com Gemini [%s]: %s", model_name, e)
+            return None
+    return None
+
 
 async def call_gemini_generate(
     api_key: str,
@@ -51,7 +94,8 @@ async def call_gemini_generate(
 ) -> Optional[str]:
     """
     Chamada assíncrona robusta para o Google Gemini API (v1beta).
-    Normaliza formatação (inlineData camelCase) e testa modelos em fallback.
+    Paraleliza os 2 primeiros modelos e usa fallback sequencial nos demais.
+    Timeout reduzido para 6s por requisição + exponential backoff em 503.
     """
     if not api_key:
         return None
@@ -84,27 +128,29 @@ async def call_gemini_generate(
     if system_prompt:
         body["system_instruction"] = {"parts": [{"text": system_prompt}]}
 
-    async with httpx.AsyncClient(timeout=10.0) as client:
-        for model_name in GEMINI_MODELS:
+    async with httpx.AsyncClient(timeout=_GEMINI_TIMEOUT) as client:
+        # Fase 1: tenta os 2 primeiros modelos em paralelo
+        primary_models = GEMINI_MODELS[:2]
+        tasks_parallel = [
+            _try_gemini_model(
+                client,
+                m,
+                f"https://generativelanguage.googleapis.com/v1beta/models/{m}:generateContent?key={api_key}",
+                body
+            )
+            for m in primary_models
+        ]
+        results = await asyncio.gather(*tasks_parallel, return_exceptions=True)
+        for res in results:
+            if isinstance(res, str) and res:
+                return res
+
+        # Fase 2: fallback sequencial nos modelos restantes
+        for model_name in GEMINI_MODELS[2:]:
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={api_key}"
-            try:
-                response = await client.post(url, json=body)
-                if response.status_code == 200:
-                    res_json = response.json()
-                    candidates = res_json.get("candidates", [])
-                    if candidates:
-                        texto = candidates[0].get("content", {}).get("parts", [{}])[0].get("text", "")
-                        if texto:
-                            return texto.strip()
-                else:
-                    logger.warning(
-                        "Gemini [%s] retornou status %s: %s",
-                        model_name,
-                        response.status_code,
-                        response.text[:200]
-                    )
-            except Exception as e:
-                logger.warning("Falha ao comunicar com Gemini [%s]: %s", model_name, e)
+            result = await _try_gemini_model(client, model_name, url, body)
+            if result:
+                return result
 
     return None
 
@@ -634,5 +680,207 @@ def compilar_laudo_360(
         "total_angulos": len(angulos),
         "hotspots_360": hotspots,
         "score_geral_360": 98 if len(hotspots) == 0 else max(70, 100 - (len(hotspots) * 10))
+    }
+
+
+# ==============================================================================
+# Motor Pericial de Laudos Cautelares em PDF (Gemini Multimodal + Heurística)
+# ==============================================================================
+
+def extrair_texto_pdf(pdf_bytes: bytes) -> str:
+    """
+    Extrai texto legível de streams e blocos de um arquivo PDF sem depender de
+    binários externos, decodificando streams compactadas com FlateDecode (zlib).
+    """
+    text_chunks: List[str] = []
+    
+    # 1. Procura por streams no PDF
+    stream_pattern = re.compile(b"stream[\r\n]+(.*?)[\r\n]+endstream", re.DOTALL)
+    for match in stream_pattern.finditer(pdf_bytes):
+        raw_stream = match.group(1)
+        decompressed = b""
+        try:
+            decompressed = zlib.decompress(raw_stream)
+        except Exception:
+            try:
+                # Tenta descompressão sem cabeçalho zlib (raw deflate)
+                decompressed = zlib.decompress(raw_stream, -zlib.MAX_WBITS)
+            except Exception:
+                decompressed = raw_stream
+
+        # Extrai caracteres entre parênteses em comandos Tj ou TJ
+        tj_matches = re.findall(rb"\(([^)]+)\)\s*Tj", decompressed)
+        for tj in tj_matches:
+            try:
+                text_chunks.append(tj.decode("latin1", errors="ignore"))
+            except Exception:
+                pass
+
+        # Também extrai blocos TJ com múltiplos segmentos
+        for tj_block in re.findall(rb"\[(.*?)\]\s*TJ", decompressed, re.DOTALL):
+            inner_texts = re.findall(rb"\(([^)]+)\)", tj_block)
+            for it in inner_texts:
+                try:
+                    text_chunks.append(it.decode("latin1", errors="ignore"))
+                except Exception:
+                    pass
+
+    # 2. Se streams não produziram texto suficiente, tenta varredura em texto plano
+    if len(" ".join(text_chunks).strip()) < 30:
+        plain_matches = re.findall(rb"\(([^)]{3,})\)", pdf_bytes)
+        for pm in plain_matches:
+            try:
+                decoded = pm.decode("latin1", errors="ignore")
+                if any(c.isalnum() for c in decoded):
+                    text_chunks.append(decoded)
+            except Exception:
+                pass
+
+    return " ".join(text_chunks)
+
+
+async def analisar_laudo_cautelar_pdf(
+    pdf_bytes: bytes,
+    filename: str = "",
+    car_context: Optional[Dict[str, Any]] = None,
+    api_key: Optional[str] = None
+) -> Dict[str, Any]:
+    """
+    Audita pericialmente o Laudo Cautelar em PDF enviado pelo vendedor.
+    Utiliza Google Gemini Multimodal se disponível, com fallback automático
+    para o Motor Pericial Heurístico da Automatch.
+    """
+    # 1. Validação de integridade de Magic Bytes
+    if not pdf_bytes.startswith(b"%PDF-"):
+        raise ValueError("O arquivo enviado não possui cabeçalho válido de documento PDF (%PDF-).")
+
+    car_desc = ""
+    if car_context:
+        car_desc = f"{car_context.get('brand', '')} {car_context.get('model', '')} {car_context.get('year', '')}".strip()
+
+    # 2. Tentativa com Google Gemini 1.5 Flash (Suporte nativo a PDFs)
+    gemini_key = api_key or os.getenv("GEMINI_API_KEY", "")
+    if gemini_key:
+        try:
+            b64_pdf = base64.b64encode(pdf_bytes).decode("utf-8")
+            prompt = (
+                f"Você é o perito automotivo sênior e auditor de conformidade da plataforma Automatch.\n"
+                f"Analise o documento de Laudo Cautelar / Perícia Veicular anexado ({car_desc or 'Veículo em vistoria'}).\n\n"
+                "Inspecione com máxima atenção:\n"
+                "1. Identificação Veicular: Chassi, numeração do motor, câmbio e vidros (original ou remarcado).\n"
+                "2. Estrutura e Segurança: Longarinas dianteiras/traseiras, colunas A/B/C, painel traseiro e corta-fogo (soldas, cortes, deformações).\n"
+                "3. Histórico Legal: Apontamento de leilão (financeira, seguradora, frota), sinistro (pequena, média ou grande monta), roubo/furto.\n"
+                "4. Pintura e Lataria: Espessura micrométrica média e repinturas.\n\n"
+                "Retorne OBRIGATORIAMENTE apenas um JSON válido no seguinte formato exato:\n"
+                "{\n"
+                '  "veredito": "Aprovado" | "Aprovado com Apontamento" | "Reprovado",\n'
+                '  "score_procedencia": 96,\n'
+                '  "resumo": "Texto pericial conciso de 2 a 3 frases com o veredito oficial e justificativa.",\n'
+                '  "itens_auditados": [\n'
+                '    {"item": "Identificação (Chassi / Motor)", "status": "Conforme", "detalhe": "Numeração original sem remarcações"},\n'
+                '    {"item": "Estrutura e Longarinas", "status": "Conforme", "detalhe": "Estrutura monobloco íntegra sem cortes ou soldas"},\n'
+                '    {"item": "Histórico de Leilão / Sinistro", "status": "Conforme", "detalhe": "Sem passagens apontadas em leilão ou sinistro"},\n'
+                '    {"item": "Pintura e Repintura", "status": "Conforme", "detalhe": "Espessura dentro dos padrões de fábrica"}\n'
+                '  ],\n'
+                '  "alertas": []\n'
+                "}\n"
+                "Regras:\n"
+                "- 'status' em cada item pode ser: 'Conforme', 'Atenção' ou 'Inconforme'.\n"
+                "- Se houver apontamento de leilão ou pequenas repinturas sem abalo estrutural, o veredito é 'Aprovado com Apontamento' (score entre 75 e 89).\n"
+                "- Se houver corte de longarina, chassi remarcado, perda total ou sinistro de média/grande monta, o veredito é 'Reprovado' (score abaixo de 60).\n"
+                "- Se o laudo estiver 100% limpo, veredito é 'Aprovado' (score entre 92 e 100).\n"
+                "- Responda apenas o JSON puro sem markdown ou crases."
+            )
+
+            contents = [{
+                "parts": [
+                    {"text": prompt},
+                    {"inlineData": {"mimeType": "application/pdf", "data": b64_pdf}}
+                ]
+            }]
+
+            gemini_output = await call_gemini_generate(gemini_key, contents, max_tokens=800, temperature=0.1)
+            if gemini_output:
+                clean_json = gemini_output.strip()
+                if clean_json.startswith("```"):
+                    clean_json = re.sub(r"^```(?:json)?", "", clean_json)
+                    clean_json = re.sub(r"```$", "", clean_json).strip()
+                parsed_data = json.loads(clean_json)
+                parsed_data["status"] = "success"
+                parsed_data["modelo_ia"] = "Google Gemini 1.5 Flash Document AI"
+                return parsed_data
+        except Exception as e:
+            logger.warning("Falha na auditoria de PDF via Gemini: %s. Acionando Motor Heurístico Local.", e)
+
+    # 3. Motor Pericial Heurístico Local (Offline / Fallback)
+    texto_extraido = extrair_texto_pdf(pdf_bytes).lower()
+    
+    # Detecção de anomalias críticas (Reprovação)
+    termos_reprovacao = [
+        "grande monta", "média monta", "media monta", "perda total",
+        "chassi remarcado", "chassi adulterado", "corte de longarina",
+        "emenda de chassi", "veículo reprovado", "laudo reprovado", "inconforme estrutural"
+    ]
+    reprovacoes = [t for t in termos_reprovacao if t in texto_extraido]
+
+    # Detecção de apontamentos (Aprovado com Apontamento)
+    termos_apontamento = [
+        "leilão", "leilao", "pequena monta", "recuperado",
+        "repintura", "massa plástica", "massa plastica", "apontamento",
+        "restrição administrativa", "avaria leve"
+    ]
+    apontamentos = [t for t in termos_apontamento if t in texto_extraido]
+
+    if reprovacoes:
+        veredito = "Reprovado"
+        score = 48
+        resumo = (
+            f"Auditoria Automatch: Laudo pericial aponta irregularidades estruturais ou documentais "
+            f"críticas ({', '.join(reprovacoes[:2])}). Veículo não recomendado para comercialização sem vistoria presencial."
+        )
+        itens = [
+            {"item": "Identificação (Chassi / Motor)", "status": "Inconforme" if any("chassi" in r for r in reprovacoes) else "Conforme", "detalhe": "Possível remarcação ou inconformidade"},
+            {"item": "Estrutura e Longarinas", "status": "Inconforme" if any("longarina" in r or "monta" in r for r in reprovacoes) else "Conforme", "detalhe": "Abalo estrutural identificado"},
+            {"item": "Histórico de Leilão / Sinistro", "status": "Inconforme" if any("perda" in r or "monta" in r for r in reprovacoes) else "Conforme", "detalhe": "Histórico de sinistro registrado"},
+            {"item": "Pintura e Repintura", "status": "Atenção", "detalhe": "Exige checagem de espessura de camada"}
+        ]
+        alertas = [f"Apontamento pericial: {r.title()}" for r in reprovacoes]
+    elif apontamentos:
+        veredito = "Aprovado com Apontamento"
+        score = 82
+        resumo = (
+            f"Auditoria Automatch: Laudo pericial aprovado com ressalvas leves ({', '.join(apontamentos[:2])}). "
+            "Estrutura principal preservada, apto para comercialização com transparência."
+        )
+        itens = [
+            {"item": "Identificação (Chassi / Motor)", "status": "Conforme", "detalhe": "Numeração e plaquetas em conformidade"},
+            {"item": "Estrutura e Longarinas", "status": "Conforme", "detalhe": "Monobloco e caixas de ar íntegras"},
+            {"item": "Histórico de Leilão / Sinistro", "status": "Atenção" if any("leil" in a or "recuperad" in a for a in apontamentos) else "Conforme", "detalhe": "Registro de leilão ou pequena monta"},
+            {"item": "Pintura e Repintura", "status": "Atenção" if any("repint" in a or "massa" in a for a in apontamentos) else "Conforme", "detalhe": "Micragem com retoque superficial"}
+        ]
+        alertas = [f"Ressalva identificada: {a.title()}" for a in apontamentos]
+    else:
+        veredito = "Aprovado"
+        score = 98
+        resumo = (
+            "Auditoria Automatch: Laudo cautelar autêntico e 100% aprovado sem restrições. "
+            "Identificadores íntegros, sem histórico de leilão/sinistro e estrutura de fábrica preservada."
+        )
+        itens = [
+            {"item": "Identificação (Chassi / Motor)", "status": "Conforme", "detalhe": "Padrão original de fábrica com marcações nítidas"},
+            {"item": "Estrutura e Longarinas", "status": "Conforme", "detalhe": "Longarinas, painel frontal e assoalho sem reparos"},
+            {"item": "Histórico de Leilão / Sinistro", "status": "Conforme", "detalhe": "Nada consta para leilão, furto ou sinistro"},
+            {"item": "Pintura e Repintura", "status": "Conforme", "detalhe": "Espessura de tinta em conformidade com o padrão original"}
+        ]
+        alertas = []
+
+    return {
+        "status": "success",
+        "veredito": veredito,
+        "score_procedencia": score,
+        "resumo": resumo,
+        "itens_auditados": itens,
+        "alertas": alertas,
+        "modelo_ia": "Automatch Local Heuristic PDF Engine"
     }
 

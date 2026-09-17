@@ -44,36 +44,37 @@ async def upload_laudo(file: UploadFile = File(...)) -> Dict[str, Any]:
     """
     if not file.filename:
         raise HTTPException(status_code=400, detail="Nome do arquivo não informado.")
-    
+
     file_ext = os.path.splitext(file.filename)[1].lower()
     if file_ext not in ALLOWED_LAUDO_EXTENSIONS:
         raise HTTPException(
             status_code=400,
             detail=f"Extensão '{file_ext}' não permitida. Aceitos: {', '.join(ALLOWED_LAUDO_EXTENSIONS)}"
         )
-    
-    content = await file.read()
-    if len(content) == 0:
+    # Leitura de magic bytes ANTES do buffer completo (evita alloc de 10MB em RAM para rejeitar)
+    magic_bytes = await file.read(5)
+    if not magic_bytes:
         raise HTTPException(status_code=400, detail="Arquivo enviado está vazio.")
+
+    if file_ext == ".pdf" and not magic_bytes.startswith(b"%PDF-"):
+        raise HTTPException(
+            status_code=400,
+            detail="O arquivo enviado não é um documento PDF válido ou está corrompido."
+        )
+
+    # Agora lê o restante do arquivo
+    rest = await file.read()
+    content = magic_bytes + rest
 
     if len(content) > MAX_LAUDO_SIZE_BYTES:
         raise HTTPException(
             status_code=400,
             detail=f"Arquivo excede o limite de {MAX_LAUDO_SIZE_BYTES // (1024*1024)}MB."
         )
-
-    # Validação de integridade de Magic Bytes para PDF
-    if file_ext == ".pdf":
-        if not content.startswith(b"%PDF-"):
-            raise HTTPException(
-                status_code=400,
-                detail="O arquivo enviado não é um documento PDF válido ou está corrompido."
-            )
-    
     file_id = str(uuid.uuid4())
     safe_filename = f"{file_id}{file_ext}"
     file_path = UPLOADS_DIR / safe_filename
-    
+
     async with aiofiles.open(file_path, "wb") as f:
         await f.write(content)
     

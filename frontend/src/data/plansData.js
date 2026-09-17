@@ -32,7 +32,7 @@ export const PLANS_DATA = [
     features: [
       'Até 15 anúncios ativos simultâneos',
       'IA Damage Scanner ilimitado',
-      'Selo Preço Justo Automatch',
+      'Selo Preço FIPE Automatch',
       '3x Veículos em Destaque na Vitrine',
       'Comparador FIPE em tempo real',
       'Painel de Gestão de Leads e Propostas',
