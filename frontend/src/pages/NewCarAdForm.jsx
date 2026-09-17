@@ -4,6 +4,7 @@ import { ShieldCheck, ArrowLeft, Save, CheckCircle, AlertCircle, Loader2, Upload
 import { motion, AnimatePresence } from 'framer-motion';
 import { stores as defaultStores } from '../data/inventoryData';
 import { addNewCar } from '../data/newCarsManager';
+import LaudoFeedbackCard from '../components/vehicle/LaudoFeedbackCard';
 
 const NewCarAdForm = () => {
   const navigate = useNavigate();
@@ -51,6 +52,7 @@ const NewCarAdForm = () => {
   const [laudoUploadedUrl, setLaudoUploadedUrl] = useState(null);
   const [laudoUploadError, setLaudoUploadError] = useState('');
   const [yoloFeedback, setYoloFeedback] = useState(null);
+  const [laudoFeedback, setLaudoFeedback] = useState(null);
   const [photoAiScanStatus, setPhotoAiScanStatus] = useState('idle'); // 'idle' | 'scanning' | 'done' | 'error'
   const [photoAiResult, setPhotoAiResult] = useState(null);
 
@@ -136,6 +138,7 @@ const NewCarAdForm = () => {
   const uploadLaudoFile = async (file) => {
     setLaudoUploadStatus('uploading');
     setLaudoUploadError('');
+    setLaudoFeedback(null);
     try {
       const formDataUpload = new FormData();
       formDataUpload.append('file', file);
@@ -150,7 +153,21 @@ const NewCarAdForm = () => {
       const data = await response.json();
       setLaudoUploadedUrl(data.url);
       setYoloFeedback(data.yolo_feedback || null);
+      setLaudoFeedback(data.laudo_feedback || null);
       setLaudoUploadStatus('uploaded');
+
+      // Auto-sincronização inteligente dos campos do formulário com base na IA pericial
+      if (data.laudo_feedback) {
+        const lf = data.laudo_feedback;
+        if (lf.veredito === 'Aprovado com Apontamento') {
+          setFormData(prev => ({ ...prev, laudo: 'Aprovado com apontamento' }));
+        } else if (lf.veredito === 'Reprovado') {
+          setFormData(prev => ({ ...prev, laudo: 'Reprovado', leilao: 'Sim' }));
+        }
+        if (lf.alertas?.some(a => a.toLowerCase().includes('leil'))) {
+          setFormData(prev => ({ ...prev, leilao: 'Sim' }));
+        }
+      }
     } catch (err) {
       setLaudoUploadError(err.message || 'Erro ao enviar o laudo.');
       setLaudoUploadStatus('error');
@@ -240,7 +257,9 @@ const NewCarAdForm = () => {
       laudo: formData.laudo,
       debitos: formData.debitos,
       leilao: formData.leilao,
-      storeId: formData.store_id || 'store-1'
+      storeId: formData.store_id || 'store-1',
+      laudo_url: laudoUploadedUrl || null,
+      laudo_feedback: laudoFeedback || null
     });
 
     const storeNumericId = formData.store_id ? Number(String(formData.store_id).replace(/\D/g, '')) || 1 : 1;
@@ -258,7 +277,9 @@ const NewCarAdForm = () => {
       location: formData.localizacao,
       laudo_status: formData.laudo,
       debt_status: formData.debitos,
-      auction_history: formData.leilao
+      auction_history: formData.leilao,
+      laudo_url: laudoUploadedUrl || null,
+      laudo_feedback: laudoFeedback ? JSON.stringify(laudoFeedback) : null
     };
 
     fetch('/api/cars', {
@@ -547,7 +568,14 @@ const NewCarAdForm = () => {
                             </div>
                             <button 
                               type="button" 
-                              onClick={() => { setLaudoPdf(null); setLaudoUploadStatus('idle'); setLaudoUploadedUrl(null); setLaudoUploadError(''); setYoloFeedback(null); }}
+                              onClick={() => { 
+                                setLaudoPdf(null); 
+                                setLaudoUploadStatus('idle'); 
+                                setLaudoUploadedUrl(null); 
+                                setLaudoUploadError(''); 
+                                setYoloFeedback(null); 
+                                setLaudoFeedback(null);
+                              }}
                               className="p-1 hover:bg-slate-200/60 rounded-lg text-slate-500 transition-colors shrink-0 ml-2"
                               disabled={laudoUploadStatus === 'uploading'}
                             >
@@ -559,9 +587,44 @@ const NewCarAdForm = () => {
                     )}
                   </AnimatePresence>
 
-                  {/* YOLO Feedback Alert */}
+                  {/* Estado animado durante a auditoria da IA */}
                   <AnimatePresence>
-                    {yoloFeedback && !yoloFeedback.info && (
+                    {laudoUploadStatus === 'uploading' && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        className="p-4 rounded-xl bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/80 flex items-center gap-3"
+                      >
+                        <div className="w-9 h-9 rounded-xl bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-md shadow-blue-500/20 animate-spin">
+                          <Loader2 className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-slate-800">
+                            Auditoria Pericial em Andamento...
+                          </p>
+                          <p className="text-[11px] text-slate-500">
+                            A IA está inspecionando o documento em busca de apontamentos de leilão, sinistro, numeração de chassi e integridade estrutural.
+                          </p>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Parecer Pericial do Laudo Cautelar emitido pela IA */}
+                  <AnimatePresence>
+                    {laudoFeedback && (
+                      <LaudoFeedbackCard
+                        feedback={laudoFeedback}
+                        pdfUrl={laudoUploadedUrl}
+                        fileName={laudoPdf?.name}
+                      />
+                    )}
+                  </AnimatePresence>
+
+                  {/* YOLO Feedback Alert (para fotos diretas de veículos) */}
+                  <AnimatePresence>
+                    {yoloFeedback && !yoloFeedback.info && !laudoFeedback && (
                       <motion.div
                         initial={{ opacity: 0, height: 0, marginTop: 0 }}
                         animate={{ opacity: 1, height: 'auto', marginTop: 12 }}
