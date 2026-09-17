@@ -26,6 +26,9 @@ class CarBase(BaseModel):
     auction_history: Optional[str] = None
     fipe_price: Optional[float] = None
     auto_price: Optional[float] = None
+    laudo_url: Optional[str] = None
+    laudo_feedback: Optional[str] = None
+    video_url: Optional[str] = None
 
 class CarSchema(CarBase):
     id: str
@@ -97,3 +100,31 @@ class CheckoutResponse(BaseModel):
     customer: str
     status: str
 
+class LaudoProtocolResponse(BaseModel):
+    valido: bool
+    protocolo: str
+    data_emissao: str
+    veiculo: dict
+    dados_fipe: Optional[dict] = None
+    dados_detran: Optional[dict] = None
+    situacao: str
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: str
+
+class ResetPasswordRequest(BaseModel):
+    email: str
+    otp: str
+    new_password: str
+
+class ForgotPasswordResponse(BaseModel):
+    message: str
+    expires_in: int
+
+class PaginatedCarsResponse(BaseModel):
+    items: List[CarSchema]
+    total: int
+    page: int
+    pages: int
+    limit: int

@@ -10,7 +10,7 @@ export const mockCars = [
     images: [
       '/images/FotoCorollaCross.jpg',
     ],
-    trustScore: 99,
+    laudoStatus: 'approved_100',
     storeId: 'store-1',
     timeline: [
       { id: 't1', type: 'laudo', status: 'approved', title: 'Laudo Cautelar', description: 'Perfeito. 100% Pintura Original.' },
@@ -47,7 +47,7 @@ export const mockCars = [
     images: [
       '/images/FotoPoloTSI.jpg',
     ],
-    trustScore: 94,
+    laudoStatus: 'approved_100',
     storeId: 'store-2',
     timeline: [
       { id: 't1', type: 'laudo', status: 'approved', title: 'Laudo Cautelar', description: 'Aprovado 100%.' },
@@ -84,7 +84,7 @@ export const mockCars = [
     images: [
       '/images/FotoHyundaiHB20.jpg',
     ],
-    trustScore: 98,
+    laudoStatus: 'approved_100',
     storeId: 'store-3',
     timeline: [
       { id: 't1', type: 'laudo', status: 'approved', title: 'Laudo Cautelar', description: 'Veículo seminovo, aprovado integralmente.' },
@@ -121,7 +121,7 @@ export const mockCars = [
     images: [
       '/images/FotoChevroletTracker.jpg',
     ],
-    trustScore: 96,
+    laudoStatus: 'approved_100',
     storeId: 'store-1',
     timeline: [
       { id: 't1', type: 'laudo', status: 'approved', title: 'Laudo Cautelar', description: 'Aprovado sem apontamentos.' },
@@ -158,7 +158,7 @@ export const mockCars = [
     images: [
       '/images/FotoFiatPulse.jpg',
     ],
-    trustScore: 95,
+    laudoStatus: 'approved_100',
     storeId: 'store-2',
     timeline: [
       { id: 't1', type: 'laudo', status: 'approved', title: 'Laudo Cautelar', description: 'Aprovado com maestria.' },

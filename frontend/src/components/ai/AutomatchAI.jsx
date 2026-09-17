@@ -37,7 +37,7 @@ const AutomatchAI = ({ vehicle }) => {
       } else if (q.includes('km') || q.includes('rodado') || q.includes('quilom')) {
         reply = `Ele tem apenas ${vehicle.mileage.toLocaleString('pt-BR')} km rodados. Passou pela nossa inspeção rigorosa sem nenhuma pendência mecânica.`;
       } else if (q.includes('bom') || q.includes('recomenda')) {
-        reply = `Com base no nosso TrustScore de ${vehicle.trustScore || 'alto nível'}, este carro está no topo da nossa lista de recomendações por sua integridade.`;
+        reply = `Com base na perícia veicular aprovada e procedência certificada, este carro está no topo da nossa lista de recomendações por sua integridade.`;
       }
 
       setMessages(prev => [...prev, { from: 'ai', text: reply }]);

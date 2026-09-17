@@ -21,10 +21,11 @@ class Car(Base):
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()), index=True)
     brand = Column(String, index=True)
     model = Column(String, index=True)
-    year = Column(Integer)
+    year = Column(Integer, index=True)
     km = Column(Integer)
-    price = Column(Float)
+    price = Column(Float, index=True)
     image = Column(String)
+    video_url = Column(String, nullable=True)
     
     color = Column(String, nullable=True)
     fuel = Column(String, nullable=True)
@@ -41,8 +42,10 @@ class Car(Base):
     auction_history = Column(String, nullable=True)
     fipe_price = Column(Float, nullable=True)
     auto_price = Column(Float, nullable=True)
+    laudo_url = Column(String, nullable=True)
+    laudo_feedback = Column(Text, nullable=True)
 
-    store_id = Column(Integer, ForeignKey("stores.id"))
+    store_id = Column(Integer, ForeignKey("stores.id"), index=True)
     store = relationship("Store", back_populates="cars")
 
 class LaudoWatchlist(Base):
@@ -77,3 +80,24 @@ class PaymentOrder(Base):
     status = Column(String, default="Aprovado")
     created_at = Column(String, nullable=False)
 
+
+class LaudoProtocol(Base):
+    __tablename__ = "laudo_protocols"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()), index=True)
+    protocol = Column(String, unique=True, index=True, nullable=False)
+    car_id = Column(String(36), ForeignKey("cars.id"), index=True)
+    created_at = Column(String, nullable=False)
+    snapshot_data = Column(Text, nullable=False)
+
+
+class PasswordResetToken(Base):
+    __tablename__ = "password_reset_tokens"
+
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()), index=True)
+    user_id = Column(String(36), ForeignKey("users.id"), index=True)
+    token_hash = Column(String, nullable=False)
+    otp_code = Column(String(6), nullable=False)
+    expires_at = Column(Float, nullable=False)
+    used = Column(Integer, default=0)
+    created_at = Column(String, nullable=False)

@@ -49,13 +49,21 @@ A desconfiança generalizada gerada por fotos de baixa qualidade, históricos de
 | **RF-11** | **Radar de Oportunidades** | O sistema deve permitir o cadastro de alertas de queda de preço com notificações via WhatsApp, E-mail e WebPush. |
 | **RF-12** | **Assistente IA Especialista (RAG)** | O sistema deve disponibilizar chatbot consultivo com respostas contextualizadas no veículo em visualização. |
 | **RF-13** | **Chat com o Vendedor** | O sistema deve permitir o envio de mensagens em tempo real e redirecionamento de contato para o WhatsApp. |
-| **RF-14** | **Sincronizador Multicanal B2B** | O sistema deve permitir a exportação simultânea de anúncios para Webmotors, OLX Autos, iCarros e Mercado Livre. |
+| **RF-14** | **Sincronizador Multicanal B2B** | O sistema deve permitir a exportação simultânea de anúncios para os 3 canais homologados: Webmotors, OLX Autos e AutoCerto DMS. |
 | **RF-15** | **Feed XML Automotivo** | O sistema deve fornecer endpoint com feed de estoque padronizado no formato AutoXML / Webmotors. |
 | **RF-16** | **Publicação de Anúncios com IA** | O sistema deve guiar o anunciante em etapas com compressão de imagens e pré-análise pericial automática. |
 | **RF-17** | **Exclusão Atômica de Anúncios** | O sistema deve permitir a exclusão segura de anúncios (`DELETE /api/cars/{id}`) com confirmação no frontend. |
 | **RF-18** | **Identificação Multi-Lojas** | O sistema deve segmentar veículos por revenda e concessionária parceira com dados de contato e endereço. |
 | **RF-19** | **Autenticação Unificada** | O sistema deve fornecer modal único para login e cadastro com hash PBKDF2 e tokens JWT. |
-| **RF-20** | **Planos de Assinatura & Checkout** | O sistema deve gerenciar planos de anúncio (*Gratuito, Pro, Revenda, Concessionária*) com protocolo de reserva online. |
+| **RF-20** | **Planos de Assinatura & Checkout** | O sistema deve gerenciar planos de anúncio (*Gratuito, Pro, Revenda, Concessionária*) com checkout seguro e negociação direta com vendedores via chat/WhatsApp sem taxa de reserva online. |
+| **RF-21** | **Dossiê em PDF Vetorial com QR Code** | O sistema deve gerar e exportar laudo pericial oficial em PDF vetorial A4 (ReportLab) com métricas de conformidade e QR Code de autenticidade escaneável (300 DPI). |
+| **RF-22** | **Validação Pública de Laudos** | O sistema deve disponibilizar página pública (`/validar/:protocolo`) para conferência imediata da autenticidade e validade dos laudos periciais emitidos. |
+| **RF-23** | **Recuperação de Senha com OTP** | O sistema deve disponibilizar recuperação de senha via código OTP de 6 dígitos com expiração em 15 minutos, rate limiting defensivo de 3 req/hora e modal com popup em modo desenvolvimento. |
+| **RF-24** | **Paginação do Catálogo no Servidor** | O sistema deve paginar a busca de veículos nativamente no banco de dados (`limit=20`, `offset`), com envelope padronizado e navegação numérica no frontend. |
+| **RF-25** | **Central de Favoritos** | O sistema deve permitir que usuários salvem veículos favoritos com sincronização em tempo real e visualização dedicada em `/favoritos`. |
+| **RF-26** | **Auditoria de Laudos em PDF por IA** | O sistema deve receber laudos periciais em PDF anexados pelo anunciante, validar integridade via magic bytes (`%PDF-`) e executar auditoria pericial automatizada com Gemini AI e motor heurístico local. |
+| **RF-27** | **Vídeo Pericial de 15 Segundos** | O sistema deve exibir player de vídeo pericial de 15s integrado aos anúncios com timeline interativa, checkpoints periciais (frente, lateral/pneus e traseira/motor) e endpoint para upload de mídias de vistoria. |
+| **RF-28** | **Comparador Multidimensional Lado a Lado** | O sistema deve permitir a comparação simultânea de até 3 veículos lado a lado analisando preço vs FIPE, quilometragem anual estimada, integridade pericial de laudo, pendências DETRAN e ficha técnica sem utilização de trustscore. |
 
 ---
 

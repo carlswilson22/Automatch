@@ -7,12 +7,13 @@ import {
   TrendingDown, TrendingUp, Minus, Car, Truck, Battery, Share2,
   CheckCircle2, AlertTriangle, Clock, Fuel, Settings, Award, Zap, X, 
   UserPlus, LogIn, DollarSign, Calculator, Lock, Check, Scan, Wrench, Tag,
-  RotateCw, Volume2, Disc, Camera, Bell, Globe2
+  RotateCw, Bell, Globe2, FileText, Download, FileDown, Video, Scale, Loader2
 } from 'lucide-react';
 import StoreIdentifier from '../components/ui/StoreIdentifier';
 import { showcaseCars } from '../data/showcaseData';
 import { mockCars } from '../data/mockData';
 import { getNewCarById, deleteNewCar, isCarDeleted } from '../data/newCarsManager';
+import { toggleFavorite, isFavorite, subscribeFavorites } from '../data/favoritesManager';
 import AutomatchScan from '../components/vehicle/AutomatchScan';
 import AIChatBox from '../components/vehicle/AIChatBox';
 import SellerChat from '../components/vehicle/SellerChat';
@@ -20,13 +21,17 @@ import TradeInSimulator from '../components/vehicle/TradeInSimulator';
 import PriceAlertModal from '../components/vehicle/PriceAlertModal';
 import MultichannelSyncModal from '../components/vehicle/MultichannelSyncModal';
 import Vehicle360Viewer from '../components/vehicle/Vehicle360Viewer';
-import EngineAcousticScanner from '../components/vehicle/EngineAcousticScanner';
-import TireDepthScanner from '../components/vehicle/TireDepthScanner';
+import PericialVideoViewer from '../components/vehicle/PericialVideoViewer';
+import VehicleComparatorModal from '../components/vehicle/VehicleComparatorModal';
 
 // ─── MAIN COMPONENT ──────────────────────────────────────────────────────────
 export default function ShowcaseVehicleDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [car, setCar] = useState(null);
+  const [isLoadingCar, setIsLoadingCar] = useState(true);
+  const [allInventoryCars, setAllInventoryCars] = useState([]);
+  const [isComparatorOpen, setIsComparatorOpen] = useState(false);
   const [liked, setLiked] = useState(false);
   const [activeChat, setActiveChat] = useState('ai'); // 'ai' | 'seller'
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -34,104 +39,194 @@ export default function ShowcaseVehicleDetails() {
   const [activeDamage, setActiveDamage] = useState(null);
   const [fipeInfoOpen, setFipeInfoOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [inspectionTab, setInspectionTab] = useState('body'); // 'body' | '360' | 'engine' | 'tires'
+  const [inspectionTab, setInspectionTab] = useState('body'); // 'body' | '360' | 'video'
   const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
   const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
 
-  // Unify vehicle search from all stores/origins
-  let car = null;
-  if (!isCarDeleted(id)) {
-    car = showcaseCars.find(c => c.id === id);
-  }
-  if (!car) {
-    const mock = mockCars.find(c => c.id === id);
-    if (mock) {
-      car = {
-        id: mock.id,
-        name: `${mock.brand} ${mock.model}`,
-        brand: mock.brand,
-        model: mock.model,
-        year: mock.year,
-        price: mock.price,
-        fipePrice: mock.price * 1.05,
-        color: 'Prata',
-        mileage: mock.mileage,
-        image: mock.images?.[0] || '/images/FotoHondaCivic.jpeg',
-        bodyType: mock.metadata?.bodyType || 'Sedã',
-        storeId: mock.storeId || 'store-1',
-        damagePoints: mock.damagePoints || [],
-        description: 'Veículo com laudo cautelar aprovado e procedência garantida.',
-        fullDescription: 'Excelente estado de conservação, revisões em dia e garantia de procedência Automatch.',
-        tags: ['Garantia 1 Ano', 'Laudo Aprovado', 'IPVA Pago'],
-        specs: {
-          motor: mock.metadata?.engine || '1.5 Turbo',
-          cambio: mock.metadata?.transmission || 'Automático',
-          combustivel: mock.metadata?.fuel || 'Flex',
-          portas: '4 portas',
-          direcao: 'Elétrica',
-          freios: 'ABS com EBD',
-          airbags: '6 airbags',
-          tracao: 'Dianteira'
-        },
-        seller: {
-          name: 'Automatch Certified',
-          avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Automatch',
-          rating: 5.0,
-          ads: 42,
-          since: '2022'
-        }
-      };
-    } else {
-      const local = getNewCarById(id);
-      if (local) {
-        car = {
-          id: local.id,
-          name: `${local.marca} ${local.modelo}`,
-          brand: local.marca,
-          model: local.modelo,
-          year: local.ano,
-          price: local.preco,
-          fipePrice: local.preco * 1.04,
-          color: local.cor || 'Preto',
-          mileage: local.km || 0,
-          image: local.imagem || '/images/FotoHondaCivic.jpeg',
-          bodyType: 'Particular',
-          storeId: local.storeId || 'store-1',
-          trustScore: 92,
-          timeline: [
-            { id: 't1', type: 'laudo', status: local.laudo === 'Não possui' ? 'attention' : 'approved', title: 'Laudo Cautelar', description: local.laudo || 'Aprovado' },
-            { id: 't2', type: 'debitos', status: local.debitos === 'Com débitos' ? 'attention' : 'approved', title: 'Multas e Débitos', description: local.debitos || 'Sem débitos' },
-            { id: 't3', type: 'leilao', status: local.leilao === 'Sim' ? 'danger' : 'approved', title: 'Passagem por Leilão', description: local.leilao === 'Sim' ? 'Consta passagem' : 'Sem registro de leilão' }
-          ],
-          opinions: {
-            owner: { text: local.descricao || "Carro muito bem cuidado de uso pessoal.", rating: 5, avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Owner" },
-            inspector: { text: "Veículo inspecionado e apto para comercialização.", rating: 4.8, avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Inspector" }
-          },
-          damagePoints: [],
-          description: local.descricao || 'Veículo anunciado pelo proprietário.',
-          fullDescription: local.descricao || 'Carro em excelente estado de conservação, sem batidas, documentação rigorosamente em dia.',
-          tags: ['Novidade', local.transmissao || 'Automático', 'Particular'],
+  // Scroll to top on mount & initialize favorite state
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
+  // Hydrate vehicle from local sources & PostgreSQL API
+  useEffect(() => {
+    if (!id) return;
+
+    setLiked(isFavorite(id));
+    const unsubFav = subscribeFavorites((favs) => {
+      setLiked(favs.includes(String(id)));
+    });
+
+    // Carrega inventário para alimentar o comparador
+    fetch('/api/cars?limit=30')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        const items = Array.isArray(data) ? data : (data?.items || []);
+        setAllInventoryCars(items);
+      })
+      .catch(() => {});
+
+    if (isCarDeleted(id)) {
+      setCar(null);
+      setIsLoadingCar(false);
+      return unsubFav;
+    }
+
+    // 1. Tenta carregar dos mocks estáticos ou localStorage imediatamente
+    let found = showcaseCars.find(c => String(c.id) === String(id));
+    if (!found) {
+      const mock = mockCars.find(c => String(c.id) === String(id));
+      if (mock) {
+        found = {
+          id: mock.id,
+          name: `${mock.brand} ${mock.model}`,
+          brand: mock.brand,
+          model: mock.model,
+          year: mock.year,
+          price: mock.price,
+          fipePrice: mock.price * 1.05,
+          color: 'Prata',
+          mileage: mock.mileage,
+          image: mock.images?.[0] || '/images/FotoHondaCivic.jpeg',
+          bodyType: mock.metadata?.bodyType || 'Sedã',
+          storeId: mock.storeId || 'store-1',
+          damagePoints: mock.damagePoints || [],
+          description: 'Veículo com laudo cautelar aprovado e procedência garantida.',
+          fullDescription: 'Excelente estado de conservação, revisões em dia e garantia de procedência Automatch.',
+          tags: ['Garantia 1 Ano', 'Laudo Aprovado', 'IPVA Pago'],
           specs: {
-            motor: 'Flex de Alta Eficiência',
-            cambio: local.transmissao || 'Automático',
-            combustivel: 'Flex',
+            motor: mock.metadata?.engine || '1.5 Turbo',
+            cambio: mock.metadata?.transmission || 'Automático',
+            combustivel: mock.metadata?.fuel || 'Flex',
             portas: '4 portas',
             direcao: 'Elétrica',
-            freios: 'ABS',
-            airbags: '4 airbags',
+            freios: 'ABS com EBD',
+            airbags: '6 airbags',
             tracao: 'Dianteira'
           },
           seller: {
-            name: 'Proprietário Independente',
-            avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Particular',
-            rating: 4.9,
-            ads: 1,
-            since: '2024'
+            name: 'Automatch Certified',
+            avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Automatch',
+            rating: 5.0,
+            ads: 42,
+            since: '2022'
           }
         };
+      } else {
+        const local = getNewCarById(id);
+        if (local) {
+          found = {
+            id: local.id,
+            name: `${local.marca} ${local.modelo}`,
+            brand: local.marca,
+            model: local.modelo,
+            year: local.ano,
+            price: local.preco,
+            fipePrice: local.preco * 1.04,
+            color: local.cor || 'Preto',
+            mileage: local.km || 0,
+            image: local.imagem || '/images/FotoHondaCivic.jpeg',
+            bodyType: 'Particular',
+            storeId: local.storeId || 'store-1',
+            laudoUrl: local.laudo_url || null,
+            laudoFeedback: local.laudo_feedback || null,
+            videoUrl: local.video_url || null,
+            timeline: [
+              { id: 't1', type: 'laudo', status: local.laudo === 'Não possui' ? 'attention' : 'approved', title: 'Laudo Cautelar', description: local.laudo || 'Aprovado' },
+              { id: 't2', type: 'debitos', status: local.debitos === 'Com débitos' ? 'attention' : 'approved', title: 'Multas e Débitos', description: local.debitos || 'Sem débitos' },
+              { id: 't3', type: 'leilao', status: local.leilao === 'Sim' ? 'danger' : 'approved', title: 'Passagem por Leilão', description: local.leilao === 'Sim' ? 'Consta passagem' : 'Sem registro de leilão' }
+            ],
+            opinions: {
+              owner: { text: local.descricao || "Carro muito bem cuidado de uso pessoal.", rating: 5, avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Owner" },
+              inspector: { text: "Veículo inspecionado e apto para comercialização.", rating: 4.8, avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Inspector" }
+            },
+            damagePoints: [],
+            description: local.descricao || 'Veículo anunciado pelo proprietário.',
+            fullDescription: local.descricao || 'Carro em excelente estado de conservação, sem batidas, documentação rigorosamente em dia.',
+            tags: ['Novidade', local.transmissao || 'Automático', 'Particular'],
+            specs: {
+              motor: 'Flex de Alta Eficiência',
+              cambio: local.transmissao || 'Automático',
+              combustivel: 'Flex',
+              portas: '4 portas',
+              direcao: 'Elétrica',
+              freios: 'ABS',
+              airbags: '4 airbags',
+              tracao: 'Dianteira'
+            },
+            seller: {
+              name: 'Proprietário Independente',
+              avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Particular',
+              rating: 4.9,
+              ads: 1,
+              since: '2024'
+            }
+          };
+        }
       }
     }
-  }
+
+    if (found) {
+      setCar(found);
+      setIsLoadingCar(false);
+    }
+
+    // 2. Busca no banco de dados PostgreSQL via API
+    fetch(`/api/cars/${id}`)
+      .then(res => res.ok ? res.json() : null)
+      .then(dbCar => {
+        if (dbCar) {
+          const formatted = {
+            id: dbCar.id,
+            name: `${dbCar.brand} ${dbCar.model}`,
+            brand: dbCar.brand,
+            model: dbCar.model,
+            year: dbCar.year,
+            price: typeof dbCar.price === 'number' ? dbCar.price : (parseFloat(dbCar.price) || 0),
+            fipePrice: dbCar.fipe_price || (dbCar.price * 1.04),
+            color: dbCar.color || 'Prata',
+            mileage: dbCar.km || 0,
+            image: dbCar.image || '/images/FotoHondaCivic.jpeg',
+            bodyType: dbCar.body_type || 'Particular',
+            storeId: dbCar.store_id ? `store-${dbCar.store_id}` : 'store-1',
+            plate: dbCar.plate || 'ABC1234',
+            fipeCode: dbCar.fipe_code || '004487-3',
+            laudoUrl: dbCar.laudo_url || null,
+            laudoFeedback: dbCar.laudo_feedback || null,
+            videoUrl: dbCar.video_url || null,
+            description: dbCar.description || 'Veículo com laudo cautelar aprovado e procedência garantida.',
+            fullDescription: dbCar.full_description || dbCar.description || 'Excelente estado de conservação, revisões em dia e garantia de procedência Automatch.',
+            tags: [dbCar.transmission || 'Automático', 'Certificado Automatch'],
+            damagePoints: [],
+            specs: {
+              motor: 'Flex de Alta Performance',
+              cambio: dbCar.transmission || 'Automático',
+              combustivel: dbCar.fuel || 'Flex',
+              portas: '4 portas',
+              direcao: 'Elétrica Progressiva',
+              freios: 'ABS com EBD',
+              airbags: '6 airbags',
+              tracao: 'Dianteira'
+            },
+            seller: {
+              name: 'Concessionária Parceira Automatch',
+              avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=AutomatchPartner',
+              rating: 5.0,
+              ads: 18,
+              since: '2023'
+            }
+          };
+          setCar(formatted);
+        }
+        setIsLoadingCar(false);
+      })
+      .catch(() => {
+        setIsLoadingCar(false);
+      });
+
+    return unsubFav;
+  }, [id]);
 
   // Fallback defaults for missing sub-objects
   const vehicleTimeline = car?.timeline || [
@@ -241,6 +336,30 @@ export default function ShowcaseVehicleDetails() {
     }
   };
 
+  const handleDownloadOfficialPdf = async () => {
+    setIsDownloadingPdf(true);
+    try {
+      const res = await fetch(`/api/v1/laudos/${id}/pdf`);
+      if (!res.ok) {
+        throw new Error('Falha ao gerar o PDF oficial.');
+      }
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const cleanName = (car?.name || car?.marca || 'Veiculo').replace(/\s+/g, '_');
+      a.download = `Laudo_Oficial_Automatch_${cleanName}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      alert('Não foi possível baixar o PDF oficial no momento. Tente novamente.');
+    } finally {
+      setIsDownloadingPdf(false);
+    }
+  };
+
   const analisarFotoDoCarro = async () => {
     setIsAnalyzing(true);
     setAnalysisResult('');
@@ -284,6 +403,17 @@ export default function ShowcaseVehicleDetails() {
     }
   };
 
+  if (isLoadingCar) {
+    return (
+      <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
+        <div className="text-center flex flex-col items-center gap-3">
+          <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+          <p className="text-sm font-semibold text-slate-300">Carregando dados do veículo...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!car) {
     return (
       <div className="min-h-screen bg-slate-900 text-white flex items-center justify-center">
@@ -325,9 +455,10 @@ export default function ShowcaseVehicleDetails() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <button 
-              onClick={() => setLiked(!liked)} 
+              onClick={() => { const newVal = !liked; setLiked(newVal); toggleFavorite(id); }} 
+              title="Curtir veículo"
               className={`p-2.5 rounded-full border transition-all ${
                 liked 
                   ? 'bg-red-500/20 border-red-500/40 text-red-400' 
@@ -336,12 +467,38 @@ export default function ShowcaseVehicleDetails() {
             >
               <Heart className={`w-5 h-5 ${liked ? 'fill-red-500' : ''}`} />
             </button>
-            <button 
-              onClick={() => navigate(`/checkout?type=vehicle&vehicleId=${car.id}`)}
-              className="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-full font-black text-xs uppercase tracking-wider transition-all shadow-lg shadow-emerald-900/40 flex items-center gap-2"
+            <button
+              onClick={() => setIsAlertModalOpen(true)}
+              title="Alerta de queda de preço"
+              className="p-2.5 rounded-full bg-slate-800 border border-slate-700 text-slate-400 hover:text-cyan-400 hover:border-cyan-500/40 transition-all"
             >
-              <Lock className="w-4 h-4" />
-              <span>Reservar Carro</span>
+              <Bell className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setIsSyncModalOpen(true)}
+              title="Sincronizar anúncio"
+              className="p-2.5 rounded-full bg-slate-800 border border-slate-700 text-slate-400 hover:text-indigo-400 hover:border-indigo-500/40 transition-all"
+            >
+              <Globe2 className="w-5 h-5" />
+            </button>
+            <button
+              onClick={() => setIsComparatorOpen(true)}
+              title="Comparar com outros veículos"
+              className="px-3 py-2 rounded-full bg-slate-800 border border-slate-700 text-slate-300 hover:text-amber-400 hover:border-amber-500/40 transition-all flex items-center gap-1.5"
+            >
+              <Scale className="w-4 h-4 text-amber-400" />
+              <span className="text-xs font-bold text-amber-300">Comparar</span>
+            </button>
+            <button 
+              onClick={() => {
+                setActiveChat('seller');
+                const chatEl = document.getElementById('chat-section');
+                if (chatEl) chatEl.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-5 py-2.5 rounded-full font-black text-xs uppercase tracking-wider transition-all shadow-lg shadow-emerald-900/40 flex items-center gap-2 active:scale-95"
+            >
+              <MessageCircle className="w-4 h-4" />
+              <span>Falar com Vendedor</span>
             </button>
           </div>
         </div>
@@ -375,7 +532,7 @@ export default function ShowcaseVehicleDetails() {
                 }`}
               >
                 <Scan className="w-3.5 h-3.5 text-cyan-300" />
-                <span>Carroceria HD & Laser</span>
+                <span>Perícia Visual IA</span>
               </button>
 
               <button
@@ -393,32 +550,26 @@ export default function ShowcaseVehicleDetails() {
 
               <button
                 type="button"
-                onClick={() => setInspectionTab('engine')}
+                onClick={() => setInspectionTab('video')}
                 className={`px-3.5 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition-all whitespace-nowrap ${
-                  inspectionTab === 'engine'
-                    ? 'bg-indigo-600 text-white shadow-md shadow-indigo-900/40'
+                  inspectionTab === 'video'
+                    ? 'bg-purple-600 text-white shadow-md shadow-purple-900/40'
                     : 'text-slate-400 hover:text-white hover:bg-slate-900'
                 }`}
               >
-                <Volume2 className="w-3.5 h-3.5 text-indigo-300" />
-                <span>Diagnóstico do Motor</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setInspectionTab('tires')}
-                className={`px-3.5 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition-all whitespace-nowrap ${
-                  inspectionTab === 'tires'
-                    ? 'bg-emerald-600 text-white shadow-md shadow-emerald-900/40'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-900'
-                }`}
-              >
-                <Disc className="w-3.5 h-3.5 text-emerald-300" />
-                <span>Scanner de Pneus</span>
+                <Video className="w-3.5 h-3.5 text-purple-300" />
+                <span>Vídeo Pericial 15s</span>
               </button>
             </div>
 
             {/* Renderização Condicional da Inspeção Selecionada */}
+            {inspectionTab === 'video' && (
+              <PericialVideoViewer
+                videoUrl={car.videoUrl || car.video_url}
+                carName={car.name}
+              />
+            )}
+
             {inspectionTab === '360' && (
               <Vehicle360Viewer
                 vehicleImage={car.image || car.imagem}
@@ -427,13 +578,7 @@ export default function ShowcaseVehicleDetails() {
               />
             )}
 
-            {inspectionTab === 'engine' && (
-              <EngineAcousticScanner car={car} />
-            )}
 
-            {inspectionTab === 'tires' && (
-              <TireDepthScanner car={car} />
-            )}
 
             {inspectionTab === 'body' && (
               /* Unified Scanner Pericial IA Viewer */
@@ -673,6 +818,43 @@ export default function ShowcaseVehicleDetails() {
                 </button>
               </div>
 
+              {/* Barra de Ação Oficial: Download do Laudo Certificado com QR Code */}
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-950/60 via-slate-900/80 to-cyan-950/60 border border-blue-800/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/30 text-blue-400 flex items-center justify-center shrink-0">
+                    <FileText className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-white">Dossiê Oficial Automatch™</span>
+                      <span className="text-[10px] bg-cyan-500/20 text-cyan-300 font-bold px-2 py-0.5 rounded-full border border-cyan-500/30">
+                        PDF com QR Code
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      Documento padronizado em A4 com dados FIPE, certidão DETRAN e autenticidade eletrônica.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleDownloadOfficialPdf}
+                  disabled={isDownloadingPdf}
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white text-xs font-bold shadow-md shadow-blue-500/25 transition-all disabled:opacity-50 shrink-0 cursor-pointer"
+                >
+                  {isDownloadingPdf ? (
+                    <>
+                      <RotateCw className="w-4 h-4 animate-spin" /> Gerando PDF...
+                    </>
+                  ) : (
+                    <>
+                      <FileDown className="w-4 h-4" /> Baixar Dossiê Oficial
+                    </>
+                  )}
+                </button>
+              </div>
+
               {/* Resultado: Laudo Cautelar */}
               {laudoData && (
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-5 rounded-2xl bg-slate-950 border border-blue-900/40 space-y-4">
@@ -681,8 +863,8 @@ export default function ShowcaseVehicleDetails() {
                       <Award className="w-5 h-5 text-blue-400" />
                       <h4 className="font-bold text-sm text-white">Resultado da Perícia Cautelar ({laudoData.laudo_id})</h4>
                     </div>
-                    <span className="text-xs bg-emerald-500/20 text-emerald-400 font-bold px-3 py-1 rounded-full border border-emerald-500/30">
-                      TrustScore: {laudoData.trust_score}/100
+                    <span className="text-xs bg-emerald-500/20 text-emerald-400 font-bold px-3 py-1 rounded-full border border-emerald-500/30 flex items-center gap-1.5">
+                      <ShieldCheck className="w-3.5 h-3.5" /> Laudo Pericial: 100% Aprovado
                     </span>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
@@ -697,6 +879,20 @@ export default function ShowcaseVehicleDetails() {
                       <span className="text-slate-400 mt-1 block">Código: {laudoData.dados_oficiais_fipe?.codigoFipe} ({laudoData.dados_oficiais_fipe?.mesReferencia})</span>
                     </div>
                   </div>
+
+                  {car.laudoUrl && (
+                    <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between">
+                      <span className="text-xs text-slate-400">Documento oficial anexado pelo anunciante:</span>
+                      <a
+                        href={car.laudoUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-400 hover:text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 px-3 py-1.5 rounded-xl border border-blue-500/30 transition-all"
+                      >
+                        <FileText className="w-3.5 h-3.5" /> Acessar Laudo em PDF
+                      </a>
+                    </div>
+                  )}
                 </motion.div>
               )}
 
@@ -804,7 +1000,7 @@ export default function ShowcaseVehicleDetails() {
             </div>
           </div>
 
-          {/* ── RIGHT COLUMN: Pricing Card, TrustScore, Simulator, Chats ── */}
+          {/* ── RIGHT COLUMN: Pricing Card, Perícia Cautelar, Simulator, Chats ── */}
           <div className="space-y-6">
             
             {/* Price Card & Action */}
@@ -850,40 +1046,18 @@ export default function ShowcaseVehicleDetails() {
               {/* Main CTAs */}
               <div className="space-y-3 pt-4">
                 <button
-                  onClick={() => navigate(`/checkout?type=vehicle&vehicleId=${car.id}`)}
-                  className="w-full py-4 bg-emerald-600 hover:bg-emerald-500 text-white rounded-2xl font-black text-sm uppercase tracking-wider transition-all shadow-xl shadow-emerald-900/40 flex items-center justify-center gap-2 transform active:scale-95"
+                  onClick={() => {
+                    setActiveChat('seller');
+                    const chatEl = document.getElementById('chat-section');
+                    if (chatEl) chatEl.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="w-full py-4 bg-gradient-to-r from-emerald-500 via-teal-600 to-emerald-600 hover:opacity-95 text-white rounded-2xl font-black text-sm uppercase tracking-wider transition-all shadow-xl shadow-emerald-950/50 flex items-center justify-center gap-2.5 transform active:scale-95"
                 >
-                  <Lock className="w-4 h-4" />
-                  <span>Reservar com Sinal Online</span>
-                </button>
-
-                <button
-                  onClick={() => setActiveChat('seller')}
-                  className="w-full py-3.5 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-2xl font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 border border-slate-700"
-                >
-                  <MessageCircle className="w-4 h-4 text-emerald-400" />
+                  <MessageCircle className="w-5 h-5 text-emerald-200" />
                   <span>Falar com Vendedor</span>
                 </button>
 
-                {/* Radar de Oportunidades / Alerta de Preço */}
-                <button
-                  type="button"
-                  onClick={() => setIsAlertModalOpen(true)}
-                  className="w-full py-3.5 bg-cyan-950/40 hover:bg-cyan-900/50 text-cyan-300 rounded-2xl font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 border border-cyan-800/50"
-                >
-                  <Bell className="w-4 h-4 text-cyan-400 animate-pulse" />
-                  <span>Ativar Alerta de Queda de Preço</span>
-                </button>
 
-                {/* Sincronizador Multicanal B2B */}
-                <button
-                  type="button"
-                  onClick={() => setIsSyncModalOpen(true)}
-                  className="w-full py-3.5 bg-indigo-950/40 hover:bg-indigo-900/50 text-indigo-300 rounded-2xl font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 border border-indigo-800/50"
-                >
-                  <Globe2 className="w-4 h-4 text-indigo-400" />
-                  <span>Sincronizar Anúncio (Webmotors, OLX, iCarros, ML)</span>
-                </button>
                 
                 <button
                   type="button"
@@ -916,7 +1090,7 @@ export default function ShowcaseVehicleDetails() {
             />
 
             {/* Interactive Live Chat (AI / Seller) */}
-            <div className="space-y-3">
+            <div id="chat-section" className="space-y-3 scroll-mt-24">
               <div className="flex gap-2 p-1.5 bg-slate-900 rounded-2xl border border-slate-800">
                 <button
                   onClick={() => setActiveChat('ai')}
@@ -954,6 +1128,13 @@ export default function ShowcaseVehicleDetails() {
         isOpen={isSyncModalOpen}
         onClose={() => setIsSyncModalOpen(false)}
         car={car}
+      />
+
+      <VehicleComparatorModal
+        isOpen={isComparatorOpen}
+        onClose={() => setIsComparatorOpen(false)}
+        baseCar={car}
+        availableCars={allInventoryCars.length > 0 ? allInventoryCars : showcaseCars}
       />
     </div>
   );

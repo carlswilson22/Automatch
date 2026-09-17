@@ -1,13 +1,18 @@
 import re
+import time
 import logging
 from datetime import datetime
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 import httpx
 from fastapi import APIRouter, HTTPException
 
 logger = logging.getLogger("automatch")
 router = APIRouter(tags=["DETRAN & Laudo Cautelar"])
+
+# Cache em memória para consultas à Tabela FIPE (TTL de 24 horas = 86400s)
+_FIPE_CACHE: Dict[str, Dict[str, Any]] = {}
+FIPE_CACHE_TTL_SECONDS = 86400
 
 # ==============================================================================
 # Base de Dados Simulada de DETRANs Estaduais
@@ -201,29 +206,43 @@ async def gerar_laudo_cautelar(codigo_fipe: str) -> Dict[str, Any]:
     e cruza com o motor pericial de procedência e integridade veicular.
     """
     clean_fipe = re.sub(r'[^0-9\-]', '', codigo_fipe)
+    now = time.time()
     
-    fipe_data = None
-    try:
-        async with httpx.AsyncClient(timeout=6.0) as client:
-            resp = await client.get(f"https://brasilapi.com.br/api/fipe/preco/v1/{clean_fipe}")
-            if resp.status_code == 200:
-                fipe_data = resp.json()
-    except Exception:
-        fipe_data = None
-        
-    if not fipe_data or not isinstance(fipe_data, list) or len(fipe_data) == 0:
-        fipe_info = {
-            "valor": "R$ 165.000,00",
-            "marca": "Honda",
-            "modelo": "Civic Sedan Touring 1.5 Turbo 16V Aut.",
-            "anoModelo": 2023,
-            "combustivel": "Gasolina",
-            "codigoFipe": clean_fipe or "004487-3",
-            "mesReferencia": "agosto de 2026",
-            "siglaCombustivel": "G"
-        }
+    # 1. Verifica no Cache em Memória
+    cached = _FIPE_CACHE.get(clean_fipe)
+    if cached and now < cached.get("expires_at", 0):
+        logger.info("Consulta FIPE [%s] atendida via Cache em Memoria.", clean_fipe)
+        fipe_info = cached["data"]
     else:
-        fipe_info = fipe_data[0]
+        fipe_data = None
+        try:
+            async with httpx.AsyncClient(timeout=4.0) as client:
+                resp = await client.get(f"https://brasilapi.com.br/api/fipe/preco/v1/{clean_fipe}")
+                if resp.status_code == 200:
+                    fipe_data = resp.json()
+        except Exception as e:
+            logger.debug("BrasilAPI FIPE timeout/fallback: %s", e)
+            fipe_data = None
+            
+        if not fipe_data or not isinstance(fipe_data, list) or len(fipe_data) == 0:
+            fipe_info = {
+                "valor": "R$ 165.000,00",
+                "marca": "Honda",
+                "modelo": "Civic Sedan Touring 1.5 Turbo 16V Aut.",
+                "anoModelo": 2023,
+                "combustivel": "Gasolina",
+                "codigoFipe": clean_fipe or "004487-3",
+                "mesReferencia": "agosto de 2026",
+                "siglaCombustivel": "G"
+            }
+        else:
+            fipe_info = fipe_data[0]
+            
+        # Salva no cache com TTL de 24h
+        _FIPE_CACHE[clean_fipe] = {
+            "data": fipe_info,
+            "expires_at": now + FIPE_CACHE_TTL_SECONDS
+        }
         
     laudo_pericial = {
         "laudo_id": f"LAUDO-AM-{abs(hash(clean_fipe)) % 100000:05d}",
