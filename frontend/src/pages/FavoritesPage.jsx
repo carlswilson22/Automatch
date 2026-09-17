@@ -13,20 +13,33 @@ import { getNewCars } from '../data/newCarsManager';
 export default function FavoritesPage() {
   const navigate = useNavigate();
   const [favoriteIds, setFavoriteIds] = useState([]);
+  const [dbCars, setDbCars] = useState([]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
     setFavoriteIds(getFavorites());
+    const unsub = subscribeFavorites((ids) => setFavoriteIds(ids));
+
+    // Carrega carros do backend para resolver IDs do banco de dados
+    fetch('/api/cars?limit=100')
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        const items = Array.isArray(data) ? data : (data?.items || []);
+        setDbCars(items);
+      })
+      .catch(() => {});
+
+    return unsub;
   }, []);
 
-  // Resolve car objects from all data sources
+  // Resolve car objects from all data sources including Postgres API
   const favoriteCars = favoriteIds.map(id => {
-    // Check showcaseData
-    let car = showcaseCars.find(c => c.id === id);
+    // 1. Check showcaseData
+    let car = showcaseCars.find(c => String(c.id) === String(id));
     if (car) return { ...car, source: 'showcase' };
 
-    // Check mockData
-    const mock = mockCars.find(c => c.id === id);
+    // 2. Check mockData
+    const mock = mockCars.find(c => String(c.id) === String(id));
     if (mock) return {
       id: mock.id, name: `${mock.brand} ${mock.model}`, brand: mock.brand,
       year: mock.year, price: mock.price, mileage: mock.mileage,
@@ -34,8 +47,8 @@ export default function FavoritesPage() {
       bodyType: mock.metadata?.bodyType || 'Sedã', source: 'mock'
     };
 
-    // Check localStorage (user-created)
-    const local = getNewCars().find(c => c.id === id);
+    // 3. Check localStorage (user-created)
+    const local = getNewCars().find(c => String(c.id) === String(id));
     if (local) return {
       id: local.id, name: `${local.marca} ${local.modelo}`, brand: local.marca,
       year: local.ano, price: local.preco, mileage: local.km || 0,
@@ -43,12 +56,25 @@ export default function FavoritesPage() {
       bodyType: 'Particular', source: 'local'
     };
 
+    // 4. Check PostgreSQL Database Cars
+    const dbCar = dbCars.find(c => String(c.id) === String(id));
+    if (dbCar) return {
+      id: dbCar.id,
+      name: `${dbCar.brand} ${dbCar.model}`,
+      brand: dbCar.brand,
+      year: dbCar.year,
+      price: typeof dbCar.price === 'number' ? dbCar.price : (parseFloat(dbCar.price) || 0),
+      mileage: dbCar.km || 0,
+      image: dbCar.image || '/images/FotoHondaCivic.jpeg',
+      bodyType: dbCar.body_type || 'Particular',
+      source: 'database'
+    };
+
     return null;
   }).filter(Boolean);
 
   const handleRemove = (carId) => {
     removeFavorite(carId);
-    setFavoriteIds(prev => prev.filter(id => id !== carId));
   };
 
   return (

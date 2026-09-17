@@ -62,6 +62,8 @@ A desconfiança generalizada gerada por fotos de baixa qualidade, históricos de
 | **RF-24** | **Paginação do Catálogo no Servidor** | O sistema deve paginar a busca de veículos nativamente no banco de dados (`limit=20`, `offset`), com envelope padronizado e navegação numérica no frontend. |
 | **RF-25** | **Central de Favoritos** | O sistema deve permitir que usuários salvem veículos favoritos com sincronização em tempo real e visualização dedicada em `/favoritos`. |
 | **RF-26** | **Auditoria de Laudos em PDF por IA** | O sistema deve receber laudos periciais em PDF anexados pelo anunciante, validar integridade via magic bytes (`%PDF-`) e executar auditoria pericial automatizada com Gemini AI e motor heurístico local. |
+| **RF-27** | **Vídeo Pericial de 15 Segundos** | O sistema deve exibir player de vídeo pericial de 15s integrado aos anúncios com timeline interativa, checkpoints periciais (frente, lateral/pneus e traseira/motor) e endpoint para upload de mídias de vistoria. |
+| **RF-28** | **Comparador Multidimensional Lado a Lado** | O sistema deve permitir a comparação simultânea de até 3 veículos lado a lado analisando preço vs FIPE, quilometragem anual estimada, integridade pericial de laudo, pendências DETRAN e ficha técnica sem utilização de trustscore. |
 
 ---
 

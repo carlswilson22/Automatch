@@ -109,7 +109,7 @@ O **Automatch** tem como missão eliminar a assimetria de informações e fraude
 * **Descrição:** *Como* comprador interessado, *quero* consultar o histórico pericial e a cotação oficial FIPE do veículo, *para que* eu tenha certeza da integridade estrutural antes da visita presencial.
 * **Critérios de Aceite:**
   - [x] Consumo assíncrono de `https://brasilapi.com.br/api/fipe/preco/v1/{codigo_fipe}` com timeout de 6s e fallback.
-  - [x] Exibição de métricas periciais: TrustScore (0-100), longarinas dianteiras/traseiras, espessura de tinta e sinistros.
+  - [x] Exibição de métricas periciais oficiais: laudo estrutural aprovado 100%, integridade de longarinas/colunas, espessura de tinta e ausência de sinistros.
 
 #### 🏷️ [ATM-LAUDO-02] Certidão Cadastral de Débitos e Restrições DETRAN
 * **Prioridade:** 🔴 `P0 - Must Have` | **Esforço:** 5 SP | **Status:** ✅ `Concluído`

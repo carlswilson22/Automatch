@@ -21,10 +21,11 @@ class Car(Base):
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()), index=True)
     brand = Column(String, index=True)
     model = Column(String, index=True)
-    year = Column(Integer)
+    year = Column(Integer, index=True)
     km = Column(Integer)
-    price = Column(Float)
+    price = Column(Float, index=True)
     image = Column(String)
+    video_url = Column(String, nullable=True)
     
     color = Column(String, nullable=True)
     fuel = Column(String, nullable=True)
@@ -44,7 +45,7 @@ class Car(Base):
     laudo_url = Column(String, nullable=True)
     laudo_feedback = Column(Text, nullable=True)
 
-    store_id = Column(Integer, ForeignKey("stores.id"))
+    store_id = Column(Integer, ForeignKey("stores.id"), index=True)
     store = relationship("Store", back_populates="cars")
 
 class LaudoWatchlist(Base):

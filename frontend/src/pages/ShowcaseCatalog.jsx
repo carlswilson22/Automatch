@@ -5,7 +5,7 @@ import StoreIdentifier from '../components/ui/StoreIdentifier';
 import { stores } from '../data/inventoryData';
 import { useAuth } from '../contexts/AuthContext';
 import { getNewCars, isCarDeleted } from '../data/newCarsManager';
-import { toggleFavorite, isFavorite } from '../data/favoritesManager';
+import { toggleFavorite, isFavorite, subscribeFavorites } from '../data/favoritesManager';
 import {
   ShieldCheck, Search, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight, Calendar, Gauge, Palette,
   MapPin, Heart, Eye, Zap, Filter, ArrowLeft, SlidersHorizontal,
@@ -78,6 +78,11 @@ const PRICE_RANGES = [
 const CarCard = ({ car, index, viewMode }) => {
   const navigate = useNavigate();
   const [liked, setLiked] = useState(() => isFavorite(car.id));
+
+  useEffect(() => {
+    setLiked(isFavorite(car.id));
+    return subscribeFavorites((favs) => setLiked(favs.includes(String(car.id))));
+  }, [car.id]);
 
   const handleLike = (e) => {
     e.stopPropagation();
@@ -473,7 +478,7 @@ const ShowcaseCatalog = () => {
   }, [currentPage, totalPages]);
 
   // ── Filter Sidebar content (reused for desktop & mobile drawer) ──
-  const FilterPanel = () => (
+  const renderFilterPanel = () => (
     <div className="space-y-5">
       <FilterSelect label="Loja" icon={MapPin} value={filterStore} onChange={setFilterStore} options={['Todas', ...stores.filter(s => s.name !== 'Escolha Clássica').map(s => ({ label: s.name, value: s.id }))]} />
       <FilterSelect label="Marca" icon={Tag} value={filterBrand} onChange={setFilterBrand} options={BRANDS} />
@@ -592,7 +597,7 @@ const ShowcaseCatalog = () => {
                 <span className="ml-auto bg-brand-blue text-white text-[10px] font-bold px-2 py-0.5 rounded-full">{activeFilterCount}</span>
               )}
             </div>
-            <FilterPanel />
+            {renderFilterPanel()}
           </div>
         </aside>
 
@@ -609,7 +614,7 @@ const ShowcaseCatalog = () => {
                   <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2"><Filter className="w-5 h-5" /> Filtros</h2>
                   <button onClick={() => setMobileFiltersOpen(false)} className="p-2 hover:bg-slate-100 rounded-full"><X className="w-5 h-5" /></button>
                 </div>
-                <FilterPanel />
+                {renderFilterPanel()}
                 <button onClick={() => setMobileFiltersOpen(false)}
                   className="w-full mt-6 bg-brand-blue text-white py-3 rounded-xl font-bold text-sm hover:bg-blue-700 transition-colors">
                   Ver {results.length} Resultados

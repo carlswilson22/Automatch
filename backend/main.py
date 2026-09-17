@@ -11,9 +11,21 @@ import security
 
 logger = logging.getLogger("automatch")
 
-# Diretório de uploads de laudos
-UPLOADS_DIR = Path("/app/uploads/laudos")
-UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+# Diretório de uploads de laudos e vídeos
+def _resolve_uploads_dir() -> Path:
+    env_dir = os.getenv("UPLOADS_DIR")
+    if env_dir:
+        p = Path(env_dir)
+    else:
+        docker_path = Path("/app/uploads/laudos")
+        if docker_path.parent.exists() and os.name != "nt":
+            p = docker_path
+        else:
+            p = Path(__file__).resolve().parent / "uploads" / "laudos"
+    p.mkdir(parents=True, exist_ok=True)
+    return p
+
+UPLOADS_DIR = _resolve_uploads_dir()
 
 # Create tables
 models.Base.metadata.create_all(bind=engine)
@@ -47,10 +59,8 @@ app.include_router(laudos_export.router)
 @app.on_event("startup")
 def on_startup():
     """Inicialização dos serviços de banco e tarefas agendadas."""
-    models.Base.metadata.create_all(bind=engine)
-    
     # Auto-seed admin user se não existir
-    db = next(get_db())
+    db = SessionLocal()
     try:
         admin_user = db.query(models.User).filter(models.User.email == "admin@automatch.com").first()
         if not admin_user:

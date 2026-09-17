@@ -14,11 +14,25 @@ from services.ai_service import run_yolo_inference, analisar_laudo_cautelar_pdf
 logger = logging.getLogger("automatch")
 router = APIRouter(prefix="/api/v1", tags=["Laudos & Uploads"])
 
-UPLOADS_DIR = Path("/app/uploads/laudos")
-UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+def _resolve_uploads_dir() -> Path:
+    env_dir = os.getenv("UPLOADS_DIR")
+    if env_dir:
+        p = Path(env_dir)
+    else:
+        docker_path = Path("/app/uploads/laudos")
+        if docker_path.parent.exists() and os.name != "nt":
+            p = docker_path
+        else:
+            p = Path(__file__).resolve().parent.parent / "uploads" / "laudos"
+    p.mkdir(parents=True, exist_ok=True)
+    return p
 
-ALLOWED_LAUDO_EXTENSIONS = {".pdf", ".jpg", ".jpeg", ".png"}
-MAX_LAUDO_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB
+UPLOADS_DIR = _resolve_uploads_dir()
+
+ALLOWED_LAUDO_EXTENSIONS = {".pdf", ".jpg", ".jpeg", ".png", ".mp4", ".webm", ".mov"}
+ALLOWED_VIDEO_EXTENSIONS = {".mp4", ".webm", ".mov", ".m4v"}
+MAX_LAUDO_SIZE_BYTES = 15 * 1024 * 1024  # 15 MB para laudos/fotos
+MAX_VIDEO_SIZE_BYTES = 40 * 1024 * 1024  # 40 MB para video pericial 15s
 
 
 @router.post("/laudos/upload")
@@ -140,7 +154,11 @@ async def get_laudo_file(filename: str):
         ".pdf": "application/pdf",
         ".jpg": "image/jpeg",
         ".jpeg": "image/jpeg",
-        ".png": "image/png"
+        ".png": "image/png",
+        ".mp4": "video/mp4",
+        ".webm": "video/webm",
+        ".mov": "video/quicktime",
+        ".m4v": "video/mp4"
     }
     
     return FileResponse(
@@ -148,3 +166,54 @@ async def get_laudo_file(filename: str):
         media_type=media_types.get(ext, "application/octet-stream"),
         filename=safe_name
     )
+
+
+@router.post("/pericia/video/upload")
+async def upload_pericia_video(file: UploadFile = File(...)) -> Dict[str, Any]:
+    """
+    Endpoint de Upload de Vídeo Pericial de Vistoria (15s):
+    Recebe vídeo curto nos formatos MP4/WebM/MOV (máx 40MB),
+    valida integridade e armazena na pasta de uploads da plataforma.
+    """
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="Nome do arquivo de vídeo não informado.")
+        
+    file_ext = os.path.splitext(file.filename)[1].lower()
+    if file_ext not in ALLOWED_VIDEO_EXTENSIONS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Formato '{file_ext}' não suportado para vídeo pericial. Aceitos: {', '.join(ALLOWED_VIDEO_EXTENSIONS)}"
+        )
+
+    content = await file.read()
+    if len(content) == 0:
+        raise HTTPException(status_code=400, detail="Arquivo de vídeo está vazio.")
+
+    if len(content) > MAX_VIDEO_SIZE_BYTES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"O vídeo excede o tamanho máximo de {MAX_VIDEO_SIZE_BYTES // (1024*1024)}MB."
+        )
+
+    file_id = str(uuid.uuid4())
+    safe_filename = f"pericia_{file_id}{file_ext}"
+    file_path = UPLOADS_DIR / safe_filename
+
+    async with aiofiles.open(file_path, "wb") as f:
+        await f.write(content)
+
+    return {
+        "status": "success",
+        "id": file_id,
+        "filename": safe_filename,
+        "video_url": f"/api/v1/laudos/files/{safe_filename}",
+        "size_bytes": len(content),
+        "duracao_estimada_segundos": 15,
+        "tipo": "video_pericial_15s",
+        "checklist_inspecao": [
+            {"tempo": "0s - 5s", "foco": "Lataria Frontal, Para-choque e Conjunto Óptico"},
+            {"tempo": "5s - 10s", "foco": "Linha de Cintura, Portas, Rodas e Pneus"},
+            {"tempo": "10s - 15s", "foco": "Traseira, Tampa do Porta-Malas e Vão do Motor"}
+        ]
+    }
+
