@@ -23,8 +23,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy application source code
 COPY . .
 
-# Pre-download YOLOv8 model weights
-RUN curl -L -o yolov8n.pt https://github.com/ultralytics/assets/releases/download/v8.1.0/yolov8n.pt
+# Garantir pesos do modelo YOLOv8 (reaproveita arquivo local existente sem travar no curl)
+RUN if [ ! -s yolov8n.pt ]; then curl -L -o yolov8n.pt https://github.com/ultralytics/assets/releases/download/v8.1.0/yolov8n.pt; fi
 
 EXPOSE 8000
 
