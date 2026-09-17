@@ -1,3 +1,5 @@
+name: automatch
+
 services:
   # Database Service (PostgreSQL 15)
   db:

@@ -55,6 +55,18 @@ async def lifespan(app: FastAPI):
     """
     # ── Startup ────────────────────────────────────────────────────────────────
     models.Base.metadata.create_all(bind=engine)
+
+    # Auto-migração idempotente de colunas adicionadas recentemente
+    try:
+        from sqlalchemy import text
+        with engine.connect() as conn:
+            conn.execute(text("ALTER TABLE cars ADD COLUMN IF NOT EXISTS video_url VARCHAR;"))
+            conn.execute(text("ALTER TABLE cars ADD COLUMN IF NOT EXISTS laudo_url VARCHAR;"))
+            conn.execute(text("ALTER TABLE cars ADD COLUMN IF NOT EXISTS laudo_feedback TEXT;"))
+            conn.commit()
+    except Exception as e:
+        logger.warning("Auto-migração de colunas: %s", e)
+
     # Auto-seed admin user se não existir
     db = SessionLocal()
     try:
