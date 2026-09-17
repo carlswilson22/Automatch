@@ -1,3 +1,4 @@
+import os
 import logging
 import asyncio
 from contextlib import asynccontextmanager
@@ -8,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 import models
 import tasks
-from database import engine, get_db
+from database import engine, get_db, SessionLocal
 from routers import auth, cars, detran, ai_vision, uploads, tradein, alerts, integrations, laudos_export
 import security
 
