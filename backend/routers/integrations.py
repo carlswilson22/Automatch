@@ -8,13 +8,13 @@ router = APIRouter(prefix="/api/integrations", tags=["Sincronizador Multicanal B
 
 CHANNELS = [
     {
-        "id": "webmotors",
-        "nome": "Webmotors",
+        "id": "autoavaliar",
+        "nome": "AutoAvaliar",
         "status": "conectado",
-        "tipo_integracao": "API REST v2 + Feed XML",
+        "tipo_integracao": "API B2B + Carga de Estoque e Avaliação",
         "anuncios_sincronizados": 18,
-        "ultima_sincronizacao": "Há 12 minutos",
-        "badge_cor": "#e01931"
+        "ultima_sincronizacao": "Há 10 minutos",
+        "badge_cor": "#ff6600"
     },
     {
         "id": "olx",
@@ -41,7 +41,7 @@ class SyncRequest(BaseModel):
     car_id: Optional[str] = None
     car_name: Optional[str] = "Veículo"
     store_id: Optional[int] = 1
-    channels: Optional[List[str]] = ["webmotors", "olx", "autocerto"]
+    channels: Optional[List[str]] = ["autoavaliar", "olx", "autocerto"]
 
 
 @router.get("/channels")
@@ -57,11 +57,11 @@ async def listar_canais_integracao() -> Dict[str, Any]:
 @router.post("/sync")
 async def sincronizar_estoque_multicanal(payload: SyncRequest) -> Dict[str, Any]:
     """
-    Dispara a sincronização de estoque multi-plataforma com Webmotors, OLX e AutoCerto DMS.
+    Dispara a sincronização de estoque multi-plataforma com AutoAvaliar, OLX e AutoCerto DMS.
     Gera protocolo de envio e links de confirmação.
     """
     protocolo = f"SYNC-{uuid.uuid4().hex[:8].upper()}"
-    selected = payload.channels or ["webmotors", "olx", "autocerto"]
+    selected = payload.channels or ["autoavaliar", "olx", "autocerto"]
 
     resultados = []
     for cid in selected:

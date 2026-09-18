@@ -8,7 +8,7 @@
 [![Redis](https://img.shields.io/badge/Redis-7-DC382D?logo=redis&logoColor=white)](https://redis.io/)
 [![OpenCV](https://img.shields.io/badge/OpenCV-Computer%20Vision-5C3EE8?logo=opencv&logoColor=white)](https://opencv.org/)
 
-O **Automatch** é um ecossistema digital automotivo Fullstack de alto padrão projetado para transformar a compra, venda e auditoria pericial de veículos seminovos e usados no Brasil. A plataforma combina **visão computacional pericial**, **varredura 360° interativa**, **auditoria por IA de laudos em PDF**, **emissão de laudos periciais vetoriais A4 com QR Code**, **recuperação de senha segura via OTP**, **catálogo escalável com paginação no servidor**, **cruzamento cadastral em tempo real (DETRAN e Tabela FIPE)**, **central de favoritos** e **hub de exportação multicanal B2B homologado com AutoCerto DMS, Webmotors e OLX Autos**.
+O **Automatch** é um ecossistema digital automotivo Fullstack de alto padrão projetado para transformar a compra, venda e auditoria pericial de veículos seminovos e usados no Brasil. A plataforma combina **visão computacional pericial**, **varredura 360° interativa**, **auditoria por IA de laudos em PDF**, **emissão de laudos periciais vetoriais A4 com QR Code**, **comparador técnico multidimensional em 5 dimensões**, **recuperação de senha segura via OTP**, **catálogo escalável com paginação no servidor**, **cruzamento cadastral em tempo real (DETRAN e Tabela FIPE)**, **central de favoritos**, **simulador de financiamento bancário multi-bancos** e **hub B2B de gestão de estoque e exportação multicanal homologado com AutoCerto DMS, AutoAvaliar e OLX Autos**.
 
 ---
 
@@ -19,8 +19,8 @@ O **Automatch** é um ecossistema digital automotivo Fullstack de alto padrão p
 | **Instituição** | CEUB — Centro Universitário de Brasília |
 | **Curso** | Análise e Desenvolvimento de Sistemas (ADS) |
 | **Organização no GitHub** | [CampusCEUB](https://github.com/CAMPUSCEUB) |
-| **Repositório Oficial** | [ADS-AUTOMATCH](https://github.com/CAMPUSCEUB/ADS-AUTOMATCH) |
-| **Equipe** | Carlos Wilson, Matheus Porto, Paulo Arthur e Vinicius Aurelio |
+| **Repositório Oficial** | [Automatch](https://github.com/carlswilson22/Automatch.git) |
+| **Equipe** | Carlos Wilson, Matheus, Paulo Arthur e Vinicius Aurelio |
 | **ID do Projeto** | ADS-AUTOMATCH-2026 |
 
 ---
@@ -32,21 +32,23 @@ O sistema adota uma arquitetura conteinerizada em microsserviços com isolamento
 * **Frontend:** React 18, Vite, Framer Motion, Lucide Icons, Tailwind CSS e Web Audio DSP.
 * **Backend:** Python 3.11, FastAPI assíncrono com Lifespan Context Manager, SQLAlchemy ORM e Pydantic v2.
 * **Banco de Dados:** PostgreSQL 15 (persistência relacional) e Redis 7 (cache de consultas e sessões).
-* **Segurança & Criptografia (P0):**
+* **Segurança & Criptografia:**
   * Whitelist de CORS explícita por variável de ambiente (`ALLOWED_ORIGINS`).
   * Autenticação stateless com **JWT (RFC 7519)** assinado via HMAC-SHA256 com proteção estrita em rotas de perfil (`update_profile`).
   * Hash seguro de senhas com **PBKDF2-HMAC-SHA256** (100.000 iterações com salt aleatório).
   * Recuperação de senha via **OTP de 6 dígitos** com hash SHA-256 e rate limiting estrito.
-* **Hub Pericial & Inteligência Artificial (P1):**
+* **Hub Pericial & Inteligência Artificial:**
   * **Ultralytics YOLOv8 & OpenCV:** Detecção de classes veiculares, contornos e amassados, com *pre-warm* assíncrono no startup.
   * **Google Gemini 1.5 Flash Vision:** Scanner pericial visual e auditoria documental de laudos, com paralelização via `asyncio.gather`, timeout de 6s e exponential backoff em 503.
-  * **Varredura 360° Interativa:** Inspeção contínua em 8 quadrantes angulares com mapeamento pericial.
+  * **Varredura 360° Interativa:** Inspeção orbital contínua em 8 quadrantes com mapeamento tridimensional de avarias.
   * **Auditoria de Laudos Cautelares:** Validação de integridade por Magic Bytes (`%PDF-`) antes da alocação de memória.
 * **Geração de Documentos Oficiais:**
   * **ReportLab Engine:** Emissão de laudos cautelares em PDF vetorial A4 de alta resolução.
-  * **QR Code Oficial:** Geração em 300 DPI (`qrcode` + PIL) apontando para a página pública de autenticidade (`/validar/{protocolo}`).
-* **Agendador em Background:** APScheduler para auditoria periódica (a cada 60s) de veículos na Watchlist DETRAN.
-* **Gateway & Infraestrutura:** Docker Compose unificando portas e rotas com Nginx Reverse Proxy.
+  * **QR Code Oficial de Autenticidade:** Geração em 300 DPI (`qrcode` + PIL) apontando para a página pública de autenticidade (`/validar/{protocolo}`).
+* **Agendador em Background (APScheduler):** Monitoramento assíncrono periódico a cada 60s com tratamento de logs otimizado e shutdown seguro.
+* **Comparador Multidimensional:** Análise técnica simultânea de 2 a 3 veículos em 5 dimensões objetivas.
+* **Painel B2B para Lojistas:** Gestão de estoque, valor imobilizado, margens e sincronização multicanal homologada com **AutoCerto DMS**, **AutoAvaliar** e **OLX Autos**.
+* **Financiamento Bancário:** Simulador transparente integrado às taxas homologadas (Itaú Auto, Santander Auto e BV Financeira), permitindo negociação direta de seminovos como entrada.
 
 ---
 
@@ -61,10 +63,10 @@ Automatch/
 ├── README.md                       # Documentação principal e guia do projeto
 ├── BACKLOG.md                      # Backlog de requisitos e histórias de usuário (US)
 ├── docs/                           # Documentação institucional e técnica
-│   ├── requisitos.md               # Matriz de requisitos funcionais (RF-01 a RF-26) e não funcionais
+│   ├── requisitos.md               # Matriz de requisitos funcionais e não funcionais
 │   ├── arquitetura.md              # Visão arquitetural, modelos de dados e decisões técnicas (ADRs)
-│   └── decisoes/                   # Registro formal de decisões arquiteturais (ADR-01 a ADR-06)
-├── sprints/                        # Documentação dos ciclos de entrega (Sprints 00 a 03)
+│   ├── decisoes/                   # Registro formal de decisões arquiteturais (ADR-01 a ADR-07)
+│   └── reunioes/                   # Atas de alinhamento e saúde do sistema
 ├── backend/                        # Microsserviço de API (FastAPI / Python 3.11)
 │   ├── main.py                     # Entrypoint com lifespan, CORS explícito e pre-warm do YOLO
 │   ├── models.py                   # Modelos relacionais (Car, Store, User, PasswordResetToken, etc.)
@@ -73,18 +75,17 @@ Automatch/
 │   ├── tasks.py                    # Agendador APScheduler para auditorias em background
 │   ├── database.py                 # Pool de conexão SQLAlchemy e inicialização de banco
 │   ├── seed.py                     # Carga inicial de concessionárias e catálogo de veículos
-│   ├── test_vision_and_delete.py   # Suíte de testes automatizados (10/10 testes de integração)
+│   ├── test_vision_and_delete.py   # Suíte de testes automatizados de integração
 │   ├── requirements.txt            # Dependências Python (FastAPI, ReportLab, qrcode, PyPDF2, etc.)
 │   ├── Dockerfile                  # Imagem conteinerizada do Backend
 │   ├── routers/                    # Endpoints modularizados:
 │   │   ├── auth.py                 # Autenticação, perfil protegido e recuperação via OTP
 │   │   ├── cars.py                 # Catálogo paginado no servidor com filtros combinados e ilike
 │   │   ├── detran.py               # Auditoria de débitos e restrições (RENAJUD)
-│   │   ├── ai_vision.py            # Endpoints do Hub Pericial de IA
+│   │   ├── ai_vision.py            # Endpoints do Hub Pericial de IA e Varredura 360°
 │   │   ├── uploads.py              # Upload com validação de magic bytes de PDF
-│   │   ├── tradein.py              # Simulador Troca com Troco multi-bancos
 │   │   ├── alerts.py               # Radar de oportunidades e alertas de queda de preço
-│   │   ├── integrations.py         # Sincronizador multicanal (AutoCerto, Webmotors, OLX)
+│   │   ├── integrations.py         # Sincronizador multicanal (AutoCerto, AutoAvaliar, OLX Autos)
 │   │   └── laudos_export.py        # Exportação de laudo em PDF vetorial A4 com QR Code
 │   └── services/                   # Motores de serviço:
 │       ├── ai_service.py           # YOLOv8 pre-warm e Gemini paralelizado com backoff
@@ -96,19 +97,19 @@ Automatch/
 │   ├── Dockerfile                  # Imagem conteinerizada do Frontend
 │   ├── public/images/              # Acervo estático de fotos dos veículos
 │   └── src/
-│       ├── contexts/               # AuthContext (com inicialização em modo visitante)
+│       ├── contexts/               # AuthContext (inicialização em modo visitante)
 │       ├── pages/                  # Telas ativas:
 │       │   ├── Home.jsx            # Landing page institucional
-│       │   ├── ShowcaseCatalog.jsx # Catálogo com paginação no servidor, skeletons e lazy loading
-│       │   ├── ShowcaseVehicleDetails.jsx # Detalhes do veículo, perícia e botão "Falar com Vendedor"
-│       │   ├── FavoritesPage.jsx   # Central dedicada de veículos favoritados
-│       │   ├── PublicValidationPage.jsx   # Validador público de laudo via protocolo/QR Code
+│       │   ├── ShowcaseCatalog.jsx # Catálogo com paginação no servidor e lazy loading
+│       │   ├── ShowcaseVehicleDetails.jsx # Detalhes do veículo, varredura 360°, laudo e financiamento
+│       │   ├── FavoritesPage.jsx   # Central de veículos favoritados com comparador multidimensional
+│       │   ├── PublicValidationPage.jsx # Validador público de laudo via protocolo/QR Code
 │       │   ├── AuthPage.jsx        # Login, cadastro por perfil e modal OTP de recuperação
-│       │   ├── NewCarAdForm.jsx    # Cadastro de anúncio com upload e auditoria de laudo por IA
-│       │   ├── Dashboard.jsx       # Painel B2B do lojista com métricas e sincronização
+│       │   ├── NewCarAdForm.jsx    # Cadastro de anúncio com auditoria de laudo por IA
+│       │   ├── Dashboard.jsx       # Painel B2B do lojista (gestão de estoque, valor imobilizado e canais)
 │       │   └── ...
 │       ├── components/             # Componentes modulares e reutilizáveis:
-│       │   ├── vehicle/            # LaudoFeedbackCard, MultichannelSyncModal, AIChatBox, etc.
+│       │   ├── vehicle/            # Vehicle360Viewer, VehicleComparatorModal, MultichannelSyncModal, etc.
 │       │   ├── ui/                 # Modais, seletores e indicadores de status
 │       │   └── layout/             # Navbar unificada, ScrollToTop e Footer
 │       └── data/                   # favoritesManager, newCarsManager, plansData e mocks
@@ -154,7 +155,7 @@ docker compose up -d --build
 
 #### 4. Acompanhar os logs de execução:
 ```bash
-# Logs de todos os microsserviços
+# Logs unificados de todos os microsserviços
 docker compose logs -f
 
 # Logs específicos do backend ou frontend
@@ -168,7 +169,7 @@ docker compose ps
 ```
 
 #### 6. Executar a Suíte de Testes Automatizados:
-O projeto conta com testes de integração cobrindo visão computacional, ciclo de exclusão de anúncios, diagnóstico acústico, scanner de pneus, visão 360°, simulador Troca com Troco, radar de alertas e integrações multicanal:
+O projeto conta com testes de integração cobrindo visão computacional, ciclo de exclusão de anúncios, diagnóstico acústico, scanner de pneus, visão 360°, geração de PDF com QR Code, radar de alertas e integrações multicanal:
 ```bash
 docker compose exec backend python test_vision_and_delete.py
 ```
@@ -210,14 +211,19 @@ O frontend estará acessível em `http://localhost:5173` consumindo a API em `ht
 
 ---
 
-## 🔗 Endereços de Acesso
+## 🔗 Todos os Endereços de Acesso
 
-| Serviço | URL | Descrição |
-| :--- | :--- | :--- |
-| **Aplicação Web (Gateway Nginx)** | [http://localhost](http://localhost) | Portal web completo na porta padrão HTTP 80 |
-| **Porta Alternativa do Gateway** | [http://localhost:3000](http://localhost:3000) | Acesso secundário ao portal completo |
-| **Frontend Vite Direto** | [http://localhost:5173](http://localhost:5173) | Interface SPA direta do servidor Vite |
-| **Documentação da API (Swagger UI)** | [http://localhost:8000/docs](http://localhost:8000/docs) | Painel interativo OpenAPI para teste de rotas |
+Abaixo está a relação consolidada de todas as portas e endereços de acesso aos serviços do ecossistema Automatch:
+
+| Serviço / Camada | Protocolo & Porta | URL de Acesso | Descrição e Finalidade |
+| :--- | :--- | :--- | :--- |
+| **Gateway Central (Nginx)** | HTTP `80` | [http://localhost](http://localhost) | Ponto de entrada unificado para produção: entrega o frontend e roteia `/api/*` para o backend |
+| **Porta Alternativa do Gateway** | HTTP `3000` | [http://localhost:3000](http://localhost:3000) | Acesso secundário espelhado para ambientes locais e testes de concorrência |
+| **Frontend SPA (Vite Dev Server)** | HTTP `5173` | [http://localhost:5173](http://localhost:5173) | Servidor de desenvolvimento com Hot Module Replacement (HMR) e feedback instantâneo |
+| **Backend API (FastAPI Docs)** | HTTP `8000` | [http://localhost:8000/docs](http://localhost:8000/docs) | Documentação interativa OpenAPI (Swagger UI) para testes diretos de todos os endpoints |
+| **OpenAPI Specification** | HTTP `8000` | [http://localhost:8000/openapi.json](http://localhost:8000/openapi.json) | Especificação JSON da API para geração de clientes e auditoria de contratos |
+| **Banco de Dados PostgreSQL** | TCP `5432` | `localhost:5432` (db: `automatch`) | Banco relacional com tabelas de usuários, veículos, concessionárias e laudos |
+| **Cache & Sessões (Redis)** | TCP `6379` | `localhost:6379` | Cache de alta velocidade para cotações da FIPE e sessões temporárias |
 
 ---
 
@@ -230,50 +236,63 @@ O banco de dados é inicializado automaticamente com o usuário administrador pa
 
 ---
 
-## 🌟 Principais Funcionalidades do Sistema
+## 🌟 Detalhamento das Principais Funcionalidades
 
-### 1. Hub Pericial Multidimensional IA
-* **Scanner de Carroceria HD:** Mapeamento pericial de riscos e amassados com coordenadas $(X, Y)$, classificação de gravidade e estimativa de reparo em R$.
-* **Varredura 360° Interativa (`POST /api/analise-360`):** Inspeção com rotação contínua por arraste e mapeamento de avarias em 8 quadrantes angulares.
-* **Vídeo Pericial de 15 Segundos (`PericialVideoViewer`):** Player interativo dedicado com linha do tempo de 15s e 3 checkpoints periciais (0-5s Frente & Óptica, 5-10s Linha Central do Veículo & Pneus, 10-15s Traseira & Motor), com upload de mídias de vistoria no backend (`POST /api/v1/pericia/video/upload`).
-* **Comparador Multidimensional Lado a Lado (`VehicleComparatorModal`):** Comparação dinâmica de até 3 veículos simultaneamente avaliando Preço vs Tabela FIPE Oficial, Quilometragem e Média Anual (km/ano), Integridade Estrutural do Laudo (100% Aprovado), Situação DETRAN e Ficha Mecânica.
-* **Pre-warm do Modelo YOLOv8:** Inicialização em thread assíncrona durante o startup do servidor, eliminando picos de latência na primeira análise do usuário.
-* **Gemini Paralelizado com Fallback:** Execução paralela dos modelos de IA (`asyncio.gather`), timeout otimizado de 6s e retry automático com exponential backoff para erros 503.
+### 1. Varredura 360° Interativa (`POST /api/analise-360`)
+* **Rotação Orbital Fluida:** Componente `Vehicle360Viewer.jsx` permitindo ao usuário girar o veículo em 8 quadrantes angulares contínuos (0° a 315°) via toque, mouse ou arraste com aceleração por hardware.
+* **Mapeamento Tridimensional de Avarias:** Cada avaria detectada pelo modelo de IA é vinculada ao ângulo correspondente e renderizada como um *hotspot* interativo com coordenadas $(X, Y)$ na lataria.
+* **Badge Dinâmico de Integridade:** Quando nenhuma avaria é detectada, exibe o selo **"Carroceria 100% Íntegra"** em verde esmeralda. Ao detectar avarias, detalha a peça afetada, o tipo de dano (risco, mossa, desalinhamento) e o orçamento estimado de reparo.
+* **Resolução de Gargalo:** O endpoint foi otimizado para responder em milissegundos com ordenação polar dos ângulos e fallback estruturado caso a imagem do quadrante esteja ausente.
 
-### 2. Emissão & Auditoria de Laudos Cautelares
-* **Emissão de Laudo em PDF Vetorial A4 (`GET /api/v1/laudos/{car_id}/pdf`):** Documento oficial formatado via ReportLab com tipografia vetorial escalável, resumo dos 4 pilares periciais e termos legais.
-* **QR Code Oficial de Validação Pública:** Código QR em 300 DPI inserido no cabeçalho do PDF que direciona para a página pública de autenticidade (`/validar/{protocolo}`).
-* **Auditoria de Laudos por IA:** Análise inteligente de laudos em PDF anexados pelo vendedor com Google Gemini Document AI e geração automática do `LaudoFeedbackCard`.
-* **Validação Prévia de Magic Bytes:** Inspeção estrita dos primeiros 5 bytes (`%PDF-`), impedindo que arquivos forjados ou corrompidos sobrecarreguem a memória RAM.
+### 2. Geração de Documentos Oficiais & Validador com QR Code
+* **Emissão de Laudo em PDF Vetorial A4 (`GET /api/v1/laudos/{car_id}/pdf`):** Relatório pericial completo gerado com a biblioteca **ReportLab**, estruturado em grade tipográfica profissional A4 com selo de autenticidade, resumo pericial em 4 pilares (Estrutura, Pintura/Lataria, Histórico DETRAN e FIPE) e termos de conformidade.
+* **QR Code Oficial em Alta Resolução (300 DPI):** Gerado via `qrcode` + PIL e estampado no cabeçalho do documento oficial.
+* **Página Pública de Validação (`/validar/{protocolo}`):** Ao escanear o QR Code pelo smartphone, o comprador é direcionado ao validador público (`GET /api/v1/laudos/validar/{protocolo}`), que valida a assinatura digital, número de protocolo e integridade dos dados cadastrais sem exigir login prévio.
+* **Auditoria de Laudos por IA:** Upload de laudos em PDF pelo vendedor com verificação obrigatória de integridade de *Magic Bytes* (`%PDF-`) prevenindo estouro de buffer e injeção de binários maliciosos.
 
-### 3. Catálogo Inteligente com Paginação no Servidor
-* **Envelope Paginado (`GET /api/cars`):** Paginação nativa com `offset` e `limit`, busca textual `ilike` e filtros combinados de marca, modelo, ano e preço.
-* **Navegação Numérica Dinâmica:** Barra de paginação com salto para primeira/última página, números inteligentes (`1 2 3 ... N`) e scroll suave automático para o topo.
-* **Skeleton Loaders Animados:** Componente `CatalogSkeleton` com animação `pulse` para os modos Grid e List durante o carregamento.
-* **Imagens Otimizadas:** Atributo `loading="lazy"` e dimensões fixas `width`/`height` prevenindo oscilações de layout (CLS) e acelerando o carregamento (LCP).
-* **Acessibilidade Completa (a11y):** Atributos `aria-label` descritivos em todos os botões de favoritos, navegação e controles interativos.
+### 3. Agendador em Background (APScheduler)
+* **Auditoria Periódica Assíncrona (`backend/tasks.py`):** Monitoramento contínuo em ciclos de 60 segundos de veículos marcados na watchlist do DETRAN e verificação de alertas de preço salvos pelos usuários.
+* **Resolução de Gargalo de Log:** Foi corrigido o problema de poluição contínua de logs no console/arquivo. Quando a watchlist está vazia, o agendador registra as verificações apenas em nível `DEBUG`, mantendo os logs de produção limpos e evitando consumo desnecessário de I/O em disco.
+* **Ciclo de Vida Limpo (FastAPI Lifespan):** Inicialização no startup com `start_scheduler()` e encerramento gracioso com `shutdown_scheduler(wait=False)`, garantindo liberação imediata de recursos no encerramento da aplicação.
 
-### 4. Gestão de Favoritos & Experiência de Navegação
-* **Central de Carros Curtidos (`/favoritos`):** Página dedicada que lista todos os automóveis favoritados com sincronização em tempo real via `favoritesManager`.
-* **Transição Sem Saltos (`ScrollToTop`):** Reset automático de rolagem ao trocar de rota, garantindo que o usuário visualize os anúncios sempre a partir do topo.
+### 4. Comparador Multidimensional (5 Dimensões Técnicas)
+* **Comparação Simultânea na Central de Favoritos (`/favoritos`):** O usuário pode selecionar de 2 a 3 veículos curtidos e abrir o `VehicleComparatorModal.jsx` para uma auditoria comparativa lado a lado.
+* **5 Dimensões Técnicas e Objetivas:**
+  1. **Tabela FIPE vs Preço Anunciado:** Diferença monetária em R$ e percentual real de desconto/ágio frente à referência oficial de mercado.
+  2. **Quilometragem Média Anual (KM/ano):** Desgaste real calculado pela divisão da quilometragem total pela idade do carro (comparado à média nacional de 15.000 km/ano).
+  3. **Laudo Cautelar & Integridade Estrutural:** Status do laudo de integridade de monobloco, longarinas e espessura de tinta.
+  4. **Auditoria Cadastral DETRAN:** Situação de débitos, multas e existência de bloqueios judiciais (RENAJUD).
+  5. **Ficha Técnica & Motorização:** Comparação direta de combustível, câmbio, potência e carroceria.
 
-### 5. Comunicação, Autenticação & Segurança de Conta
-* **Recuperação de Senha via OTP (`POST /api/auth/reset-password`):** Fluxo seguro de redefinição com código de 6 dígitos gerado com SHA-256, validade de 15 minutos e rate limit estrito de 3 tentativas/hora.
-* **Negociação Direta ("Falar com Vendedor"):** Botão de ação direta via chat interno ou WhatsApp, eliminando a cobrança de sinal online prévio.
-* **Inicialização em Modo Visitante:** O sistema inicia deslogado para possibilitar testes completos de cadastro e login.
-* **Perfis Especializados no Cadastro:**
-  * 🛒 **Comprador:** Vitrine digital e gestão de favoritos.
-  * 🚗 **Vendedor Particular:** Redirecionamento direto para a criação de anúncio (`/novo-anuncio`).
-  * 🏢 **Lojista / Concessionária:** Acesso ao painel B2B (`/dashboard`) com ferramentas de estoque.
+### 5. Painel B2B para Lojistas e Concessionárias (`/dashboard`)
+* **Público-Alvo e Finalidade:** A aba de Painel B2B foi concebida especificamente para lojistas, revendedores e gerentes de concessionárias gerenciarem suas operações com agilidade.
+* **Gestão Centralizada de Estoque:** Visualização instantânea de todos os veículos cadastrados no pátio da loja com status de publicação, fotos e preço.
+* **Métricas Financeiras em Tempo Real:**
+  * **Valor Imobilizado Total:** Soma do capital investido em estoque ativo.
+  * **Margem Bruta Projetada:** Estimativa de rentabilidade calculada entre o valor de entrada e o preço de venda de cada unidade.
+* **Hub de Sincronização Multicanal:** Publicação em lote do estoque com 1 clique para os canais de venda integrados.
+* **Feed XML Padronizado:** Exportação automatizada para sistemas DMS externos (`/api/integrations/autocerto/feed.xml` e `/api/integrations/feed.xml`).
+* **Funil de Conversão:** Acompanhamento de cliques, veículos mais visualizados e propostas recebidas.
 
-### 6. Negociação Avançada & Fintech Automotiva
-* **Simulador 'Troca com Troco' (`POST /api/troca-com-troco`):** Avalia instantaneamente o seminovo do cliente pela placa, calculando se o comprador tem troco a receber em dinheiro via Pix ou saldo a financiar, integrando os bancos Itaú, Santander e BV Financeira.
-* **Radar de Oportunidades & Alerta de Preço (`POST /api/alerts`):** Monitoramento de veículos com avisos por WhatsApp, E-mail ou Push.
+### 6. Homologação Oficial de Canais B2B (AutoAvaliar, AutoCerto e OLX)
+* **Substituição de Webmotors por AutoAvaliar:** O canal Webmotors foi formalmente substituído por **AutoAvaliar** em todo o ecossistema (backend, rotas, schemas Pydantic e interface visual).
+* **Os 3 Canais Homologados Oficiais:**
+  1. **AutoCerto DMS:** Integração nativa de inventário em XML para gestão de concessionárias.
+  2. **AutoAvaliar:** Plataforma líder de avaliação e repasse B2B no Brasil, integrada para precificação e giro de estoque.
+  3. **OLX Autos:** Maior portal de classificados automotivos do país com publicação automatizada de anúncios.
 
-### 7. Integrações B2B & Sincronizador Multicanal
-* **Canais Homologados Exclusivos (`POST /api/integrations/sync`):** Sincronização em lote em 1 clique para os 3 canais oficiais: **AutoCerto DMS**, **Webmotors** e **OLX Autos**.
-* **Feed XML AutoCerto (`GET /api/integrations/autocerto/feed.xml`):** Carga direta DMS formatada em `<carga_autocerto versao="3.1">`.
-* **Feed XML Geral (`GET /api/integrations/feed.xml`):** Exportação padronizada compatível com os principais agregadores automotivos.
+### 7. Simulador de Financiamento Bancário (Sem Troca com Troco)
+* **Foco em Transparência Financeira:** A modalidade de "Troca com Troco" foi completamente removida do backend e da interface, visto que a aceitação e precificação de carros usados como parte do pagamento é uma negociação que deve ser tratada diretamente e de forma personalizada entre vendedor e comprador pelo chat/WhatsApp.
+* **Simulador de Crédito Multi-Bancos:** O componente `TradeInSimulator.jsx` opera exclusivamente como simulador de financiamento bancário, exibindo propostas e taxas reais de instituições parceiras:
+  * **Itaú Auto:** 1,42% a.m. (Menor taxa de mercado)
+  * **Santander Auto:** 1,45% a.m. (Aprovação ágil)
+  * **BV Financeira:** 1,49% a.m. (Entrada facilitada)
+* **Controles Interativos:** Ajuste dinâmico de valor de entrada (com atalhos rápidos de 20%, 30% e 50%) e prazos flexíveis de 12x a 60x meses com valor estimado de parcela em destaque.
+
+### 8. Catálogo com Paginação no Servidor & Central de Favoritos
+* **Paginação com Envelope Seguro (`GET /api/cars`):** Navegação com `offset` e `limit`, busca `ilike` e filtros combinados.
+* **Skeleton Loaders e Acessibilidade:** Carregamento suave com `CatalogSkeleton` e rótulos `aria-label` completos.
+* **Favoritos em Tempo Real:** Sincronização automática via `favoritesManager` e navegação limpa sem saltos de rolagem (`ScrollToTop`).
 
 ---
 
@@ -303,13 +322,13 @@ docker compose down -v
 
 ## 📚 Documentação Institucional & Governança
 
-Para detalhes técnicos profundos, consulte a pasta de documentação:
+Para detalhes técnicos e históricos das decisões de engenharia, consulte:
 
-* [docs/requisitos.md](docs/requisitos.md) — Matriz completa de Requisitos Funcionais (RF-01 a RF-26) e Não Funcionais.
-* [docs/arquitetura.md](docs/arquitetura.md) — Arquitetura de microsserviços, diagramas de dados e integrações.
-* [BACKLOG.md](BACKLOG.md) — Backlog priorizado e critérios de aceitação (DoD).
-* [sprints/README.md](sprints/README.md) — Planejamento e retrospectivas das Sprints 00, 01, 02 e 03.
-* [CHANGELOG.md](CHANGELOG.md) — Histórico detalhado de versões e alterações.
+* [docs/requisitos.md](docs/requisitos.md) — Matriz de Requisitos Funcionais e Não Funcionais.
+* [docs/arquitetura.md](docs/arquitetura.md) — Diagramas arquiteturais, modelos relacionais e fluxos de dados.
+* [docs/decisoes/](docs/decisoes/) — Registro formal de Decisões Arquiteturais (ADRs).
+* [docs/reunioes/](docs/reunioes/) — Atas e alinhamentos de governança do sistema.
+* [BACKLOG.md](BACKLOG.md) — Histórias de usuário e critérios de aceitação.
 
 ---
 

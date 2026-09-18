@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import models
 import tasks
 from database import engine, get_db, SessionLocal
-from routers import auth, cars, detran, ai_vision, uploads, tradein, alerts, integrations, laudos_export
+from routers import auth, cars, detran, ai_vision, uploads, alerts, integrations, laudos_export
 import security
 
 logger = logging.getLogger("automatch")
@@ -131,7 +131,6 @@ app.include_router(cars.router)
 app.include_router(detran.router)
 app.include_router(ai_vision.router)
 app.include_router(uploads.router)
-app.include_router(tradein.router)
 app.include_router(alerts.router)
 app.include_router(integrations.router)
 app.include_router(laudos_export.router)

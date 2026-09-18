@@ -199,38 +199,21 @@ def run_tests():
     print("✅ TESTE 7 PASSOU COM SUCESSO!")
 
     # -------------------------------------------------------------------------
-    # TESTE 8: Simulador 'Troca com Troco' (POST /api/troca-com-troco)
+    # TESTE 8: Emissão de Dossiê Oficial em PDF Vetorial com QR Code (GET /api/v1/laudos/{car_id}/pdf)
     # -------------------------------------------------------------------------
-    print("\n[TESTE 8] Simulador Instantâneo 'Troca com Troco'...")
-    # Caso A: Saldo a Financiar (carro de entrada de menor valor)
-    resp8a = client.post("/api/troca-com-troco", json={
-        "target_price": 140000.0,
-        "tradein_brand": "Volkswagen",
-        "tradein_model": "Polo 1.0 TSI",
-        "tradein_year": 2020,
-        "tradein_km": 40000,
-        "tradein_fipe": 78000.0
-    })
-    assert resp8a.status_code == 200, f"Falha na rota troca-com-troco: {resp8a.text}"
-    data8a = resp8a.json()
-    print(f"Tipo: {data8a.get('tipo_operacao')} | Avaliação: R$ {data8a['veiculo_entrada']['valor_avaliacao']} | Saldo a Financiar: R$ {data8a.get('saldo_financiar')}")
-    assert data8a.get("tipo_operacao") == "saldo_a_financiar"
-    assert len(data8a.get("bancos")) >= 3
+    print("\n[TESTE 8] Geração e Validação de Dossiê Cautelar em PDF Vetorial A4...")
+    resp8 = client.get("/api/v1/laudos/1/pdf")
+    assert resp8.status_code == 200, f"Falha na emissão de laudo PDF: {resp8.status_code}"
+    assert resp8.headers.get("content-type") == "application/pdf"
+    assert resp8.content.startswith(b"%PDF-"), "O arquivo gerado deve ser um PDF vetorial válido"
+    print(f"Dossiê gerado com sucesso: {len(resp8.content)} bytes | Protocolo: {resp8.headers.get('X-Protocol-ID')}")
 
-    # Caso B: Troco a Receber (carro de entrada de maior valor)
-    resp8b = client.post("/api/troca-com-troco", json={
-        "target_price": 60000.0,
-        "tradein_brand": "BMW",
-        "tradein_model": "320i M Sport",
-        "tradein_year": 2022,
-        "tradein_km": 20000,
-        "tradein_fipe": 240000.0
-    })
-    assert resp8b.status_code == 200
-    data8b = resp8b.json()
-    print(f"Tipo: {data8b.get('tipo_operacao')} | Troco via Pix: R$ {data8b.get('troco_pix')}")
-    assert data8b.get("tipo_operacao") == "troco_a_receber"
-    assert data8b.get("troco_pix") > 0
+    # Validação do endpoint público do QR Code
+    proto = resp8.headers.get("X-Protocol-ID", "ATM-2026-ABCD")
+    resp8_val = client.get(f"/api/v1/laudos/validar/{proto}")
+    assert resp8_val.status_code == 200, f"Falha na validação do protocolo {proto}"
+    assert resp8_val.json().get("valido") is True
+    print(f"Protocolo {proto} validado como autêntico via QR Code endpoint.")
     print("✅ TESTE 8 PASSOU COM SUCESSO!")
 
     # -------------------------------------------------------------------------
@@ -256,25 +239,25 @@ def run_tests():
     print("✅ TESTE 9 PASSOU COM SUCESSO!")
 
     # -------------------------------------------------------------------------
-    # TESTE 10: Sincronizador Multicanal B2B (Webmotors, OLX, AutoCerto)
+    # TESTE 10: Sincronizador Multicanal B2B (AutoAvaliar, OLX, AutoCerto)
     # -------------------------------------------------------------------------
-    print("\n[TESTE 10] Sincronizador Multicanal B2B (Webmotors, OLX, AutoCerto)...")
+    print("\n[TESTE 10] Sincronizador Multicanal B2B (AutoAvaliar, OLX, AutoCerto)...")
     resp10_ch = client.get("/api/integrations/channels")
     assert resp10_ch.status_code == 200, f"Falha ao listar canais: {resp10_ch.text}"
     data10_ch = resp10_ch.json()
     print(f"Canais Disponíveis: {data10_ch.get('total_canais')} parceiros integrados")
     assert data10_ch.get("total_canais") == 3, f"Esperado 3 canais, obtido {data10_ch.get('total_canais')}"
     
-    # Valida presença do AutoCerto, Webmotors e OLX
+    # Valida presença do AutoCerto, AutoAvaliar e OLX
     nomes_canais = [c["id"] for c in data10_ch.get("canais", [])]
     assert "autocerto" in nomes_canais, "AutoCerto deve estar presente nos canais integrados"
-    assert "webmotors" in nomes_canais, "Webmotors deve estar presente nos canais integrados"
+    assert "autoavaliar" in nomes_canais, "AutoAvaliar deve estar presente nos canais integrados"
     assert "olx" in nomes_canais, "OLX deve estar presente nos canais integrados"
 
     resp10_sync = client.post("/api/integrations/sync", json={
         "car_id": "1",
         "car_name": "Golf GTI 2.0 TSI",
-        "channels": ["webmotors", "olx", "autocerto"]
+        "channels": ["autoavaliar", "olx", "autocerto"]
     })
     assert resp10_sync.status_code == 200, f"Falha na sincronização multicanal: {resp10_sync.text}"
     data10_sync = resp10_sync.json()
