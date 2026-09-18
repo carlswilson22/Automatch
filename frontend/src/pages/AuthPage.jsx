@@ -54,7 +54,12 @@ const AuthPage = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    let sanitizedValue = value;
+    if (name === 'email') {
+      // Remove @ inicial caso o usuário tenha colado ou digitado acidentalmente antes do nome
+      sanitizedValue = value.replace(/^@+/, '').trim();
+    }
+    setFormData(prev => ({ ...prev, [name]: sanitizedValue }));
     if (error) setError('');
   };
 
@@ -64,14 +69,16 @@ const AuthPage = () => {
     setError('');
     setSuccess('');
 
+    const cleanEmail = formData.email.replace(/^@+/, '').trim();
+
     try {
       if (isLogin) {
-        await login(formData.email, formData.password);
+        await login(cleanEmail, formData.password);
         setSuccess('Login realizado com sucesso! Redirecionando...');
       } else {
         await register(
-          formData.name, 
-          formData.email, 
+          formData.name.trim(), 
+          cleanEmail, 
           formData.password, 
           { 
             accountType, 
@@ -108,7 +115,8 @@ const AuthPage = () => {
 
   // ─── Recovery Handlers ─────────────────────────────────────────────────────
   const handleForgotPassword = async () => {
-    if (!recoveryEmail.trim()) {
+    const cleanRecoveryEmail = recoveryEmail.replace(/^@+/, '').trim();
+    if (!cleanRecoveryEmail) {
       setRecoveryError('Digite seu e-mail cadastrado.');
       return;
     }
@@ -121,7 +129,7 @@ const AuthPage = () => {
       const res = await fetch('/api/auth/forgot-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: recoveryEmail.trim() })
+        body: JSON.stringify({ email: cleanRecoveryEmail })
       });
       const data = await res.json();
       
@@ -406,6 +414,7 @@ const AuthPage = () => {
                   required
                   value={formData.email}
                   onChange={handleInputChange}
+                  onBlur={(e) => setFormData(prev => ({ ...prev, email: prev.email.replace(/^@+/, '').trim() }))}
                   placeholder="exemplo@email.com"
                   className="w-full bg-slate-900 border border-slate-700 rounded-xl py-3 pl-11 pr-4 text-sm text-white placeholder:text-slate-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
                 />

@@ -7,20 +7,25 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Inicializa sempre sem usuário (Modo Visitante limpo) a cada inicialização/recarregamento
-    // permitindo testes manuais completos de cadastro e tipos de perfil.
-    localStorage.removeItem('automatch_user');
-    localStorage.removeItem('automatch_token');
-    setUser(null);
+    // Restaura a sessão do usuário previamente salvo
+    const savedUser = localStorage.getItem('automatch_user');
+    if (savedUser) {
+      try {
+        setUser(JSON.parse(savedUser));
+      } catch (e) {
+        localStorage.removeItem('automatch_user');
+      }
+    }
     setLoading(false);
   }, []);
 
-  const login = async (email, password) => {
+  const login = async (rawEmail, password) => {
+    const cleanEmail = (rawEmail || '').trim().replace(/^@+/, '').toLowerCase();
     try {
       const response = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+        body: JSON.stringify({ email: cleanEmail, password })
       });
 
       if (!response.ok) {
@@ -33,8 +38,8 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('automatch_user', JSON.stringify(userData));
       return userData;
     } catch (error) {
-      // Fallback para as credenciais oficiais de demonstração (README)
-      if (email.toLowerCase() === 'admin@automatch.com' && password === 'admin123') {
+      // 1. Fallback para as credenciais oficiais de demonstração (README)
+      if (cleanEmail === 'admin@automatch.com' && password === 'admin123') {
         const demoAdmin = {
           id: 1,
           name: 'Administrador Automatch',
@@ -49,16 +54,32 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('automatch_user', JSON.stringify(demoAdmin));
         return demoAdmin;
       }
+
+      // 2. Fallback para usuários registrados localmente no navegador
+      try {
+        const localAccounts = JSON.parse(localStorage.getItem('@automatch:registered_users') || '[]');
+        const found = localAccounts.find(u => u.email.toLowerCase() === cleanEmail && u.password === password);
+        if (found) {
+          const { password: _p, ...userData } = found;
+          setUser(userData);
+          localStorage.setItem('automatch_user', JSON.stringify(userData));
+          return userData;
+        }
+      } catch (storageErr) {
+        console.warn('Erro ao consultar contas locais:', storageErr);
+      }
+
       throw error;
     }
   };
 
-  const register = async (name, email, password, extraData = {}) => {
+  const register = async (name, rawEmail, password, extraData = {}) => {
+    const cleanEmail = (rawEmail || '').trim().replace(/^@+/, '').toLowerCase();
     try {
       const response = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, email, password })
+        body: JSON.stringify({ name: name.trim(), email: cleanEmail, password })
       });
 
       let userData;
@@ -84,6 +105,15 @@ export const AuthProvider = ({ children }) => {
       if (fullUser.token) {
         localStorage.setItem('automatch_token', fullUser.token);
       }
+
+      // Salva cópia local para garantir login offline futuro
+      try {
+        const localAccounts = JSON.parse(localStorage.getItem('@automatch:registered_users') || '[]');
+        const updated = localAccounts.filter(u => u.email.toLowerCase() !== cleanEmail);
+        updated.push({ ...fullUser, password });
+        localStorage.setItem('@automatch:registered_users', JSON.stringify(updated));
+      } catch (e) {}
+
       return fullUser;
     } catch (error) {
       // Fallback local resiliente: permite cadastrar qualquer tipo de perfil mesmo com backend offline
@@ -91,9 +121,9 @@ export const AuthProvider = ({ children }) => {
       const fallbackUser = {
         id: 'user-' + Date.now(),
         name: name.trim(),
-        email: email.trim().toLowerCase(),
+        email: cleanEmail,
         memberSince: 'Setembro 2026',
-        photo: `https://api.dicebear.com/7.x/initials/svg?seed=${name}`,
+        photo: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name.trim())}`,
         accountType: extraData.accountType || 'buyer',
         phone: extraData.phone || '',
         city: extraData.city || '',
@@ -102,6 +132,15 @@ export const AuthProvider = ({ children }) => {
         planId: extraData.planId || 'free',
         token: 'local-jwt-token-' + Date.now()
       };
+
+      // Persiste nas contas registradas locais
+      try {
+        const localAccounts = JSON.parse(localStorage.getItem('@automatch:registered_users') || '[]');
+        const updated = localAccounts.filter(u => u.email.toLowerCase() !== cleanEmail);
+        updated.push({ ...fallbackUser, password });
+        localStorage.setItem('@automatch:registered_users', JSON.stringify(updated));
+      } catch (e) {}
+
       setUser(fallbackUser);
       localStorage.setItem('automatch_user', JSON.stringify(fallbackUser));
       return fallbackUser;

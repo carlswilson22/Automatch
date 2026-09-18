@@ -12,6 +12,7 @@ import Dashboard from './pages/Dashboard';
 import NewCarAdForm from './pages/NewCarAdForm';
 import PlansPage from './pages/PlansPage';
 import PublicValidationPage from './pages/PublicValidationPage';
+import MyAdsPage from './pages/MyAdsPage';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
@@ -35,13 +36,22 @@ function App() {
           <Route path="/encontrar" element={<ShowcaseCatalog />} />
           <Route path="/encontrar/:id" element={<ShowcaseVehicleDetails />} />
           <Route path="/como-funciona" element={<HowItWorksPage />} />
-          <Route path="/favoritos" element={<FavoritesPage />} />
           <Route path="/planos" element={<PlansPage />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/novo-anuncio" element={<NewCarAdForm />} />
           <Route path="/validar/:protocolo" element={<PublicValidationPage />} />
           
-          {/* Protected Routes */}
+          {/* Protected Routes (Apenas após cadastro / login) */}
+          <Route path="/favoritos" element={
+            <ProtectedRoute>
+              <FavoritesPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/meus-anuncios" element={
+            <ProtectedRoute>
+              <MyAdsPage />
+            </ProtectedRoute>
+          } />
           <Route path="/perfil" element={
             <ProtectedRoute>
               <ProfilePage />

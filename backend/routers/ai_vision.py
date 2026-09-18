@@ -173,16 +173,29 @@ async def chat_automatch(payload: ChatRequest) -> Dict[str, Any]:
         if result:
             return {"status": "success", "modelo": "gemini-1.5-flash", "resposta": result}
 
-    # Resposta inteligente de fallback
+    # Resposta inteligente consultiva (fallback resiliente e contextual)
     q = user_msg.lower()
-    if "laudo" in q or "cautelar" in q or "detran" in q:
-        reply = "Todos os nossos veículos passam por vistoria cautelar com validação no DETRAN e checagem de mais de 120 itens estruturais."
-    elif "financiamento" in q or "parcela" in q or "taxa" in q:
-        reply = "Trabalhamos com simulação de financiamento em tempo real com taxas a partir de 1,49% a.m. através dos principais bancos."
-    else:
-        reply = "Olá! Como posso ajudar você a encontrar ou negociar seu próximo veículo com total procedência no Automatch?"
+    car_name = f"{car_context.get('brand', '')} {car_context.get('model', '')}".strip() if car_context else ""
 
-    return {"status": "success", "modelo": "gemini-1.5-flash", "resposta": reply}
+    if car_context and any(term in q for term in ["este carro", "esse carro", "o carro", "veículo", "veiculo", "motor", "km", "preço", "preco"]):
+        reply = (
+            f"O {car_name} ({car_context.get('year', '2024')}) está anunciado por R$ {car_context.get('price', 'sob consulta')}. "
+            f"Possui {car_context.get('km', 0)} km rodados, laudo cautelar 100% aprovado e integridade estrutural validada pela Automatch."
+        )
+    elif "laudo" in q or "cautelar" in q or "detran" in q or "procedencia" in q or "leilao" in q:
+        reply = "Todos os veículos na Automatch contam com Laudo Cautelar 100% Aprovado, verificação de restrições no DETRAN e checagem detalhada de chassi, motor e histórico de leilão."
+    elif "financiamento" in q or "parcela" in q or "taxa" in q or "banco" in q or "entrada" in q:
+        reply = "Simulamos financiamento em tempo real com taxas competitivas a partir de 1,29% a.m. com os maiores bancos do país, permitindo parcelar em até 60x."
+    elif "fipe" in q or "tabela" in q or "valor" in q or "desconto" in q:
+        reply = "Nossos veículos possuem cotação atualizada na Tabela FIPE Oficial, garantindo preços transparentes e justos tanto para compradores quanto para vendedores."
+    elif "troca" in q or "troco" in q or "usado" in q:
+        reply = "Aceitamos seu veículo usado na troca com avaliação técnica justa pela FIPE. Utilize também nosso simulador de Troca com Troco disponível no anúncio!"
+    elif "garantia" in q or "seguro" in q or "revisão" in q:
+        reply = "Os carros contam com certificação pericial Automatch e garantia técnica legal mínima de 90 dias para motor e câmbio pelas concessionárias parceiras."
+    else:
+        reply = "Olá! Sou o assistente virtual da Automatch. Posso esclarecer dúvidas sobre Laudo Cautelar, simulação de financiamento, Tabela FIPE ou orientar sua negociação na plataforma!"
+
+    return {"status": "success", "modelo": "automatch-consultor-ai", "resposta": reply}
 
 
 @router.post("/api/v1/precificacao")

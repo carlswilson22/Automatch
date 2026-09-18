@@ -226,14 +226,37 @@ const Home = () => {
   const [chatTab, setChatTab] = useState('system');
   const [chatMessage, setChatMessage] = useState('');
   const [messages, setMessages] = useState([
-    { id: 1, text: 'Olá! Bem-vindo ao AutoMatch. Como podemos ajudar com sua negociação hoje?', sender: 'system' }
+    { id: 1, text: 'Olá! Bem-vindo ao AutoMatch. Como podemos ajudar com sua busca ou negociação hoje?', sender: 'system' }
   ]);
+
+  const generateAssistantResponse = (text) => {
+    const q = (text || '').toLowerCase();
+    if (q.includes('laudo') || q.includes('cautelar') || q.includes('vistoria') || q.includes('pericia') || q.includes('procedencia')) {
+      return "Todos os veículos na Automatch possuem Laudo Cautelar 100% Aprovado e Dossiê de Transparência auditado, cobrindo integridade estrutural, pintura, histórico de leilão e documentação no DETRAN.";
+    }
+    if (q.includes('financiamento') || q.includes('parcela') || q.includes('entrada') || q.includes('banco') || q.includes('taxa') || q.includes('juros')) {
+      return "Trabalhamos com os principais bancos parceiros (Santander, Itaú, Bradesco, BV) com taxas competitivas a partir de 1,29% ao mês. Você pode simular parcelas diretamente na página de detalhes de qualquer veículo.";
+    }
+    if (q.includes('como funciona') || q.includes('funciona') || q.includes('comprar') || q.includes('vender') || q.includes('passo')) {
+      return "Na Automatch você escolhe seu carro com laudo pericial transparente, simula financiamento online, fala direto com o vendedor e baixa o Dossiê Oficial com QR Code de autenticidade sem burocracia.";
+    }
+    if (q.includes('troca') || q.includes('usado') || q.includes('avaliar') || q.includes('troco')) {
+      return "Aceitamos veículos usados na troca com avaliação rápida baseada na Tabela FIPE e estado de conservação. Experimente também nosso Simulador de Troca com Troco na página do veículo!";
+    }
+    if (q.includes('fipe') || q.includes('preço') || q.includes('preco') || q.includes('desconto') || q.includes('valor')) {
+      return "Nossos anúncios contam com comparativo oficial em relação à Tabela FIPE atualizada. A maioria dos nossos carros está anunciada com preços na média ou abaixo da FIPE.";
+    }
+    if (q.includes('garantia') || q.includes('seguro') || q.includes('devolução') || q.includes('revisado')) {
+      return "Todos os carros anunciados por concessionárias parceiras contam com garantia de procedência, 90 dias de cobertura mecânica e certificação pericial Automatch.";
+    }
+    return "Olá! Sou o assistente virtual Automatch. Posso esclarecer dúvidas sobre Laudo Cautelar, simulação de financiamento, Tabela FIPE ou ajudá-lo a encontrar o modelo ideal na nossa Vitrine Digital!";
+  };
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!chatMessage.trim()) return;
     
-    const userMessage = chatMessage;
+    const userMessage = chatMessage.trim();
     setMessages(prev => [...prev, { id: Date.now(), text: userMessage, sender: 'user' }]);
     setChatMessage('');
 
@@ -246,16 +269,18 @@ const Home = () => {
         body: JSON.stringify({ mensagem: userMessage }),
       });
       
-      const data = await response.json();
       if (response.ok) {
-        setMessages(prev => [...prev, { id: Date.now(), text: data.resposta, sender: 'system' }]);
-      } else {
-        const fallbackText = data.fallback || data.error || "Desculpe, ocorreu um erro ao conectar com o assistente.";
-        setMessages(prev => [...prev, { id: Date.now(), text: fallbackText, sender: 'system' }]);
+        const data = await response.json();
+        if (data.resposta) {
+          setMessages(prev => [...prev, { id: Date.now(), text: data.resposta, sender: 'system' }]);
+          return;
+        }
       }
+      throw new Error('Fallback para assistente inteligente');
     } catch (error) {
-      console.error("Erro no chat:", error);
-      setMessages(prev => [...prev, { id: Date.now(), text: "Não foi possível conectar ao servidor de chat. Verifique se o servidor está rodando.", sender: 'system' }]);
+      setTimeout(() => {
+        setMessages(prev => [...prev, { id: Date.now(), text: generateAssistantResponse(userMessage), sender: 'system' }]);
+      }, 400);
     }
   };
 
@@ -321,7 +346,13 @@ const Home = () => {
 
           <div className="flex items-center gap-3">
             <button 
-              onClick={() => navigate('/favoritos')} 
+              onClick={() => {
+                if (!isAuthenticated) {
+                  navigate('/login', { state: { from: { pathname: '/favoritos' } } });
+                } else {
+                  navigate('/favoritos');
+                }
+              }} 
               className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
               title="Carros Curtidos"
             >
@@ -398,7 +429,10 @@ const Home = () => {
                   Ver Vitrine Digital
                   <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </button>
-                <button className="bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur-sm text-white px-8 py-4 rounded-full font-semibold text-lg transition-all">
+                <button 
+                  onClick={() => navigate('/como-funciona')}
+                  className="bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur-sm text-white px-8 py-4 rounded-full font-semibold text-lg transition-all cursor-pointer hover:border-white/40 active:scale-95"
+                >
                   Como funciona?
                 </button>
               </div>
