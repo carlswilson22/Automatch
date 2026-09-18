@@ -6,7 +6,8 @@ from typing import Dict, Any, List
 from datetime import datetime
 
 from sqlalchemy.orm import Session
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Header
+from typing import Optional
 
 import models
 import schemas
@@ -15,6 +16,29 @@ from database import get_db
 
 logger = logging.getLogger("automatch")
 router = APIRouter(prefix="/api", tags=["Auth"])
+
+
+def get_current_user_from_header(
+    authorization: Optional[str] = Header(default=None),
+    db: Session = Depends(get_db)
+) -> models.User:
+    """
+    Extrai e valida o JWT do header Authorization: Bearer <token>.
+    Retorna o objeto User autenticado ou levanta HTTPException 401.
+    """
+    if not authorization or not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Token de autenticação obrigatório.")
+    token = authorization.removeprefix("Bearer ").strip()
+    payload = security.decode_access_token(token)
+    if not payload:
+        raise HTTPException(status_code=401, detail="Token inválido ou expirado.")
+    user_id = payload.get("sub")
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Token malformado.")
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+    return user
 
 # Rate limiting em memória para recuperação de senha
 _reset_attempts: Dict[str, List[float]] = {}
@@ -74,27 +98,39 @@ def login(request: schemas.UserLogin, db: Session = Depends(get_db)) -> Dict[str
 
 
 @router.put("/users/profile", response_model=schemas.UserResponse)
-def update_profile(request: schemas.UserProfileUpdate, db: Session = Depends(get_db)) -> Dict[str, Any]:
-    user = db.query(models.User).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
-    
+def update_profile(
+    request: schemas.UserProfileUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user_from_header)
+) -> Dict[str, Any]:
+    """
+    Atualiza o perfil do usuário autenticado via JWT.
+    Requer header: Authorization: Bearer <token>
+    """
     if request.name:
-        user.name = request.name
+        current_user.name = request.name.strip()
     if request.email:
-        user.email = request.email.strip().lower()
+        new_email = request.email.strip().lower()
+        # Verifica se o novo e-mail já está em uso por outro usuário
+        conflict = db.query(models.User).filter(
+            models.User.email == new_email,
+            models.User.id != current_user.id
+        ).first()
+        if conflict:
+            raise HTTPException(status_code=400, detail="Este e-mail já está em uso por outro usuário.")
+        current_user.email = new_email
     if request.photo:
-        user.photo = request.photo
-        
+        current_user.photo = request.photo
+
     db.commit()
-    db.refresh(user)
-    
+    db.refresh(current_user)
+
     return {
-        "id": user.id,
-        "name": user.name,
-        "email": user.email,
-        "memberSince": user.member_since,
-        "photo": user.photo,
+        "id": current_user.id,
+        "name": current_user.name,
+        "email": current_user.email,
+        "memberSince": current_user.member_since,
+        "photo": current_user.photo,
         "token": None
     }
 

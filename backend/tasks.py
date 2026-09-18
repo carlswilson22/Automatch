@@ -27,13 +27,14 @@ def verificar_watchlist_detran():
     Job periódico do APScheduler:
     Verifica no DETRAN (mockado) todos os veículos da laudo_watchlist e atualiza o status.
     """
-    logger.info("🔍 [APScheduler] Iniciando verificação periódica da Watchlist DETRAN...")
     db = SessionLocal()
     try:
         watchlist_items = db.query(models.LaudoWatchlist).all()
         if not watchlist_items:
-            logger.info("ℹ️ [APScheduler] Nenhum veículo cadastrado na watchlist.")
+            logger.debug("[APScheduler] Watchlist vazia. Nenhuma consulta pendente.")
             return
+
+        logger.info(f"🔍 [APScheduler] Verificando {len(watchlist_items)} veículo(s) na Watchlist DETRAN...")
 
         for item in watchlist_items:
             detran_data = consultar_detran_mock(item.placa)
