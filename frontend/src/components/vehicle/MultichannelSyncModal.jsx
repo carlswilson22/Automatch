@@ -4,7 +4,7 @@ import { Share2, X, CheckCircle2, RefreshCw, ExternalLink, Globe2, FileCode, Che
 import axios from 'axios';
 
 const CHANNELS_CONFIG = [
-  { id: 'webmotors', name: 'Webmotors', color: '#e01931', type: 'API REST v2 + Feed XML', iconText: 'WM', portalUrl: 'https://www.webmotors.com.br' },
+  { id: 'autoavaliar', name: 'AutoAvaliar', color: '#ff6600', type: 'API B2B + Carga de Estoque', iconText: 'AA', portalUrl: 'https://www.autoavaliar.com.br' },
   { id: 'olx', name: 'OLX Autos', color: '#6e0ad6', type: 'AutoXML / Carga de Estoque', iconText: 'OLX', portalUrl: 'https://www.olx.com.br/autos' },
   { id: 'autocerto', name: 'AutoCerto DMS', color: '#0066cc', type: 'Carga Direta DMS / Feed XML', iconText: 'AC', portalUrl: 'https://www.autocerto.com' }
 ];
@@ -24,7 +24,7 @@ const MultichannelSyncModal = ({ isOpen, onClose, car }) => {
       const resp = await axios.post('/api/integrations/sync', {
         car_id: car?.id || '1',
         car_name: car?.name || 'Veículo',
-        channels: ['webmotors', 'olx', 'autocerto']
+        channels: ['autoavaliar', 'olx', 'autocerto']
       });
 
       if (resp.data && resp.data.status === 'success') {
