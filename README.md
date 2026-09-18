@@ -211,19 +211,35 @@ O frontend estará acessível em `http://localhost:5173` consumindo a API em `ht
 
 ---
 
-## 🔗 Todos os Endereços de Acesso
+## 🌐 Mapeamento de Portas & Endereços de Execução Local
 
-Abaixo está a relação consolidada de todas as portas e endereços de acesso aos serviços do ecossistema Automatch:
+> [!NOTE]
+> Os endereços listados abaixo são pontos de comunicação local (**localhost**). Eles são ativados no seu computador assim que os microsserviços são inicializados no terminal através do comando:
+> ```bash
+> docker compose up -d
+> ```
 
-| Serviço / Camada | Protocolo & Porta | URL de Acesso | Descrição e Finalidade |
-| :--- | :--- | :--- | :--- |
-| **Gateway Central (Nginx)** | HTTP `80` | [http://localhost](http://localhost) | Ponto de entrada unificado para produção: entrega o frontend e roteia `/api/*` para o backend |
-| **Porta Alternativa do Gateway** | HTTP `3000` | [http://localhost:3000](http://localhost:3000) | Acesso secundário espelhado para ambientes locais e testes de concorrência |
-| **Frontend SPA (Vite Dev Server)** | HTTP `5173` | [http://localhost:5173](http://localhost:5173) | Servidor de desenvolvimento com Hot Module Replacement (HMR) e feedback instantâneo |
-| **Backend API (FastAPI Docs)** | HTTP `8000` | [http://localhost:8000/docs](http://localhost:8000/docs) | Documentação interativa OpenAPI (Swagger UI) para testes diretos de todos os endpoints |
-| **OpenAPI Specification** | HTTP `8000` | [http://localhost:8000/openapi.json](http://localhost:8000/openapi.json) | Especificação JSON da API para geração de clientes e auditoria de contratos |
-| **Banco de Dados PostgreSQL** | TCP `5432` | `localhost:5432` (db: `automatch`) | Banco relacional com tabelas de usuários, veículos, concessionárias e laudos |
-| **Cache & Sessões (Redis)** | TCP `6379` | `localhost:6379` | Cache de alta velocidade para cotações da FIPE e sessões temporárias |
+| Microsserviço / Camada | Porta Exposta | Endereço Local (Copiar) | Protocolo | Finalidade & Rota |
+| :--- | :---: | :--- | :---: | :--- |
+| **Gateway Central (Nginx)** | `80` | `http://localhost` | HTTP | Ponto de entrada de produção: entrega o frontend e roteia `/api/*` para a API |
+| **Gateway Secundário (Nginx)** | `3000` | `http://localhost:3000` | HTTP | Acesso alternativo espelhado para testes locais de concorrência |
+| **Frontend SPA (Vite)** | `5173` | `http://localhost:5173` | HTTP / WS | Servidor de desenvolvimento com *Hot Module Replacement* (HMR) |
+| **Backend API (FastAPI)** | `8000` | `http://localhost:8000/docs` | HTTP / REST | Painel interativo Swagger UI para inspeção e testes diretos de endpoints |
+| **OpenAPI Specification** | `8000` | `http://localhost:8000/openapi.json` | HTTP / JSON | Contrato JSON da API para geração de SDKs e automações |
+| **Banco de Dados (PostgreSQL)** | `5432` | `localhost:5432` *(db: automatch)* | TCP / SQL | Conexão para ferramentas de banco (DBeaver, pgAdmin, VS Code ou `psql`) |
+| **Cache em Memória (Redis)** | `6379` | `localhost:6379` | TCP | Armazenamento temporário de cotações FIPE e controle de sessões |
+
+### ⚡ Comandos Rápidos de Ciclo de Vida:
+```bash
+# Iniciar todos os 5 microsserviços em segundo plano
+docker compose up -d
+
+# Verificar se todos os containers estão ativos (status "Up")
+docker compose ps
+
+# Desligar todos os serviços e liberar as portas do computador
+docker compose down
+```
 
 ---
 
