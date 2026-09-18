@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   User, Mail, ShieldCheck, MapPin, Calendar, Heart, Eye, LogOut, 
   Edit3, Camera, Save, ArrowLeft, Shield, Loader2, Sparkles, 
-  LayoutDashboard, PlusCircle, CreditCard, ChevronRight
+  LayoutDashboard, PlusCircle, CreditCard, ChevronRight, Car
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -192,18 +192,18 @@ const ProfilePage = () => {
             {/* Quick Actions / Ecosystem Links */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <button 
-                onClick={() => navigate('/planos')}
-                className="p-5 bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-3xl shadow-lg shadow-blue-500/20 text-left hover:scale-[1.02] active:scale-[0.98] transition-all flex flex-col justify-between group"
+                onClick={() => navigate('/meus-anuncios')}
+                className="p-5 bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-3xl shadow-lg shadow-blue-500/20 text-left hover:scale-[1.02] active:scale-[0.98] transition-all flex flex-col justify-between group cursor-pointer"
               >
                 <div className="flex items-center justify-between mb-4">
                   <div className="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center">
-                    <Sparkles className="w-5 h-5 text-white" />
+                    <Car className="w-5 h-5 text-white" />
                   </div>
                   <ChevronRight className="w-5 h-5 text-white/60 group-hover:translate-x-1 transition-transform" />
                 </div>
                 <div>
-                  <h4 className="font-bold text-base">Planos & Assinatura</h4>
-                  <p className="text-xs text-blue-100 mt-0.5">Upgrade para Lojista Pro</p>
+                  <h4 className="font-bold text-base">Meus Anúncios</h4>
+                  <p className="text-xs text-blue-100 mt-0.5">Gerenciar e excluir veículos</p>
                 </div>
               </button>
 

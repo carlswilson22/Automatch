@@ -12,6 +12,22 @@ import {
   Car, ChevronDown, X, Star, RotateCcw, Tag, UserPlus, LogIn, Sparkles, Loader2
 } from 'lucide-react';
 
+// ─── UTILS DE FORMATAÇÃO ──────────────────────────────────────────────────
+export const formatMileage = (val) => {
+  if (val === undefined || val === null) return '0 km';
+  if (typeof val === 'number') return `${val.toLocaleString('pt-BR')} km`;
+  const str = String(val).trim();
+  if (str.toLowerCase().endsWith('km')) return str;
+  const num = Number(str.replace(/\D/g, ''));
+  return isNaN(num) || num === 0 ? `${str} km` : `${num.toLocaleString('pt-BR')} km`;
+};
+
+export const formatPrice = (val) => {
+  if (val === undefined || val === null) return 'R$ 0';
+  const num = typeof val === 'number' ? val : Number(String(val).replace(/[^0-9.-]+/g, ''));
+  return isNaN(num) ? `R$ ${val}` : `R$ ${num.toLocaleString('pt-BR')}`;
+};
+
 // ─── DATA ────────────────────────────────────────────────────────────────────
 const showcaseCars = [
   {
@@ -127,11 +143,11 @@ const CarCard = ({ car, index, viewMode }) => {
               <h3 className="text-xl font-bold text-slate-800">{car.name}</h3>
               <p className="text-xs text-slate-500 font-medium flex items-center gap-1 mt-0.5"><car.icon className="w-3.5 h-3.5" /> {car.bodyType}</p>
             </div>
-            <p className="text-2xl font-black text-brand-blue whitespace-nowrap">R$ {car.price.toLocaleString('pt-BR')}</p>
+            <p className="text-2xl font-black text-brand-blue whitespace-nowrap">{formatPrice(car.price)}</p>
           </div>
           <div className="flex gap-4 my-3 text-xs text-slate-500 font-medium flex-wrap">
             <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {car.year}</span>
-            <span className="flex items-center gap-1"><Gauge className="w-3.5 h-3.5" /> {car.mileage.toLocaleString('pt-BR')} km</span>
+            <span className="flex items-center gap-1"><Gauge className="w-3.5 h-3.5" /> {formatMileage(car.mileage)}</span>
             <span className="flex items-center gap-1"><Palette className="w-3.5 h-3.5" /> {car.color}</span>
             <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {car.location}</span>
           </div>
@@ -164,7 +180,7 @@ const CarCard = ({ car, index, viewMode }) => {
           </div>
         )}
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-4 pt-10">
-          <p className="text-2xl font-black text-white drop-shadow-md">R$ {car.price.toLocaleString('pt-BR')}</p>
+          <p className="text-2xl font-black text-white drop-shadow-md">{formatPrice(car.price)}</p>
         </div>
         <button onClick={handleLike}
           title={liked ? "Remover dos favoritos" : "Curtir veículo"}
@@ -183,7 +199,7 @@ const CarCard = ({ car, index, viewMode }) => {
         <div className="grid grid-cols-3 gap-2 mb-3">
           {[
             { icon: Calendar, val: car.year },
-            { icon: Gauge, val: `${car.mileage.toLocaleString('pt-BR')} km` },
+            { icon: Gauge, val: formatMileage(car.mileage) },
             { icon: Palette, val: car.color },
           ].map((s, i) => (
             <div key={i} className="bg-slate-50 rounded-lg px-2 py-1.5 text-center border border-slate-100">
@@ -540,7 +556,13 @@ const ShowcaseCatalog = () => {
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => navigate('/favoritos')}
+              onClick={() => {
+                if (!isAuthenticated) {
+                  navigate('/login', { state: { from: { pathname: '/favoritos' } } });
+                } else {
+                  navigate('/favoritos');
+                }
+              }}
               className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
               title="Carros Curtidos"
             >

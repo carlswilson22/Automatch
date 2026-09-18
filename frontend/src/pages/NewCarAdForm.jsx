@@ -5,9 +5,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { stores as defaultStores } from '../data/inventoryData';
 import { addNewCar } from '../data/newCarsManager';
 import LaudoFeedbackCard from '../components/vehicle/LaudoFeedbackCard';
+import { useAuth } from '../contexts/AuthContext';
 
 const NewCarAdForm = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     marca: '',
     modelo: '',
@@ -259,7 +261,9 @@ const NewCarAdForm = () => {
       leilao: formData.leilao,
       storeId: formData.store_id || 'store-1',
       laudo_url: laudoUploadedUrl || null,
-      laudo_feedback: laudoFeedback || null
+      laudo_feedback: laudoFeedback || null,
+      userEmail: user?.email || null,
+      userName: user?.name || 'Particular'
     });
 
     const storeNumericId = formData.store_id ? Number(String(formData.store_id).replace(/\D/g, '')) || 1 : 1;
@@ -383,8 +387,16 @@ const NewCarAdForm = () => {
                     <div className="border-t border-slate-100 pt-4 space-y-3">
                       <button
                         type="button"
-                        onClick={() => navigate('/encontrar')}
+                        onClick={() => navigate('/meus-anuncios')}
                         className="w-full px-5 py-3.5 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 transition-all flex items-center justify-center gap-2 shadow-md shadow-blue-500/20"
+                      >
+                        <Car className="w-5 h-5" />
+                        Ver em Meus Anúncios
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => navigate('/encontrar')}
+                        className="w-full px-5 py-3 rounded-xl font-bold text-slate-700 bg-slate-100 hover:bg-slate-200 transition-all flex items-center justify-center gap-2"
                       >
                         <ExternalLink className="w-5 h-5" />
                         Ver Vitrine de Carros
@@ -392,9 +404,9 @@ const NewCarAdForm = () => {
                       <button
                         type="button"
                         onClick={handleNewCar}
-                        className="w-full px-5 py-3.5 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-all flex items-center justify-center gap-2"
+                        className="w-full px-5 py-2.5 rounded-xl font-semibold text-slate-500 hover:text-slate-700 transition-all flex items-center justify-center gap-2 text-xs"
                       >
-                        <PlusCircle className="w-5 h-5" />
+                        <PlusCircle className="w-4 h-4" />
                         Cadastrar Outro Carro
                       </button>
                     </div>
