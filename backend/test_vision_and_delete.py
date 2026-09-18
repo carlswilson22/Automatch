@@ -141,43 +141,43 @@ def run_tests():
     print("✅ TESTE 4 PASSOU COM SUCESSO!")
 
     # -------------------------------------------------------------------------
-    # TESTE 5: Diagnóstico Acústico do Motor por IA (POST /api/analise-acustica)
+    # TESTE 5: Vídeo Pericial de Vistoria de 15 Segundos (POST /api/v1/pericia/video/upload)
     # -------------------------------------------------------------------------
-    print("\n[TESTE 5] Diagnóstico Acústico do Motor por IA (Automatch Engine Sound)...")
-    resp5 = client.post("/api/analise-acustica", json={
-        "car_context": {
-            "km": 42000,
-            "specs": {
-                "motor": "2.0 TSI Turbo",
-                "combustivel": "Gasolina"
-            }
-        }
-    })
-    assert resp5.status_code == 200, f"Falha na rota acústica: {resp5.text}"
+    print("\n[TESTE 5] Vídeo Pericial de Vistoria de 15 Segundos da Carroceria...")
+    fake_video_bytes = b"\x00\x00\x00 ftypmp42\x00\x00\x00\x00mp42isom" + b"\x00" * 256
+    resp5 = client.post(
+        "/api/v1/pericia/video/upload",
+        files={"file": ("vistoria_15s.mp4", fake_video_bytes, "video/mp4")}
+    )
+    assert resp5.status_code == 200, f"Falha no upload de vídeo pericial: {resp5.text}"
     data5 = resp5.json()
-    print(f"Score do Motor: {data5.get('score_motor')}% | Status: {data5.get('status_geral')}")
-    print(f"Laudo Acústico: {data5.get('laudo_resumo')}")
+    print(f"Vídeo Gerado: {data5.get('filename')} | Duração Estimada: {data5.get('duracao_estimada_segundos')}s")
     assert data5.get("status") == "success"
-    assert data5.get("score_motor") >= 90
-    assert len(data5.get("itens_checados")) >= 4
-    assert len(data5.get("waveform_data")) > 0
+    assert data5.get("duracao_estimada_segundos") == 15
+    assert len(data5.get("checklist_inspecao", [])) == 3
     print("✅ TESTE 5 PASSOU COM SUCESSO!")
 
     # -------------------------------------------------------------------------
-    # TESTE 6: Scanner IA de Desgaste de Pneus (POST /api/analise-pneus)
+    # TESTE 6: Motor AutoPrice™ e Chat Consultivo IA (POST /api/v1/precificacao e /api/chat)
     # -------------------------------------------------------------------------
-    print("\n[TESTE 6] Scanner IA de Desgaste de Pneus (Tread Depth Scanner)...")
-    resp6 = client.post("/api/analise-pneus", json={
-        "posicao_roda": "dianteiro_esquerdo",
-        "car_context": {"km": 42000}
+    print("\n[TESTE 6] Motor AutoPrice™ e Chat Consultivo IA...")
+    resp6_price = client.post("/api/v1/precificacao", json={
+        "fipe_price": 142000.0,
+        "km": 42000,
+        "year": 2022,
+        "damages": ["Pequeno arranhão"]
     })
-    assert resp6.status_code == 200, f"Falha na rota de pneus: {resp6.text}"
-    data6 = resp6.json()
-    print(f"Posição: {data6.get('posicao_label')} | Sulco: {data6.get('profundidade_mm')}mm | CONTRAN: {data6.get('aprovado_contran')}")
-    assert data6.get("status") == "success"
-    assert data6.get("profundidade_mm") >= 1.6
-    assert data6.get("aprovado_contran") is True
-    assert data6.get("km_estimado_restante") > 0
+    assert resp6_price.status_code == 200, f"Falha na precificação: {resp6_price.text}"
+    data6_price = resp6_price.json()
+    assert "suggested_price" in data6_price
+    print(f"Preço Justo Sugerido: R$ {data6_price.get('suggested_price')}")
+
+    resp6_chat = client.post("/api/chat", json={
+        "mensagem": "Qual a procedência e histórico deste carro?",
+        "car_context": {"brand": "Volkswagen", "model": "Golf GTI", "year": 2022, "km": 42000, "price": 142000}
+    })
+    assert resp6_chat.status_code == 200, f"Falha no chat: {resp6_chat.text}"
+    print(f"Chat IA Consultivo: {resp6_chat.json().get('resposta')[:80]}...")
     print("✅ TESTE 6 PASSOU COM SUCESSO!")
 
     # -------------------------------------------------------------------------
