@@ -44,6 +44,8 @@ class Car(Base):
     auto_price = Column(Float, nullable=True)
     laudo_url = Column(String, nullable=True)
     laudo_feedback = Column(Text, nullable=True)
+    original_price = Column(Float, nullable=True)
+    price_history = Column(Text, nullable=True)
 
     store_id = Column(Integer, ForeignKey("stores.id"), index=True)
     store = relationship("Store", back_populates="cars")

@@ -29,6 +29,8 @@ class CarBase(BaseModel):
     laudo_url: Optional[str] = None
     laudo_feedback: Optional[str] = None
     video_url: Optional[str] = None
+    original_price: Optional[float] = None
+    price_history: Optional[str] = None
 
 class CarSchema(CarBase):
     id: str

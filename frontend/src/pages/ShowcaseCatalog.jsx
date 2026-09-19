@@ -2,6 +2,8 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import StoreIdentifier from '../components/ui/StoreIdentifier';
+import MarketPriceIndicator from '../components/vehicle/MarketPriceIndicator';
+import PriceDropBadge from '../components/vehicle/PriceDropBadge';
 import { stores } from '../data/inventoryData';
 import { useAuth } from '../contexts/AuthContext';
 import { getNewCars, isCarDeleted } from '../data/newCarsManager';
@@ -32,7 +34,7 @@ export const formatPrice = (val) => {
 const showcaseCars = [
   {
     id: 'sc-001', name: 'Toyota Corolla Cross XRX', brand: 'Toyota', year: 2024,
-    price: 185000, color: 'Branco Pérola', mileage: 12000, storeId: 'store-1',
+    price: 185000, fipePrice: 192000, originalPrice: 194000, color: 'Branco Pérola', mileage: 12000, storeId: 'store-1',
     image: '/images/FotoCorollaCross.jpg',
     bodyType: 'SUV',
     icon: Car, featured: true, seller: 'Automatch Oficial', location: 'São Paulo, SP',
@@ -41,7 +43,7 @@ const showcaseCars = [
   },
   {
     id: 'sc-002', name: 'Volkswagen Polo TSI', brand: 'Volkswagen', year: 2023,
-    price: 98000, color: 'Vermelho', mileage: 18500, storeId: 'store-2',
+    price: 98000, fipePrice: 104000, originalPrice: 103000, color: 'Vermelho', mileage: 18500, storeId: 'store-2',
     image: '/images/FotoPoloTSI.jpg', bodyType: 'Hatch',
     icon: Car, featured: false, seller: 'João Carlos', location: 'Campinas, SP',
     description: 'Hatch potente e econômico com painel digital.',
@@ -138,12 +140,18 @@ const CarCard = ({ car, index, viewMode }) => {
           </div>
         </div>
         <div className="flex-1 p-5 flex flex-col">
-          <div className="flex justify-between items-start mb-1">
+          <div className="flex justify-between items-start mb-1 gap-2">
             <div>
               <h3 className="text-xl font-bold text-slate-800">{car.name}</h3>
               <p className="text-xs text-slate-500 font-medium flex items-center gap-1 mt-0.5"><car.icon className="w-3.5 h-3.5" /> {car.bodyType}</p>
             </div>
-            <p className="text-2xl font-black text-brand-blue whitespace-nowrap">{formatPrice(car.price)}</p>
+            <div className="text-right shrink-0">
+              <PriceDropBadge originalPrice={car.originalPrice} currentPrice={car.price} variant="badge" className="mb-1" />
+              <p className="text-2xl font-black text-brand-blue whitespace-nowrap">{formatPrice(car.price)}</p>
+            </div>
+          </div>
+          <div className="my-2">
+            <MarketPriceIndicator price={car.price} fipePrice={car.fipePrice} variant="badge" />
           </div>
           <div className="flex gap-4 my-3 text-xs text-slate-500 font-medium flex-wrap">
             <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {car.year}</span>
@@ -179,8 +187,9 @@ const CarCard = ({ car, index, viewMode }) => {
             <Star className="w-3 h-3 fill-white" /> Destaque
           </div>
         )}
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-4 pt-10">
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 pt-10 flex items-end justify-between gap-2">
           <p className="text-2xl font-black text-white drop-shadow-md">{formatPrice(car.price)}</p>
+          <PriceDropBadge originalPrice={car.originalPrice} currentPrice={car.price} variant="badge" />
         </div>
         <button onClick={handleLike}
           title={liked ? "Remover dos favoritos" : "Curtir veículo"}
@@ -207,6 +216,9 @@ const CarCard = ({ car, index, viewMode }) => {
               <p className="text-[11px] font-bold text-slate-700 truncate">{s.val}</p>
             </div>
           ))}
+        </div>
+        <div className="my-2">
+          <MarketPriceIndicator price={car.price} fipePrice={car.fipePrice} variant="badge" />
         </div>
         <p className="text-sm text-slate-600 leading-relaxed mb-3 line-clamp-2">{car.description}</p>
         <div className="flex flex-wrap gap-1.5 mt-auto mb-3">
