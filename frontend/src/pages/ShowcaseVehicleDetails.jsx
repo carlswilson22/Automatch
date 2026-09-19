@@ -22,6 +22,9 @@ import PriceAlertModal from '../components/vehicle/PriceAlertModal';
 import MultichannelSyncModal from '../components/vehicle/MultichannelSyncModal';
 import Vehicle360Viewer from '../components/vehicle/Vehicle360Viewer';
 import VehicleComparatorModal from '../components/vehicle/VehicleComparatorModal';
+import MarketPriceIndicator from '../components/vehicle/MarketPriceIndicator';
+import TcoCalculatorCard from '../components/vehicle/TcoCalculatorCard';
+import PriceDropBadge from '../components/vehicle/PriceDropBadge';
 import { useAuth } from '../contexts/AuthContext';
 
 export const formatMileage = (val) => {
@@ -101,7 +104,13 @@ export default function ShowcaseVehicleDetails() {
           model: mock.model,
           year: mock.year,
           price: mock.price,
+          originalPrice: mock.price * 1.05,
+          priceHistory: [
+            { date: '10/08/2026', price: Math.round(mock.price * 1.05), label: 'Preço Inicial' },
+            { date: '01/09/2026', price: mock.price, label: 'Preço Baixou' }
+          ],
           fipePrice: mock.price * 1.05,
+          autoPrice: mock.price * 0.98,
           color: 'Prata',
           mileage: mock.mileage,
           image: mock.images?.[0] || '/images/FotoHondaCivic.jpeg',
@@ -139,7 +148,13 @@ export default function ShowcaseVehicleDetails() {
             model: local.modelo,
             year: local.ano,
             price: local.preco,
+            originalPrice: local.preco * 1.04,
+            priceHistory: [
+              { date: '01/09/2026', price: Math.round(local.preco * 1.04), label: 'Anúncio Inicial' },
+              { date: '15/09/2026', price: local.preco, label: 'Preço Baixou' }
+            ],
             fipePrice: local.preco * 1.04,
+            autoPrice: local.preco * 0.99,
             color: local.cor || 'Preto',
             mileage: local.km || 0,
             image: local.imagem || '/images/FotoHondaCivic.jpeg',
@@ -200,7 +215,10 @@ export default function ShowcaseVehicleDetails() {
             model: dbCar.model,
             year: dbCar.year,
             price: typeof dbCar.price === 'number' ? dbCar.price : (parseFloat(dbCar.price) || 0),
-            fipePrice: dbCar.fipe_price || (dbCar.price * 1.04),
+            originalPrice: dbCar.original_price || (found?.originalPrice || null),
+            priceHistory: dbCar.price_history ? JSON.parse(dbCar.price_history) : (found?.priceHistory || []),
+            fipePrice: dbCar.fipe_price || (found?.fipePrice || dbCar.price * 1.04),
+            autoPrice: dbCar.auto_price || (found?.autoPrice || null),
             color: dbCar.color || 'Prata',
             mileage: dbCar.km || 0,
             image: dbCar.image || '/images/FotoHondaCivic.jpeg',
@@ -713,7 +731,14 @@ export default function ShowcaseVehicleDetails() {
             </div>
 
             <div className="lg:text-right shrink-0 bg-slate-950/80 p-4 sm:p-5 rounded-2xl border border-slate-800 flex flex-col justify-center">
-              <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400 block mb-0.5">Preço à Vista</span>
+              <div className="flex items-center justify-between lg:justify-end gap-2 mb-1 flex-wrap">
+                <span className="text-[10px] uppercase font-bold tracking-widest text-slate-400 block">Preço à Vista</span>
+                <PriceDropBadge
+                  originalPrice={car.originalPrice}
+                  currentPrice={car.price}
+                  variant="badge"
+                />
+              </div>
               <p className="text-3xl sm:text-4xl font-black text-emerald-400">
                 {formatPrice(car.price)}
               </p>
@@ -1206,6 +1231,14 @@ export default function ShowcaseVehicleDetails() {
                 {car.fullDescription || car.description || car.descricao || 'Veículo inspecionado e auditado com laudo cautelar 100% aprovado pela plataforma Automatch.'}
               </p>
             </div>
+
+            {/* Calculadora Interativa de Custo Total de Posse (TCO) */}
+            <TcoCalculatorCard
+              price={car.price}
+              fipePrice={car.fipePrice}
+              fuelType={car.specs?.combustivel || car.fuel || 'Flex'}
+              carYear={car.year}
+            />
           </div>
 
           {/* ── RIGHT COLUMN: Pricing Card, Perícia Cautelar, Simulator, Chats ── */}
@@ -1214,6 +1247,14 @@ export default function ShowcaseVehicleDetails() {
             {/* Price Card & Action */}
             <div className="bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-2xl space-y-6">
               <div>
+                <PriceDropBadge
+                  originalPrice={car.originalPrice}
+                  currentPrice={car.price}
+                  priceHistory={car.priceHistory}
+                  variant="detailed"
+                  className="mb-4"
+                />
+
                 <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-1">
                   Preço do Veículo
                 </span>
@@ -1221,25 +1262,14 @@ export default function ShowcaseVehicleDetails() {
                   {formatPrice(car.price)}
                 </p>
                 
-                {/* Informação Preço FIPE no estilo OLX e Webmotors */}
-                <div className="mt-3 pt-3 border-t border-slate-800/80 flex items-center justify-between text-xs flex-wrap gap-2">
-                  <div className="flex items-center gap-2 text-slate-400">
-                    <Tag className="w-3.5 h-3.5 text-blue-400" />
-                    <span>Preço FIPE:</span>
-                    <strong className="text-slate-200 font-semibold">
-                      {formatPrice(car.fipePrice || (typeof car.price === 'number' ? car.price * 1.04 : 100000))}
-                    </strong>
-                  </div>
-                  {(car.fipePrice || (typeof car.price === 'number' ? car.price * 1.04 : 0)) > (typeof car.price === 'number' ? car.price : 0) ? (
-                    <span className="text-[11px] font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-md border border-emerald-500/20">
-                      R$ {Math.round((car.fipePrice || car.price * 1.04) - car.price).toLocaleString('pt-BR')} abaixo da FIPE
-                    </span>
-                  ) : (
-                    <span className="text-[11px] font-semibold text-slate-400 bg-slate-800 px-2 py-0.5 rounded-md">
-                      Na média da FIPE
-                    </span>
-                  )}
-                </div>
+                {/* Termômetro de Oportunidade e Preço de Mercado */}
+                <MarketPriceIndicator
+                  price={car.price}
+                  fipePrice={car.fipePrice}
+                  autoPrice={car.autoPrice}
+                  variant="gauge"
+                  className="mt-4"
+                />
               </div>
 
               {/* Tags */}

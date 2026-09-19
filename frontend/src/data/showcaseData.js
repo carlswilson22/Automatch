@@ -3,7 +3,13 @@ import { Car } from 'lucide-react';
 export const showcaseCars = [
   {
     id: 'sc-001', name: 'Toyota Corolla Cross XRX', brand: 'Toyota', model: 'Corolla Cross',
-    year: 2024, price: 185000, fipePrice: 192000, color: 'Branco Pérola',
+    year: 2024, price: 185000, fipePrice: 192000, originalPrice: 194000,
+    priceHistory: [
+      { date: '15/08/2026', price: 194000, label: 'Preço Inicial' },
+      { date: '02/09/2026', price: 189000, label: 'Ajuste de Mercado' },
+      { date: '18/09/2026', price: 185000, label: 'Super Desconto Automatch' }
+    ],
+    color: 'Branco Pérola',
     mileage: 12000, image: '/images/FotoCorollaCross.jpg',
     bodyType: 'SUV',
     icon: Car, featured: true, location: 'São Paulo, SP', storeId: 'store-1',
@@ -15,7 +21,12 @@ export const showcaseCars = [
   },
   {
     id: 'sc-002', name: 'Volkswagen Polo TSI', brand: 'Volkswagen', model: 'Polo TSI',
-    year: 2023, price: 98000, fipePrice: 102000, color: 'Vermelho',
+    year: 2023, price: 98000, fipePrice: 104000, originalPrice: 103000,
+    priceHistory: [
+      { date: '01/09/2026', price: 103000, label: 'Preço Inicial' },
+      { date: '14/09/2026', price: 98000, label: 'Preço Baixou' }
+    ],
+    color: 'Vermelho',
     mileage: 18500, image: '/images/FotoPoloTSI.jpg',
     bodyType: 'Hatch',
     icon: Car, featured: false, location: 'Campinas, SP', storeId: 'store-2',
@@ -39,7 +50,12 @@ export const showcaseCars = [
   },
   {
     id: 'sc-004', name: 'Chevrolet Tracker Premier', brand: 'Chevrolet', model: 'Tracker',
-    year: 2024, price: 152000, fipePrice: 158000, color: 'Azul Escuro',
+    year: 2024, price: 152000, fipePrice: 159000, originalPrice: 158000,
+    priceHistory: [
+      { date: '20/08/2026', price: 158000, label: 'Preço Inicial' },
+      { date: '10/09/2026', price: 152000, label: 'Preço Baixou' }
+    ],
+    color: 'Azul Escuro',
     mileage: 8500, image: '/images/FotoChevroletTracker.jpg',
     bodyType: 'SUV',
     icon: Car, featured: true, location: 'Curitiba, PR', storeId: 'store-1',

@@ -2,6 +2,25 @@
 
 Registre aqui as mudanças relevantes por sprint ou marco avaliativo.
 
+## Sprint 05 - Termômetro de Mercado, Calculadora TCO e Price Drop Tracker (v2.3.0)
+- **Termômetro Visual de Oportunidade / Preço de Mercado (Oportunidade 1)**:
+  - Novo componente `MarketPriceIndicator.jsx` com modos `gauge` (régua visual graduada de dispersão) e `badge` (destaque compacto para cards).
+  - Classificação analítica de oportunidade (`Super Oportunidade`, `Preço Justo FIPE`, `Na Média de Mercado`, `Acima da Média`), indicando economia real garantida em R$ frente à tabela de referência.
+  - Integração nos cards da vitrine (`ShowcaseCatalog.jsx`) e no cabeçalho/sidebar de preços (`ShowcaseVehicleDetails.jsx`).
+  - Endpoint REST no backend: `GET /api/cars/{car_id}/market-indicator` e função de cálculo no `pricing_service.py`.
+- **Calculadora de Custo Total de Posse - TCO Mensal (Oportunidade 2)**:
+  - Novo componente interativo `TcoCalculatorCard.jsx` na página de detalhes do veículo.
+  - Breakdown dinâmico com 4 pilares de despesa mensal: IPVA proporcional por alíquota estadual (SP, RJ, MG, DF, etc.), Seguro estimado anualizado, Manutenção preventiva e Combustível projetado conforme a quilometragem mensal informada pelo condutor.
+  - Indicador consolidado de Custo Mensal Total e Custo Diário ("R$ X/dia") para planejamento orçamentário do comprador.
+  - Endpoint REST no backend: `POST /api/cars/tco-calculator` e algoritmos puros em `pricing_service.py`.
+- **Histórico & Badge de Redução de Preço - Price Drop Tracker (Oportunidade 4)**:
+  - Novo componente `PriceDropBadge.jsx` exibindo tags vibrantes de desconto ("Preço Baixou R$ X.XXX / -Y%") e timeline histórica expansível com a evolução dos reajustes do anúncio.
+  - Colunas `original_price` e `price_history` adicionadas ao banco de dados (`backend/models.py`) e schemas Pydantic (`backend/schemas.py`).
+  - Destaque sobreposto nos cards do catálogo e na ficha técnica do veículo.
+- **Validação e Confiabilidade**:
+  - Nova Suíte 13 de testes automatizados adicionada em `backend/test_full_system_review.py`.
+  - Frontend compilado com 100% de sucesso via Vite (`2.236 módulos transformados em 21.27s`).
+
 ## Sprint 04 - Resolução de Gargalos, Vídeo Pericial 15s e Comparador Multidimensional (v2.2.0)
 - **Otimização de Gargalos e Escalabilidade**:
   - Connection pooling configurado no SQLAlchemy (`pool_size=10`, `max_overflow=20`, `pool_recycle=1800`, `pool_pre_ping=True`) com suporte a concorrência assíncrona.

@@ -136,3 +136,47 @@ def delete_car(car_id: str, db: Session = Depends(get_db)) -> Dict[str, Any]:
     db.commit()
     logger.info("Veículo com ID %s excluído com sucesso do banco de dados.", car_id)
     return {"status": "success", "message": "Anúncio excluído com sucesso.", "deleted_id": car_id}
+
+
+from services.pricing_service import calcular_indicador_mercado, calcular_tco_mensal
+from pydantic import BaseModel
+
+class TcoRequest(BaseModel):
+    price: float
+    fipe_price: Optional[float] = None
+    fuel: Optional[str] = "Flex"
+    uf: Optional[str] = "SP"
+    monthly_km: Optional[int] = 1000
+    fuel_price: Optional[float] = None
+
+
+@router.get("/cars/{car_id}/market-indicator")
+def get_car_market_indicator(car_id: str, db: Session = Depends(get_db)) -> Dict[str, Any]:
+    """
+    Retorna o termômetro de mercado para o veículo: classificação de preço, diferença FIPE e régua de dispersão.
+    """
+    car = db.query(models.Car).filter(models.Car.id == car_id).first()
+    if not car:
+        raise HTTPException(status_code=404, detail="Veículo não encontrado.")
+    
+    return calcular_indicador_mercado(
+        price=car.price,
+        fipe_price=car.fipe_price or car.price,
+        auto_price=car.auto_price
+    )
+
+
+@router.post("/cars/tco-calculator")
+def post_tco_calculator(payload: TcoRequest) -> Dict[str, Any]:
+    """
+    Calcula o Custo Total de Posse (TCO) mensal detalhado para um veículo.
+    """
+    return calcular_tco_mensal(
+        price=payload.price,
+        fipe_price=payload.fipe_price,
+        fuel=payload.fuel,
+        uf=payload.uf or "SP",
+        monthly_km=payload.monthly_km or 1000,
+        fuel_price=payload.fuel_price
+    )
+

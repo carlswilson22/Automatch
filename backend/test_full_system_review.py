@@ -283,6 +283,60 @@ def run_full_system_review():
     print("✅ SUÍTE 12 CONCLUÍDA COM SUCESSO!")
 
     # -------------------------------------------------------------------------
+    # SUÍTE 13: Termômetro Visual de Mercado, TCO e Redução de Preço
+    # -------------------------------------------------------------------------
+    print("\n--- SUÍTE 13: Termômetro de Mercado, Calculadora TCO & Histórico de Preço ---")
+    from services.pricing_service import calcular_indicador_mercado, calcular_tco_mensal
+
+    # 1. Teste unitário de indicador de mercado
+    ind_deal = calcular_indicador_mercado(price=90000.0, fipe_price=100000.0)
+    assert ind_deal["status_code"] == "EXCELLENT_DEAL", f"Esperado EXCELLENT_DEAL, obtido {ind_deal['status_code']}"
+    assert ind_deal["is_discount"] is True
+    assert ind_deal["savings_amount"] == 10000.0
+    print(f"Indicador de Mercado (Super Oportunidade): {ind_deal['status_label']} (-R$ {ind_deal['savings_amount']:,.2f}) OK!")
+
+    ind_fair = calcular_indicador_mercado(price=101000.0, fipe_price=100000.0)
+    assert ind_fair["status_code"] == "FAIR_PRICE", f"Esperado FAIR_PRICE, obtido {ind_fair['status_code']}"
+    print(f"Indicador de Mercado (Preço Justo FIPE): {ind_fair['status_label']} OK!")
+
+    # 2. Teste unitário de cálculo de TCO
+    tco_sp = calcular_tco_mensal(price=100000.0, fipe_price=100000.0, fuel="Flex", uf="SP", monthly_km=1000)
+    assert tco_sp["breakdown"]["ipva_mensal"] == 333.33, f"IPVA mensal incorreto: {tco_sp['breakdown']['ipva_mensal']}"
+    assert tco_sp["breakdown"]["seguro_mensal"] == 375.0, f"Seguro mensal incorreto: {tco_sp['breakdown']['seguro_mensal']}"
+    assert tco_sp["total_mensal"] > 800.0
+    print(f"TCO Mensal Calculado: R$ {tco_sp['total_mensal']:,.2f}/mês (R$ {tco_sp['custo_diario']:,.2f}/dia) OK!")
+
+    # 3. Teste via API REST: POST /api/cars/tco-calculator
+    tco_resp = client.post("/api/cars/tco-calculator", json={
+        "price": 120000.0,
+        "fipe_price": 125000.0,
+        "fuel": "Híbrido",
+        "uf": "DF",
+        "monthly_km": 1500
+    })
+    assert tco_resp.status_code == 200, f"Falha na rota /api/cars/tco-calculator: {tco_resp.text}"
+    tco_json = tco_resp.json()
+    assert "total_mensal" in tco_json
+    assert tco_json["uf"] == "DF"
+    print(f"Rota POST /api/cars/tco-calculator: Status 200, TCO DF: R$ {tco_json['total_mensal']:,.2f}/mês OK!")
+
+    # 4. Teste via API REST: GET /api/cars/{car_id}/market-indicator com veículo existente
+    list_cars = client.get("/api/cars?limit=1")
+    assert list_cars.status_code == 200
+    items = list_cars.json().get("items", [])
+    if items:
+        test_car_id = items[0]["id"]
+        mi_resp = client.get(f"/api/cars/{test_car_id}/market-indicator")
+        assert mi_resp.status_code == 200, f"Falha em /api/cars/{test_car_id}/market-indicator: {mi_resp.text}"
+        mi_data = mi_resp.json()
+        assert "status_code" in mi_data
+        assert "gauge_percent" in mi_data
+        print(f"Rota GET /api/cars/{test_car_id}/market-indicator: Status 200, Status: {mi_data['status_label']} ({mi_data['gauge_percent']}%) OK!")
+
+    results["13. Termômetro de Mercado & Calculadora TCO"] = "PASS"
+    print("✅ SUÍTE 13 CONCLUÍDA COM SUCESSO!")
+
+    # -------------------------------------------------------------------------
     # RELATÓRIO FINAL
     # -------------------------------------------------------------------------
     print("\n" + "=" * 75)
