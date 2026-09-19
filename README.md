@@ -19,7 +19,7 @@ O **Automatch** é um ecossistema digital automotivo Fullstack de alto padrão p
 | **Instituição** | CEUB — Centro Universitário de Brasília |
 | **Curso** | Análise e Desenvolvimento de Sistemas (ADS) |
 | **Organização no GitHub** | [CampusCEUB](https://github.com/CAMPUSCEUB) |
-| **Repositório Oficial** | [Automatch](https://github.com/carlswilson22/Automatch.git) |
+| **Repositório Oficial** | [ADS-AUTOMATCH](https://github.com/CAMPUSCEUB/ADS-AUTOMATCH) |
 | **Equipe** | Carlos Wilson, Matheus, Paulo Arthur e Vinicius Aurelio |
 | **ID do Projeto** | ADS-AUTOMATCH-2026 |
 
