@@ -17,9 +17,18 @@ Registre aqui as mudanças relevantes por sprint ou marco avaliativo.
   - Novo componente `PriceDropBadge.jsx` exibindo tags vibrantes de desconto ("Preço Baixou R$ X.XXX / -Y%") e timeline histórica expansível com a evolução dos reajustes do anúncio.
   - Colunas `original_price` e `price_history` adicionadas ao banco de dados (`backend/models.py`) e schemas Pydantic (`backend/schemas.py`).
   - Destaque sobreposto nos cards do catálogo e na ficha técnica do veículo.
+- **Scanner Pericial de Lataria Amassada & Testes de IA**:
+  - Inclusão de fotos de alta fidelidade para testes periciais (`carro_lataria_amassada.jpg` e `carro_parachoque_danificado.jpg`) em `frontend/public/images/` e `backend/public_images/`.
+  - Atualização do `AutomatchScan.jsx` com barra de cenários de teste rápido pericial (Lataria Amassada com deformidade severa na porta, Dano no para-choque e Carro 100% íntegro).
+  - Atualização do `ShowcaseVehicleDetails.jsx` com seletor de amostras de lataria e integração direta com o recalculo do motor AutoPrice™.
+- **Visor Orbital 360° com Quadrantes Fotográficos**:
+  - `Vehicle360Viewer.jsx` aprimorado com galeria fotográfica multi-quadrantes (Frente, Diagonais, Laterais e Traseira).
+  - Hotspots tridimensionais vinculados ao ângulo correspondente da carroceria com popover de detalhe e estimativa de reparo.
+- **Bateria Global de Casos de Uso (End-to-End)**:
+  - Criação de `backend/test_usecases_full_battery.py` cobrindo 100% dos 8 casos de uso do sistema (Scanner IA, Visor 360°, Termômetro FIPE, TCO, PDF com QR Code, Hub B2B, Chat e Gestão de Anúncios).
 - **Validação e Confiabilidade**:
   - Nova Suíte 13 de testes automatizados adicionada em `backend/test_full_system_review.py`.
-  - Frontend compilado com 100% de sucesso via Vite (`2.236 módulos transformados em 21.27s`).
+  - Frontend compilado com 100% de sucesso via Vite (`2.236 módulos transformados em 13.36s`).
 
 ## Sprint 04 - Resolução de Gargalos, Vídeo Pericial 15s e Comparador Multidimensional (v2.2.0)
 - **Otimização de Gargalos e Escalabilidade**:
