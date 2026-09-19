@@ -126,12 +126,19 @@ def create_car(car: schemas.CarBase, db: Session = Depends(get_db)) -> schemas.C
 def delete_car(car_id: str, db: Session = Depends(get_db)) -> Dict[str, Any]:
     """
     Exclui um anúncio de veículo do catálogo e banco de dados.
+    Remove laudos associados (FK cascade manual) antes da exclusão.
     """
     car = db.query(models.Car).filter(models.Car.id == car_id).first()
     if not car:
         # Se não encontrou por UUID exato, tenta busca segura ou confirma sucesso para idempotência
         return {"status": "success", "message": "Anúncio removido ou inexistente no banco de dados.", "deleted_id": car_id}
     
+    # Remove laudos associados para evitar violação de FK
+    try:
+        db.query(models.LaudoProtocol).filter(models.LaudoProtocol.car_id == car_id).delete()
+    except Exception as e:
+        logger.warning("Erro ao remover laudos associados ao carro %s: %s", car_id, e)
+
     db.delete(car)
     db.commit()
     logger.info("Veículo com ID %s excluído com sucesso do banco de dados.", car_id)

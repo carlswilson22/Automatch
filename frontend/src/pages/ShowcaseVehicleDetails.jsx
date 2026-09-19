@@ -7,7 +7,8 @@ import {
   TrendingDown, TrendingUp, Minus, Car, Truck, Battery, Share2,
   CheckCircle2, AlertTriangle, Clock, Fuel, Settings, Award, Zap, X, 
   UserPlus, LogIn, DollarSign, Calculator, Lock, Check, Scan, Wrench, Tag,
-  RotateCw, Bell, Globe2, FileText, Download, FileDown, Video, Scale, Loader2
+  RotateCw, Bell, Globe2, FileText, Download, FileDown, Video, Scale, Loader2,
+  Sparkles
 } from 'lucide-react';
 import StoreIdentifier from '../components/ui/StoreIdentifier';
 import { showcaseCars } from '../data/showcaseData';
@@ -62,6 +63,8 @@ export default function ShowcaseVehicleDetails() {
   const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
   const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+  const [inspectionImage, setInspectionImage] = useState(null);
+  const [selectedSample, setSelectedSample] = useState('original');
 
   // Scroll to top on mount & initialize favorite state
   useEffect(() => {
@@ -540,7 +543,7 @@ export default function ShowcaseVehicleDetails() {
     setAnalysisResult('');
     
     try {
-      const vehicleImg = car.image || car.imagem || '/images/FotoGolfGTI.jpeg';
+      const vehicleImg = inspectionImage || car.image || car.imagem || '/images/carro_lataria_amassada.jpg';
       // 1. Pré-compressão rápida client-side
       const compressedB64 = await compressImage(vehicleImg, 1024, 0.8);
 
@@ -806,6 +809,16 @@ export default function ShowcaseVehicleDetails() {
                 vehicleImage={car.image || car.imagem}
                 carName={car.name}
                 damagePoints={currentDamagePoints}
+                imagesByAngle={{
+                  0: '/images/carro_360_frente.jpg',
+                  45: '/images/carro_360_diagonal.jpg',
+                  90: '/images/carro_360_lateral.jpg',
+                  135: '/images/carro_360_diagonal.jpg',
+                  180: '/images/carro_360_traseira.jpg',
+                  225: '/images/carro_360_diagonal.jpg',
+                  270: '/images/carro_360_lateral.jpg',
+                  315: '/images/carro_360_diagonal.jpg'
+                }}
               />
             )}
 
@@ -870,10 +883,79 @@ export default function ShowcaseVehicleDetails() {
                 </button>
               </div>
 
+              {/* Barra de Amostras de Teste Pericial de Lataria */}
+              <div className="bg-slate-950/80 px-4 py-2.5 border-b border-slate-800 flex items-center justify-between gap-2 overflow-x-auto">
+                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0 flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-cyan-400" /> Amostras Periciais:
+                </span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedSample('original');
+                      setInspectionImage(car.image || car.imagem);
+                      setCurrentDamagePoints(car.damagePoints || []);
+                      setAnalysisResult('');
+                      setAiDamageData(null);
+                    }}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
+                      selectedSample === 'original'
+                        ? 'bg-blue-600 text-white font-black'
+                        : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                    }`}
+                  >
+                    Foto do Anúncio
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedSample('dent');
+                      setInspectionImage('/images/carro_lataria_amassada.jpg');
+                      const dentPoints = [
+                        { id: 1, x: 62, y: 48, type: 'amassado', severity: 'high', description: 'Amassado severo na lataria da porta e para-lama', repairCost: 1200 },
+                        { id: 2, x: 38, y: 65, type: 'risco', severity: 'medium', description: 'Risco profundo na saia lateral', repairCost: 400 }
+                      ];
+                      setCurrentDamagePoints(dentPoints);
+                      setActiveDamage(1);
+                      setAnalysisResult('IA Automatch Vision: Detectada deformidade estrutural severa na lataria da porta e para-lama dianteiro. Necessita funilaria e pintura técnica. Custo estimado de reparo: R$ 1.600,00.');
+                      setAiDamageData({ tem_avarias: true, score_lataria: 74, pontos_avaria: dentPoints });
+                    }}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
+                      selectedSample === 'dent'
+                        ? 'bg-rose-500 text-white font-black shadow-md'
+                        : 'bg-rose-500/15 text-rose-300 hover:bg-rose-500/25 border border-rose-500/30'
+                    }`}
+                  >
+                    <span>🚨 Lataria Amassada</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedSample('bumper');
+                      setInspectionImage('/images/carro_parachoque_danificado.jpg');
+                      const bumpPoints = [
+                        { id: 1, x: 42, y: 72, type: 'parachoque', severity: 'medium', description: 'Impacto frontal leve com dano no para-choque', repairCost: 850 }
+                      ];
+                      setCurrentDamagePoints(bumpPoints);
+                      setActiveDamage(1);
+                      setAnalysisResult('IA Automatch Vision: Detectado desalinhamento de presilhas e raspado no para-choque frontal. Estrutura monobloco preservada. Custo estimado de reparo: R$ 850,00.');
+                      setAiDamageData({ tem_avarias: true, score_lataria: 86, pontos_avaria: bumpPoints });
+                    }}
+                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
+                      selectedSample === 'bumper'
+                        ? 'bg-amber-500 text-slate-950 font-black shadow-md'
+                        : 'bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 border border-amber-500/30'
+                    }`}
+                  >
+                    <span>⚠️ Dano Para-choque</span>
+                  </button>
+                </div>
+              </div>
+
               {/* Photo Canvas with Integrated Scanner & Hotspots */}
               <div className="relative aspect-[16/10] bg-slate-950 overflow-hidden select-none">
                 <img 
-                  src={car.image || car.imagem || '/images/FotoGolfGTI.jpeg'} 
+                  src={inspectionImage || car.image || car.imagem || '/images/FotoGolfGTI.jpeg'} 
                   alt={car.name} 
                   className="w-full h-full object-cover" 
                 />

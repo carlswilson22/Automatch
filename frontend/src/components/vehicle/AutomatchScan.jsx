@@ -1,37 +1,126 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UploadCloud, Scan, AlertCircle, Wrench } from 'lucide-react';
+import { UploadCloud, Scan, AlertCircle, Wrench, Sparkles, CheckCircle2, ShieldAlert, Image as ImageIcon } from 'lucide-react';
 
-const AutomatchScan = ({ vehicleImage, damagePoints = [] }) => {
+const SAMPLE_SCENARIOS = [
+  {
+    id: 'dent',
+    name: 'Lataria Amassada',
+    desc: 'Amassado na porta e lateral',
+    image: '/images/carro_lataria_amassada.jpg',
+    points: [
+      {
+        id: 'dp-dent-1',
+        x: 62,
+        y: 48,
+        type: 'amassado',
+        severity: 'high',
+        description: 'Amassado na lataria da porta dianteira e para-lama',
+        repairCost: 1200
+      },
+      {
+        id: 'dp-dent-2',
+        x: 38,
+        y: 65,
+        type: 'risco',
+        severity: 'medium',
+        description: 'Risco profundo na saia lateral inferior',
+        repairCost: 400
+      }
+    ]
+  },
+  {
+    id: 'bumper',
+    name: 'Para-choque Avariado',
+    desc: 'Colisão frontal leve',
+    image: '/images/carro_parachoque_danificado.jpg',
+    points: [
+      {
+        id: 'dp-bump-1',
+        x: 42,
+        y: 72,
+        type: 'parachoque',
+        severity: 'medium',
+        description: 'Desalinhamento e fratura no para-choque dianteiro',
+        repairCost: 850
+      }
+    ]
+  },
+  {
+    id: 'clean',
+    name: 'Lataria 100% Íntegra',
+    desc: 'Pintura original sem avarias',
+    image: '/images/FotoToyotaCorolla.jpg',
+    points: []
+  }
+];
+
+const AutomatchScan = ({ vehicleImage, damagePoints = [], onDamagesChange }) => {
   const [isScanning, setIsScanning] = useState(false);
   const [scanComplete, setScanComplete] = useState(false);
-  const [uploadedImage, setUploadedImage] = useState(vehicleImage || null);
+  const [uploadedImage, setUploadedImage] = useState(vehicleImage || '/images/FotoToyotaCorolla.jpg');
+  const [currentPoints, setCurrentPoints] = useState(damagePoints);
   const [activeDamage, setActiveDamage] = useState(null);
+  const [selectedScenarioId, setSelectedScenarioId] = useState('dent');
 
   useEffect(() => {
-    setUploadedImage(vehicleImage);
     if (damagePoints && damagePoints.length > 0) {
+      setCurrentPoints(damagePoints);
       setScanComplete(true);
-      setIsScanning(false);
       setActiveDamage(damagePoints[0].id);
-    } else {
-      setScanComplete(false);
-      setIsScanning(false);
-      setActiveDamage(null);
     }
-  }, [vehicleImage, damagePoints]);
+  }, [damagePoints]);
+
+  const handleSelectScenario = (scenario) => {
+    setSelectedScenarioId(scenario.id);
+    setUploadedImage(scenario.image);
+    setCurrentPoints(scenario.points);
+    setScanComplete(false);
+    setActiveDamage(null);
+
+    if (onDamagesChange) {
+      onDamagesChange(scenario.points);
+    }
+  };
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      setSelectedScenarioId('custom');
+      setUploadedImage(event.target.result);
+      setScanComplete(false);
+      setActiveDamage(null);
+      // Simula detecção em imagem personalizada
+      const detected = [
+        {
+          id: `custom-${Date.now()}`,
+          x: 55,
+          y: 50,
+          type: 'amassado',
+          severity: 'medium',
+          description: 'Avaria detectada por Visão Computacional (Amassado/Risco)',
+          repairCost: 750
+        }
+      ];
+      setCurrentPoints(detected);
+      if (onDamagesChange) onDamagesChange(detected);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleScan = () => {
     if (!uploadedImage) return;
     setIsScanning(true);
     setScanComplete(false);
-    
-    // Simula tempo de escaneamento visual
+
     setTimeout(() => {
       setIsScanning(false);
       setScanComplete(true);
-      if (damagePoints && damagePoints.length > 0) {
-        setActiveDamage(damagePoints[0].id);
+      if (currentPoints.length > 0) {
+        setActiveDamage(currentPoints[0].id);
       }
     }, 1800);
   };
@@ -39,155 +128,234 @@ const AutomatchScan = ({ vehicleImage, damagePoints = [] }) => {
   const severityColors = {
     low: 'bg-amber-400',
     medium: 'bg-amber-500',
-    high: 'bg-red-500'
+    high: 'bg-rose-500'
   };
 
+  const totalRepairCost = currentPoints.reduce((acc, curr) => acc + (curr.repairCost || 0), 0);
+
   return (
-    <div className="bg-slate-900 rounded-2xl shadow-sm border border-slate-800 overflow-hidden flex flex-col h-full">
-      <div className="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-950/80">
-        <div className="flex items-center gap-2 text-white font-semibold">
-          <Scan className="w-5 h-5 text-cyan-400" />
-          <h2 className="text-sm">Scanner Pericial Automatch IA</h2>
+    <div className="bg-slate-900 rounded-3xl shadow-xl border border-slate-800 overflow-hidden flex flex-col h-full">
+      
+      {/* Top Header Bar */}
+      <div className="p-4 sm:p-5 border-b border-slate-800 flex justify-between items-center bg-slate-950/90 flex-wrap gap-2">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
+            <Scan className="w-4 h-4" />
+          </div>
+          <div>
+            <h2 className="text-sm font-bold text-white flex items-center gap-2">
+              <span>Scanner Pericial Automatch IA</span>
+              <span className="text-[10px] uppercase font-black tracking-wider bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 px-2 py-0.5 rounded-full">
+                YOLOv8 + CV
+              </span>
+            </h2>
+            <p className="text-[11px] text-slate-400">Inspeção de lataria, pintura e alinhamento monobloco</p>
+          </div>
         </div>
-        {!scanComplete && (
-          <span className="text-xs bg-slate-800 text-slate-400 px-2.5 py-1 rounded-full font-medium border border-slate-700">Pronto</span>
-        )}
-        {scanComplete && (
-          <span className="text-xs bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-1 rounded-full font-medium flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            Perícia Concluída
-          </span>
-        )}
-      </div>
 
-      <div className="p-4 flex-1 flex flex-col">
-        {/* Upload / Image Area */}
-        <div className="relative w-full aspect-video bg-slate-950 rounded-xl overflow-hidden border border-slate-800 flex items-center justify-center">
-          
-          {!uploadedImage ? (
-            <div className="flex flex-col items-center justify-center text-slate-500">
-              <UploadCloud className="w-10 h-10 mb-2 opacity-50 text-slate-400" />
-              <p className="text-sm font-medium">Nenhuma foto selecionada</p>
-            </div>
-          ) : (
-            <div className="relative w-full h-full">
-              <img 
-                src={uploadedImage} 
-                alt="Alvo do Scanner" 
-                className="w-full h-full object-cover"
-              />
-              
-              <AnimatePresence>
-                {/* Laser Scanner Effect */}
-                {isScanning && (
-                  <motion.div
-                    initial={{ top: '0%' }}
-                    animate={{ top: '100%' }}
-                    transition={{ duration: 1.8, ease: "linear", repeat: 0 }}
-                    className="absolute left-0 right-0 h-1 z-10 bg-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.9)]"
-                  />
-                )}
-                {isScanning && (
-                   <motion.div
-                   initial={{ top: '0%', opacity: 0.3 }}
-                   animate={{ top: '100%', opacity: 0.3 }}
-                   transition={{ duration: 1.8, ease: "linear", repeat: 0 }}
-                   className="absolute left-0 right-0 h-32 -mt-32 z-0 bg-gradient-to-b from-transparent to-cyan-500"
-                 />
-                )}
-              </AnimatePresence>
-
-              {/* Damage Hotspots */}
-              <AnimatePresence>
-                {scanComplete && damagePoints.map((point) => (
-                  <motion.div
-                    key={point.id}
-                    initial={{ scale: 0, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    exit={{ scale: 0, opacity: 0 }}
-                    transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                    className="absolute z-20"
-                    style={{ left: `${point.x}%`, top: `${point.y}%`, transform: 'translate(-50%, -50%)' }}
-                    onClick={() => setActiveDamage(activeDamage === point.id ? null : point.id)}
-                  >
-                    <div className="relative group cursor-pointer">
-                      <div className={`w-7 h-7 rounded-full flex items-center justify-center text-white shadow-lg border-2 border-white cursor-pointer hover:scale-125 transition-transform ${severityColors[point.severity] || 'bg-blue-600'}`}>
-                        <AlertCircle className="w-4 h-4" />
-                      </div>
-                      
-                      {/* Pulse effect */}
-                      <div className={`absolute inset-0 rounded-full animate-ping opacity-75 ${severityColors[point.severity] || 'bg-blue-600'}`}></div>
-                    </div>
-                  </motion.div>
-                ))}
-              </AnimatePresence>
-            </div>
+        <div>
+          {!scanComplete && (
+            <span className="text-xs bg-slate-800 text-slate-300 px-3 py-1 rounded-full font-bold border border-slate-700">
+              Pronto para Análise
+            </span>
+          )}
+          {scanComplete && (
+            <span className={`text-xs px-3 py-1 rounded-full font-bold flex items-center gap-1.5 border ${
+              currentPoints.length > 0
+                ? 'bg-rose-500/15 text-rose-400 border-rose-500/30'
+                : 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30'
+            }`}>
+              <span className={`w-2 h-2 rounded-full ${currentPoints.length > 0 ? 'bg-rose-400' : 'bg-emerald-400'} animate-pulse`} />
+              {currentPoints.length > 0 ? `${currentPoints.length} Avaria(s) Detectada(s)` : 'Lataria 100% Íntegra'}
+            </span>
           )}
         </div>
+      </div>
 
-        {/* Action Button & Context */}
-        <div className="mt-4 mt-auto">
+      {/* Barra de Amostras de Teste Pericial */}
+      <div className="bg-slate-950/60 p-3 border-b border-slate-800/80 flex items-center justify-between gap-2 overflow-x-auto">
+        <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0 flex items-center gap-1">
+          <Sparkles className="w-3 h-3 text-cyan-400" /> Amostras Periciais:
+        </span>
+        <div className="flex items-center gap-1.5 shrink-0">
+          {SAMPLE_SCENARIOS.map((scenario) => (
+            <button
+              key={scenario.id}
+              type="button"
+              onClick={() => handleSelectScenario(scenario)}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+                selectedScenarioId === scenario.id
+                  ? 'bg-cyan-500 text-slate-950 font-black shadow-md shadow-cyan-500/20'
+                  : 'bg-slate-800/80 text-slate-300 hover:bg-slate-800 border border-slate-700/60'
+              }`}
+            >
+              <span>{scenario.name}</span>
+            </button>
+          ))}
+
+          {/* Upload de Foto Própria */}
+          <label className="cursor-pointer px-2.5 py-1 rounded-lg text-xs font-bold bg-slate-800/80 hover:bg-slate-800 text-slate-300 border border-slate-700/60 flex items-center gap-1.5 transition-all">
+            <UploadCloud className="w-3.5 h-3.5 text-blue-400" />
+            <span>Upload Foto</span>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={handleFileUpload}
+              className="hidden"
+            />
+          </label>
+        </div>
+      </div>
+
+      <div className="p-4 sm:p-5 flex-1 flex flex-col space-y-4">
+        
+        {/* Canvas da Imagem */}
+        <div className="relative w-full aspect-video bg-slate-950 rounded-2xl overflow-hidden border border-slate-800 shadow-inner flex items-center justify-center group">
+          <img 
+            src={uploadedImage} 
+            alt="Alvo do Scanner" 
+            className="w-full h-full object-cover transition-transform duration-500"
+          />
+
+          {/* Gradiente de iluminação */}
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-slate-950/30 pointer-events-none" />
+
+          {/* Efeito Laser de Varredura */}
+          <AnimatePresence>
+            {isScanning && (
+              <>
+                <motion.div
+                  initial={{ top: '0%' }}
+                  animate={{ top: '100%' }}
+                  transition={{ duration: 1.8, ease: "linear", repeat: Infinity }}
+                  className="absolute left-0 right-0 h-1 z-20 bg-cyan-400 shadow-[0_0_20px_rgba(34,211,238,1)]"
+                />
+                <motion.div
+                  initial={{ top: '0%', opacity: 0.4 }}
+                  animate={{ top: '100%', opacity: 0.4 }}
+                  transition={{ duration: 1.8, ease: "linear", repeat: Infinity }}
+                  className="absolute left-0 right-0 h-28 -mt-28 z-10 bg-gradient-to-b from-transparent to-cyan-500/30"
+                />
+              </>
+            )}
+          </AnimatePresence>
+
+          {/* Hotspots de Avarias Plotados sobre a Lataria */}
+          <AnimatePresence>
+            {scanComplete && currentPoints.map((point) => (
+              <motion.div
+                key={point.id}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0, opacity: 0 }}
+                transition={{ type: "spring", stiffness: 300, damping: 20 }}
+                className="absolute z-30"
+                style={{ left: `${point.x}%`, top: `${point.y}%`, transform: 'translate(-50%, -50%)' }}
+                onClick={() => setActiveDamage(activeDamage === point.id ? null : point.id)}
+              >
+                <div className="relative cursor-pointer group">
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white shadow-xl border-2 border-white hover:scale-125 transition-transform ${severityColors[point.severity] || 'bg-rose-500'}`}>
+                    <AlertCircle className="w-4 h-4" />
+                  </div>
+                  <div className={`absolute inset-0 rounded-full animate-ping opacity-75 ${severityColors[point.severity] || 'bg-rose-500'}`} />
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+
+        {/* Painel Inferior de Resultados */}
+        <div className="space-y-3">
           {!scanComplete ? (
             <button 
               type="button"
               onClick={handleScan}
               disabled={isScanning || !uploadedImage}
-              className={`w-full py-3 rounded-xl font-bold text-xs uppercase tracking-wider text-white transition-all flex justify-center items-center gap-2 ${
-                isScanning ? 'bg-slate-800' : 'bg-blue-600 hover:bg-blue-500'
-              } disabled:opacity-50 disabled:cursor-not-allowed shadow-md`}
+              className={`w-full py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider text-white transition-all flex justify-center items-center gap-2 ${
+                isScanning
+                  ? 'bg-slate-800 cursor-wait'
+                  : 'bg-gradient-to-r from-blue-600 via-cyan-600 to-blue-600 hover:opacity-95 shadow-lg shadow-cyan-900/30 active:scale-98'
+              } disabled:opacity-50`}
             >
-               {isScanning ? (
-                 <>
-                   <Scan className="w-4 h-4 animate-spin text-cyan-300" />
-                   <span>Analisando estruturas com IA...</span>
-                 </>
-               ) : (
-                 <>Executar Diagnóstico Visual</>
-               )}
+              {isScanning ? (
+                <>
+                  <Scan className="w-4 h-4 animate-spin text-cyan-300" />
+                  <span>Auditando Lataria com Rede Neural...</span>
+                </>
+              ) : (
+                <>
+                  <Scan className="w-4 h-4" />
+                  <span>Executar Perícia na Lataria</span>
+                </>
+              )}
             </button>
           ) : (
             <div className="space-y-3">
-               {/* Details card for active damage */}
-               <AnimatePresence>
-                  {activeDamage && (
-                    <motion.div 
-                      key="damage-card"
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -10 }}
-                      className="bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-xs flex items-start gap-3 shadow-md"
-                    >
-                      <div className="pt-0.5">
-                        <Wrench className="w-5 h-5 text-cyan-400" />
-                      </div>
-                      <div className="flex-1">
-                        {damagePoints.filter(d => d.id === activeDamage).map(d => (
-                           <div key={d.id}>
-                             <div className="flex items-center justify-between gap-2 mb-1">
-                               <p className="font-bold text-white">{d.description}</p>
-                               <span className={`text-[10px] font-extrabold uppercase px-2 py-0.5 rounded ${d.severity === 'high' ? 'bg-red-500/20 text-red-400' : d.severity === 'medium' ? 'bg-amber-500/20 text-amber-400' : 'bg-blue-500/20 text-blue-400'}`}>
-                                 Gravidade {d.severity === 'high' ? 'Alta' : d.severity === 'medium' ? 'Média' : 'Leve'}
-                               </span>
-                             </div>
-                             <p className="text-slate-400">Reparo estimado: <strong className="text-rose-400 font-bold">R$ {d.repairCost?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong></p>
-                           </div>
-                        ))}
-                      </div>
-                    </motion.div>
-                  )}
-               </AnimatePresence>
+              {/* Card de Detalhe da Avaria Selecionada */}
+              <AnimatePresence>
+                {activeDamage && (
+                  <motion.div 
+                    key="damage-card"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    className="bg-slate-950 border border-rose-500/30 rounded-2xl p-4 text-xs flex items-start gap-3 shadow-xl"
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400 shrink-0">
+                      <Wrench className="w-5 h-5" />
+                    </div>
+                    <div className="flex-1">
+                      {currentPoints.filter(d => d.id === activeDamage).map(d => (
+                        <div key={d.id}>
+                          <div className="flex items-center justify-between gap-2 mb-1 flex-wrap">
+                            <p className="font-bold text-white text-sm">{d.description}</p>
+                            <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full ${
+                              d.severity === 'high' ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30' :
+                              d.severity === 'medium' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' :
+                              'bg-blue-500/20 text-blue-400 border border-blue-500/30'
+                            }`}>
+                              Severidade {d.severity === 'high' ? 'Alta' : d.severity === 'medium' ? 'Média' : 'Leve'}
+                            </span>
+                          </div>
+                          <p className="text-slate-400">
+                            Custo de Funilaria / Pintura: <strong className="text-rose-400 font-black text-sm">R$ {d.repairCost?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}</strong>
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
 
-               {damagePoints.length === 0 && (
-                  <div className="bg-emerald-950/40 border border-emerald-800/50 rounded-xl p-3 text-xs flex items-start gap-3 shadow-sm">
-                     <div className="pt-0.5">
-                        <Scan className="w-5 h-5 text-emerald-400" />
-                     </div>
-                     <div className="flex-1">
-                        <p className="font-bold text-emerald-300">Nenhum dano detectado na lataria</p>
-                        <p className="text-emerald-400/80 mt-0.5">Veículo aprovado nos padrões periciais de alinhamento e uniformidade de pintura.</p>
-                     </div>
+              {/* Status 100% Íntegro */}
+              {currentPoints.length === 0 && (
+                <div className="bg-emerald-950/40 border border-emerald-500/30 rounded-2xl p-4 text-xs flex items-start gap-3 shadow-md">
+                  <div className="w-9 h-9 rounded-xl bg-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
+                    <CheckCircle2 className="w-5 h-5" />
                   </div>
-               )}
+                  <div>
+                    <p className="font-bold text-emerald-300 text-sm">Lataria 100% Homologada e Aprovada</p>
+                    <p className="text-slate-400 mt-0.5">
+                      Ausência de amassados, ondulações e repinturas fora dos padrões de fábrica.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Impacto no Preço / AutoPrice Summary */}
+              {currentPoints.length > 0 && (
+                <div className="bg-slate-950/80 border border-slate-800 rounded-2xl p-3.5 flex items-center justify-between text-xs flex-wrap gap-2">
+                  <div className="text-slate-400">
+                    <span>Depreciação total calculada pela IA:</span>
+                    <strong className="text-rose-400 block font-bold text-sm">
+                      - R$ {totalRepairCost.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </strong>
+                  </div>
+                  <span className="text-[10px] text-cyan-300 bg-cyan-500/10 border border-cyan-500/20 px-2.5 py-1 rounded-lg font-bold">
+                    Integrado ao AutoPrice™
+                  </span>
+                </div>
+              )}
 
               <button 
                 type="button"
@@ -202,6 +370,7 @@ const AutomatchScan = ({ vehicleImage, damagePoints = [] }) => {
             </div>
           )}
         </div>
+
       </div>
     </div>
   );
