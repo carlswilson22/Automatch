@@ -10,7 +10,6 @@ import FavoritesPage from './pages/FavoritesPage';
 import CheckoutPage from './pages/CheckoutPage';
 import Dashboard from './pages/Dashboard';
 import NewCarAdForm from './pages/NewCarAdForm';
-import PlansPage from './pages/PlansPage';
 import PublicValidationPage from './pages/PublicValidationPage';
 import MyAdsPage from './pages/MyAdsPage';
 import { AuthProvider } from './contexts/AuthContext';
@@ -36,7 +35,7 @@ function App() {
           <Route path="/encontrar" element={<ShowcaseCatalog />} />
           <Route path="/encontrar/:id" element={<ShowcaseVehicleDetails />} />
           <Route path="/como-funciona" element={<HowItWorksPage />} />
-          <Route path="/planos" element={<PlansPage />} />
+          <Route path="/planos" element={<Navigate to="/encontrar" replace />} />
           <Route path="/checkout" element={<CheckoutPage />} />
           <Route path="/novo-anuncio" element={<NewCarAdForm />} />
           <Route path="/validar/:protocolo" element={<PublicValidationPage />} />

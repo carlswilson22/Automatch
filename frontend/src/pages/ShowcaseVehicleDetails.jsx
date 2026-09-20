@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShieldCheck, ArrowLeft, Calendar, Gauge, Palette, MapPin, Heart,
-  Phone, MessageCircle, Send, Bot, User, Star, ChevronRight,
+  Phone, MessageCircle, Send, Bot, User, Star, ChevronRight, ChevronDown,
   TrendingDown, TrendingUp, Minus, Car, Truck, Battery, Share2,
   CheckCircle2, AlertTriangle, Clock, Fuel, Settings, Award, Zap, X, 
   UserPlus, LogIn, DollarSign, Calculator, Lock, Check, Scan, Wrench, Tag,
@@ -64,7 +64,7 @@ export default function ShowcaseVehicleDetails() {
   const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [inspectionImage, setInspectionImage] = useState(null);
-  const [selectedSample, setSelectedSample] = useState('original');
+  const [isTcoOpen, setIsTcoOpen] = useState(false);
 
   // Scroll to top on mount & initialize favorite state
   useEffect(() => {
@@ -343,6 +343,8 @@ export default function ShowcaseVehicleDetails() {
 
   const consultarLaudoOficial = async () => {
     if (laudoData) { setLaudoData(null); return; }
+    setDetranData(null);
+    setFipeInfoOpen(false);
     setIsLaudoLoading(true);
     try {
       const res = await fetch('/api/v1/integracoes/laudo-cautelar/004487-3');
@@ -359,6 +361,8 @@ export default function ShowcaseVehicleDetails() {
 
   const consultarDetranOficial = async () => {
     if (detranData) { setDetranData(null); return; }
+    setLaudoData(null);
+    setFipeInfoOpen(false);
     setIsDetranLoading(true);
     try {
       const res = await fetch('/api/v1/integracoes/detran/ABC1234');
@@ -883,75 +887,6 @@ export default function ShowcaseVehicleDetails() {
                 </button>
               </div>
 
-              {/* Barra de Amostras de Teste Pericial de Lataria */}
-              <div className="bg-slate-950/80 px-4 py-2.5 border-b border-slate-800 flex items-center justify-between gap-2 overflow-x-auto">
-                <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 shrink-0 flex items-center gap-1.5">
-                  <Sparkles className="w-3.5 h-3.5 text-cyan-400" /> Amostras Periciais:
-                </span>
-                <div className="flex items-center gap-2 shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedSample('original');
-                      setInspectionImage(car.image || car.imagem);
-                      setCurrentDamagePoints(car.damagePoints || []);
-                      setAnalysisResult('');
-                      setAiDamageData(null);
-                    }}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all ${
-                      selectedSample === 'original'
-                        ? 'bg-blue-600 text-white font-black'
-                        : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                    }`}
-                  >
-                    Foto do Anúncio
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedSample('dent');
-                      setInspectionImage('/images/carro_lataria_amassada.jpg');
-                      const dentPoints = [
-                        { id: 1, x: 62, y: 48, type: 'amassado', severity: 'high', description: 'Amassado severo na lataria da porta e para-lama', repairCost: 1200 },
-                        { id: 2, x: 38, y: 65, type: 'risco', severity: 'medium', description: 'Risco profundo na saia lateral', repairCost: 400 }
-                      ];
-                      setCurrentDamagePoints(dentPoints);
-                      setActiveDamage(1);
-                      setAnalysisResult('IA Automatch Vision: Detectada deformidade estrutural severa na lataria da porta e para-lama dianteiro. Necessita funilaria e pintura técnica. Custo estimado de reparo: R$ 1.600,00.');
-                      setAiDamageData({ tem_avarias: true, score_lataria: 74, pontos_avaria: dentPoints });
-                    }}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
-                      selectedSample === 'dent'
-                        ? 'bg-rose-500 text-white font-black shadow-md'
-                        : 'bg-rose-500/15 text-rose-300 hover:bg-rose-500/25 border border-rose-500/30'
-                    }`}
-                  >
-                    <span>🚨 Lataria Amassada</span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedSample('bumper');
-                      setInspectionImage('/images/carro_parachoque_danificado.jpg');
-                      const bumpPoints = [
-                        { id: 1, x: 42, y: 72, type: 'parachoque', severity: 'medium', description: 'Impacto frontal leve com dano no para-choque', repairCost: 850 }
-                      ];
-                      setCurrentDamagePoints(bumpPoints);
-                      setActiveDamage(1);
-                      setAnalysisResult('IA Automatch Vision: Detectado desalinhamento de presilhas e raspado no para-choque frontal. Estrutura monobloco preservada. Custo estimado de reparo: R$ 850,00.');
-                      setAiDamageData({ tem_avarias: true, score_lataria: 86, pontos_avaria: bumpPoints });
-                    }}
-                    className={`px-2.5 py-1 rounded-lg text-xs font-bold transition-all flex items-center gap-1 ${
-                      selectedSample === 'bumper'
-                        ? 'bg-amber-500 text-slate-950 font-black shadow-md'
-                        : 'bg-amber-500/15 text-amber-300 hover:bg-amber-500/25 border border-amber-500/30'
-                    }`}
-                  >
-                    <span>⚠️ Dano Para-choque</span>
-                  </button>
-                </div>
-              </div>
-
               {/* Photo Canvas with Integrated Scanner & Hotspots */}
               <div className="relative aspect-[16/10] bg-slate-950 overflow-hidden select-none">
                 <img 
@@ -1113,7 +1048,15 @@ export default function ShowcaseVehicleDetails() {
 
                 <button
                   type="button"
-                  onClick={() => setFipeInfoOpen(!fipeInfoOpen)}
+                  onClick={() => {
+                    if (fipeInfoOpen) {
+                      setFipeInfoOpen(false);
+                    } else {
+                      setLaudoData(null);
+                      setDetranData(null);
+                      setFipeInfoOpen(true);
+                    }
+                  }}
                   className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between group ${
                     fipeInfoOpen 
                       ? 'bg-blue-950/70 border-blue-600/70 shadow-lg shadow-blue-900/20' 
@@ -1290,9 +1233,9 @@ export default function ShowcaseVehicleDetails() {
               )}
             </div>
 
-            {/* Ficha Técnica Grid */}
-            <div className="bg-slate-900/80 rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-xl">
-              <h3 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+            {/* Ficha Técnica Grid com Informações Consolidadas */}
+            <div className="bg-slate-900/80 rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-xl space-y-6">
+              <h3 className="text-xl font-bold text-white flex items-center gap-2">
                 <Settings className="w-5 h-5 text-blue-400" /> Ficha Técnica & Equipamentos
               </h3>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -1304,6 +1247,23 @@ export default function ShowcaseVehicleDetails() {
                   </div>
                 ))}
               </div>
+
+              {/* Destaques e Equipamentos do Veículo (Consolidados junto à Ficha Técnica) */}
+              {car.tags && car.tags.length > 0 && (
+                <div className="pt-4 border-t border-slate-800">
+                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-2.5">
+                    Diferenciais e Itens de Série
+                  </span>
+                  <div className="flex flex-wrap gap-2">
+                    {car.tags.map((tag, idx) => (
+                      <span key={idx} className="text-xs font-bold text-blue-300 bg-blue-500/10 border border-blue-500/20 px-3 py-1.5 rounded-xl flex items-center gap-1.5">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-blue-400" />
+                        {tag}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Description Box */}
@@ -1314,19 +1274,55 @@ export default function ShowcaseVehicleDetails() {
               </p>
             </div>
 
-            {/* Calculadora Interativa de Custo Total de Posse (TCO) */}
-            <TcoCalculatorCard
-              price={car.price}
-              fipePrice={car.fipePrice}
-              fuelType={car.specs?.combustivel || car.fuel || 'Flex'}
-              carYear={car.year}
-            />
+            {/* Calculadora Interativa de Custo Total de Posse (TCO) com Divulgação Progressiva */}
+            <div className="bg-slate-900/80 rounded-3xl p-6 sm:p-7 border border-slate-800 shadow-xl">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="p-3 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 shrink-0">
+                    <Calculator className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-bold text-white">Custo Estimado de Propriedade (TCO)</h3>
+                    <p className="text-xs text-slate-400">
+                      Simulação personalizada de IPVA, seguro, consumo e manutenção preventiva.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setIsTcoOpen(!isTcoOpen)}
+                  className="px-4 py-2.5 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center justify-center gap-2 transition-all shrink-0 cursor-pointer"
+                >
+                  <span>{isTcoOpen ? 'Ocultar Detalhes' : 'Calcular Custo de Propriedade'}</span>
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isTcoOpen ? 'rotate-180' : ''}`} />
+                </button>
+              </div>
+
+              <AnimatePresence>
+                {isTcoOpen && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="overflow-hidden pt-5 mt-4 border-t border-slate-800"
+                  >
+                    <TcoCalculatorCard
+                      price={car.price}
+                      fipePrice={car.fipePrice}
+                      fuelType={car.specs?.combustivel || car.fuel || 'Flex'}
+                      carYear={car.year}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
 
           {/* ── RIGHT COLUMN: Pricing Card, Perícia Cautelar, Simulator, Chats ── */}
           <div className="space-y-6">
             
-            {/* Price Card & Action */}
+            {/* Price Card & Action Limpo */}
             <div className="bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-2xl space-y-6">
               <div>
                 <PriceDropBadge
@@ -1343,29 +1339,12 @@ export default function ShowcaseVehicleDetails() {
                 <p className="text-4xl sm:text-5xl font-black text-white">
                   {formatPrice(car.price)}
                 </p>
-                
-                {/* Termômetro de Oportunidade e Preço de Mercado */}
-                <MarketPriceIndicator
-                  price={car.price}
-                  fipePrice={car.fipePrice}
-                  autoPrice={car.autoPrice}
-                  variant="gauge"
-                  className="mt-4"
-                />
-              </div>
-
-              {/* Tags */}
-              <div className="flex flex-wrap gap-2 pt-2 border-t border-slate-800">
-                {car.tags?.map((tag, idx) => (
-                  <span key={idx} className="text-[10px] font-bold text-blue-400 bg-blue-500/10 border border-blue-500/20 px-2.5 py-1 rounded-full uppercase">
-                    {tag}
-                  </span>
-                ))}
               </div>
 
               {/* Main CTAs */}
-              <div className="space-y-3 pt-4">
+              <div className="space-y-3 pt-2">
                 <button
+                  type="button"
                   onClick={() => {
                     setActiveChat('seller');
                     const chatEl = document.getElementById('chat-section');

@@ -41,9 +41,10 @@ export default function PericialVideoViewer({
   const [isMuted, setIsMuted] = useState(true);
   const [activeSegment, setActiveSegment] = useState(0);
   const [simulatedProgress, setSimulatedProgress] = useState(0);
-  const [isSimulated, setIsSimulated] = useState(!videoUrl);
+  const [videoError, setVideoError] = useState(false);
+  const isSimulated = !videoUrl || videoError;
 
-  // Se não houver videoUrl real fornecido, usa simulação interativa de 15s de alta fidelidade
+  // Se não houver videoUrl real fornecido ou der erro, usa simulação interativa de 15s de alta fidelidade
   useEffect(() => {
     let timer;
     if (isSimulated && isPlaying) {
@@ -138,13 +139,14 @@ export default function PericialVideoViewer({
 
       {/* Video Viewport Container */}
       <div className="relative aspect-video bg-slate-950 flex items-center justify-center overflow-hidden group">
-        {videoUrl ? (
+        {videoUrl && !videoError ? (
           <video
             ref={videoRef}
             src={videoUrl}
             className="w-full h-full object-cover"
             muted={isMuted}
             playsInline
+            onError={() => setVideoError(true)}
             onTimeUpdate={() => {
               if (videoRef.current) {
                 setCurrentTime(videoRef.current.currentTime);
@@ -210,6 +212,7 @@ export default function PericialVideoViewer({
         {/* Center Big Play Button when paused */}
         {!isPlaying && (
           <button
+            type="button"
             onClick={togglePlay}
             className="absolute inset-0 m-auto w-16 h-16 rounded-full bg-cyan-500/90 text-slate-950 flex items-center justify-center shadow-xl shadow-cyan-500/30 hover:scale-110 active:scale-95 transition-all z-20"
           >
@@ -239,6 +242,7 @@ export default function PericialVideoViewer({
           <div className="flex items-center justify-between gap-3 text-white">
             <div className="flex items-center gap-3">
               <button
+                type="button"
                 onClick={togglePlay}
                 className="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-white transition-all active:scale-95"
               >
@@ -246,6 +250,7 @@ export default function PericialVideoViewer({
               </button>
 
               <button
+                type="button"
                 onClick={handleRestart}
                 className="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition-all active:scale-95"
                 title="Reiniciar vídeo (15s)"
@@ -254,6 +259,7 @@ export default function PericialVideoViewer({
               </button>
 
               <button
+                type="button"
                 onClick={() => setIsMuted(!isMuted)}
                 className="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition-all"
               >
@@ -264,6 +270,7 @@ export default function PericialVideoViewer({
             <div className="flex items-center gap-2">
               {CHECKPOINTS.map((cp, idx) => (
                 <button
+                  type="button"
                   key={idx}
                   onClick={() => jumpToTime(cp.start)}
                   className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition-all ${

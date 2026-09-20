@@ -552,13 +552,6 @@ const ShowcaseCatalog = () => {
 
           <div className="hidden md:flex items-center gap-3">
             <button
-              onClick={() => navigate('/planos')}
-              className="text-xs font-bold text-slate-600 hover:text-brand-blue flex items-center gap-1.5 px-3 py-2 rounded-full hover:bg-slate-50 transition-colors"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-              <span>Planos</span>
-            </button>
-            <button
               onClick={() => navigate('/novo-anuncio')}
               className="text-xs font-bold text-brand-blue bg-blue-50 hover:bg-blue-100 px-3.5 py-1.5 rounded-full transition-colors"
             >
