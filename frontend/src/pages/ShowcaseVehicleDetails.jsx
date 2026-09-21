@@ -22,6 +22,7 @@ import TradeInSimulator from '../components/vehicle/TradeInSimulator';
 import PriceAlertModal from '../components/vehicle/PriceAlertModal';
 import MultichannelSyncModal from '../components/vehicle/MultichannelSyncModal';
 import Vehicle360Viewer from '../components/vehicle/Vehicle360Viewer';
+import PericialVideoViewer from '../components/vehicle/PericialVideoViewer';
 import VehicleComparatorModal from '../components/vehicle/VehicleComparatorModal';
 import MarketPriceIndicator from '../components/vehicle/MarketPriceIndicator';
 import TcoCalculatorCard from '../components/vehicle/TcoCalculatorCard';
