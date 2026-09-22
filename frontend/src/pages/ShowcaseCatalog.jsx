@@ -445,9 +445,15 @@ const ShowcaseCatalog = () => {
           };
         });
         const fallbackActive = [...localFormatted, ...showcaseCars].filter(c => !isCarDeleted(c.id));
-        setAllCars(fallbackActive);
-        setTotalItems(fallbackActive.length);
-        setTotalPages(Math.ceil(fallbackActive.length / itemsPerPage) || 1);
+
+        // Apply client-side store filter in fallback mode
+        const fallbackFiltered = filterStore !== 'Todas'
+          ? fallbackActive.filter(c => c.storeId === filterStore)
+          : fallbackActive;
+
+        setAllCars(fallbackFiltered);
+        setTotalItems(fallbackFiltered.length);
+        setTotalPages(Math.ceil(fallbackFiltered.length / itemsPerPage) || 1);
         setIsLoading(false);
       });
   }, [currentPage, debouncedSearch, filterBrand, filterYear, filterPrice, filterStore]);
@@ -468,6 +474,11 @@ const ShowcaseCatalog = () => {
   const results = useMemo(() => {
     let cars = allCars;
 
+    // Safety net: client-side store filter for local/static fallback items
+    if (filterStore !== 'Todas') {
+      cars = cars.filter(c => c.storeId === filterStore);
+    }
+
     // Client-side complementary filters
     if (filterType !== 'Todos') cars = cars.filter(c => c.bodyType === filterType);
     const kmRange = KM_RANGES.find(r => r.label === filterKm);
@@ -481,7 +492,7 @@ const ShowcaseCatalog = () => {
       if (sortBy === 'km') return a.mileage - b.mileage;
       return (b.featured ? 1 : 0) - (a.featured ? 1 : 0);
     });
-  }, [allCars, filterType, filterKm, sortBy]);
+  }, [allCars, filterStore, filterType, filterKm, sortBy]);
 
   // Page change handler with smooth scroll to top of catalog
   const handlePageChange = (newPage) => {

@@ -59,18 +59,18 @@ export default function Dashboard() {
             </div>
           </div>
           
-          <div className="flex flex-col sm:flex-row gap-3 min-w-[300px]">
-            <div className="flex-1">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto sm:min-w-[420px]">
+            <div className="flex-1 min-w-[160px]">
               <StoreSelector selectedStoreId={selectedStoreId} onSelect={setSelectedStoreId} />
             </div>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
               <input 
                 type="text" 
                 placeholder="Buscar por modelo ou placa..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-slate-100 border-none rounded-xl pl-9 pr-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-blue/20 outline-none transition-all font-medium"
+                className="w-full bg-slate-100 border-none rounded-xl pl-10 pr-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-blue/20 outline-none transition-all font-medium"
               />
             </div>
           </div>

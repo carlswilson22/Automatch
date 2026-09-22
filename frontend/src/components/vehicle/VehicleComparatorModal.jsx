@@ -4,24 +4,34 @@ import { useNavigate } from 'react-router-dom';
 import {
   X, Check, AlertCircle, ShieldCheck, ArrowRight, DollarSign,
   Calendar, Gauge, Fuel, CheckCircle2, SlidersHorizontal, Plus,
-  TrendingDown, TrendingUp, Minus, Car, Sparkles, Scale, ExternalLink
+  TrendingDown, TrendingUp, Minus, Car, Sparkles, Scale, ExternalLink,
+  Search
 } from 'lucide-react';
 
 export default function VehicleComparatorModal({
   isOpen,
   onClose,
+  baseCar = null,
   initialVehicles = [],
+  availableCars = [],
   availableVehicles = []
 }) {
   const navigate = useNavigate();
+  const allAvailable = availableCars.length > 0 ? availableCars : availableVehicles;
   // Permite comparar de 2 a 3 veículos simultaneamente
   const [selectedVehicles, setSelectedVehicles] = useState(() => {
-    if (initialVehicles.length > 0) return initialVehicles.slice(0, 3);
-    if (availableVehicles.length >= 2) return availableVehicles.slice(0, 2);
-    return [];
+    const base = baseCar ? [baseCar] : [];
+    if (initialVehicles.length > 0) return [...base, ...initialVehicles].slice(0, 3);
+    if (base.length > 0 && allAvailable.length > 0) {
+      const second = allAvailable.find(c => String(c.id) !== String(baseCar?.id));
+      return second ? [baseCar, second] : [baseCar, allAvailable[0]];
+    }
+    if (allAvailable.length >= 2) return allAvailable.slice(0, 2);
+    return base;
   });
 
   const [selectorOpenSlot, setSelectorOpenSlot] = useState(null);
+  const [selectorSearch, setSelectorSearch] = useState('');
 
   if (!isOpen) return null;
 
@@ -79,14 +89,8 @@ export default function VehicleComparatorModal({
 
   const handleAddThirdCar = () => {
     if (selectedVehicles.length >= 3) return;
-    // Pega o primeiro carro disponível que ainda não esteja selecionado
-    const selectedIds = new Set(selectedVehicles.map(c => String(c.id)));
-    const candidate = availableVehicles.find(c => !selectedIds.has(String(c.id)));
-    if (candidate) {
-      setSelectedVehicles([...selectedVehicles, candidate]);
-    } else if (availableVehicles.length > 0) {
-      setSelectedVehicles([...selectedVehicles, availableVehicles[0]]);
-    }
+    setSelectorOpenSlot(selectedVehicles.length);
+    setSelectorSearch('');
   };
 
   return (
@@ -199,7 +203,84 @@ export default function VehicleComparatorModal({
                   </div>
                 </div>
               ))}
+
+              {/* Empty slot for adding a 3rd car */}
+              {selectedVehicles.length < 3 && (
+                <div
+                  onClick={handleAddThirdCar}
+                  className="border-2 border-dashed border-slate-700 hover:border-cyan-400/80 bg-slate-950/40 hover:bg-slate-900/60 rounded-2xl p-6 flex flex-col items-center justify-center min-h-[220px] transition-all cursor-pointer group"
+                >
+                  <Plus className="w-8 h-8 text-cyan-400 group-hover:scale-125 transition-transform mb-3" />
+                  <span className="text-sm font-bold text-slate-400 group-hover:text-cyan-300 transition-colors">Adicionar 3° Carro</span>
+                  <span className="text-[10px] text-slate-500 mt-1">Clique para escolher</span>
+                </div>
+              )}
             </div>
+
+            {/* Vehicle Selector Popover */}
+            <AnimatePresence>
+              {selectorOpenSlot !== null && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 10 }}
+                  className="bg-slate-950 border border-cyan-500/30 rounded-2xl p-4 shadow-2xl space-y-3"
+                >
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-sm font-bold text-white">Escolher Veículo</h4>
+                    <button onClick={() => setSelectorOpenSlot(null)} className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                    <input
+                      type="text"
+                      value={selectorSearch}
+                      onChange={e => setSelectorSearch(e.target.value)}
+                      placeholder="Buscar por nome..."
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500 transition-colors"
+                    />
+                  </div>
+                  <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
+                    {allAvailable
+                      .filter(c => !selectedVehicles.some(sv => String(sv.id) === String(c.id)))
+                      .filter(c => {
+                        if (!selectorSearch.trim()) return true;
+                        const q = selectorSearch.toLowerCase();
+                        const carLabel = (c.name || `${c.brand} ${c.model}`).toLowerCase();
+                        return carLabel.includes(q);
+                      })
+                      .map(c => (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => handleSelectCarForSlot(c, selectorOpenSlot)}
+                          className="w-full flex items-center gap-3 p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 hover:border-cyan-500/50 hover:bg-slate-800 transition-all text-left group"
+                        >
+                          <div className="w-14 h-10 rounded-lg overflow-hidden bg-slate-800 shrink-0">
+                            <img
+                              src={c.image || c.imagem || '/images/FotoHondaCivic.jpeg'}
+                              alt={c.name || c.model}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-bold text-white truncate">{c.name || `${c.brand} ${c.model}`}</p>
+                            <p className="text-[10px] text-slate-400">{c.year} • {Number(c.mileage || c.km || 0).toLocaleString('pt-BR')} km</p>
+                          </div>
+                          <span className="text-xs font-bold text-cyan-400 shrink-0">
+                            {formatMoney(c.price)}
+                          </span>
+                        </button>
+                      ))}
+                    {allAvailable.filter(c => !selectedVehicles.some(sv => String(sv.id) === String(c.id))).length === 0 && (
+                      <p className="text-xs text-slate-500 text-center py-4">Nenhum veículo disponível</p>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Dimension 1: Preço Anunciado vs Tabela FIPE */}
             <div className="bg-slate-950/50 border border-slate-800 rounded-2xl p-4">

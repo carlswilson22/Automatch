@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
   Calculator, Fuel, ShieldCheck, Wrench, Building2, ChevronDown,
-  Info, Sparkles, TrendingUp, Gauge, HelpCircle
+  Info, Sparkles, TrendingUp, Gauge, HelpCircle, Zap
 } from 'lucide-react';
 
 const UF_RATES = [
@@ -65,7 +65,10 @@ export default function TcoCalculatorCard({
     const seguroAnual = numPrice * 0.045; // Média de mercado 4.5% a.a.
     const seguroMensal = seguroAnual / 12;
 
-    const manutencaoMensal = 125.0; // Média básica de revisão/desgaste proporcional
+    const manutencaoBase = 125.0;
+    // Veículos elétricos têm manutenção ~45% menor (sem óleo, filtros, velas)
+    const isEletrico = activeFuel === 'eletrico';
+    const manutencaoMensal = isEletrico ? Math.round(manutencaoBase * 0.55) : manutencaoBase;
 
     const currentFuelConf = fuelConfigs[activeFuel] || fuelConfigs.gasolina;
     const currentPricePerUnit = fuelPrices[activeFuel] || currentFuelConf.defaultPrice;
@@ -76,8 +79,11 @@ export default function TcoCalculatorCard({
     const totalAnual = totalMensal * 12;
     const custoDiario = totalMensal / 30;
 
+    // Format rate to avoid floating-point artifacts (e.g., 3.5000000000000004 → 3.5)
+    const formattedRate = parseFloat((ufObj.rate * 100).toFixed(2));
+
     return {
-      ufRate: ufObj.rate * 100,
+      ufRate: formattedRate,
       ipvaMensal: Math.round(ipvaMensal),
       ipvaAnual: Math.round(ipvaAnual),
       seguroMensal: Math.round(seguroMensal),
@@ -86,6 +92,8 @@ export default function TcoCalculatorCard({
       combustivelMensal: Math.round(combustivelMensal),
       unitsConsumed: Math.round(unitsPerMonth),
       fuelUnit: currentFuelConf.unit,
+      fuelName: currentFuelConf.name,
+      isEletrico,
       totalMensal: Math.round(totalMensal),
       totalAnual: Math.round(totalAnual),
       custoDiario: Math.round(custoDiario)
@@ -210,7 +218,7 @@ export default function TcoCalculatorCard({
             <span className="flex items-center gap-1.5 font-bold">
               <Building2 className="w-3.5 h-3.5 text-blue-400" /> IPVA ({selectedUf})
             </span>
-            <span className="text-[10px] text-blue-400 font-semibold">{calculations.ufRate}%</span>
+            <span className="text-[10px] font-mono font-bold text-blue-400">{String(calculations.ufRate).replace('.', ',')}%</span>
           </div>
           <p className="text-xl font-black text-white">
             R$ {calculations.ipvaMensal} <span className="text-[10px] text-slate-400 font-normal">/mês</span>
@@ -242,13 +250,22 @@ export default function TcoCalculatorCard({
             <span className="flex items-center gap-1.5 font-bold">
               <Wrench className="w-3.5 h-3.5 text-amber-400" /> Manutenção
             </span>
-            <span className="text-[10px] text-amber-400 font-semibold">Preventiva</span>
+            {calculations.isEletrico ? (
+              <span className="text-[10px] bg-emerald-500/15 text-emerald-300 font-bold px-2 py-0.5 rounded-full border border-emerald-500/30 flex items-center gap-1">
+                <Sparkles className="w-3 h-3 text-emerald-400" /> VE: -45%
+              </span>
+            ) : (
+              <span className="text-[10px] text-amber-400 font-semibold">Preventiva</span>
+            )}
           </div>
           <p className="text-xl font-black text-white">
             R$ {calculations.manutencaoMensal} <span className="text-[10px] text-slate-400 font-normal">/mês</span>
           </p>
           <span className="text-[10px] text-slate-500 block mt-0.5">
-            Óleo, filtros, pneus e pastilhas
+            {calculations.isEletrico
+              ? 'Filtro de cabine, arrefecimento da bateria, pastilhas regenerativas e pneus'
+              : 'Óleo, filtros, pneus e pastilhas'
+            }
           </span>
         </div>
 
@@ -256,9 +273,12 @@ export default function TcoCalculatorCard({
         <div className="bg-slate-950/70 p-3.5 rounded-2xl border border-slate-800/90 hover:border-slate-700 transition-all">
           <div className="flex items-center justify-between text-slate-400 text-xs mb-1.5">
             <span className="flex items-center gap-1.5 font-bold">
-              <Fuel className="w-3.5 h-3.5 text-cyan-400" /> Combustível
+              {calculations.isEletrico
+                ? <><Zap className="w-3.5 h-3.5 text-emerald-400" /> Energia / Recarga</>
+                : <><Fuel className="w-3.5 h-3.5 text-cyan-400" /> Combustível</>
+              }
             </span>
-            <span className="text-[10px] text-cyan-400 font-semibold">{calculations.unitsConsumed}{calculations.fuelUnit}</span>
+            <span className={`text-[10px] font-semibold ${calculations.isEletrico ? 'text-emerald-400' : 'text-cyan-400'}`}>{calculations.unitsConsumed} {calculations.fuelUnit}</span>
           </div>
           <p className="text-xl font-black text-white">
             R$ {calculations.combustivelMensal} <span className="text-[10px] text-slate-400 font-normal">/mês</span>

@@ -225,9 +225,18 @@ const Home = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [chatTab, setChatTab] = useState('system');
   const [chatMessage, setChatMessage] = useState('');
+  const [isTyping, setIsTyping] = useState(false);
+  const chatEndRef = useRef(null);
   const [messages, setMessages] = useState([
     { id: 1, text: 'Olá! Bem-vindo ao AutoMatch. Como podemos ajudar com sua busca ou negociação hoje?', sender: 'system' }
   ]);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    if (chatEndRef.current) {
+      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
+    }
+  }, [messages, isTyping]);
 
   const generateAssistantResponse = (text) => {
     const q = (text || '').toLowerCase();
@@ -259,6 +268,7 @@ const Home = () => {
     const userMessage = chatMessage.trim();
     setMessages(prev => [...prev, { id: Date.now(), text: userMessage, sender: 'user' }]);
     setChatMessage('');
+    setIsTyping(true);
 
     try {
       const response = await fetch('/api/chat', {
@@ -272,6 +282,7 @@ const Home = () => {
       if (response.ok) {
         const data = await response.json();
         if (data.resposta) {
+          setIsTyping(false);
           setMessages(prev => [...prev, { id: Date.now(), text: data.resposta, sender: 'system' }]);
           return;
         }
@@ -279,8 +290,9 @@ const Home = () => {
       throw new Error('Fallback para assistente inteligente');
     } catch (error) {
       setTimeout(() => {
+        setIsTyping(false);
         setMessages(prev => [...prev, { id: Date.now(), text: generateAssistantResponse(userMessage), sender: 'system' }]);
-      }, 400);
+      }, 800);
     }
   };
 
@@ -586,9 +598,49 @@ const Home = () => {
                         </div>
                       </div>
                     ))}
+
+                    {/* Typing Indicator */}
+                    {isTyping && (
+                      <div className="flex justify-start">
+                        <div className="bg-white border border-slate-100 rounded-2xl rounded-tl-sm px-5 py-3.5 shadow-md">
+                          <div className="flex items-center gap-1.5">
+                            <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                            <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                            <span className="w-2 h-2 bg-blue-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    <div ref={chatEndRef} />
                   </div>
 
                   <div className="p-4 bg-white border-t border-slate-100">
+                    {/* Quick Chips */}
+                    {messages.length <= 2 && (
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {['Laudo Cautelar', 'Financiamento', 'Tabela FIPE', 'Garantia', 'Troca'].map((chip) => (
+                          <button
+                            key={chip}
+                            type="button"
+                            onClick={() => {
+                              setChatMessage(chip);
+                              handleSendMessage({ preventDefault: () => {} });
+                              setChatMessage('');
+                              setMessages(prev => [...prev, { id: Date.now(), text: chip, sender: 'user' }]);
+                              setIsTyping(true);
+                              setTimeout(() => {
+                                setIsTyping(false);
+                                setMessages(prev => [...prev, { id: Date.now() + 1, text: generateAssistantResponse(chip), sender: 'system' }]);
+                              }, 800);
+                            }}
+                            className="text-xs font-semibold text-blue-600 bg-blue-50 border border-blue-200 px-3 py-1.5 rounded-full hover:bg-blue-100 transition-colors"
+                          >
+                            {chip}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
                     <form
                       onSubmit={handleSendMessage}
                       className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-full px-2 py-2 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-all shadow-sm"
@@ -602,7 +654,7 @@ const Home = () => {
                       />
                       <button
                         type="submit"
-                        disabled={!chatMessage.trim()}
+                        disabled={!chatMessage.trim() || isTyping}
                         className="p-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 disabled:bg-slate-300 disabled:cursor-not-allowed transition-all transform active:scale-95 shadow-md"
                       >
                         <Send className="w-4 h-4" />

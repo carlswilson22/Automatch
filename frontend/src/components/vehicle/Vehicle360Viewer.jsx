@@ -56,6 +56,7 @@ const Vehicle360Viewer = ({
   const [isAutoRotating, setIsAutoRotating] = useState(false);
   const [activeHotspot, setActiveHotspot] = useState(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [prevImage, setPrevImage] = useState(null);
   const startXRef = useRef(0);
   const startAngleRef = useRef(0);
 
@@ -96,7 +97,28 @@ const Vehicle360Viewer = ({
   };
 
   const currentAngleObj = ANGLES.find((a) => a.angle === currentAngle) || ANGLES[0];
-  const activeImage = (imagesByAngle && imagesByAngle[currentAngle]) || currentAngleObj.defaultImg || vehicleImage || '/images/FotoCorollaCross.jpg';
+
+  // Determine the active image: prioritize car-specific images that differ from generic defaults
+  const genericImages = ['/images/carro_360_frente.jpg', '/images/carro_360_diagonal.jpg', '/images/carro_360_lateral.jpg', '/images/carro_360_traseira.jpg'];
+  const getActiveImage = () => {
+    if (imagesByAngle && imagesByAngle[currentAngle]) {
+      const angleSrc = imagesByAngle[currentAngle];
+      // If the image is a generic placeholder AND we have a real vehicle photo, use the vehicle photo
+      if (genericImages.includes(angleSrc) && vehicleImage) {
+        return vehicleImage;
+      }
+      return angleSrc;
+    }
+    // Always fall back to the vehicle's own main photo to avoid showing other cars
+    return vehicleImage || currentAngleObj.defaultImg || '/images/FotoCorollaCross.jpg';
+  };
+  const activeImage = getActiveImage();
+
+  // Cross-fade: track previous image for smooth transition
+  useEffect(() => {
+    const timer = setTimeout(() => setPrevImage(activeImage), 300);
+    return () => clearTimeout(timer);
+  }, [activeImage]);
 
   // Hotspots vinculados ao ângulo atual
   const allHotspots = (damagePoints && damagePoints.length > 0) ? damagePoints : DEFAULT_SAMPLE_HOTSPOTS;
