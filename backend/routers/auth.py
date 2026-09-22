@@ -248,7 +248,11 @@ def reset_password(request: schemas.ResetPasswordRequest, db: Session = Depends(
 
 
 @router.post("/checkout", response_model=schemas.CheckoutResponse)
-def checkout(request: schemas.CheckoutRequest, db: Session = Depends(get_db)) -> Dict[str, Any]:
+def checkout(
+    request: schemas.CheckoutRequest,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user_from_header)
+) -> Dict[str, Any]:
     protocol = f"ATM-{int(datetime.now().timestamp()) % 1000000:06d}"
     now_str = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     

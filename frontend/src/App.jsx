@@ -36,8 +36,16 @@ function App() {
           <Route path="/encontrar/:id" element={<ShowcaseVehicleDetails />} />
           <Route path="/como-funciona" element={<HowItWorksPage />} />
           <Route path="/planos" element={<Navigate to="/encontrar" replace />} />
-          <Route path="/checkout" element={<CheckoutPage />} />
-          <Route path="/novo-anuncio" element={<NewCarAdForm />} />
+          <Route path="/checkout" element={
+            <ProtectedRoute>
+              <CheckoutPage />
+            </ProtectedRoute>
+          } />
+          <Route path="/novo-anuncio" element={
+            <ProtectedRoute>
+              <NewCarAdForm />
+            </ProtectedRoute>
+          } />
           <Route path="/validar/:protocolo" element={<PublicValidationPage />} />
           
           {/* Protected Routes (Apenas após cadastro / login) */}

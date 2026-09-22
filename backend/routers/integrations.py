@@ -1,8 +1,11 @@
 import uuid
 from datetime import datetime
 from typing import Optional, Dict, Any, List
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Response, Depends, Header
 from pydantic import BaseModel
+
+import models
+from routers.auth import get_current_user_from_header
 
 router = APIRouter(prefix="/api/integrations", tags=["Sincronizador Multicanal B2B"])
 
@@ -55,7 +58,10 @@ async def listar_canais_integracao() -> Dict[str, Any]:
 
 
 @router.post("/sync")
-async def sincronizar_estoque_multicanal(payload: SyncRequest) -> Dict[str, Any]:
+async def sincronizar_estoque_multicanal(
+    payload: SyncRequest,
+    current_user: models.User = Depends(get_current_user_from_header)
+) -> Dict[str, Any]:
     """
     Dispara a sincronização de estoque multi-plataforma com AutoAvaliar, OLX e AutoCerto DMS.
     Gera protocolo de envio e links de confirmação.

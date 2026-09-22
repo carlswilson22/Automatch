@@ -6,10 +6,14 @@ from pathlib import Path
 from typing import Dict, Any
 
 import aiofiles
-from fastapi import APIRouter, HTTPException, UploadFile, File
+from fastapi import APIRouter, HTTPException, UploadFile, File, Depends, Header
 from fastapi.responses import FileResponse
+from sqlalchemy.orm import Session
 
 from services.ai_service import run_yolo_inference, analisar_laudo_cautelar_pdf
+from database import get_db
+import models
+from routers.auth import get_current_user_from_header
 
 logger = logging.getLogger("automatch")
 router = APIRouter(prefix="/api/v1", tags=["Laudos & Uploads"])
@@ -36,7 +40,10 @@ MAX_VIDEO_SIZE_BYTES = 40 * 1024 * 1024  # 40 MB para video pericial 15s
 
 
 @router.post("/laudos/upload")
-async def upload_laudo(file: UploadFile = File(...)) -> Dict[str, Any]:
+async def upload_laudo(
+    file: UploadFile = File(...),
+    current_user: models.User = Depends(get_current_user_from_header)
+) -> Dict[str, Any]:
     """
     Endpoint de Upload de Laudos Cautelares:
     Recebe arquivos PDF ou imagens (JPG/PNG), valida extensão, magic bytes e tamanho,
@@ -170,7 +177,10 @@ async def get_laudo_file(filename: str):
 
 
 @router.post("/pericia/video/upload")
-async def upload_pericia_video(file: UploadFile = File(...)) -> Dict[str, Any]:
+async def upload_pericia_video(
+    file: UploadFile = File(...),
+    current_user: models.User = Depends(get_current_user_from_header)
+) -> Dict[str, Any]:
     """
     Endpoint de Upload de Vídeo Pericial de Vistoria (15s):
     Recebe vídeo curto nos formatos MP4/WebM/MOV (máx 40MB),

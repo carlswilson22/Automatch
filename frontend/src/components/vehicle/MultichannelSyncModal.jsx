@@ -21,11 +21,15 @@ const MultichannelSyncModal = ({ isOpen, onClose, car }) => {
   const handleRunSync = async () => {
     setIsSyncing(true);
     try {
+      const storedUser = JSON.parse(localStorage.getItem('automatch_user') || '{}');
+      const token = storedUser?.token;
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
       const resp = await axios.post('/api/integrations/sync', {
         car_id: car?.id || '1',
         car_name: car?.name || 'Veículo',
         channels: ['autoavaliar', 'olx', 'autocerto']
-      });
+      }, { headers });
 
       if (resp.data && resp.data.status === 'success') {
         setSyncProtocol(resp.data.protocolo);

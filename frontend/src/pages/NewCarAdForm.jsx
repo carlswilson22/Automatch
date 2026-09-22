@@ -142,10 +142,17 @@ const NewCarAdForm = () => {
     setLaudoUploadError('');
     setLaudoFeedback(null);
     try {
+      const token = user?.token || JSON.parse(localStorage.getItem('automatch_user') || '{}')?.token;
+      const headers = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const formDataUpload = new FormData();
       formDataUpload.append('file', file);
       const response = await fetch('/api/v1/laudos/upload', {
         method: 'POST',
+        headers,
         body: formDataUpload,
       });
       if (!response.ok) {
@@ -286,9 +293,15 @@ const NewCarAdForm = () => {
       laudo_feedback: laudoFeedback ? JSON.stringify(laudoFeedback) : null
     };
 
+    const token = user?.token || JSON.parse(localStorage.getItem('automatch_user') || '{}')?.token;
+    const authHeaders = {
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+    };
+
     fetch('/api/cars', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: authHeaders,
       body: JSON.stringify(payload)
     })
     .then(async (response) => {

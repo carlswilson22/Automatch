@@ -3,11 +3,12 @@ from typing import List, Optional, Dict, Any
 
 from sqlalchemy import or_
 from sqlalchemy.orm import Session
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Header
 
 import models
 import schemas
 from database import get_db
+from routers.auth import get_current_user_from_header
 
 logger = logging.getLogger("automatch")
 router = APIRouter(prefix="/api", tags=["Cars & Stores"])
@@ -95,7 +96,11 @@ def get_car_by_id(car_id: str, db: Session = Depends(get_db)) -> schemas.CarSche
 
 
 @router.post("/cars", response_model=schemas.CarSchema)
-def create_car(car: schemas.CarBase, db: Session = Depends(get_db)) -> schemas.CarSchema:
+def create_car(
+    car: schemas.CarBase,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user_from_header)
+) -> schemas.CarSchema:
     car_data = car.dict()
     target_store_id = car_data.get("store_id")
     if target_store_id is not None:
@@ -123,7 +128,11 @@ def create_car(car: schemas.CarBase, db: Session = Depends(get_db)) -> schemas.C
 
 
 @router.delete("/cars/{car_id}")
-def delete_car(car_id: str, db: Session = Depends(get_db)) -> Dict[str, Any]:
+def delete_car(
+    car_id: str,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user_from_header)
+) -> Dict[str, Any]:
     """
     Exclui um anúncio de veículo do catálogo e banco de dados.
     Remove laudos associados (FK cascade manual) antes da exclusão.

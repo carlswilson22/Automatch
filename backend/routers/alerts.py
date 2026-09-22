@@ -1,8 +1,11 @@
 import uuid
 from datetime import datetime
 from typing import Optional, Dict, Any, List
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends, Header
 from pydantic import BaseModel
+
+import models
+from routers.auth import get_current_user_from_header
 
 router = APIRouter(prefix="/api/alerts", tags=["Radar de Oportunidades & Alertas"])
 
@@ -34,7 +37,9 @@ class AlertCreateRequest(BaseModel):
 
 
 @router.get("")
-async def listar_alertas() -> Dict[str, Any]:
+async def listar_alertas(
+    current_user: models.User = Depends(get_current_user_from_header)
+) -> Dict[str, Any]:
     """Lista todos os alertas de preço e oportunidades ativos."""
     return {
         "status": "success",
@@ -44,7 +49,10 @@ async def listar_alertas() -> Dict[str, Any]:
 
 
 @router.post("")
-async def criar_alerta(payload: AlertCreateRequest) -> Dict[str, Any]:
+async def criar_alerta(
+    payload: AlertCreateRequest,
+    current_user: models.User = Depends(get_current_user_from_header)
+) -> Dict[str, Any]:
     """
     Cadastra um novo Alerta de Queda de Preço ou Radar de Oportunidades.
     Dispara notificações quando o preço cair ou entrar oferta similar abaixo da FIPE.

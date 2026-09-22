@@ -20,6 +20,10 @@ const PriceAlertModal = ({ isOpen, onClose, car }) => {
 
     setIsSubmitting(true);
     try {
+      const storedUser = JSON.parse(localStorage.getItem('automatch_user') || '{}');
+      const token = storedUser?.token;
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
       const resp = await axios.post('/api/alerts', {
         car_id: car?.id || '1',
         car_name: car?.name || 'Veículo',
@@ -28,7 +32,7 @@ const PriceAlertModal = ({ isOpen, onClose, car }) => {
         contact_type: channel,
         contact_value: contactValue,
         notify_below_fipe: notifyBelowFipe
-      });
+      }, { headers });
 
       if (resp.data && resp.data.status === 'success') {
         setSubmitted(true);

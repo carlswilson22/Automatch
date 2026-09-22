@@ -63,7 +63,18 @@ export const deleteNewCar = async (id) => {
 
   // 3. Notifica o backend para exclusão no banco PostgreSQL (se existir)
   try {
-    await fetch(`/api/cars/${id}`, { method: 'DELETE' });
+    let token = null;
+    try {
+      const storedUser = JSON.parse(localStorage.getItem('automatch_user') || '{}');
+      token = storedUser?.token || null;
+    } catch (_) {}
+
+    const headers = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    await fetch(`/api/cars/${id}`, { method: 'DELETE', headers });
   } catch (e) {
     console.warn('Backend delete notification skipped or failed', e);
   }

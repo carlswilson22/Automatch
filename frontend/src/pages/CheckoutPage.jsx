@@ -98,9 +98,13 @@ const CheckoutPage = () => {
     const customer = cardData.name || user?.name || 'Cliente Automatch';
 
     try {
+      const token = user?.token || JSON.parse(localStorage.getItem('automatch_user') || '{}')?.token;
       const response = await fetch('/api/checkout', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({
           customer_name: customer,
           customer_email: user?.email || 'cliente@automatch.com',
