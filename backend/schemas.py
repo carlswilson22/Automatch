@@ -31,6 +31,7 @@ class CarBase(BaseModel):
     video_url: Optional[str] = None
     original_price: Optional[float] = None
     price_history: Optional[str] = None
+    user_id: Optional[str] = None
 
 class CarSchema(CarBase):
     id: str

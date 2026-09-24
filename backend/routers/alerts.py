@@ -40,11 +40,17 @@ class AlertCreateRequest(BaseModel):
 async def listar_alertas(
     current_user: models.User = Depends(get_current_user_from_header)
 ) -> Dict[str, Any]:
-    """Lista todos os alertas de preço e oportunidades ativos."""
+    """Lista os alertas de preço. Usuários comuns visualizam apenas seus próprios alertas; administradores visualizam todos."""
+    is_admin = (current_user.email == "admin@automatch.com")
+    if is_admin:
+        user_alerts = ALERTS_DB
+    else:
+        user_alerts = [a for a in ALERTS_DB if a.get("user_id") == current_user.id]
+
     return {
         "status": "success",
-        "total_alertas": len(ALERTS_DB),
-        "alertas": ALERTS_DB
+        "total_alertas": len(user_alerts),
+        "alertas": user_alerts
     }
 
 
@@ -62,6 +68,7 @@ async def criar_alerta(
 
     novo_alerta = {
         "id": alerta_id,
+        "user_id": current_user.id,
         "car_id": payload.car_id,
         "car_name": payload.car_name,
         "current_price": payload.current_price,

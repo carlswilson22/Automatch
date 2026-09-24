@@ -102,6 +102,7 @@ def create_car(
     current_user: models.User = Depends(get_current_user_from_header)
 ) -> schemas.CarSchema:
     car_data = car.dict()
+    car_data["user_id"] = current_user.id
     target_store_id = car_data.get("store_id")
     if target_store_id is not None:
         store_exists = db.query(models.Store).filter(models.Store.id == target_store_id).first()
@@ -136,12 +137,20 @@ def delete_car(
     """
     Exclui um anúncio de veículo do catálogo e banco de dados.
     Remove laudos associados (FK cascade manual) antes da exclusão.
+    Apenas o proprietário do anúncio ou o administrador oficial pode excluir (OWASP A01).
     """
     car = db.query(models.Car).filter(models.Car.id == car_id).first()
     if not car:
         # Se não encontrou por UUID exato, tenta busca segura ou confirma sucesso para idempotência
         return {"status": "success", "message": "Anúncio removido ou inexistente no banco de dados.", "deleted_id": car_id}
     
+    is_admin = (current_user.email == "admin@automatch.com")
+    if car.user_id and car.user_id != current_user.id and not is_admin:
+        raise HTTPException(
+            status_code=403,
+            detail="Permissão negada. Você só pode excluir anúncios cadastrados pela sua conta."
+        )
+
     # Remove laudos associados para evitar violação de FK
     try:
         db.query(models.LaudoProtocol).filter(models.LaudoProtocol.car_id == car_id).delete()

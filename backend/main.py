@@ -65,6 +65,7 @@ async def lifespan(app: FastAPI):
             conn.execute(text("ALTER TABLE cars ADD COLUMN IF NOT EXISTS laudo_feedback TEXT;"))
             conn.execute(text("ALTER TABLE cars ADD COLUMN IF NOT EXISTS original_price FLOAT;"))
             conn.execute(text("ALTER TABLE cars ADD COLUMN IF NOT EXISTS price_history TEXT;"))
+            conn.execute(text("ALTER TABLE cars ADD COLUMN IF NOT EXISTS user_id VARCHAR(36);"))
             conn.commit()
     except Exception as e:
         logger.warning("Auto-migração de colunas: %s", e)

@@ -1,11 +1,48 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, ArrowLeft, Save, CheckCircle, AlertCircle, Loader2, UploadCloud, X, FileText, Copy, ExternalLink, PlusCircle, Bot, Scan, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { ShieldCheck, ArrowLeft, Save, CheckCircle, AlertCircle, Loader2, UploadCloud, X, FileText, Copy, ExternalLink, PlusCircle, Bot, Scan, CheckCircle2, AlertTriangle, Car } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { stores as defaultStores } from '../data/inventoryData';
 import { addNewCar } from '../data/newCarsManager';
 import LaudoFeedbackCard from '../components/vehicle/LaudoFeedbackCard';
 import { useAuth } from '../contexts/AuthContext';
+
+// Compressor inteligente via HTML5 Canvas para mitigar QuotaExceededError no localStorage
+const compressImageToJpeg = (file, maxDimension = 1200, quality = 0.82) => {
+  return new Promise((resolve) => {
+    if (!file || !file.type.startsWith('image/')) {
+      resolve(null);
+      return;
+    }
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = (event) => {
+      const img = new Image();
+      img.src = event.target.result;
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxDimension || height > maxDimension) {
+          if (width > height) {
+            height = Math.round((height * maxDimension) / width);
+            width = maxDimension;
+          } else {
+            width = Math.round((width * maxDimension) / height);
+            height = maxDimension;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+        const compressedDataUrl = canvas.toDataURL('image/jpeg', quality);
+        resolve(compressedDataUrl);
+      };
+      img.onerror = () => resolve(event.target.result);
+    };
+    reader.onerror = () => resolve(null);
+  });
+};
 
 const NewCarAdForm = () => {
   const navigate = useNavigate();
@@ -115,7 +152,7 @@ const NewCarAdForm = () => {
     setLaudoPdf(null);
   };
 
-  const processFile = (file) => {
+  const processFile = async (file) => {
     if (file) {
       if (!['image/jpeg', 'image/jpg', 'image/png'].includes(file.type)) {
         setErrorMessage('Apenas arquivos JPG ou PNG são aceitos.');
@@ -123,18 +160,26 @@ const NewCarAdForm = () => {
         setTimeout(() => setStatus('idle'), 4000);
         return;
       }
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setFormData(prev => ({ ...prev, imagem: reader.result }));
-      };
-      reader.readAsDataURL(file);
+      try {
+        const compressed = await compressImageToJpeg(file, 1200, 0.82);
+        if (compressed) {
+          setFormData(prev => ({ ...prev, imagem: compressed }));
+          scanCarPhotoAi(compressed);
+        }
+      } catch (err) {
+        console.warn('Erro na compressão de imagem:', err);
+      }
     }
   };
 
   const handleDrop = (e) => {
     e.preventDefault();
+    e.stopPropagation();
     setIsDragging(false);
-    processFile(e.dataTransfer.files?.[0]);
+    const file = e.dataTransfer?.files?.[0];
+    if (file) {
+      processFile(file);
+    }
   };
 
   const uploadLaudoFile = async (file) => {

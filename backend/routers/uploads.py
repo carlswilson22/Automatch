@@ -68,6 +68,16 @@ async def upload_laudo(
             status_code=400,
             detail="O arquivo enviado não é um documento PDF válido ou está corrompido."
         )
+    elif file_ext in {".jpg", ".jpeg"} and not magic_bytes.startswith(b"\xff\xd8\xff"):
+        raise HTTPException(
+            status_code=400,
+            detail="O arquivo enviado não é uma imagem JPEG válida ou está corrompido."
+        )
+    elif file_ext == ".png" and not magic_bytes.startswith(b"\x89PNG"):
+        raise HTTPException(
+            status_code=400,
+            detail="O arquivo enviado não é uma imagem PNG válida ou está corrompido."
+        )
 
     # Agora lê o restante do arquivo
     rest = await file.read()

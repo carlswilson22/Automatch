@@ -341,37 +341,40 @@ def analyze_vehicle_damage_cv(
         except Exception as ye:
             logger.debug("YOLO check skipped: %s", ye)
 
-    # 2. Análise pericial de imagem com OpenCV ou PIL
+    # 2. Análise pericial adaptativa de 5 zonas anatômicas veiculares (OpenCV + Pillow)
     damage_points: List[Dict[str, Any]] = []
     avarias_detectadas: List[str] = []
-    score_lataria = 96
+    score_lataria = 98
 
-    # Se car_context já possui danos conhecidos (ex: mock ou inspeção prévia), incorpora
+    # Se car_context já possui danos conhecidos (ex: laudo prévio ou vistoria), incorpora
     preexisting_damages = car_context.get("damages", []) if car_context else []
     if preexisting_damages:
         for idx, d_desc in enumerate(preexisting_damages):
             damage_type = "arranhão"
-            cost = 300
+            cost = 350
             if "amassad" in d_desc.lower() or "mossa" in d_desc.lower():
                 damage_type = "amassado"
                 cost = 1200
             elif "farol" in d_desc.lower():
                 damage_type = "farol trincado"
-                cost = 800
+                cost = 850
+            elif "parachoque" in d_desc.lower() or "para-choque" in d_desc.lower():
+                damage_type = "parachoque"
+                cost = 750
 
             avarias_detectadas.append(d_desc)
             damage_points.append({
                 "id": idx + 1,
-                "x": 35.0 + (idx * 25.0) % 50.0,
-                "y": 55.0 + (idx * 15.0) % 30.0,
+                "x": round(35.0 + (idx * 25.0) % 50.0, 1),
+                "y": round(55.0 + (idx * 15.0) % 30.0, 1),
                 "type": damage_type,
-                "severity": "medium" if cost > 500 else "low",
+                "severity": "high" if cost > 1000 else ("medium" if cost > 500 else "low"),
                 "description": d_desc,
                 "repairCost": cost
             })
-        score_lataria = max(70, 100 - (len(damage_points) * 10))
+        score_lataria = max(65, 100 - (len(damage_points) * 9))
 
-    # Tenta inspeção de anomalias visuais usando OpenCV se disponível
+    # Análise de 5 zonas anatômicas na lataria usando OpenCV / Pillow
     try:
         import cv2
         import numpy as np
@@ -380,37 +383,117 @@ def analyze_vehicle_damage_cv(
         cv_img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
 
         if cv_img is not None:
+            h, w = cv_img.shape[:2]
             gray = cv2.cvtColor(cv_img, cv2.COLOR_BGR2GRAY)
-            canny = cv2.Canny(gray, 100, 200)
-            canny_density = float(np.sum(canny > 0)) / (width * height)
 
-            if canny_density > 0.08 and not damage_points:
-                h, w = canny.shape
-                q1 = np.sum(canny[0:h//2, 0:w//2])
-                q2 = np.sum(canny[0:h//2, w//2:w])
-                q3 = np.sum(canny[h//2:h, 0:w//2])
-                q4 = np.sum(canny[h//2:h, w//2:w])
-                quads = [(q1, 28.0, 38.0, "capô/para-lama dianteiro"),
-                         (q2, 72.0, 38.0, "lateral dianteira superior"),
-                         (q3, 30.0, 68.0, "para-choque dianteiro"),
-                         (q4, 70.0, 68.0, "lateral inferior/saia")]
-                quads.sort(key=lambda x: x[0], reverse=True)
-                top_q = quads[0]
+            # Definição dos 5 quadrantes anatômicos automotivos
+            zones = [
+                {
+                    "name": "Capô e Teto",
+                    "bbox": (int(w * 0.30), int(h * 0.15), int(w * 0.70), int(h * 0.45)),
+                    "center_x": 50.0, "center_y": 30.0,
+                    "default_type": "amassado"
+                },
+                {
+                    "name": "Para-choque Dianteiro",
+                    "bbox": (int(w * 0.25), int(h * 0.65), int(w * 0.75), int(h * 0.90)),
+                    "center_x": 48.0, "center_y": 74.0,
+                    "default_type": "parachoque"
+                },
+                {
+                    "name": "Lateral Esquerda",
+                    "bbox": (int(w * 0.08), int(h * 0.30), int(w * 0.35), int(h * 0.70)),
+                    "center_x": 22.0, "center_y": 52.0,
+                    "default_type": "arranhão"
+                },
+                {
+                    "name": "Lateral Direita",
+                    "bbox": (int(w * 0.65), int(h * 0.30), int(w * 0.92), int(h * 0.70)),
+                    "center_x": 78.0, "center_y": 52.0,
+                    "default_type": "arranhão"
+                },
+                {
+                    "name": "Traseira e Tampa do Porta-Malas",
+                    "bbox": (int(w * 0.30), int(h * 0.40), int(w * 0.70), int(h * 0.75)),
+                    "center_x": 50.0, "center_y": 58.0,
+                    "default_type": "amassado"
+                }
+            ]
 
-                if top_q[0] > (canny_density * width * height * 0.4):
-                    avarias_detectadas.append("Micro-risco na superfície da pintura")
-                    damage_points.append({
-                        "id": 1,
-                        "x": top_q[1],
-                        "y": top_q[2],
-                        "type": "arranhão",
-                        "severity": "low",
-                        "description": f"Pequena marca superficial identificada no {top_q[3]}",
-                        "repairCost": 300
+            zone_metrics = []
+            for z in zones:
+                x1, y1, x2, y2 = z["bbox"]
+                if x2 > x1 and y2 > y1:
+                    roi = gray[y1:y2, x1:x2]
+                    # Variância Laplaciana (nitidez/rugosidade)
+                    lap_var = float(cv2.Laplacian(roi, cv2.CV_64F).var())
+                    # Gradiente Sobel para medir descontinuidade estrutural
+                    sobelx = cv2.Sobel(roi, cv2.CV_64F, 1, 0, ksize=3)
+                    sobely = cv2.Sobel(roi, cv2.CV_64F, 0, 1, ksize=3)
+                    sobel_mag = float(np.mean(np.sqrt(sobelx**2 + sobely**2)))
+                    # Densidade Canny
+                    canny_roi = cv2.Canny(roi, 80, 180)
+                    canny_density = float(np.sum(canny_roi > 0)) / (roi.shape[0] * roi.shape[1])
+
+                    # Localiza o ponto de maior descontinuidade no ROI
+                    min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(canny_roi)
+                    pt_x = round(((x1 + max_loc[0]) / w) * 100.0, 1) if max_val > 0 else z["center_x"]
+                    pt_y = round(((y1 + max_loc[1]) / h) * 100.0, 1) if max_val > 0 else z["center_y"]
+
+                    zone_metrics.append({
+                        "name": z["name"],
+                        "lap_var": lap_var,
+                        "sobel_mag": sobel_mag,
+                        "canny_density": canny_density,
+                        "x": pt_x,
+                        "y": pt_y,
+                        "default_type": z["default_type"]
                     })
-                    score_lataria = 92
+
+            # Se não tínhamos danos pré-existentes, avalia os quadrantes calculados
+            if not damage_points and zone_metrics:
+                # Ordena por maior índice de descontinuidade
+                zone_metrics.sort(key=lambda m: (m["lap_var"] * 0.4 + m["sobel_mag"] * 0.6), reverse=True)
+                mean_sobel = np.mean([m["sobel_mag"] for m in zone_metrics])
+                mean_lap = np.mean([m["lap_var"] for m in zone_metrics])
+
+                detected_count = 0
+                for idx, m in enumerate(zone_metrics):
+                    # Identifica anomalias que destoem da média da lataria
+                    is_anomaly = (m["sobel_mag"] > mean_sobel * 1.25 and m["canny_density"] > 0.05) or (m["lap_var"] > mean_lap * 1.35)
+                    if is_anomaly and detected_count < 3:
+                        detected_count += 1
+                        if m["lap_var"] > 550 or m["sobel_mag"] > 38:
+                            sev = "high"
+                            cost = 1200
+                            d_type = "amassado"
+                            desc = f"Amassado com deformação de superfície identificado no(a) {m['name']}"
+                        elif m["lap_var"] > 300 or m["sobel_mag"] > 25:
+                            sev = "medium"
+                            cost = 750
+                            d_type = m["default_type"]
+                            desc = f"Desalinhamento/avaria moderada detectada no(a) {m['name']}"
+                        else:
+                            sev = "low"
+                            cost = 350
+                            d_type = "arranhão"
+                            desc = f"Micro-risco na superfície da pintura no(a) {m['name']}"
+
+                        avarias_detectadas.append(desc)
+                        damage_points.append({
+                            "id": len(damage_points) + 1,
+                            "x": m["x"],
+                            "y": m["y"],
+                            "type": d_type,
+                            "severity": sev,
+                            "description": desc,
+                            "repairCost": cost
+                        })
+
+                if damage_points:
+                    score_lataria = max(68, 100 - (len(damage_points) * 11))
     except Exception as cve:
-        logger.debug("OpenCV advanced filter skipped: %s", cve)
+        logger.debug("OpenCV 5-zone filter skipped or failed: %s", cve)
 
     has_damages = len(damage_points) > 0
     if has_damages:

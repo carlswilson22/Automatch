@@ -50,6 +50,8 @@ class Car(Base):
     store_id = Column(Integer, ForeignKey("stores.id"), index=True)
     store = relationship("Store", back_populates="cars")
 
+    user_id = Column(String(36), ForeignKey("users.id"), nullable=True, index=True)
+
 class LaudoWatchlist(Base):
     __tablename__ = "laudo_watchlist"
 

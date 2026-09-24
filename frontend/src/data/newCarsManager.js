@@ -26,7 +26,23 @@ export const addNewCar = (carData) => {
     createdAt: new Date().toISOString()
   };
   cars.push(newCar);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(cars));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(cars));
+  } catch (e) {
+    console.warn('QuotaExceededError detectado no localStorage. Aplicando mitigação de quota:', e);
+    // Mantém apenas os anúncios mais recentes e normaliza dados pesados
+    const trimmed = cars.slice(-10).map(c => {
+      if (c.image && c.image.length > 400000) {
+        return { ...c, image: '/images/FotoToyotaCorolla.jpg' };
+      }
+      return c;
+    });
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(trimmed));
+    } catch (saveErr) {
+      console.error('Falha crítica ao persistir no localStorage:', saveErr);
+    }
+  }
   return newCar;
 };
 
@@ -45,12 +61,42 @@ export const isCarDeleted = (id) => {
 export const deleteNewCar = async (id) => {
   if (!id) return false;
   
-  // 1. Remove do storage local de carros adicionados
+  // 1. Consulta o backend para verificação estrita de autorização (OWASP A01)
+  let token = null;
+  try {
+    const storedUser = JSON.parse(localStorage.getItem('automatch_user') || '{}');
+    token = storedUser?.token || localStorage.getItem('automatch_token') || null;
+  } catch (_) {}
+
+  const headers = {};
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  try {
+    const res = await fetch(`/api/cars/${id}`, { method: 'DELETE', headers });
+    if (res.status === 403) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.detail || 'Permissão negada. Você só pode excluir anúncios cadastrados pela sua conta.');
+    }
+  } catch (err) {
+    // Propaga erro de autorização 403 explicitamente para a UI
+    if (err.message && err.message.includes('Permissão negada')) {
+      throw err;
+    }
+    console.warn('Aviso na exclusão de backend (modo contingência ou offline):', err);
+  }
+
+  // 2. Se autorizado (ou offline), remove do catálogo local de anúncios
   const cars = getNewCars();
   const filtered = cars.filter(car => String(car.id) !== String(id));
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+  } catch (e) {
+    console.error('Erro ao atualizar storage após exclusão:', e);
+  }
 
-  // 2. Registra na lista de IDs excluídos da plataforma
+  // 3. Registra na lista de IDs excluídos da plataforma
   try {
     const deleted = JSON.parse(localStorage.getItem(DELETED_KEY) || '[]');
     if (!deleted.includes(String(id))) {
@@ -59,24 +105,6 @@ export const deleteNewCar = async (id) => {
     }
   } catch (e) {
     console.error('Error saving deleted car ID', e);
-  }
-
-  // 3. Notifica o backend para exclusão no banco PostgreSQL (se existir)
-  try {
-    let token = null;
-    try {
-      const storedUser = JSON.parse(localStorage.getItem('automatch_user') || '{}');
-      token = storedUser?.token || null;
-    } catch (_) {}
-
-    const headers = {};
-    if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
-    }
-
-    await fetch(`/api/cars/${id}`, { method: 'DELETE', headers });
-  } catch (e) {
-    console.warn('Backend delete notification skipped or failed', e);
   }
 
   return true;

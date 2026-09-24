@@ -36,6 +36,9 @@ export const AuthProvider = ({ children }) => {
       const userData = await response.json();
       setUser(userData);
       localStorage.setItem('automatch_user', JSON.stringify(userData));
+      if (userData.token) {
+        localStorage.setItem('automatch_token', userData.token);
+      }
       return userData;
     } catch (error) {
       // 1. Fallback para as credenciais oficiais de demonstração (README)
@@ -52,6 +55,7 @@ export const AuthProvider = ({ children }) => {
         };
         setUser(demoAdmin);
         localStorage.setItem('automatch_user', JSON.stringify(demoAdmin));
+        localStorage.setItem('automatch_token', demoAdmin.token);
         return demoAdmin;
       }
 
@@ -63,6 +67,9 @@ export const AuthProvider = ({ children }) => {
           const { password: _p, ...userData } = found;
           setUser(userData);
           localStorage.setItem('automatch_user', JSON.stringify(userData));
+          if (userData.token) {
+            localStorage.setItem('automatch_token', userData.token);
+          }
           return userData;
         }
       } catch (storageErr) {
@@ -155,9 +162,15 @@ export const AuthProvider = ({ children }) => {
 
   const updateProfile = async (updates) => {
     try {
+      const token = user?.token || localStorage.getItem('automatch_token');
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch('/api/users/profile', {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(updates)
       });
 
