@@ -159,9 +159,19 @@ export default function VehicleComparatorModal({
     setSelectorSearch('');
   };
 
+  // Suporte a fechamento pelo teclado (Esc)
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   return (
     <AnimatePresence>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
         {/* Backdrop */}
         <motion.div
           initial={{ opacity: 0 }}
@@ -204,7 +214,7 @@ export default function VehicleComparatorModal({
                   onClick={handleAddThirdCar}
                   className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-cyan-400 bg-cyan-500/10 border border-cyan-500/30 hover:bg-cyan-500/20 px-3 py-2 rounded-xl transition-all"
                 >
-                  <Plus className="w-3.5 h-3.5" /> Adicionar 3º Carro
+                  <Plus className="w-3.5 h-3.5" /> {selectedVehicles.length === 1 ? 'Adicionar 2º Carro' : 'Adicionar 3º Carro'}
                 </button>
               )}
               <button
@@ -291,15 +301,17 @@ export default function VehicleComparatorModal({
                 </div>
               ))}
 
-              {/* Empty slot for adding a 3rd car */}
+              {/* Empty slot for adding 2nd or 3rd car */}
               {selectedVehicles.length < 3 && (
                 <div
                   onClick={handleAddThirdCar}
-                  className="border-2 border-dashed border-slate-700 hover:border-cyan-400/80 bg-slate-950/40 hover:bg-slate-900/60 rounded-2xl p-6 flex flex-col items-center justify-center min-h-[220px] transition-all cursor-pointer group"
+                  className="border-2 border-dashed border-cyan-500/30 hover:border-cyan-400 bg-slate-950/40 hover:bg-slate-900/60 rounded-2xl p-6 flex flex-col items-center justify-center min-h-[220px] transition-all cursor-pointer group"
                 >
                   <Plus className="w-8 h-8 text-cyan-400 group-hover:scale-125 transition-transform mb-3" />
-                  <span className="text-sm font-bold text-slate-400 group-hover:text-cyan-300 transition-colors">Adicionar 3° Carro</span>
-                  <span className="text-[10px] text-slate-500 mt-1">Clique para escolher</span>
+                  <span className="text-sm font-bold text-slate-200 group-hover:text-cyan-300 transition-colors">
+                    {selectedVehicles.length === 1 ? 'Escolher 2° Carro para Comparar' : 'Adicionar 3° Carro'}
+                  </span>
+                  <span className="text-[10px] text-slate-500 mt-1">Clique para buscar no estoque</span>
                 </div>
               )}
             </div>
@@ -368,7 +380,7 @@ export default function VehicleComparatorModal({
               </div>
               <div className={`grid gap-4 ${selectedVehicles.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
                 {selectedVehicles.map((car, idx) => {
-                  const comp = comparisons[idx];
+                  const comp = comparisons[idx] || {};
                   return (
                     <div key={idx} className="space-y-1.5 p-3 rounded-xl bg-slate-900/60 border border-slate-800">
                       <div className="flex justify-between text-xs">
@@ -381,7 +393,7 @@ export default function VehicleComparatorModal({
                           comp?.fipeComparison?.isBelow ? 'text-emerald-400' : 'text-slate-300'
                         }`}>
                           {comp?.fipeComparison?.isBelow ? <TrendingDown className="w-3.5 h-3.5" /> : <TrendingUp className="w-3.5 h-3.5" />}
-                          {comp?.fipeComparison?.label}
+                          {comp?.fipeComparison?.label || 'Compatível'}
                         </span>
                       </div>
                       <div className="flex justify-between text-xs pt-1 border-t border-slate-800/80">
@@ -391,6 +403,16 @@ export default function VehicleComparatorModal({
                     </div>
                   );
                 })}
+                {selectedVehicles.length === 1 && (
+                  <div 
+                    onClick={() => { setSelectorOpenSlot(1); setSelectorSearch(''); }}
+                    className="p-4 rounded-xl bg-slate-900/40 border border-dashed border-cyan-500/30 hover:border-cyan-400 flex flex-col items-center justify-center text-center cursor-pointer group transition-all"
+                  >
+                    <Plus className="w-4 h-4 text-cyan-400 group-hover:scale-110 mb-1" />
+                    <span className="text-xs font-bold text-slate-300 group-hover:text-cyan-300">Escolha o 2° veículo</span>
+                    <span className="text-[10px] text-slate-500">Confronte a Tabela FIPE lado a lado</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -401,7 +423,7 @@ export default function VehicleComparatorModal({
               </div>
               <div className={`grid gap-4 ${selectedVehicles.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
                 {selectedVehicles.map((car, idx) => {
-                  const comp = comparisons[idx];
+                  const comp = comparisons[idx] || {};
                   return (
                     <div key={idx} className="space-y-1.5 p-3 rounded-xl bg-slate-900/60 border border-slate-800">
                       <div className="flex justify-between text-xs">
@@ -424,6 +446,16 @@ export default function VehicleComparatorModal({
                     </div>
                   );
                 })}
+                {selectedVehicles.length === 1 && (
+                  <div 
+                    onClick={() => { setSelectorOpenSlot(1); setSelectorSearch(''); }}
+                    className="p-4 rounded-xl bg-slate-900/40 border border-dashed border-cyan-500/30 hover:border-cyan-400 flex flex-col items-center justify-center text-center cursor-pointer group transition-all"
+                  >
+                    <Plus className="w-4 h-4 text-cyan-400 group-hover:scale-110 mb-1" />
+                    <span className="text-xs font-bold text-slate-300 group-hover:text-cyan-300">Escolha o 2° veículo</span>
+                    <span className="text-[10px] text-slate-500">Confronte o hodômetro e uso anual</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -455,6 +487,16 @@ export default function VehicleComparatorModal({
                     </div>
                   </div>
                 ))}
+                {selectedVehicles.length === 1 && (
+                  <div 
+                    onClick={() => { setSelectorOpenSlot(1); setSelectorSearch(''); }}
+                    className="p-4 rounded-xl bg-slate-900/40 border border-dashed border-cyan-500/30 hover:border-cyan-400 flex flex-col items-center justify-center text-center cursor-pointer group transition-all"
+                  >
+                    <Plus className="w-4 h-4 text-cyan-400 group-hover:scale-110 mb-1" />
+                    <span className="text-xs font-bold text-slate-300 group-hover:text-cyan-300">Escolha o 2° veículo</span>
+                    <span className="text-[10px] text-slate-500">Confronte a perícia cautelar</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -480,6 +522,16 @@ export default function VehicleComparatorModal({
                     </div>
                   </div>
                 ))}
+                {selectedVehicles.length === 1 && (
+                  <div 
+                    onClick={() => { setSelectorOpenSlot(1); setSelectorSearch(''); }}
+                    className="p-4 rounded-xl bg-slate-900/40 border border-dashed border-cyan-500/30 hover:border-cyan-400 flex flex-col items-center justify-center text-center cursor-pointer group transition-all"
+                  >
+                    <Plus className="w-4 h-4 text-cyan-400 group-hover:scale-110 mb-1" />
+                    <span className="text-xs font-bold text-slate-300 group-hover:text-cyan-300">Escolha o 2° veículo</span>
+                    <span className="text-[10px] text-slate-500">Confronte débitos e gravame DETRAN</span>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -509,6 +561,16 @@ export default function VehicleComparatorModal({
                     </div>
                   </div>
                 ))}
+                {selectedVehicles.length === 1 && (
+                  <div 
+                    onClick={() => { setSelectorOpenSlot(1); setSelectorSearch(''); }}
+                    className="p-4 rounded-xl bg-slate-900/40 border border-dashed border-cyan-500/30 hover:border-cyan-400 flex flex-col items-center justify-center text-center cursor-pointer group transition-all"
+                  >
+                    <Plus className="w-4 h-4 text-cyan-400 group-hover:scale-110 mb-1" />
+                    <span className="text-xs font-bold text-slate-300 group-hover:text-cyan-300">Escolha o 2° veículo</span>
+                    <span className="text-[10px] text-slate-500">Confronte itens de série e câmbio</span>
+                  </div>
+                )}
               </div>
             </div>
             </>

@@ -57,6 +57,7 @@ export default function ShowcaseVehicleDetails() {
   const [isLoadingCar, setIsLoadingCar] = useState(true);
   const [allInventoryCars, setAllInventoryCars] = useState([]);
   const [isComparatorOpen, setIsComparatorOpen] = useState(false);
+  const [isOpeningComparator, setIsOpeningComparator] = useState(false);
   const [liked, setLiked] = useState(false);
   const [activeChat, setActiveChat] = useState('ai'); // 'ai' | 'seller'
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -709,12 +710,28 @@ export default function ShowcaseVehicleDetails() {
               <Globe2 className="w-5 h-5" />
             </button>
             <button
-              onClick={() => setIsComparatorOpen(true)}
+              type="button"
+              id="topbar-open-comparator-btn"
+              onClick={() => {
+                setIsOpeningComparator(true);
+                try {
+                  setIsComparatorOpen(true);
+                } finally {
+                  setTimeout(() => setIsOpeningComparator(false), 300);
+                }
+              }}
+              disabled={isOpeningComparator}
               title="Comparar com outros veículos"
-              className="px-3 py-2 rounded-full bg-slate-800 border border-slate-700 text-slate-300 hover:text-amber-400 hover:border-amber-500/40 transition-all flex items-center gap-1.5"
+              className="px-3 py-2 rounded-full bg-slate-800 border border-slate-700 text-slate-300 hover:text-amber-400 hover:border-amber-500/40 transition-all flex items-center gap-1.5 disabled:opacity-50 active:scale-95"
             >
-              <Scale className="w-4 h-4 text-amber-400" />
-              <span className="text-xs font-bold text-amber-300">Comparar</span>
+              {isOpeningComparator ? (
+                <div className="w-4 h-4 border-2 border-amber-400 border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Scale className="w-4 h-4 text-amber-400" />
+              )}
+              <span className="text-xs font-bold text-amber-300">
+                {isOpeningComparator ? 'Abrindo...' : 'Comparar'}
+              </span>
             </button>
             <button 
               onClick={() => {
@@ -752,6 +769,7 @@ export default function ShowcaseVehicleDetails() {
             <div className="flex items-center gap-2 p-1.5 bg-slate-950/80 rounded-2xl border border-slate-800 overflow-x-auto shadow-lg">
               <button
                 type="button"
+                id="scanner-ia-tab-btn"
                 onClick={() => setInspectionTab('body')}
                 className={`px-3.5 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition-all whitespace-nowrap ${
                   inspectionTab === 'body'
@@ -760,7 +778,7 @@ export default function ShowcaseVehicleDetails() {
                 }`}
               >
                 <Scan className="w-3.5 h-3.5 text-cyan-300" />
-                <span>Perícia Visual IA</span>
+                <span>Scanner de IA</span>
               </button>
 
               <button
@@ -867,12 +885,13 @@ export default function ShowcaseVehicleDetails() {
                 {/* Single Unified Action Button */}
                 <button 
                   type="button"
+                  id="scanner-ia-action-btn"
                   onClick={analisarFotoDoCarro}
                   disabled={isAnalyzing}
                   className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 shadow-lg shadow-blue-900/30 transition-all transform active:scale-95 disabled:opacity-50"
                 >
                   <Bot className={`w-4 h-4 text-cyan-200 ${isAnalyzing ? 'animate-spin' : ''}`} /> 
-                  <span>{isAnalyzing ? "Periciando Imagem..." : (analysisResult ? "Refazer Scanner IA" : "Escanear Foto com IA")}</span>
+                  <span>{isAnalyzing ? "Escanando Imagem..." : (analysisResult ? "Refazer Scanner de IA" : "Scanner de IA")}</span>
                 </button>
               </div>
 
@@ -1451,6 +1470,8 @@ export default function ShowcaseVehicleDetails() {
       />
 
       <ErrorBoundary
+        isOpen={isComparatorOpen}
+        resetKey={isComparatorOpen ? 'open' : 'closed'}
         title="Comparador Multidimensional Temporariamente Indisponível"
         description="Ocorreu uma instabilidade ao confrontar os dados deste veículo. Você pode recarregar ou continuar navegando na vitrine."
         onClose={() => setIsComparatorOpen(false)}
