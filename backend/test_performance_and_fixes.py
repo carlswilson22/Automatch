@@ -101,10 +101,10 @@ def run_tests():
     assert resp_channels.status_code == 200
     channels = resp_channels.json().get("canais", [])
     channel_ids = [c["id"] for c in channels]
-    assert "autocerto" not in channel_ids, f"AutoCerto não deve mais constar em canais: {channel_ids}"
+    assert "autocerto" in channel_ids, f"AutoCerto deve constar em canais homologados: {channel_ids}"
     assert "autoavaliar" in channel_ids, "AutoAvaliar deve permanecer"
     assert "olx" in channel_ids, "OLX deve permanecer"
-    print(f"  -> Canais Homologados Ativos: {channel_ids} (AutoCerto removido com sucesso)")
+    print(f"  -> Canais Homologados Ativos: {channel_ids} (AutoCerto reintegrado como conexão direta)")
 
     # Rota específica /api/integrations/autocerto/feed.xml deve dar 404
     resp_autocerto_feed = client.get("/api/integrations/autocerto/feed.xml")

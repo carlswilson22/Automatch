@@ -17,25 +17,49 @@ export default function VehicleComparatorModal({
   availableVehicles = []
 }) {
   const navigate = useNavigate();
-  const allAvailable = availableCars.length > 0 ? availableCars : availableVehicles;
-  // Permite comparar de 2 a 3 veículos simultaneamente
-  const [selectedVehicles, setSelectedVehicles] = useState(() => {
-    const base = baseCar ? [baseCar] : [];
-    if (initialVehicles.length > 0) return [...base, ...initialVehicles].slice(0, 3);
-    if (base.length > 0 && allAvailable.length > 0) {
-      const second = allAvailable.find(c => String(c.id) !== String(baseCar?.id));
-      return second ? [baseCar, second] : [baseCar, allAvailable[0]];
+  const currentYear = 2026;
+
+  const normalizeCar = (car) => {
+    if (!car) return null;
+    const name = car.name || `${car.brand || ''} ${car.model || 'Veículo'}`.trim();
+    const price = Number(car.price) || 0;
+    const mileage = Number(car.mileage || car.km) || 0;
+    const image = car.image || car.imagem || '/images/FotoHondaCivic.jpeg';
+    const year = Number(car.year) || currentYear;
+    return { ...car, name, price, mileage, image, year };
+  };
+
+  const allAvailable = useMemo(() => {
+    const raw = (availableCars && availableCars.length > 0) ? availableCars : (availableVehicles || []);
+    return raw.map(normalizeCar).filter(Boolean);
+  }, [availableCars, availableVehicles]);
+
+  // Permite comparar de 2 a 3 veículos simultaneamente com sincronização reativa
+  const [selectedVehicles, setSelectedVehicles] = useState([]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const normalizedBase = normalizeCar(baseCar);
+    const normalizedInit = (initialVehicles || []).map(normalizeCar).filter(Boolean);
+
+    if (normalizedInit.length >= 2) {
+      setSelectedVehicles(normalizedInit.slice(0, 3));
+    } else if (normalizedBase) {
+      const second = allAvailable.find(c => c && String(c.id) !== String(normalizedBase.id));
+      setSelectedVehicles(second ? [normalizedBase, second] : [normalizedBase]);
+    } else if (allAvailable.length >= 2) {
+      setSelectedVehicles(allAvailable.slice(0, 2));
+    } else if (allAvailable.length === 1) {
+      setSelectedVehicles([allAvailable[0]]);
+    } else {
+      setSelectedVehicles([]);
     }
-    if (allAvailable.length >= 2) return allAvailable.slice(0, 2);
-    return base;
-  });
+  }, [isOpen, baseCar, initialVehicles, allAvailable]);
 
   const [selectorOpenSlot, setSelectorOpenSlot] = useState(null);
   const [selectorSearch, setSelectorSearch] = useState('');
 
   if (!isOpen) return null;
-
-  const currentYear = 2026;
 
   const formatMoney = (val) => {
     if (!val || isNaN(val)) return 'R$ 0,00';
@@ -51,6 +75,7 @@ export default function VehicleComparatorModal({
     if (!price || !fipe) return null;
     const diff = price - fipe;
     const pct = (diff / fipe) * 100;
+    if (isNaN(pct)) return null;
     return {
       diff,
       pct,
@@ -64,14 +89,14 @@ export default function VehicleComparatorModal({
   };
 
   const estimateMonthlyPayment = (price) => {
-    if (!price) return 0;
+    if (!price || isNaN(price)) return 0;
     const entry = price * 0.3; // 30% de entrada
     const financed = price - entry;
     // 48x taxa média 1.45% a.m.
     const i = 0.0145;
     const n = 48;
     const pmt = financed * (i * Math.pow(1 + i, n)) / (Math.pow(1 + i, n) - 1);
-    return Math.round(pmt);
+    return Math.round(pmt) || 0;
   };
 
   const [debouncedSelectorSearch, setDebouncedSelectorSearch] = useState('');
@@ -83,7 +108,7 @@ export default function VehicleComparatorModal({
   }, [selectorSearch]);
 
   const filteredAvailable = useMemo(() => {
-    const unselected = allAvailable.filter(c => !selectedVehicles.some(sv => String(sv.id) === String(c.id)));
+    const unselected = allAvailable.filter(c => c && !selectedVehicles.some(sv => sv && String(sv.id) === String(c.id)));
     if (!debouncedSelectorSearch.trim()) {
       return unselected.slice(0, 15);
     }
@@ -95,8 +120,10 @@ export default function VehicleComparatorModal({
   }, [allAvailable, selectedVehicles, debouncedSelectorSearch]);
 
   const comparisons = useMemo(() => {
-    return selectedVehicles.map(car => {
-      const fipe = car.fipePrice || car.fipe_price || (car.price * 1.04);
+    return (selectedVehicles || []).map(rawCar => {
+      const car = normalizeCar(rawCar);
+      if (!car) return null;
+      const fipe = Number(car.fipePrice || car.fipe_price || (car.price * 1.04)) || 0;
       const fipeComparison = calculateFipeDiff(car.price, fipe);
       const km = Number(car.mileage || car.km || 0);
       const kmPerYear = calculateKmPerYear(km, car.year);
@@ -113,14 +140,15 @@ export default function VehicleComparatorModal({
   }, [selectedVehicles]);
 
   const handleSelectCarForSlot = (car, slotIndex) => {
+    if (!car) return;
     const updated = [...selectedVehicles];
-    updated[slotIndex] = car;
-    setSelectedVehicles(updated);
+    updated[slotIndex] = normalizeCar(car);
+    setSelectedVehicles(updated.filter(Boolean));
     setSelectorOpenSlot(null);
   };
 
   const handleRemoveSlot = (slotIndex) => {
-    if (selectedVehicles.length <= 2) return;
+    if (selectedVehicles.length <= 1) return;
     const updated = selectedVehicles.filter((_, idx) => idx !== slotIndex);
     setSelectedVehicles(updated);
   };
@@ -191,6 +219,27 @@ export default function VehicleComparatorModal({
           {/* Comparison Table Body */}
           <div className="p-5 sm:p-6 overflow-x-auto overflow-y-auto flex-1 space-y-6">
             
+            {selectedVehicles.length === 0 ? (
+              <div className="p-10 text-center flex flex-col items-center justify-center my-6 bg-slate-950/60 rounded-3xl border border-slate-800">
+                <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center mb-3">
+                  <Scale className="w-7 h-7" />
+                </div>
+                <h3 className="text-base font-bold text-white mb-1">Nenhum veículo selecionado para comparação</h3>
+                <p className="text-xs text-slate-400 max-w-sm mb-5">
+                  Adicione veículos a partir da vitrine ou selecione na lista abaixo para confrontar preços FIPE, laudos e especificações.
+                </p>
+                {allAvailable.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setSelectedVehicles(allAvailable.slice(0, 2))}
+                    className="bg-cyan-500 hover:bg-cyan-400 text-slate-950 font-black text-xs px-5 py-2.5 rounded-xl transition-all shadow-lg shadow-cyan-500/20 active:scale-95"
+                  >
+                    Comparar Veículos Disponíveis
+                  </button>
+                )}
+              </div>
+            ) : (
+              <>
             {/* Header Cards Row (Photos & Names) */}
             <div className={`grid gap-4 ${selectedVehicles.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
               {selectedVehicles.map((car, idx) => (
@@ -462,6 +511,8 @@ export default function VehicleComparatorModal({
                 ))}
               </div>
             </div>
+            </>
+            )}
 
           </div>
         </motion.div>

@@ -11,6 +11,15 @@ router = APIRouter(prefix="/api/integrations", tags=["Sincronizador Multicanal B
 
 CHANNELS = [
     {
+        "id": "autocerto",
+        "nome": "AutoCerto DMS",
+        "status": "conectado",
+        "tipo_integracao": "API de Conexão Direta (DMS)",
+        "anuncios_sincronizados": 18,
+        "ultima_sincronizacao": "Há 5 minutos",
+        "badge_cor": "#0066cc"
+    },
+    {
         "id": "autoavaliar",
         "nome": "AutoAvaliar",
         "status": "conectado",
@@ -35,7 +44,7 @@ class SyncRequest(BaseModel):
     car_id: Optional[str] = None
     car_name: Optional[str] = "Veículo"
     store_id: Optional[int] = 1
-    channels: Optional[List[str]] = ["autoavaliar", "olx"]
+    channels: Optional[List[str]] = ["autocerto", "autoavaliar", "olx"]
 
 
 @router.get("/channels")
@@ -54,11 +63,11 @@ async def sincronizar_estoque_multicanal(
     current_user: models.User = Depends(get_current_user_from_header)
 ) -> Dict[str, Any]:
     """
-    Dispara a sincronização de estoque multi-plataforma com canais homologados (AutoAvaliar, OLX).
+    Dispara a sincronização de estoque multi-plataforma com canais homologados (AutoCerto, AutoAvaliar, OLX).
     Gera protocolo de envio e links de confirmação.
     """
     protocolo = f"SYNC-{uuid.uuid4().hex[:8].upper()}"
-    selected = payload.channels or ["autoavaliar", "olx"]
+    selected = payload.channels or ["autocerto", "autoavaliar", "olx"]
 
     resultados = []
     for cid in selected:
