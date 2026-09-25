@@ -49,10 +49,13 @@ export const AuthProvider = ({ children }) => {
           email: 'admin@automatch.com',
           accountType: 'store',
           role: 'admin',
+          sub_role: 'owner',
+          store_id: 1,
           memberSince: 'Março 2024',
           photo: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200',
           token: 'demo-admin-token'
         };
+
         setUser(demoAdmin);
         localStorage.setItem('automatch_user', JSON.stringify(demoAdmin));
         localStorage.setItem('automatch_token', demoAdmin.token);

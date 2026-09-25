@@ -43,6 +43,27 @@ class CarSchema(CarBase):
     class Config:
         from_attributes = True
 
+class CarUpdate(BaseModel):
+    brand: Optional[str] = None
+    model: Optional[str] = None
+    year: Optional[int] = None
+    km: Optional[int] = None
+    price: Optional[float] = None
+    image: Optional[str] = None
+    color: Optional[str] = None
+    fuel: Optional[str] = None
+    transmission: Optional[str] = None
+    location: Optional[str] = None
+    description: Optional[str] = None
+    laudo_status: Optional[str] = None
+    debt_status: Optional[str] = None
+    auction_history: Optional[str] = None
+    # B2B Repasse
+    compartilhavel: Optional[int] = None
+    valor_minimo_repasse: Optional[float] = None
+    comissao_fixa: Optional[float] = None
+    observacoes_repasse: Optional[str] = None
+
 class StoreBase(BaseModel):
     name: str
     slug: str
@@ -81,10 +102,14 @@ class UserResponse(BaseModel):
     email: str
     photo: Optional[str] = None
     memberSince: Optional[str] = "Março 2024"
+    role: Optional[str] = "lojista"
+    sub_role: Optional[str] = "owner"
+    store_id: Optional[int] = 1
     token: Optional[str] = None
 
     class Config:
         from_attributes = True
+
 
 class UserProfileUpdate(BaseModel):
     name: Optional[str] = None

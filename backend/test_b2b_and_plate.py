@@ -267,5 +267,113 @@ class TestB2BAndVehicleLookup(unittest.TestCase):
         self.assertEqual(len(msgs), 1)
         self.assertEqual(msgs[0]["message"], "Cliente tem R$ 50 mil de entrada e restante financiado.")
 
+    def test_security_verify_token_and_b2b_auth_dependency(self):
+        """Testa decodificação e validação de token JWT real no módulo de segurança e dependência B2B."""
+        import security
+        from routers.partnerships import get_current_b2b_user
+        from fastapi import HTTPException
+
+        token = security.create_access_token({"sub": self.user_alpha.id, "email": self.user_alpha.email})
+        
+        # 1. Valida função verify_token alias
+        payload = security.verify_token(token)
+        self.assertIsNotNone(payload)
+        self.assertEqual(payload["sub"], self.user_alpha.id)
+
+        # 2. Valida dependência get_current_b2b_user com header real
+        auth_header = f"Bearer {token}"
+        resolved_user = get_current_b2b_user(db=self.db, authorization=auth_header)
+        self.assertEqual(resolved_user.id, self.user_alpha.id)
+        self.assertEqual(resolved_user.role, "lojista")
+
+        # 3. Valida rejeição de token inválido
+        with self.assertRaises(HTTPException) as cm:
+            get_current_b2b_user(db=self.db, authorization="Bearer token-invalido.123.456")
+        self.assertEqual(cm.exception.status_code, 401)
+
+    def test_car_update_and_floor_price_validation(self):
+        """Testa PUT /api/cars/{car_id} com validação de piso e controle de acesso OWASP A01."""
+        from routers.cars import update_car
+        from fastapi import HTTPException
+
+        # 1. Atualização legítima pelo proprietário do anúncio
+        update_payload = schemas.CarUpdate(
+            price=140000.0,
+            compartilhavel=1,
+            valor_minimo_repasse=132000.0,
+            comissao_fixa=3.5,
+            observacoes_repasse="Aceita proposta à vista"
+        )
+        updated = update_car("car-alpha-001", update_payload, self.db, self.user_alpha)
+        self.assertEqual(updated.price, 140000.0)
+        self.assertEqual(updated.valor_minimo_repasse, 132000.0)
+        self.assertEqual(updated.comissao_fixa, 3.5)
+
+        # 2. Rejeição de piso superior ao preço de venda
+        invalid_payload = schemas.CarUpdate(valor_minimo_repasse=155000.0)
+        with self.assertRaises(HTTPException) as cm:
+            update_car("car-alpha-001", invalid_payload, self.db, self.user_alpha)
+        self.assertEqual(cm.exception.status_code, 400)
+        self.assertIn("superior ao preço", cm.exception.detail)
+
+        # 3. Rejeição por usuário sem permissão (não-proprietário)
+        with self.assertRaises(HTTPException) as cm2:
+            update_car("car-alpha-001", update_payload, self.db, self.user_beta)
+        self.assertEqual(cm2.exception.status_code, 403)
+
+    def test_car_delete_with_b2b_dependencies_cascade(self):
+        """Testa exclusão limpa e atômica de veículo com reservas, mensagens e transações sem erro de FK."""
+        from routers.cars import delete_car
+
+        # Cria carro com dependências
+        test_car = models.Car(
+            id="car-cascade-test",
+            brand="Honda",
+            model="HR-V EXL",
+            year=2023,
+            km=25000,
+            price=138000.0,
+            image="test.jpg",
+            store_id=1,
+            user_id=self.user_alpha.id
+        )
+        self.db.add(test_car)
+        self.db.commit()
+
+        # Cria reserva e mensagem
+        res = models.CarReservation(
+            id="res-cascade-001",
+            car_id="car-cascade-test",
+            requesting_store_id=2,
+            owner_store_id=1,
+            seller_user_id="user-beta",
+            proposed_price=130000.0,
+            status="ativa",
+            created_at="2026-09-24",
+            expires_at=time.time() + 3600
+        )
+        self.db.add(res)
+        self.db.commit()
+
+        msg = models.PartnerMessage(
+            reservation_id="res-cascade-001",
+            sender_user_id="user-beta",
+            sender_store_id=2,
+            message="Mensagem vinculada à reserva",
+            created_at="2026-09-24"
+        )
+        self.db.add(msg)
+        self.db.commit()
+
+        # Executa delete_car pelo proprietário
+        result = delete_car("car-cascade-test", self.db, self.user_alpha)
+        self.assertEqual(result["status"], "success")
+
+        # Verifica que o carro e suas dependências foram removidos
+        self.assertIsNone(self.db.query(models.Car).filter(models.Car.id == "car-cascade-test").first())
+        self.assertIsNone(self.db.query(models.CarReservation).filter(models.CarReservation.id == "res-cascade-001").first())
+        self.assertEqual(self.db.query(models.PartnerMessage).filter(models.PartnerMessage.reservation_id == "res-cascade-001").count(), 0)
+
 if __name__ == '__main__':
     unittest.main()
+

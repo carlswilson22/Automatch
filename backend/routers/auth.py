@@ -77,12 +77,19 @@ def register(request: schemas.UserCreate, db: Session = Depends(get_db)) -> Dict
     if existing:
         raise HTTPException(status_code=400, detail="Este e-mail já está cadastrado no sistema.")
     
+    # Associa à loja padrão (ou primeira loja disponível)
+    first_store = db.query(models.Store).first()
+    default_store_id = first_store.id if first_store else 1
+
     user = models.User(
         name=clean_name,
         email=email,
         hashed_password=security.hash_password(request.password),
         member_since="Março 2024",
-        photo="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200"
+        photo="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200",
+        role="lojista",
+        sub_role="owner",
+        store_id=default_store_id
     )
     db.add(user)
     db.commit()
@@ -95,6 +102,9 @@ def register(request: schemas.UserCreate, db: Session = Depends(get_db)) -> Dict
         "email": user.email,
         "memberSince": user.member_since,
         "photo": user.photo,
+        "role": user.role or "lojista",
+        "sub_role": user.sub_role or "owner",
+        "store_id": user.store_id or default_store_id,
         "token": token
     }
 
@@ -117,6 +127,9 @@ def login(request: schemas.UserLogin, db: Session = Depends(get_db)) -> Dict[str
         "email": user.email,
         "memberSince": user.member_since,
         "photo": user.photo,
+        "role": getattr(user, 'role', 'lojista') or 'lojista',
+        "sub_role": getattr(user, 'sub_role', 'owner') or 'owner',
+        "store_id": getattr(user, 'store_id', 1) or 1,
         "token": token
     }
 
@@ -160,8 +173,12 @@ def update_profile(
         "email": current_user.email,
         "memberSince": current_user.member_since,
         "photo": current_user.photo,
+        "role": getattr(current_user, 'role', 'lojista') or 'lojista',
+        "sub_role": getattr(current_user, 'sub_role', 'owner') or 'owner',
+        "store_id": getattr(current_user, 'store_id', 1) or 1,
         "token": None
     }
+
 
 
 @router.post("/auth/forgot-password", response_model=schemas.ForgotPasswordResponse)

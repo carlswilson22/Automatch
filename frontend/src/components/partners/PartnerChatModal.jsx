@@ -11,16 +11,23 @@ export default function PartnerChatModal({ isOpen, onClose, reservation }) {
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef(null);
 
-  const fetchMessages = async () => {
+  const resolveToken = () => {
+    return user?.token || 
+           localStorage.getItem('automatch_token') || 
+           localStorage.getItem('token') ||
+           JSON.parse(localStorage.getItem('automatch_user') || '{}')?.token;
+  };
+
+  const fetchMessages = async (isMounted = true) => {
     if (!reservation?.id) return;
     try {
-      const token = localStorage.getItem('token');
+      const token = resolveToken();
       const res = await fetch(`/api/partnerships/reservations/${reservation.id}/messages`, {
         headers: {
           'Authorization': token ? `Bearer ${token}` : ''
         }
       });
-      if (res.ok) {
+      if (res.ok && isMounted) {
         const data = await res.json();
         setMessages(data);
       }
@@ -30,13 +37,22 @@ export default function PartnerChatModal({ isOpen, onClose, reservation }) {
   };
 
   useEffect(() => {
+    let isMounted = true;
     if (isOpen && reservation?.id) {
       setLoading(true);
-      fetchMessages().finally(() => setLoading(false));
+      fetchMessages(isMounted).finally(() => {
+        if (isMounted) setLoading(false);
+      });
 
-      // Polling suave a cada 5 segundos durante negociação
-      const interval = setInterval(fetchMessages, 5000);
-      return () => clearInterval(interval);
+      // Polling suave a cada 5 segundos durante negociação com cleanup
+      const interval = setInterval(() => {
+        if (isMounted) fetchMessages(isMounted);
+      }, 5000);
+
+      return () => {
+        isMounted = false;
+        clearInterval(interval);
+      };
     }
   }, [isOpen, reservation?.id]);
 
@@ -48,7 +64,7 @@ export default function PartnerChatModal({ isOpen, onClose, reservation }) {
     e?.preventDefault();
     if (!inputText.trim() || sending) return;
 
-    const token = localStorage.getItem('token');
+    const token = resolveToken();
     const msgToSend = inputText.trim();
     setInputText('');
     setSending(true);
@@ -62,6 +78,7 @@ export default function PartnerChatModal({ isOpen, onClose, reservation }) {
         },
         body: JSON.stringify({ message: msgToSend })
       });
+
 
       if (res.ok) {
         await fetchMessages();

@@ -101,7 +101,7 @@ def create_car(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user_from_header)
 ) -> schemas.CarSchema:
-    car_data = car.dict()
+    car_data = car.model_dump()
     car_data["user_id"] = current_user.id
     target_store_id = car_data.get("store_id")
     if target_store_id is not None:
@@ -128,6 +128,49 @@ def create_car(
     return db_car
 
 
+@router.put("/cars/{car_id}", response_model=schemas.CarSchema)
+def update_car(
+    car_id: str,
+    payload: schemas.CarUpdate,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user_from_header)
+) -> schemas.CarSchema:
+    """
+    Atualiza os dados cadastrais do veículo e condições de repasse B2B.
+    Apenas o proprietário do anúncio ou o administrador oficial pode alterar (OWASP A01).
+    """
+    car = db.query(models.Car).filter(models.Car.id == car_id).first()
+    if not car:
+        raise HTTPException(status_code=404, detail="Veículo não encontrado.")
+
+    is_admin = (current_user.email == "admin@automatch.com")
+    if car.user_id and car.user_id != current_user.id and not is_admin:
+        raise HTTPException(
+            status_code=403,
+            detail="Permissão negada. Você só pode editar veículos da sua própria conta."
+        )
+
+    update_data = payload.model_dump(exclude_unset=True)
+
+
+    # Validação de piso inviolável de repasse B2B
+    target_price = update_data.get("price") if update_data.get("price") is not None else car.price
+    if update_data.get("valor_minimo_repasse") is not None:
+        if update_data["valor_minimo_repasse"] > target_price:
+            raise HTTPException(
+                status_code=400,
+                detail=f"O valor mínimo de repasse (R$ {update_data['valor_minimo_repasse']:,.2f}) não pode ser superior ao preço do veículo (R$ {target_price:,.2f})."
+            )
+
+    for field, val in update_data.items():
+        setattr(car, field, val)
+
+    db.commit()
+    db.refresh(car)
+    logger.info("Veículo %s atualizado com sucesso pelo usuário %s.", car_id, current_user.email)
+    return car
+
+
 @router.delete("/cars/{car_id}")
 def delete_car(
     car_id: str,
@@ -136,12 +179,12 @@ def delete_car(
 ) -> Dict[str, Any]:
     """
     Exclui um anúncio de veículo do catálogo e banco de dados.
-    Remove laudos associados (FK cascade manual) antes da exclusão.
+    Remove de forma atômica dependências de laudos, reservas e transações associadas (FK cascade).
     Apenas o proprietário do anúncio ou o administrador oficial pode excluir (OWASP A01).
     """
     car = db.query(models.Car).filter(models.Car.id == car_id).first()
     if not car:
-        # Se não encontrou por UUID exato, tenta busca segura ou confirma sucesso para idempotência
+        # Confirma idempotência caso já excluído
         return {"status": "success", "message": "Anúncio removido ou inexistente no banco de dados.", "deleted_id": car_id}
     
     is_admin = (current_user.email == "admin@automatch.com")
@@ -151,16 +194,28 @@ def delete_car(
             detail="Permissão negada. Você só pode excluir anúncios cadastrados pela sua conta."
         )
 
-    # Remove laudos associados para evitar violação de FK
+    # Remove dependências em cascata para evitar violação de integridade referencial (FK)
     try:
+        # 1. Mensagens e reservas B2B associadas
+        reservations = db.query(models.CarReservation).filter(models.CarReservation.car_id == car_id).all()
+        for res in reservations:
+            db.query(models.PartnerMessage).filter(models.PartnerMessage.reservation_id == res.id).delete()
+        db.query(models.CarReservation).filter(models.CarReservation.car_id == car_id).delete()
+
+        # 2. Transações B2B associadas
+        db.query(models.PartnerTransaction).filter(models.PartnerTransaction.car_id == car_id).delete()
+
+        # 3. Laudos e Watchlist
         db.query(models.LaudoProtocol).filter(models.LaudoProtocol.car_id == car_id).delete()
+        db.query(models.LaudoWatchlist).filter(models.LaudoWatchlist.car_id == car_id).delete()
     except Exception as e:
-        logger.warning("Erro ao remover laudos associados ao carro %s: %s", car_id, e)
+        logger.warning("Erro ao remover dependências associadas ao carro %s: %s", car_id, e)
 
     db.delete(car)
     db.commit()
     logger.info("Veículo com ID %s excluído com sucesso do banco de dados.", car_id)
     return {"status": "success", "message": "Anúncio excluído com sucesso.", "deleted_id": car_id}
+
 
 
 from services.pricing_service import calcular_indicador_mercado, calcular_tco_mensal

@@ -56,29 +56,53 @@ async def lifespan(app: FastAPI):
     # ── Startup ────────────────────────────────────────────────────────────────
     models.Base.metadata.create_all(bind=engine)
 
-    # Auto-migração idempotente de colunas adicionadas recentemente
+    # Auto-migração idempotente e agnóstica de colunas (compatível com SQLite e Postgres)
     try:
-        from sqlalchemy import text
-        with engine.connect() as conn:
-            conn.execute(text("ALTER TABLE cars ADD COLUMN IF NOT EXISTS video_url VARCHAR;"))
-            conn.execute(text("ALTER TABLE cars ADD COLUMN IF NOT EXISTS laudo_url VARCHAR;"))
-            conn.execute(text("ALTER TABLE cars ADD COLUMN IF NOT EXISTS laudo_feedback TEXT;"))
-            conn.execute(text("ALTER TABLE cars ADD COLUMN IF NOT EXISTS original_price FLOAT;"))
-            conn.execute(text("ALTER TABLE cars ADD COLUMN IF NOT EXISTS price_history TEXT;"))
-            conn.execute(text("ALTER TABLE cars ADD COLUMN IF NOT EXISTS user_id VARCHAR(36);"))
-            # Colunas B2B em cars
-            conn.execute(text("ALTER TABLE cars ADD COLUMN IF NOT EXISTS compartilhavel INTEGER DEFAULT 0;"))
-            conn.execute(text("ALTER TABLE cars ADD COLUMN IF NOT EXISTS valor_minimo_repasse FLOAT;"))
-            conn.execute(text("ALTER TABLE cars ADD COLUMN IF NOT EXISTS comissao_fixa FLOAT;"))
-            conn.execute(text("ALTER TABLE cars ADD COLUMN IF NOT EXISTS observacoes_repasse TEXT;"))
-            conn.execute(text("ALTER TABLE cars ADD COLUMN IF NOT EXISTS status_reserva VARCHAR(32) DEFAULT 'disponivel';"))
-            # Colunas B2B em users
-            conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(32) DEFAULT 'lojista';"))
-            conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS sub_role VARCHAR(32) DEFAULT 'owner';"))
-            conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS store_id INTEGER;"))
-            conn.commit()
+        from sqlalchemy import inspect, text
+        inspector = inspect(engine)
+
+        if "cars" in inspector.get_table_names():
+            existing_car_cols = {c["name"] for c in inspector.get_columns("cars")}
+            car_cols_to_add = [
+                ("video_url", "VARCHAR"),
+                ("laudo_url", "VARCHAR"),
+                ("laudo_feedback", "TEXT"),
+                ("original_price", "FLOAT"),
+                ("price_history", "TEXT"),
+                ("user_id", "VARCHAR(36)"),
+                ("compartilhavel", "INTEGER DEFAULT 0"),
+                ("valor_minimo_repasse", "FLOAT"),
+                ("comissao_fixa", "FLOAT"),
+                ("observacoes_repasse", "TEXT"),
+                ("status_reserva", "VARCHAR(32) DEFAULT 'disponivel'")
+            ]
+            with engine.connect() as conn:
+                for col_name, col_type in car_cols_to_add:
+                    if col_name not in existing_car_cols:
+                        try:
+                            conn.execute(text(f"ALTER TABLE cars ADD COLUMN {col_name} {col_type};"))
+                            conn.commit()
+                        except Exception as ce:
+                            logger.debug("Coluna %s em cars já presente ou erro: %s", col_name, ce)
+
+        if "users" in inspector.get_table_names():
+            existing_user_cols = {c["name"] for c in inspector.get_columns("users")}
+            user_cols_to_add = [
+                ("role", "VARCHAR(32) DEFAULT 'lojista'"),
+                ("sub_role", "VARCHAR(32) DEFAULT 'owner'"),
+                ("store_id", "INTEGER")
+            ]
+            with engine.connect() as conn:
+                for col_name, col_type in user_cols_to_add:
+                    if col_name not in existing_user_cols:
+                        try:
+                            conn.execute(text(f"ALTER TABLE users ADD COLUMN {col_name} {col_type};"))
+                            conn.commit()
+                        except Exception as ue:
+                            logger.debug("Coluna %s em users já presente ou erro: %s", col_name, ue)
     except Exception as e:
         logger.warning("Auto-migração de colunas: %s", e)
+
 
     # Auto-seed admin user se não existir
     db = SessionLocal()

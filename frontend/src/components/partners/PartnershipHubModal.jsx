@@ -39,14 +39,18 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
   const [reviewingTx, setReviewingTx] = useState(null);
   const [reviewForm, setReviewForm] = useState({ rating: 5, punctuality_rating: 5, comment: '' });
 
-  // Helper de token
+  // Helper de token resiliente e unificado
   const getAuthHeaders = () => {
-    const token = localStorage.getItem('token');
+    const token = user?.token || 
+                  localStorage.getItem('automatch_token') || 
+                  localStorage.getItem('token') ||
+                  JSON.parse(localStorage.getItem('automatch_user') || '{}')?.token;
     return {
       'Content-Type': 'application/json',
       'Authorization': token ? `Bearer ${token}` : ''
     };
   };
+
 
   // Carregamento de dados
   const loadSharedInventory = async () => {

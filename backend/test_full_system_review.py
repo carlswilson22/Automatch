@@ -48,6 +48,7 @@ def run_full_system_review():
     assert login_resp.status_code == 200, f"Falha no login: {login_resp.text}"
     user_data = login_resp.json()
     token = user_data.get("token")
+    auth_headers = {"Authorization": f"Bearer {token}"}
     assert token is not None, "Token JWT deve ser retornado no login"
     print(f"Usuário autenticado com sucesso: {user_data.get('name')} ({user_data.get('email')})")
 
@@ -115,7 +116,8 @@ def run_full_system_review():
     fake_video_bytes = b"\x00\x00\x00 ftypmp42\x00\x00\x00\x00mp42isom" + b"\x00" * 256
     video_upload_resp = client.post(
         "/api/v1/pericia/video/upload",
-        files={"file": ("vistoria_15s.mp4", fake_video_bytes, "video/mp4")}
+        files={"file": ("vistoria_15s.mp4", fake_video_bytes, "video/mp4")},
+        headers=auth_headers
     )
     assert video_upload_resp.status_code == 200, f"Falha no upload de vídeo pericial: {video_upload_resp.text}"
     video_data = video_upload_resp.json()
@@ -176,18 +178,21 @@ def run_full_system_review():
     fake_pdf = b"NOT_A_REAL_PDF_CONTENT"
     fraud_resp = client.post(
         "/api/v1/laudos/upload",
-        files={"file": ("laudo_falso.pdf", fake_pdf, "application/pdf")}
+        files={"file": ("laudo_falso.pdf", fake_pdf, "application/pdf")},
+        headers=auth_headers
     )
-    assert fraud_resp.status_code == 400, "Arquivo falso deve ser rejeitado com 400"
+    assert fraud_resp.status_code == 400, f"Arquivo falso deve ser rejeitado com 400: {fraud_resp.text}"
     print("Validação de Magic Bytes rejeitou com sucesso arquivo corrompido/falso (400 Bad Request)!")
 
     # 2. Arquivo PDF legítimo
     valid_pdf_content = b"%PDF-1.4\n1 0 obj\n<<>>\nendobj\ntrailer\n<<>>\n%%EOF"
     valid_upload_resp = client.post(
         "/api/v1/laudos/upload",
-        files={"file": ("laudo_oficial.pdf", valid_pdf_content, "application/pdf")}
+        files={"file": ("laudo_oficial.pdf", valid_pdf_content, "application/pdf")},
+        headers=auth_headers
     )
     assert valid_upload_resp.status_code == 200, f"Falha no upload de PDF válido: {valid_upload_resp.text}"
+
     results["8. Upload com Magic Bytes (%PDF-)"] = "PASS"
     print("✅ SUÍTE 8 CONCLUÍDA COM SUCESSO!")
 
@@ -206,7 +211,7 @@ def run_full_system_review():
     sync_resp = client.post("/api/integrations/sync", json={
         "car_id": "1",
         "channels": ["autoavaliar", "autocerto", "olx"]
-    })
+    }, headers=auth_headers)
     assert sync_resp.status_code == 200
     assert sync_resp.json().get("total_sincronizados") == 3
 
@@ -266,12 +271,12 @@ def run_full_system_review():
         "image": "/images/FotoToyotaCorolla.jpg",
         "store_id": 1,
         "transmission": "Automático"
-    })
+    }, headers=auth_headers)
     assert new_car.status_code == 200, f"Falha ao criar carro de teste: {new_car.text}"
     created_id = new_car.json()["id"]
 
     # Exclui o veículo
-    del_car = client.delete(f"/api/cars/{created_id}")
+    del_car = client.delete(f"/api/cars/{created_id}", headers=auth_headers)
     assert del_car.status_code == 200
     assert del_car.json().get("status") == "success"
 

@@ -127,9 +127,10 @@ def run_full_battery_usecases():
         "fipe_price": 96000.0,
         "image": "/images/yaris_test.jpg",
         "store_id": 1
-    })
+    }, headers={"Authorization": "Bearer demo-admin-token"})
     assert test_car.status_code == 200, f"Falha ao criar veículo de teste: {test_car.text}"
     car_id = test_car.json()["id"]
+
 
     # Emissão do PDF vetorial
     resp_pdf = client.get(f"/api/v1/laudos/{car_id}/pdf")
@@ -153,8 +154,9 @@ def run_full_battery_usecases():
     resp_sync = client.post("/api/integrations/sync", json={
         "car_id": car_id,
         "channels": ["autoavaliar", "autocerto", "olx"]
-    })
+    }, headers={"Authorization": "Bearer demo-admin-token"})
     assert resp_sync.status_code == 200
+
     sync_data = resp_sync.json()
     assert sync_data.get("status") == "success"
     synced = sync_data.get("canais_sincronizados", [])
@@ -202,8 +204,9 @@ def run_full_battery_usecases():
     print(f"  -> Catálogo Paginado: Encontrados {cat_json['total']} veículos com filtro por marca.")
 
     # Exclusão segura do veículo de teste
-    resp_del = client.delete(f"/api/cars/{car_id}")
+    resp_del = client.delete(f"/api/cars/{car_id}", headers={"Authorization": "Bearer demo-admin-token"})
     assert resp_del.status_code == 200
+
     assert resp_del.json().get("status") == "success"
 
     # Confirmação de 404 Not Found pós-deleção

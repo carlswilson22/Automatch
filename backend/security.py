@@ -95,3 +95,9 @@ def decode_access_token(token: str) -> Optional[Dict[str, Any]]:
         return payload
     except Exception:
         return None
+
+# Alias canônico para compatibilidade com rotas de autenticação B2B
+def verify_token(token: str) -> Optional[Dict[str, Any]]:
+    """Valida assinatura e expiração do token JWT. Alias de decode_access_token."""
+    return decode_access_token(token)
+
