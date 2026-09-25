@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, ArrowLeft, Save, CheckCircle, AlertCircle, Loader2, UploadCloud, X, FileText, Copy, ExternalLink, PlusCircle, Bot, Scan, CheckCircle2, AlertTriangle, Car } from 'lucide-react';
+import { ShieldCheck, ArrowLeft, Save, CheckCircle, AlertCircle, Loader2, UploadCloud, X, FileText, Copy, ExternalLink, PlusCircle, Bot, Scan, CheckCircle2, AlertTriangle, Car, Sparkles, Search, Lock, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { stores as defaultStores } from '../data/inventoryData';
 import { addNewCar } from '../data/newCarsManager';
@@ -61,8 +61,63 @@ const NewCarAdForm = () => {
     laudo: 'Aprovado',
     debitos: 'Sem débitos',
     leilao: 'Não',
-    store_id: 'store-1'
+    store_id: 'store-1',
+    // B2B Estoque Compartilhado
+    compartilhavel: false,
+    valor_minimo_repasse: '',
+    comissao_fixa: '3.0',
+    observacoes_repasse: ''
   });
+
+  // Estados da Consulta Inteligente de Placa
+  const [plateInput, setPlateInput] = useState('');
+  const [isLookingUpPlate, setIsLookingUpPlate] = useState(false);
+  const [plateLookupResult, setPlateLookupResult] = useState(null);
+  const [plateLookupError, setPlateLookupError] = useState('');
+  const [plateAutoFilled, setPlateAutoFilled] = useState(false);
+
+  const handleLookupPlate = async () => {
+    if (!plateInput.trim()) return;
+    const cleanPlate = plateInput.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+    if (cleanPlate.length < 7) {
+      setPlateLookupError('Placa incompleta. Informe 7 caracteres (ex: ABC1D23 ou ABC1234).');
+      return;
+    }
+    setPlateLookupError('');
+    setIsLookingUpPlate(true);
+    try {
+      const res = await fetch(`/api/vehicles/lookup-plate/${cleanPlate}`);
+      if (res.ok) {
+        const data = await res.json();
+        setPlateLookupResult(data);
+        setFormData(prev => ({
+          ...prev,
+          marca: data.marca || prev.marca,
+          modelo: data.modelo || prev.modelo,
+          ano: data.ano_fabricacao ? String(data.ano_fabricacao) : prev.ano,
+          cor: data.cor || prev.cor,
+          combustivel: data.combustivel || 'Flex',
+          localizacao: (data.municipio && data.uf) ? `${data.municipio}, ${data.uf}` : prev.localizacao
+        }));
+        setPlateAutoFilled(true);
+        setTimeout(() => setPlateAutoFilled(false), 3000);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        setPlateLookupError(err.detail || 'Veículo não localizado na base automática. Você pode preencher os campos manualmente abaixo.');
+      }
+    } catch (e) {
+      setPlateLookupError('Não foi possível conectar ao serviço de consulta. Preencha os campos manualmente.');
+    } finally {
+      setIsLookingUpPlate(false);
+    }
+  };
+
+  const applyFipePrice = () => {
+    if (plateLookupResult?.preco_fipe_sugerido) {
+      const formatted = Number(plateLookupResult.preco_fipe_sugerido).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      setFormData(prev => ({ ...prev, preco: formatted }));
+    }
+  };
 
   const [stores, setStores] = useState(defaultStores);
 
@@ -335,7 +390,13 @@ const NewCarAdForm = () => {
       debt_status: formData.debitos,
       auction_history: formData.leilao,
       laudo_url: laudoUploadedUrl || null,
-      laudo_feedback: laudoFeedback ? JSON.stringify(laudoFeedback) : null
+      laudo_feedback: laudoFeedback ? JSON.stringify(laudoFeedback) : null,
+      // B2B Repasse
+      compartilhavel: formData.compartilhavel ? 1 : 0,
+      valor_minimo_repasse: formData.valor_minimo_repasse ? Number(formData.valor_minimo_repasse.replace(/[^0-9,-]+/g,"").replace(",", ".")) : null,
+      comissao_fixa: formData.comissao_fixa ? parseFloat(formData.comissao_fixa) : 3.0,
+      observacoes_repasse: formData.observacoes_repasse || null,
+      plate: plateInput.replace(/[^A-Za-z0-9]/g, '').toUpperCase() || null
     };
 
     const token = user?.token || JSON.parse(localStorage.getItem('automatch_user') || '{}')?.token;
@@ -492,6 +553,130 @@ const NewCarAdForm = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
+            {/* ── CONSULTA INTELIGENTE DE PLACA ────────────────────────────── */}
+            <div className="bg-gradient-to-r from-blue-50/70 via-indigo-50/50 to-slate-50 border border-blue-200/80 rounded-2xl p-5 sm:p-6 shadow-sm">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="w-8 h-8 rounded-xl bg-blue-600 text-white flex items-center justify-center shadow-sm">
+                  <Sparkles className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">
+                    Cadastro Rápido via Placa
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Consulte os dados cadastrais oficiais e preencha marca, modelo, ano e restrições com 1 clique.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                <div className="relative flex-1 max-w-xs">
+                  {/* Visual Placa Mercosul */}
+                  <div className="flex items-center bg-white border-2 border-slate-300 rounded-xl overflow-hidden shadow-inner focus-within:border-blue-600 transition-all">
+                    <div className="bg-[#003399] text-white px-2.5 py-3 flex items-center gap-1 font-black text-[10px] tracking-widest uppercase">
+                      <span>🇧🇷</span> BR
+                    </div>
+                    <input
+                      type="text"
+                      maxLength={8}
+                      placeholder="ABC1D23"
+                      value={plateInput}
+                      onChange={(e) => setPlateInput(e.target.value.toUpperCase())}
+                      onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleLookupPlate())}
+                      className="w-full px-3 py-2.5 font-mono text-base font-black text-slate-800 uppercase tracking-widest focus:outline-none bg-transparent"
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={handleLookupPlate}
+                  disabled={isLookingUpPlate || !plateInput.trim()}
+                  className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md shadow-blue-500/20 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed transition-all cursor-pointer"
+                >
+                  {isLookingUpPlate ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                      <span>Consultando Bases...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Search className="w-4 h-4" />
+                      <span>Consultar Placa</span>
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Erro ou Fallback amigável */}
+              {plateLookupError && (
+                <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-800 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+                    <span>{plateLookupError}</span>
+                  </div>
+                  <button type="button" onClick={() => setPlateLookupError('')} className="text-amber-500 hover:text-amber-800">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+
+              {/* Resultado & Badges de Procedência */}
+              {plateLookupResult && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="mt-4 pt-4 border-t border-blue-200/60 space-y-3"
+                >
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
+                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                      {plateLookupResult.status_roubo_furto}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800 border border-blue-200">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
+                      {plateLookupResult.restricoes_financeiras}
+                    </span>
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
+                      🏷️ {plateLookupResult.historico_leilao}
+                    </span>
+                    {plateLookupResult.cache_hit && (
+                      <span className="text-[10px] font-bold text-slate-400 bg-white px-2 py-0.5 rounded-md border border-slate-200">
+                        ⚡ Resposta via Cache 24h
+                      </span>
+                    )}
+                  </div>
+
+                  {/* FIPE Price Suggestion Card */}
+                  {plateLookupResult.preco_fipe_sugerido && (
+                    <div className="p-3.5 bg-white rounded-xl border border-blue-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+                      <div className="flex items-center gap-2.5">
+                        <span className="text-lg">📊</span>
+                        <div>
+                          <p className="text-[10px] font-black uppercase text-slate-400">Referência Oficial FIPE</p>
+                          <p className="text-sm font-black text-slate-800">
+                            R$ {Number(plateLookupResult.preco_fipe_sugerido).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            <span className="text-xs font-normal text-slate-500 ml-1.5">({plateLookupResult.mes_referencia_fipe || 'Mês atual'})</span>
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={applyFipePrice}
+                        className="px-4 py-2 bg-emerald-50 hover:bg-emerald-600 hover:text-white text-emerald-700 rounded-xl text-xs font-bold border border-emerald-200 transition-all flex items-center justify-center gap-1.5 active:scale-95 cursor-pointer"
+                      >
+                        <Sparkles className="w-3.5 h-3.5" /> Aplicar Preço FIPE ao Anúncio
+                      </button>
+                    </div>
+                  )}
+
+                  <p className="text-[11px] text-slate-500">
+                    ✓ Dados cadastrais preenchidos nos campos abaixo. Você pode editá-los livremente se desejar.
+                  </p>
+                </motion.div>
+              )}
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               
               {/* Loja Parceira */}
@@ -891,6 +1076,113 @@ const NewCarAdForm = () => {
             <div className="space-y-2">
               <label className="text-sm font-bold text-slate-700">Descrição do Veículo</label>
               <textarea name="descricao" value={formData.descricao} onChange={handleChange} rows="5" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all shadow-sm resize-y" placeholder="Destaque as qualidades do veículo, opcionais, estado de conservação..."></textarea>
+            </div>
+
+            {/* ── REDE B2B DE ESTOQUE COMPARTILHADO ────────────────────────── */}
+            <div className="p-6 bg-gradient-to-r from-slate-50 via-indigo-50/30 to-blue-50/40 border border-indigo-100 rounded-2xl space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-sm">
+                    <Users className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">
+                      Compartilhamento de Estoque B2B
+                    </h3>
+                    <p className="text-xs text-slate-500">
+                      Disponibilize este veículo para lojistas parceiros consultarem e oferecerem aos seus clientes.
+                    </p>
+                  </div>
+                </div>
+
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formData.compartilhavel}
+                    onChange={(e) => setFormData({ ...formData, compartilhavel: e.target.checked })}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                </label>
+              </div>
+
+              <AnimatePresence>
+                {formData.compartilhavel && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="pt-4 border-t border-indigo-100 space-y-4 overflow-hidden"
+                  >
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                          <Lock className="w-3.5 h-3.5 text-amber-600" />
+                          Valor Mínimo de Repasse (Piso Inviolável) *
+                        </label>
+                        <input
+                          type="text"
+                          name="valor_minimo_repasse"
+                          value={formData.valor_minimo_repasse}
+                          onChange={(e) => {
+                            let value = e.target.value.replace(/\D/g, "");
+                            if (value === "") {
+                              setFormData(p => ({ ...p, valor_minimo_repasse: "" }));
+                              return;
+                            }
+                            const formatted = (Number(value) / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                            setFormData(p => ({ ...p, valor_minimo_repasse: formatted }));
+                          }}
+                          placeholder="R$ 0,00"
+                          className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-amber-800 focus:ring-2 focus:ring-indigo-500 outline-none"
+                        />
+                        <span className="text-[10px] text-slate-400">
+                          Nenhum lojista parceiro poderá reservar este veículo abaixo deste valor.
+                        </span>
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                          Comissão Fixa de Parceria (%)
+                        </label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          name="comissao_fixa"
+                          value={formData.comissao_fixa}
+                          onChange={handleChange}
+                          placeholder="3.0"
+                          className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none"
+                        />
+                        <span className="text-[10px] text-slate-400">
+                          Percentual acordado repassado à loja parceira na conclusão da venda.
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                        Observações de Repasse para Lojas Parceiras
+                      </label>
+                      <input
+                        type="text"
+                        name="observacoes_repasse"
+                        value={formData.observacoes_repasse}
+                        onChange={handleChange}
+                        placeholder="Ex: Veículo revisado em concessionária com chave reserva e manual. Aceita contraproposta à vista."
+                        className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none"
+                      />
+                    </div>
+
+                    <div className="p-3 bg-amber-50/80 border border-amber-200/80 rounded-xl text-xs text-amber-900 flex items-center gap-2">
+                      <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0" />
+                      <span>
+                        <strong>Confidencialidade Garantida:</strong> O valor mínimo de repasse e a margem de parceria nunca serão exibidos aos clientes finais na vitrine pública.
+                      </span>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Botoes */}

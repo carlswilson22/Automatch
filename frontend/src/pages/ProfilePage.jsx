@@ -4,15 +4,17 @@ import { useNavigate } from 'react-router-dom';
 import { 
   User, Mail, ShieldCheck, MapPin, Calendar, Heart, Eye, LogOut, 
   Edit3, Camera, Save, ArrowLeft, Shield, Loader2, Sparkles, 
-  LayoutDashboard, PlusCircle, CreditCard, ChevronRight, Car
+  LayoutDashboard, PlusCircle, CreditCard, ChevronRight, Car, Users
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import PartnershipHubModal from '../components/partners/PartnershipHubModal';
 
 const ProfilePage = () => {
   const navigate = useNavigate();
   const { user, logout, updateProfile } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isB2BModalOpen, setIsB2BModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: user?.name || '',
     email: user?.email || '',
@@ -239,9 +241,43 @@ const ProfilePage = () => {
                 </div>
               </button>
             </div>
+
+            {/* B2B Partnership Network Banner */}
+            {(user?.role === 'lojista' || user?.role === 'admin' || !user?.role) && (
+              <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-900 rounded-3xl p-6 text-white shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-indigo-800/40">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-blue-300 shrink-0">
+                    <Users className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h4 className="font-black text-lg">Rede de Parceiros B2B</h4>
+                      <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                        Ativo
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-300 mt-0.5">
+                      Acesse o estoque compartilhado, faça reservas temporárias com Hold Lock e repasses entre lojas.
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => setIsB2BModalOpen(true)}
+                  className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white rounded-2xl font-bold text-xs uppercase tracking-wider shadow-lg shadow-blue-600/30 active:scale-95 transition-all whitespace-nowrap self-start sm:self-auto cursor-pointer"
+                >
+                  Acessar Hub B2B
+                </button>
+              </div>
+            )}
           </motion.div>
         </div>
       </div>
+
+      {/* Hub B2B Modal */}
+      <PartnershipHubModal
+        isOpen={isB2BModalOpen}
+        onClose={() => setIsB2BModalOpen(false)}
+      />
     </div>
   );
 };

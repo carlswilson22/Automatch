@@ -30,8 +30,12 @@ class CarBase(BaseModel):
     laudo_feedback: Optional[str] = None
     video_url: Optional[str] = None
     original_price: Optional[float] = None
-    price_history: Optional[str] = None
     user_id: Optional[str] = None
+    compartilhavel: Optional[int] = 0
+    valor_minimo_repasse: Optional[float] = None
+    comissao_fixa: Optional[float] = None
+    observacoes_repasse: Optional[str] = None
+    status_reserva: Optional[str] = "disponivel"
 
 class CarSchema(CarBase):
     id: str
@@ -131,3 +135,155 @@ class PaginatedCarsResponse(BaseModel):
     page: int
     pages: int
     limit: int
+
+
+# ============================================================================
+# SCHEMAS: REDE B2B & CONSULTA DE PLACA
+# ============================================================================
+
+class PartnershipInviteRequest(BaseModel):
+    receiver_store_id: int
+    commission_rate: Optional[float] = 3.0
+    notes: Optional[str] = None
+
+class PartnershipResponse(BaseModel):
+    id: str
+    requester_store_id: int
+    receiver_store_id: int
+    requester_store_name: Optional[str] = None
+    receiver_store_name: Optional[str] = None
+    status: str
+    commission_rate: float
+    notes: Optional[str] = None
+    termination_reason: Optional[str] = None
+    created_at: str
+    activated_at: Optional[str] = None
+    is_incoming: Optional[bool] = False
+
+    class Config:
+        from_attributes = True
+
+class SharedCarResponse(BaseModel):
+    id: str
+    brand: str
+    model: str
+    year: int
+    km: int
+    price: float
+    valor_minimo_repasse: float
+    comissao_fixa: Optional[float] = 3.0
+    observacoes_repasse: Optional[str] = None
+    status_reserva: str
+    image: str
+    store_id: int
+    store_name: str
+    store_logo: Optional[str] = None
+    location: Optional[str] = None
+    color: Optional[str] = None
+    fuel: Optional[str] = None
+    transmission: Optional[str] = None
+
+    class Config:
+        from_attributes = True
+
+class ReservationCreateRequest(BaseModel):
+    car_id: str
+    proposed_price: float
+    client_markup: Optional[float] = 0.0
+    client_name: Optional[str] = None
+    duration_minutes: Optional[int] = 120
+
+class ReservationResponse(BaseModel):
+    id: str
+    car_id: str
+    car_title: Optional[str] = None
+    car_image: Optional[str] = None
+    requesting_store_id: int
+    requesting_store_name: Optional[str] = None
+    owner_store_id: int
+    owner_store_name: Optional[str] = None
+    seller_user_id: str
+    proposed_price: float
+    client_markup: float
+    client_name: Optional[str] = None
+    status: str
+    duration_minutes: int
+    created_at: str
+    expires_at: float
+    time_remaining_seconds: Optional[int] = None
+    closing_requested: int
+    consent_notes: Optional[str] = None
+    is_owner: Optional[bool] = False
+
+    class Config:
+        from_attributes = True
+
+class ReservationConsentRequest(BaseModel):
+    approved: bool
+    notes: Optional[str] = None
+
+class PartnerTransactionResponse(BaseModel):
+    id: str
+    protocol: str
+    reservation_id: Optional[str] = None
+    car_id: str
+    car_title: Optional[str] = None
+    car_image: Optional[str] = None
+    selling_store_id: int
+    selling_store_name: Optional[str] = None
+    buying_store_id: int
+    buying_store_name: Optional[str] = None
+    final_price: float
+    repasse_piso: float
+    markup_amount: float
+    commission_amount: float
+    status: str
+    created_at: str
+
+    class Config:
+        from_attributes = True
+
+class PartnerMessageCreate(BaseModel):
+    message: str
+
+class PartnerMessageResponse(BaseModel):
+    id: str
+    reservation_id: str
+    sender_user_id: str
+    sender_name: Optional[str] = None
+    sender_store_id: int
+    sender_store_name: Optional[str] = None
+    message: str
+    created_at: str
+    is_me: Optional[bool] = False
+
+    class Config:
+        from_attributes = True
+
+class PartnerReviewCreate(BaseModel):
+    transaction_id: Optional[str] = None
+    reviewed_store_id: int
+    rating: int
+    punctuality_rating: Optional[int] = 5
+    comment: Optional[str] = None
+
+class PlateLookupResponse(BaseModel):
+    placa: str
+    marca: str
+    modelo: str
+    ano_fabricacao: int
+    ano_modelo: int
+    cor: str
+    combustivel: str
+    chassi_parcial: str
+    municipio: str
+    uf: str
+    situacao_veiculo: str
+    status_roubo_furto: str
+    restricoes_financeiras: str
+    historico_leilao: str
+    preco_fipe_sugerido: Optional[float] = None
+    codigo_fipe: Optional[str] = None
+    mes_referencia_fipe: Optional[str] = None
+    cache_hit: bool = False
+

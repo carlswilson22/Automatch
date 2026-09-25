@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import models
 import tasks
 from database import engine, get_db, SessionLocal
-from routers import auth, cars, detran, ai_vision, uploads, alerts, integrations, laudos_export
+from routers import auth, cars, detran, ai_vision, uploads, alerts, integrations, laudos_export, partnerships, vehicle_lookup
 import security
 
 logger = logging.getLogger("automatch")
@@ -66,6 +66,16 @@ async def lifespan(app: FastAPI):
             conn.execute(text("ALTER TABLE cars ADD COLUMN IF NOT EXISTS original_price FLOAT;"))
             conn.execute(text("ALTER TABLE cars ADD COLUMN IF NOT EXISTS price_history TEXT;"))
             conn.execute(text("ALTER TABLE cars ADD COLUMN IF NOT EXISTS user_id VARCHAR(36);"))
+            # Colunas B2B em cars
+            conn.execute(text("ALTER TABLE cars ADD COLUMN IF NOT EXISTS compartilhavel INTEGER DEFAULT 0;"))
+            conn.execute(text("ALTER TABLE cars ADD COLUMN IF NOT EXISTS valor_minimo_repasse FLOAT;"))
+            conn.execute(text("ALTER TABLE cars ADD COLUMN IF NOT EXISTS comissao_fixa FLOAT;"))
+            conn.execute(text("ALTER TABLE cars ADD COLUMN IF NOT EXISTS observacoes_repasse TEXT;"))
+            conn.execute(text("ALTER TABLE cars ADD COLUMN IF NOT EXISTS status_reserva VARCHAR(32) DEFAULT 'disponivel';"))
+            # Colunas B2B em users
+            conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(32) DEFAULT 'lojista';"))
+            conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS sub_role VARCHAR(32) DEFAULT 'owner';"))
+            conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS store_id INTEGER;"))
             conn.commit()
     except Exception as e:
         logger.warning("Auto-migração de colunas: %s", e)
@@ -137,3 +147,5 @@ app.include_router(uploads.router)
 app.include_router(alerts.router)
 app.include_router(integrations.router)
 app.include_router(laudos_export.router)
+app.include_router(partnerships.router)
+app.include_router(vehicle_lookup.router)

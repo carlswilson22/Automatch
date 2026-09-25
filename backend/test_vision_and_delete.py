@@ -18,6 +18,40 @@ import models
 client = TestClient(app)
 
 def run_tests():
+    models.Base.metadata.create_all(bind=engine)
+    db = SessionLocal()
+    try:
+        import security
+        if not db.query(models.User).filter(models.User.id == "user-1").first():
+            u = models.User(
+                id="user-1",
+                name="Admin",
+                email="admin@automatch.com",
+                hashed_password=security.hash_password("admin123"),
+                role="admin",
+                sub_role="owner",
+                store_id=1
+            )
+            db.add(u)
+        if not db.query(models.Car).filter(models.Car.id == "1").first():
+            c = models.Car(
+                id="1",
+                brand="Toyota",
+                model="Corolla Altis",
+                year=2023,
+                km=15000,
+                price=140000.0,
+                image="/images/FotoToyotaCorolla.jpeg",
+                store_id=1,
+                user_id="user-1"
+            )
+            db.add(c)
+        db.commit()
+    except Exception as e:
+        db.rollback()
+    finally:
+        db.close()
+
     print("=" * 70)
     print("🚀 INICIANDO TESTES DA IA DE PERÍCIA VISUAL E EXCLUSÃO DE ANÚNCIOS")
     print("=" * 70)
@@ -102,6 +136,10 @@ def run_tests():
     # TESTE 4: Funcionalidade de Excluir Anúncio (DELETE /api/cars/{id})
     # -------------------------------------------------------------------------
     print("\n[TESTE 4] Funcionalidade de Criar e Excluir Anúncio...")
+    import security
+    auth_token = security.create_access_token(data={"sub": "user-1"})
+    auth_headers = {"Authorization": f"Bearer {auth_token}"}
+
     # 1. Cria um anúncio de teste
     create_resp = client.post("/api/cars", json={
         "brand": "Ford",
@@ -115,7 +153,7 @@ def run_tests():
         "transmission": "Automático",
         "description": "Carro para teste de exclusão.",
         "location": "São Paulo, SP"
-    })
+    }, headers=auth_headers)
     print(f"Criação Status Code: {create_resp.status_code}")
     assert create_resp.status_code == 200, f"Falha ao criar carro de teste: {create_resp.text}"
     created_car = create_resp.json()
@@ -127,7 +165,7 @@ def run_tests():
     assert get_resp.status_code == 200, "Veículo deve existir antes da exclusão"
 
     # 3. Executa exclusão (DELETE /api/cars/{id})
-    del_resp = client.delete(f"/api/cars/{car_id}")
+    del_resp = client.delete(f"/api/cars/{car_id}", headers=auth_headers)
     print(f"Exclusão Status Code: {del_resp.status_code}")
     assert del_resp.status_code == 200, f"Falha na exclusão: {del_resp.text}"
     del_data = del_resp.json()
@@ -147,7 +185,8 @@ def run_tests():
     fake_video_bytes = b"\x00\x00\x00 ftypmp42\x00\x00\x00\x00mp42isom" + b"\x00" * 256
     resp5 = client.post(
         "/api/v1/pericia/video/upload",
-        files={"file": ("vistoria_15s.mp4", fake_video_bytes, "video/mp4")}
+        files={"file": ("vistoria_15s.mp4", fake_video_bytes, "video/mp4")},
+        headers=auth_headers
     )
     assert resp5.status_code == 200, f"Falha no upload de vídeo pericial: {resp5.text}"
     data5 = resp5.json()
@@ -227,13 +266,13 @@ def run_tests():
         "target_price": 135000.0,
         "contact_type": "whatsapp",
         "contact_value": "(11) 99999-8888"
-    })
+    }, headers=auth_headers)
     assert resp9.status_code == 200, f"Falha ao criar alerta: {resp9.text}"
     data9 = resp9.json()
     print(f"Alerta ID: {data9.get('alerta_id')} | Msg: {data9.get('mensagem')}")
     assert data9.get("status") == "success"
 
-    resp9_list = client.get("/api/alerts")
+    resp9_list = client.get("/api/alerts", headers=auth_headers)
     assert resp9_list.status_code == 200
     assert resp9_list.json().get("total_alertas") >= 1
     print("✅ TESTE 9 PASSOU COM SUCESSO!")
@@ -258,7 +297,7 @@ def run_tests():
         "car_id": "1",
         "car_name": "Golf GTI 2.0 TSI",
         "channels": ["autoavaliar", "olx", "autocerto"]
-    })
+    }, headers=auth_headers)
     assert resp10_sync.status_code == 200, f"Falha na sincronização multicanal: {resp10_sync.text}"
     data10_sync = resp10_sync.json()
     print(f"Protocolo: {data10_sync.get('protocolo')} | Sincronizados: {data10_sync.get('total_sincronizados')} canais")

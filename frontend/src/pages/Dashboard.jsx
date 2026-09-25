@@ -10,18 +10,21 @@ import {
   Filter,
   TrendingUp,
   Package,
-  FileText
+  FileText,
+  Users
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { stores, inventory } from '../data/inventoryData';
 import StoreSelector from '../components/layout/StoreSelector';
 import StoreIdentifier from '../components/ui/StoreIdentifier';
+import PartnershipHubModal from '../components/partners/PartnershipHubModal';
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const [selectedStoreId, setSelectedStoreId] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState('grid');
+  const [isB2BModalOpen, setIsB2BModalOpen] = useState(false);
 
   const filteredInventory = inventory.filter(item => {
     const matchesStore = !selectedStoreId || item.storeId === selectedStoreId;
@@ -73,6 +76,14 @@ export default function Dashboard() {
                 className="w-full bg-slate-100 border-none rounded-xl pl-10 pr-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-blue/20 outline-none transition-all font-medium"
               />
             </div>
+
+            <button
+              onClick={() => setIsB2BModalOpen(true)}
+              className="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-md shadow-blue-500/20 active:scale-95 transition-all whitespace-nowrap cursor-pointer"
+            >
+              <Users className="w-4 h-4" />
+              Rede de Parceiros
+            </button>
           </div>
         </div>
       </header>
@@ -253,6 +264,12 @@ export default function Dashboard() {
           </div>
         )}
       </main>
+
+      {/* Hub B2B Modal */}
+      <PartnershipHubModal
+        isOpen={isB2BModalOpen}
+        onClose={() => setIsB2BModalOpen(false)}
+      />
     </div>
   );
 }
