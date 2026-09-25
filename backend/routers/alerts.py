@@ -29,7 +29,7 @@ ALERTS_DB: List[Dict[str, Any]] = [
 class AlertCreateRequest(BaseModel):
     car_id: Optional[str] = None
     car_name: Optional[str] = "Veículo"
-    current_price: float
+    current_price: Optional[float] = 0.0
     target_price: Optional[float] = None
     contact_type: str = "whatsapp"  # "whatsapp" | "email"
     contact_value: str
