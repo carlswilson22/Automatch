@@ -16,7 +16,7 @@ Plataforma automotiva Fullstack que une **marketplace de compra e venda de veíc
 
 * **Instituição:** Centro Universitário de Brasília (CEUB)
 * **Curso:** Análise e Desenvolvimento de Sistemas (ADS)
-* **Equipe:** Carlos Wilson, Matheus, Paulo Arthur e Vinicius Aurelio
+* **Equipe:** Carlos Wilson, Matheus Porto, Paulo Arthur e Vinicius Aurelio
 * **Identificador:** `ADS-AUTOMATCH-2026`
 
 ---
