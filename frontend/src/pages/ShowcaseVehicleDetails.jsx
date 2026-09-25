@@ -28,6 +28,8 @@ import MarketPriceIndicator from '../components/vehicle/MarketPriceIndicator';
 import TcoCalculatorCard from '../components/vehicle/TcoCalculatorCard';
 import PriceDropBadge from '../components/vehicle/PriceDropBadge';
 import { useAuth } from '../contexts/AuthContext';
+import { getVehicleImageUrl, handleVehicleImageError } from '../utils/imageHelper';
+
 
 export const formatMileage = (val) => {
   if (val === undefined || val === null) return '0 km';
@@ -794,14 +796,14 @@ export default function ShowcaseVehicleDetails() {
                 carName={car.name}
                 damagePoints={currentDamagePoints}
                 imagesByAngle={{
-                  0: '/images/carro_360_frente.jpg',
-                  45: '/images/carro_360_diagonal.jpg',
-                  90: '/images/carro_360_lateral.jpg',
-                  135: '/images/carro_360_diagonal.jpg',
-                  180: '/images/carro_360_traseira.jpg',
-                  225: '/images/carro_360_diagonal.jpg',
-                  270: '/images/carro_360_lateral.jpg',
-                  315: '/images/carro_360_diagonal.jpg'
+                  0: getVehicleImageUrl('carro_360_frente.jpg'),
+                  45: getVehicleImageUrl('carro_360_diagonal.jpg'),
+                  90: getVehicleImageUrl('carro_360_lateral.jpg'),
+                  135: getVehicleImageUrl('carro_360_diagonal.jpg'),
+                  180: getVehicleImageUrl('carro_360_traseira.jpg'),
+                  225: getVehicleImageUrl('carro_360_diagonal.jpg'),
+                  270: getVehicleImageUrl('carro_360_lateral.jpg'),
+                  315: getVehicleImageUrl('carro_360_diagonal.jpg')
                 }}
               />
             )}
@@ -870,8 +872,9 @@ export default function ShowcaseVehicleDetails() {
               {/* Photo Canvas with Integrated Scanner & Hotspots */}
               <div className="relative aspect-[16/10] bg-slate-950 overflow-hidden select-none">
                 <img 
-                  src={inspectionImage || car.image || car.imagem || '/images/FotoGolfGTI.jpeg'} 
+                  src={getVehicleImageUrl(inspectionImage || car.image || car.imagem || 'FotoGolfGTI.jpeg')} 
                   alt={car.name} 
+                  onError={handleVehicleImageError}
                   className="w-full h-full object-cover" 
                 />
 

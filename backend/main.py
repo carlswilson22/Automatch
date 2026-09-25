@@ -173,3 +173,17 @@ app.include_router(integrations.router)
 app.include_router(laudos_export.router)
 app.include_router(partnerships.router)
 app.include_router(vehicle_lookup.router)
+
+# ── Monta diretório de imagens estáticas (fallback de alta disponibilidade) ───
+from fastapi.staticfiles import StaticFiles
+
+possible_images_paths = [
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend", "public", "images")),
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "public", "images")),
+    "/app/frontend/public/images"
+]
+for p in possible_images_paths:
+    if os.path.exists(p) and os.path.isdir(p):
+        app.mount("/images", StaticFiles(directory=p), name="images")
+        break
+

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, Users, Car, Clock, FileText, CheckCircle2, AlertTriangle, 
@@ -7,6 +7,8 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import PartnerChatModal from './PartnerChatModal';
+import NewPartnershipInviteCard from './NewPartnershipInviteCard';
+import { getVehicleImageUrl, handleVehicleImageError } from '../../utils/imageHelper';
 
 export default function PartnershipHubModal({ isOpen, onClose }) {
   const { user } = useAuth();
@@ -19,6 +21,7 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
   const [myReservations, setMyReservations] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [inventoryLoading, setInventoryLoading] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState({ type: '', text: '' });
 
@@ -40,7 +43,7 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
   const [reviewForm, setReviewForm] = useState({ rating: 5, punctuality_rating: 5, comment: '' });
 
   // Helper de token resiliente e unificado
-  const getAuthHeaders = () => {
+  const getAuthHeaders = useCallback(() => {
     const token = user?.token || 
                   localStorage.getItem('automatch_token') || 
                   localStorage.getItem('token') ||
@@ -49,13 +52,13 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
       'Content-Type': 'application/json',
       'Authorization': token ? `Bearer ${token}` : ''
     };
-  };
+  }, [user]);
 
-
-  // Carregamento de dados
-  const loadSharedInventory = async () => {
+  // Carregamento isolado de dados por aba (Lazy Loading)
+  const loadSharedInventory = async (query = searchCar) => {
+    setInventoryLoading(true);
     try {
-      const res = await fetch(`/api/partnerships/shared-inventory?q=${encodeURIComponent(searchCar)}`, {
+      const res = await fetch(`/api/partnerships/shared-inventory?q=${encodeURIComponent(query)}`, {
         headers: getAuthHeaders()
       });
       if (res.ok) {
@@ -64,6 +67,8 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
       }
     } catch (e) {
       console.error(e);
+    } finally {
+      setInventoryLoading(false);
     }
   };
 
@@ -101,7 +106,7 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
   const refreshAll = async () => {
     setLoading(true);
     await Promise.all([
-      loadSharedInventory(),
+      loadSharedInventory(searchCar),
       loadPartnerships(),
       loadReservations(),
       loadTransactions()
@@ -109,13 +114,37 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
     setLoading(false);
   };
 
+  // Carregamento sob demanda (Lazy Loading) de acordo com a aba ativa
   useEffect(() => {
-    if (isOpen) {
-      refreshAll();
-      const interval = setInterval(loadReservations, 10000);
-      return () => clearInterval(interval);
+    if (!isOpen) return;
+
+    if (activeTab === 'inventory') {
+      loadSharedInventory(searchCar);
+    } else if (activeTab === 'partnerships') {
+      loadPartnerships();
+    } else if (activeTab === 'reservations') {
+      loadReservations();
+    } else if (activeTab === 'transactions') {
+      loadTransactions();
     }
-  }, [isOpen, searchCar]);
+  }, [isOpen, activeTab]);
+
+  // Debounce de 300ms estrito para a busca no estoque sem re-disparo do modal inteiro
+  useEffect(() => {
+    if (!isOpen || activeTab !== 'inventory') return;
+    const timer = setTimeout(() => {
+      loadSharedInventory(searchCar);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchCar, isOpen]);
+
+  // Polling ativo exclusivamente na aba de reservas em tempo real
+  useEffect(() => {
+    if (!isOpen || activeTab !== 'reservations') return;
+    const interval = setInterval(loadReservations, 10000);
+    return () => clearInterval(interval);
+  }, [isOpen, activeTab]);
+
 
   // Ações de Parceria
   const handleInvite = async (storeId) => {
@@ -442,8 +471,11 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
                     placeholder="Buscar por marca, modelo ou cor..."
                     value={searchCar}
                     onChange={(e) => setSearchCar(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-11 pr-4 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-11 pr-10 py-2.5 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
                   />
+                  {inventoryLoading && (
+                    <div className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-blue-500/30 border-t-blue-600 rounded-full animate-spin" />
+                  )}
                 </div>
                 <div className="flex items-center gap-2 text-xs text-slate-500 font-medium">
                   <Lock className="w-4 h-4 text-amber-500" />
@@ -484,11 +516,12 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
                         }`}
                       >
                         {/* Car Image + Badges */}
-                        <div className="relative h-48 bg-slate-100 overflow-hidden">
+                        <div className="relative h-48 bg-slate-900 overflow-hidden group">
                           <img
-                            src={car.image}
+                            src={getVehicleImageUrl(car.image)}
                             alt={`${car.brand} ${car.model}`}
-                            className="w-full h-full object-cover"
+                            onError={handleVehicleImageError}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           />
                           <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
                             <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-900/80 backdrop-blur-md text-white">
@@ -580,6 +613,13 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
           {/* TAB 2: MINHAS PARCERIAS */}
           {activeTab === 'partnerships' && (
             <div className="space-y-8">
+              {/* Módulo Proeminente para Enviar Pedido de Parceria */}
+              <NewPartnershipInviteCard
+                availableStores={availableStores}
+                onInviteSuccess={loadPartnerships}
+                getAuthHeaders={getAuthHeaders}
+              />
+
               {/* Active & Pending Partnerships */}
               <div className="space-y-4">
                 <h3 className="text-lg font-black text-slate-800 flex items-center gap-2">
@@ -746,8 +786,9 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
                         <div className="flex items-center gap-4">
                           {res.car_image ? (
                             <img
-                              src={res.car_image}
+                              src={getVehicleImageUrl(res.car_image)}
                               alt={res.car_title}
+                              onError={handleVehicleImageError}
                               className="w-20 h-16 object-cover rounded-2xl border border-slate-200"
                             />
                           ) : (

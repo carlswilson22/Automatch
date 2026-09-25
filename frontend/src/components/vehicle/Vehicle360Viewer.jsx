@@ -1,17 +1,19 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { RotateCw, Compass, AlertCircle, Wrench, Play, Pause, Eye, Sparkles } from 'lucide-react';
+import { getVehicleImageUrl, handleVehicleImageError } from '../../utils/imageHelper';
 
 const ANGLES = [
-  { angle: 0, label: 'Frente', icon: '0°', defaultImg: '/images/carro_360_frente.jpg', flip: false },
-  { angle: 45, label: 'Diag. Diant. Dir.', icon: '45°', defaultImg: '/images/carro_360_diagonal.jpg', flip: false },
-  { angle: 90, label: 'Lateral Direita', icon: '90°', defaultImg: '/images/carro_360_lateral.jpg', flip: false },
-  { angle: 135, label: 'Diag. Tras. Dir.', icon: '135°', defaultImg: '/images/carro_360_diagonal.jpg', flip: true },
-  { angle: 180, label: 'Traseira', icon: '180°', defaultImg: '/images/carro_360_traseira.jpg', flip: false },
-  { angle: 225, label: 'Diag. Tras. Esq.', icon: '225°', defaultImg: '/images/carro_360_diagonal.jpg', flip: true },
-  { angle: 270, label: 'Lateral Esquerda', icon: '270°', defaultImg: '/images/carro_360_lateral.jpg', flip: true },
-  { angle: 315, label: 'Diag. Diant. Esq.', icon: '315°', defaultImg: '/images/carro_360_diagonal.jpg', flip: false },
+  { angle: 0, label: 'Frente', icon: '0°', defaultImg: 'carro_360_frente.jpg', flip: false },
+  { angle: 45, label: 'Diag. Diant. Dir.', icon: '45°', defaultImg: 'carro_360_diagonal.jpg', flip: false },
+  { angle: 90, label: 'Lateral Direita', icon: '90°', defaultImg: 'carro_360_lateral.jpg', flip: false },
+  { angle: 135, label: 'Diag. Tras. Dir.', icon: '135°', defaultImg: 'carro_360_diagonal.jpg', flip: true },
+  { angle: 180, label: 'Traseira', icon: '180°', defaultImg: 'carro_360_traseira.jpg', flip: false },
+  { angle: 225, label: 'Diag. Tras. Esq.', icon: '225°', defaultImg: 'carro_360_diagonal.jpg', flip: true },
+  { angle: 270, label: 'Lateral Esquerda', icon: '270°', defaultImg: 'carro_360_lateral.jpg', flip: true },
+  { angle: 315, label: 'Diag. Diant. Esq.', icon: '315°', defaultImg: 'carro_360_diagonal.jpg', flip: false },
 ];
+
 
 const DEFAULT_SAMPLE_HOTSPOTS = [
   {
@@ -105,12 +107,12 @@ const Vehicle360Viewer = ({
       const angleSrc = imagesByAngle[currentAngle];
       // If the image is a generic placeholder AND we have a real vehicle photo, use the vehicle photo
       if (genericImages.includes(angleSrc) && vehicleImage) {
-        return vehicleImage;
+        return getVehicleImageUrl(vehicleImage);
       }
-      return angleSrc;
+      return getVehicleImageUrl(angleSrc);
     }
     // Always fall back to the vehicle's own main photo to avoid showing other cars
-    return vehicleImage || currentAngleObj.defaultImg || '/images/FotoCorollaCross.jpg';
+    return getVehicleImageUrl(vehicleImage || currentAngleObj.defaultImg || 'FotoCorollaCross.jpg');
   };
   const activeImage = getActiveImage();
 
@@ -193,6 +195,7 @@ const Vehicle360Viewer = ({
           <img
             src={activeImage}
             alt={`${carName} - Ângulo ${currentAngle}°`}
+            onError={handleVehicleImageError}
             className={`w-full h-full object-cover transition-transform duration-300 ${
               currentAngleObj.flip ? 'scale-x-[-1]' : ''
             }`}

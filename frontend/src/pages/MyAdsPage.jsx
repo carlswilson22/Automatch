@@ -7,6 +7,8 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { getNewCars, deleteNewCar } from '../data/newCarsManager';
+import { getVehicleImageUrl, handleVehicleImageError } from '../utils/imageHelper';
+
 
 export const formatMileage = (val) => {
   if (val === undefined || val === null) return '0 km';
@@ -174,12 +176,12 @@ export default function MyAdsPage() {
                   className="bg-white rounded-3xl p-5 sm:p-6 border border-slate-200 shadow-sm hover:shadow-md transition-all flex flex-col md:flex-row items-start md:items-center justify-between gap-6"
                 >
                   <div className="flex items-center gap-5 w-full md:w-auto">
-                    <div className="w-28 h-20 sm:w-36 sm:h-24 rounded-2xl overflow-hidden bg-slate-100 shrink-0 border border-slate-100 shadow-inner">
+                    <div className="w-28 h-20 sm:w-36 sm:h-24 rounded-2xl overflow-hidden bg-slate-900 shrink-0 border border-slate-800 shadow-inner">
                       <img 
-                        src={carImg} 
+                        src={getVehicleImageUrl(carImg)} 
                         alt={carName}
                         className="w-full h-full object-cover"
-                        onError={(e) => { e.target.src = '/images/FotoGolfGTI.jpeg'; }}
+                        onError={handleVehicleImageError}
                       />
                     </div>
                     <div className="space-y-1 min-w-0">

@@ -13,6 +13,8 @@ import { stores } from '../data/inventoryData';
 import StoreIdentifier from '../components/ui/StoreIdentifier';
 import { getNewCars } from '../data/newCarsManager';
 import { toggleFavorite, isFavorite } from '../data/favoritesManager';
+import { getVehicleImageUrl, handleVehicleImageError } from '../utils/imageHelper';
+
 
 // SE O CARCARD ESTIVER EM OUTRO ARQUIVO, DESCOMENTE A LINHA ABAIXO:
 // import CarCard from '../components/CarCard';
@@ -116,10 +118,11 @@ const CarCard = ({ car, index }) => {
       onClick={handleDetails}
     >
       {/* Image Container */}
-      <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
+      <div className="relative aspect-[16/10] overflow-hidden bg-slate-900">
         <img
-          src={car.image || '/images/FotoGolfGTI.jpeg'}
+          src={getVehicleImageUrl(car.image || 'FotoGolfGTI.jpeg')}
           alt={car.name}
+          onError={handleVehicleImageError}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           loading="lazy"
         />

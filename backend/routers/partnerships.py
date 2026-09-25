@@ -127,23 +127,41 @@ def refresh_expired_reservations(db: Session):
 
 @router.get("/stores-available")
 def list_available_stores(
+    q: Optional[str] = None,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_b2b_user)
 ):
     """Lista lojas cadastradas na plataforma indicando o status da parceria com a loja do usuário."""
     my_store_id = current_user.store_id or 1
-    stores = db.query(models.Store).filter(models.Store.id != my_store_id).all()
+    
+    # 1 única query para todas as parcerias envolvendo my_store_id
+    partnerships = db.query(models.StorePartnership).filter(
+        or_(
+            models.StorePartnership.requester_store_id == my_store_id,
+            models.StorePartnership.receiver_store_id == my_store_id
+        )
+    ).all()
+
+    partner_map = {}
+    for p in partnerships:
+        other_id = p.receiver_store_id if p.requester_store_id == my_store_id else p.requester_store_id
+        partner_map[other_id] = p
+
+    store_query = db.query(models.Store).filter(models.Store.id != my_store_id)
+    if q:
+        search = f"%{q}%"
+        store_query = store_query.filter(
+            or_(
+                models.Store.name.ilike(search),
+                models.Store.slug.ilike(search),
+                models.Store.description.ilike(search)
+            )
+        )
+    stores = store_query.all()
 
     result = []
     for s in stores:
-        # Verifica se já existe parceria
-        p = db.query(models.StorePartnership).filter(
-            or_(
-                and_(models.StorePartnership.requester_store_id == my_store_id, models.StorePartnership.receiver_store_id == s.id),
-                and_(models.StorePartnership.requester_store_id == s.id, models.StorePartnership.receiver_store_id == my_store_id)
-            )
-        ).first()
-
+        p = partner_map.get(s.id)
         result.append({
             "id": s.id,
             "name": s.name,
@@ -152,7 +170,8 @@ def list_available_stores(
             "description": s.description,
             "partnership_status": p.status if p else "nenhuma",
             "partnership_id": p.id if p else None,
-            "is_requester": (p.requester_store_id == my_store_id) if p else False
+            "is_requester": (p.requester_store_id == my_store_id) if p else False,
+            "commission_rate": p.commission_rate if p else 3.0
         })
 
     return result
@@ -173,10 +192,23 @@ def get_my_partnerships(
         )
     ).order_by(models.StorePartnership.created_at.desc()).all()
 
+    if not partnerships:
+        return []
+
+    # Coleta todos os store_ids em 1 conjunto
+    all_store_ids = set()
+    for p in partnerships:
+        all_store_ids.add(p.requester_store_id)
+        all_store_ids.add(p.receiver_store_id)
+
+    # 1 única query em lote para carregar os nomes das lojas
+    stores_list = db.query(models.Store).filter(models.Store.id.in_(list(all_store_ids))).all() if all_store_ids else []
+    store_map = {s.id: s for s in stores_list}
+
     result = []
     for p in partnerships:
-        req_store = db.query(models.Store).filter(models.Store.id == p.requester_store_id).first()
-        rec_store = db.query(models.Store).filter(models.Store.id == p.receiver_store_id).first()
+        req_store = store_map.get(p.requester_store_id)
+        rec_store = store_map.get(p.receiver_store_id)
         is_incoming = (p.receiver_store_id == my_store_id)
 
         result.append({
@@ -195,6 +227,7 @@ def get_my_partnerships(
         })
 
     return result
+
 
 
 @router.post("/invite")
@@ -394,9 +427,14 @@ def get_shared_inventory(
 
     cars = query.order_by(models.Car.year.desc()).all()
 
+    # Otimização: Carrega todas as lojas envolvidas em 1 única query em lote
+    car_store_ids = {c.store_id for c in cars if c.store_id}
+    stores = db.query(models.Store).filter(models.Store.id.in_(list(car_store_ids))).all() if car_store_ids else []
+    store_map = {s.id: s for s in stores}
+
     result = []
     for c in cars:
-        store = db.query(models.Store).filter(models.Store.id == c.store_id).first()
+        store = store_map.get(c.store_id)
         piso = c.valor_minimo_repasse or (c.price * 0.90)
         comissao = c.comissao_fixa or commission_map.get(c.store_id, 3.0)
 
@@ -546,11 +584,26 @@ def get_my_reservations(
         )
     ).order_by(models.CarReservation.created_at.desc()).all()
 
+    if not reservations:
+        return []
+
+    # Batch load de carros e lojas para eliminar N+1
+    car_ids = {r.car_id for r in reservations if r.car_id}
+    store_ids = set()
+    for r in reservations:
+        if r.requesting_store_id:
+            store_ids.add(r.requesting_store_id)
+        if r.owner_store_id:
+            store_ids.add(r.owner_store_id)
+
+    cars_map = {c.id: c for c in db.query(models.Car).filter(models.Car.id.in_(list(car_ids))).all()} if car_ids else {}
+    stores_map = {s.id: s for s in db.query(models.Store).filter(models.Store.id.in_(list(store_ids))).all()} if store_ids else {}
+
     result = []
     for r in reservations:
-        car = db.query(models.Car).filter(models.Car.id == r.car_id).first()
-        req_store = db.query(models.Store).filter(models.Store.id == r.requesting_store_id).first()
-        owner_store = db.query(models.Store).filter(models.Store.id == r.owner_store_id).first()
+        car = cars_map.get(r.car_id)
+        req_store = stores_map.get(r.requesting_store_id)
+        owner_store = stores_map.get(r.owner_store_id)
 
         time_remaining = max(0, int(r.expires_at - now)) if r.status == "ativa" else 0
 
@@ -841,11 +894,26 @@ def get_partner_transactions(
         )
     ).order_by(models.PartnerTransaction.created_at.desc()).all()
 
+    if not transactions:
+        return []
+
+    # Batch load de carros e lojas para eliminar N+1
+    car_ids = {t.car_id for t in transactions if t.car_id}
+    store_ids = set()
+    for t in transactions:
+        if t.selling_store_id:
+            store_ids.add(t.selling_store_id)
+        if t.buying_store_id:
+            store_ids.add(t.buying_store_id)
+
+    cars_map = {c.id: c for c in db.query(models.Car).filter(models.Car.id.in_(list(car_ids))).all()} if car_ids else {}
+    stores_map = {s.id: s for s in db.query(models.Store).filter(models.Store.id.in_(list(store_ids))).all()} if store_ids else {}
+
     result = []
     for t in transactions:
-        car = db.query(models.Car).filter(models.Car.id == t.car_id).first()
-        selling = db.query(models.Store).filter(models.Store.id == t.selling_store_id).first()
-        buying = db.query(models.Store).filter(models.Store.id == t.buying_store_id).first()
+        car = cars_map.get(t.car_id)
+        selling = stores_map.get(t.selling_store_id)
+        buying = stores_map.get(t.buying_store_id)
 
         result.append({
             "id": t.id,

@@ -13,6 +13,8 @@ import {
   MapPin, Heart, Eye, Zap, Filter, ArrowLeft, SlidersHorizontal,
   Car, ChevronDown, X, Star, RotateCcw, Tag, UserPlus, LogIn, Sparkles, Loader2
 } from 'lucide-react';
+import { getVehicleImageUrl, handleVehicleImageError } from '../utils/imageHelper';
+
 
 // ─── UTILS DE FORMATAÇÃO ──────────────────────────────────────────────────
 export const formatMileage = (val) => {
@@ -117,10 +119,11 @@ const CarCard = ({ car, index, viewMode }) => {
         className="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 group cursor-pointer flex flex-col md:flex-row"
         onClick={() => navigate(`/encontrar/${car.id}`)}
       >
-        <div className="relative w-full md:w-80 aspect-[16/10] md:aspect-auto shrink-0 overflow-hidden bg-slate-100">
+        <div className="relative w-full md:w-80 aspect-[16/10] md:aspect-auto shrink-0 overflow-hidden bg-slate-900">
           <img 
-            src={car.image || '/images/FotoGolfGTI.jpeg'} 
+            src={getVehicleImageUrl(car.image || 'FotoGolfGTI.jpeg')} 
             alt={car.name} 
+            onError={handleVehicleImageError}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
           />
           {car.featured && (
@@ -176,10 +179,11 @@ const CarCard = ({ car, index, viewMode }) => {
       className="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 group cursor-pointer flex flex-col"
       onClick={() => navigate(`/encontrar/${car.id}`)}
     >
-      <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
+      <div className="relative aspect-[16/10] overflow-hidden bg-slate-900">
         <img 
-          src={car.image || '/images/FotoGolfGTI.jpeg'} 
+          src={getVehicleImageUrl(car.image || 'FotoGolfGTI.jpeg')} 
           alt={car.name} 
+          onError={handleVehicleImageError}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
         />
         {car.featured && (

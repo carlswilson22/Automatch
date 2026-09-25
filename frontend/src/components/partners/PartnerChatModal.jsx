@@ -2,8 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, MessageSquare, Car, DollarSign, Store, Shield, CheckCircle, Clock } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { getVehicleImageUrl, handleVehicleImageError } from '../../utils/imageHelper';
 
 export default function PartnerChatModal({ isOpen, onClose, reservation }) {
+
   const { user } = useAuth();
   const [messages, setMessages] = useState([]);
   const [inputText, setInputText] = useState('');
@@ -132,8 +134,9 @@ export default function PartnerChatModal({ isOpen, onClose, reservation }) {
             <div className="flex items-center gap-3 min-w-0">
               {reservation.car_image ? (
                 <img
-                  src={reservation.car_image}
+                  src={getVehicleImageUrl(reservation.car_image)}
                   alt={reservation.car_title}
+                  onError={handleVehicleImageError}
                   className="w-12 h-10 object-cover rounded-xl border border-slate-200"
                 />
               ) : (
