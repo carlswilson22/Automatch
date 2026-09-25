@@ -4,13 +4,14 @@ import { Share2, X, CheckCircle2, RefreshCw, ExternalLink, Globe2, Check } from 
 import axios from 'axios';
 
 const CHANNELS_CONFIG = [
+  { id: 'autocerto', name: 'AutoCerto DMS', color: '#0066cc', type: 'API de Conexão Direta (DMS)', iconText: 'AC', portalUrl: 'https://dms.autocerto.com.br' },
   { id: 'autoavaliar', name: 'AutoAvaliar', color: '#ff6600', type: 'API B2B + Carga de Estoque', iconText: 'AA', portalUrl: 'https://www.autoavaliar.com.br' },
   { id: 'olx', name: 'OLX Autos', color: '#6e0ad6', type: 'AutoXML / Carga de Estoque', iconText: 'OLX', portalUrl: 'https://www.olx.com.br/autos' }
 ];
 
 const MultichannelSyncModal = ({ isOpen, onClose, car }) => {
   const [channelsStatus, setChannelsStatus] = useState(
-    CHANNELS_CONFIG.map(c => ({ ...c, status: 'sincronizado', lastSync: 'Há 10 min' }))
+    CHANNELS_CONFIG.map(c => ({ ...c, status: 'sincronizado', lastSync: 'Há 5 min' }))
   );
   const [isSyncing, setIsSyncing] = useState(false);
   const [syncProtocol, setSyncProtocol] = useState(null);
@@ -27,7 +28,7 @@ const MultichannelSyncModal = ({ isOpen, onClose, car }) => {
       const resp = await axios.post('/api/integrations/sync', {
         car_id: car?.id || '1',
         car_name: car?.name || 'Veículo',
-        channels: ['autoavaliar', 'olx']
+        channels: ['autocerto', 'autoavaliar', 'olx']
       }, { headers });
 
       if (resp.data && resp.data.status === 'success') {

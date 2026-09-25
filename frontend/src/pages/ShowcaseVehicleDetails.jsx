@@ -29,6 +29,8 @@ import TcoCalculatorCard from '../components/vehicle/TcoCalculatorCard';
 import PriceDropBadge from '../components/vehicle/PriceDropBadge';
 import { useAuth } from '../contexts/AuthContext';
 import { getVehicleImageUrl, handleVehicleImageError } from '../utils/imageHelper';
+import ErrorBoundary from '../components/common/ErrorBoundary';
+import AccordionPanel from '../components/vehicle/AccordionPanel';
 
 
 export const formatMileage = (val) => {
@@ -60,7 +62,9 @@ export default function ShowcaseVehicleDetails() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisResult, setAnalysisResult] = useState('');
   const [activeDamage, setActiveDamage] = useState(null);
-  const [fipeInfoOpen, setFipeInfoOpen] = useState(false);
+  const [activeAccordion, setActiveAccordion] = useState(null); // 'laudo' | 'detran' | 'fipe' | null
+  const laudoCacheRef = useRef(null);
+  const detranCacheRef = useRef(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [inspectionTab, setInspectionTab] = useState('body'); // 'body' | '360' | 'video'
   const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
@@ -344,73 +348,77 @@ export default function ShowcaseVehicleDetails() {
   const [detranData, setDetranData] = useState(null);
   const [isDetranLoading, setIsDetranLoading] = useState(false);
 
-  const consultarLaudoOficial = async () => {
-    if (laudoData) { setLaudoData(null); return; }
-    setDetranData(null);
-    setFipeInfoOpen(false);
-    setIsLaudoLoading(true);
-    try {
-      const fipeCode = car?.fipeCode || '004487-3';
-      const res = await fetch(`/api/v1/integracoes/laudo-cautelar/${fipeCode}`);
-      if (res.ok) {
-        const data = await res.json();
-        setLaudoData(data);
-      } else {
-        throw new Error('API indisponível');
-      }
-    } catch (e) {
-      // Fallback resiliente com dados oficiais simulados
-      setLaudoData({
-        laudo_id: `LC-${String(car?.id || '0042').slice(-4).toUpperCase()}`,
-        status: 'APROVADO',
-        analise_estrutural: {
-          longarinas_dianteiras: 'Sem deformações – 100% íntegras',
-          espessura_media_tinta_micras: '115'
-        },
-        dados_oficiais_fipe: {
-          valor: `R$ ${(car?.fipePrice || car?.price * 1.04 || 165000).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
-          codigoFipe: car?.fipeCode || '004487-3',
-          mesReferencia: 'Setembro/2026'
-        }
-      });
-    } finally {
-      setIsLaudoLoading(false);
+  const toggleAccordion = async (tipo) => {
+    if (activeAccordion === tipo) {
+      setActiveAccordion(null);
+      return;
     }
-  };
+    setActiveAccordion(tipo);
 
-  const consultarDetranOficial = async () => {
-    if (detranData) { setDetranData(null); return; }
-    setLaudoData(null);
-    setFipeInfoOpen(false);
-    setIsDetranLoading(true);
-    try {
-      const plate = car?.plate || 'ABC1234';
-      const res = await fetch(`/api/v1/integracoes/detran/${plate}`);
-      if (res.ok) {
-        const data = await res.json();
-        setDetranData(data);
-      } else {
-        throw new Error('API indisponível');
-      }
-    } catch (e) {
-      // Fallback resiliente com dados cadastrais simulados
-      setDetranData({
-        placa: car?.plate || 'ATM-2026',
-        chassi: '9BWZZZ377VT' + String(Math.floor(Math.random() * 900000 + 100000)),
-        uf: 'SP',
-        situacao_veiculo: 'Regular – Circulação Permitida',
-        debitos: {
-          ipva: 'Quitado – 2026',
-          licenciamento_exercicio: '2026',
-          licenciamento_status: 'Pago em dia',
-          total_multas: 0
-        },
-        restricoes: {
-          gravame: 'Sem Gravame (Livre)'
+    if (tipo === 'laudo' && !laudoCacheRef.current) {
+      setIsLaudoLoading(true);
+      try {
+        const fipeCode = car?.fipeCode || '004487-3';
+        const res = await fetch(`/api/v1/integracoes/laudo-cautelar/${fipeCode}`);
+        if (res.ok) {
+          const data = await res.json();
+          laudoCacheRef.current = data;
+          setLaudoData(data);
+        } else {
+          throw new Error('API indisponível');
         }
-      });
-    } finally {
-      setIsDetranLoading(false);
+      } catch (e) {
+        const fallback = {
+          laudo_id: `LC-${String(car?.id || '0042').slice(-4).toUpperCase()}`,
+          status: 'APROVADO',
+          analise_estrutural: {
+            longarinas_dianteiras: 'Sem deformações – 100% íntegras',
+            espessura_media_tinta_micras: '115'
+          },
+          dados_oficiais_fipe: {
+            valor: `R$ ${(car?.fipePrice || car?.price * 1.04 || 165000).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+            codigoFipe: car?.fipeCode || '004487-3',
+            mesReferencia: 'Setembro/2026'
+          }
+        };
+        laudoCacheRef.current = fallback;
+        setLaudoData(fallback);
+      } finally {
+        setIsLaudoLoading(false);
+      }
+    } else if (tipo === 'detran' && !detranCacheRef.current) {
+      setIsDetranLoading(true);
+      try {
+        const plate = car?.plate || 'ABC1234';
+        const res = await fetch(`/api/v1/integracoes/detran/${plate}`);
+        if (res.ok) {
+          const data = await res.json();
+          detranCacheRef.current = data;
+          setDetranData(data);
+        } else {
+          throw new Error('API indisponível');
+        }
+      } catch (e) {
+        const fallback = {
+          placa: car?.plate || 'ATM-2026',
+          chassi: '9BWZZZ377VT' + String(Math.floor(Math.random() * 900000 + 100000)),
+          uf: 'SP',
+          situacao_veiculo: 'Regular – Circulação Permitida',
+          debitos: {
+            ipva: 'Quitado – 2026',
+            licenciamento_exercicio: '2026',
+            licenciamento_status: 'Pago em dia',
+            total_multas: 0
+          },
+          restricoes: {
+            gravame: 'Sem Gravame (Livre)'
+          }
+        };
+        detranCacheRef.current = fallback;
+        setDetranData(fallback);
+      } finally {
+        setIsDetranLoading(false);
+      }
     }
   };
 
@@ -998,9 +1006,13 @@ export default function ShowcaseVehicleDetails() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <button
                   type="button"
-                  onClick={consultarLaudoOficial}
+                  onClick={() => toggleAccordion('laudo')}
                   disabled={isLaudoLoading}
-                  className="p-3.5 rounded-2xl bg-blue-950/50 hover:bg-blue-900/60 border border-blue-800/50 text-left transition-all flex flex-col justify-between group"
+                  className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between group ${
+                    activeAccordion === 'laudo'
+                      ? 'bg-blue-950/80 border-blue-500 shadow-lg shadow-blue-900/30 scale-[1.01]'
+                      : 'bg-blue-950/50 hover:bg-blue-900/60 border-blue-800/50'
+                  }`}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <Award className="w-5 h-5 text-blue-400 group-hover:scale-110 transition-transform" />
@@ -1014,9 +1026,13 @@ export default function ShowcaseVehicleDetails() {
 
                 <button
                   type="button"
-                  onClick={consultarDetranOficial}
+                  onClick={() => toggleAccordion('detran')}
                   disabled={isDetranLoading}
-                  className="p-3.5 rounded-2xl bg-emerald-950/40 hover:bg-emerald-900/50 border border-emerald-800/50 text-left transition-all flex flex-col justify-between group"
+                  className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between group ${
+                    activeAccordion === 'detran'
+                      ? 'bg-emerald-950/80 border-emerald-500 shadow-lg shadow-emerald-900/30 scale-[1.01]'
+                      : 'bg-emerald-950/40 hover:bg-emerald-900/50 border-emerald-800/50'
+                  }`}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <ShieldCheck className="w-5 h-5 text-emerald-400 group-hover:scale-110 transition-transform" />
@@ -1030,24 +1046,16 @@ export default function ShowcaseVehicleDetails() {
 
                 <button
                   type="button"
-                  onClick={() => {
-                    if (fipeInfoOpen) {
-                      setFipeInfoOpen(false);
-                    } else {
-                      setLaudoData(null);
-                      setDetranData(null);
-                      setFipeInfoOpen(true);
-                    }
-                  }}
+                  onClick={() => toggleAccordion('fipe')}
                   className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between group ${
-                    fipeInfoOpen 
-                      ? 'bg-blue-950/70 border-blue-600/70 shadow-lg shadow-blue-900/20' 
+                    activeAccordion === 'fipe' 
+                      ? 'bg-cyan-950/70 border-cyan-500 shadow-lg shadow-cyan-900/30 scale-[1.01]' 
                       : 'bg-slate-950/60 hover:bg-slate-900/80 border-slate-800'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <Tag className="w-5 h-5 text-blue-400 group-hover:scale-110 transition-transform" />
-                    <span className="text-[10px] bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full font-bold">FIPE Oficial</span>
+                    <Tag className="w-5 h-5 text-cyan-400 group-hover:scale-110 transition-transform" />
+                    <span className="text-[10px] bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded-full font-bold">FIPE Oficial</span>
                   </div>
                   <div>
                     <h4 className="text-sm font-bold text-white">Preço FIPE</h4>
@@ -1093,14 +1101,13 @@ export default function ShowcaseVehicleDetails() {
                 </button>
               </div>
 
-              {/* Resultado: Laudo Cautelar */}
-              <AnimatePresence>
-              {laudoData && (
-                <motion.div initial={{ opacity: 0, y: 15, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -10, scale: 0.98 }} transition={{ duration: 0.25, ease: 'easeOut' }} className="p-5 rounded-3xl bg-slate-950 border border-blue-900/50 shadow-2xl space-y-4">
+              {/* Resultado: Laudo Cautelar com AccordionPanel */}
+              <AccordionPanel isOpen={activeAccordion === 'laudo' && !!laudoData}>
+                <div className="p-5 rounded-3xl bg-slate-950 border border-blue-900/50 shadow-2xl space-y-4">
                   <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                     <div className="flex items-center gap-2">
                       <Award className="w-5 h-5 text-blue-400" />
-                      <h4 className="font-bold text-sm text-white">Resultado da Perícia Cautelar ({laudoData.laudo_id})</h4>
+                      <h4 className="font-bold text-sm text-white">Resultado da Perícia Cautelar ({laudoData?.laudo_id})</h4>
                     </div>
                     <span className="text-xs bg-emerald-500/20 text-emerald-400 font-bold px-3 py-1 rounded-full border border-emerald-500/30 flex items-center gap-1.5">
                       <ShieldCheck className="w-3.5 h-3.5" /> Laudo Pericial: 100% Aprovado
@@ -1109,13 +1116,13 @@ export default function ShowcaseVehicleDetails() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
                     <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
                       <span className="text-slate-400 block mb-1 font-semibold">Integridade Estrutural:</span>
-                      <span className="text-emerald-400 font-bold block">{laudoData.analise_estrutural?.longarinas_dianteiras}</span>
-                      <span className="text-slate-300 mt-1 block">Espessura de tinta: {laudoData.analise_estrutural?.espessura_media_tinta_micras} micras (Padrão de fábrica)</span>
+                      <span className="text-emerald-400 font-bold block">{laudoData?.analise_estrutural?.longarinas_dianteiras}</span>
+                      <span className="text-slate-300 mt-1 block">Espessura de tinta: {laudoData?.analise_estrutural?.espessura_media_tinta_micras} micras (Padrão de fábrica)</span>
                     </div>
                     <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
                       <span className="text-slate-400 block mb-1 font-semibold">Referência FIPE Oficial:</span>
-                      <span className="text-white font-bold block">{laudoData.dados_oficiais_fipe?.valor || 'R$ 165.000,00'}</span>
-                      <span className="text-slate-400 mt-1 block">Código: {laudoData.dados_oficiais_fipe?.codigoFipe} ({laudoData.dados_oficiais_fipe?.mesReferencia})</span>
+                      <span className="text-white font-bold block">{laudoData?.dados_oficiais_fipe?.valor || 'R$ 165.000,00'}</span>
+                      <span className="text-slate-400 mt-1 block">Código: {laudoData?.dados_oficiais_fipe?.codigoFipe} ({laudoData?.dados_oficiais_fipe?.mesReferencia})</span>
                     </div>
                   </div>
 
@@ -1132,102 +1139,88 @@ export default function ShowcaseVehicleDetails() {
                       </a>
                     </div>
                   )}
-                </motion.div>
-              )}
-              </AnimatePresence>
+                </div>
+              </AccordionPanel>
 
-              {/* Resultado: DETRAN */}
-              <AnimatePresence>
-              {detranData && (
-                <motion.div initial={{ opacity: 0, y: 15, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -10, scale: 0.98 }} transition={{ duration: 0.25, ease: 'easeOut' }} className="p-5 rounded-3xl bg-slate-950 border border-emerald-900/50 shadow-2xl space-y-4">
+              {/* Resultado: DETRAN com AccordionPanel */}
+              <AccordionPanel isOpen={activeAccordion === 'detran' && !!detranData}>
+                <div className="p-5 rounded-3xl bg-slate-950 border border-emerald-900/50 shadow-2xl space-y-4">
                   <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                     <div className="flex items-center gap-2">
                       <ShieldCheck className="w-5 h-5 text-emerald-400" />
-                      <h4 className="font-bold text-sm text-white">Certidão Cadastral - DETRAN ({detranData.uf})</h4>
+                      <h4 className="font-bold text-sm text-white">Certidão Cadastral - DETRAN ({detranData?.uf})</h4>
                     </div>
                     <span className="text-xs bg-emerald-500/20 text-emerald-400 font-bold px-3 py-1 rounded-full border border-emerald-500/30">
-                      {detranData.situacao_veiculo}
+                      {detranData?.situacao_veiculo}
                     </span>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
                     <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
                       <span className="text-slate-400 block mb-0.5">Placa / Chassi:</span>
-                      <span className="text-white font-bold">{detranData.placa}</span>
-                      <span className="text-[10px] text-slate-500 block truncate">{detranData.chassi}</span>
+                      <span className="text-white font-bold">{detranData?.placa}</span>
+                      <span className="text-[10px] text-slate-500 block truncate">{detranData?.chassi}</span>
                     </div>
                     <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
                       <span className="text-slate-400 block mb-0.5">IPVA / Licenciamento:</span>
-                      <span className="text-emerald-400 font-bold">{detranData.debitos?.ipva}</span>
-                      <span className="text-[10px] text-slate-400 block">{detranData.debitos?.licenciamento_exercicio}: {detranData.debitos?.licenciamento_status}</span>
+                      <span className="text-emerald-400 font-bold">{detranData?.debitos?.ipva}</span>
+                      <span className="text-[10px] text-slate-400 block">{detranData?.debitos?.licenciamento_exercicio}: {detranData?.debitos?.licenciamento_status}</span>
                     </div>
                     <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
                       <span className="text-slate-400 block mb-0.5">Gravame / Alienação:</span>
-                      <span className="text-white font-bold">{detranData.restricoes?.gravame}</span>
+                      <span className="text-white font-bold">{detranData?.restricoes?.gravame}</span>
                     </div>
                     <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
                       <span className="text-slate-400 block mb-0.5">Multas Ativas:</span>
-                      <span className="text-emerald-400 font-bold">R$ {detranData.debitos?.total_multas?.toFixed(2)}</span>
+                      <span className="text-emerald-400 font-bold">R$ {detranData?.debitos?.total_multas?.toFixed(2)}</span>
                       <span className="text-[10px] text-slate-500 block">Nenhuma infração</span>
                     </div>
                   </div>
-                </motion.div>
-              )}
-              </AnimatePresence>
+                </div>
+              </AccordionPanel>
 
-              {/* Resultado: Preço FIPE estilo OLX / Webmotors com Animação Suave */}
-              <AnimatePresence>
-                {fipeInfoOpen && (
-                  <motion.div
-                    key="fipe-accordion-container"
-                    initial={{ opacity: 0, height: 0, scale: 0.98 }}
-                    animate={{ opacity: 1, height: 'auto', scale: 1 }}
-                    exit={{ opacity: 0, height: 0, scale: 0.98 }}
-                    transition={{ duration: 0.22, ease: 'easeOut' }}
-                    className="overflow-hidden"
-                  >
-                    <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
-                      <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                        <div className="flex items-center gap-2">
-                          <Tag className="w-5 h-5 text-blue-400" />
-                          <h4 className="font-bold text-sm text-white">Tabela FIPE Oficial</h4>
-                        </div>
-                        <span className="text-xs bg-blue-500/20 text-blue-300 font-bold px-3 py-1 rounded-full border border-blue-500/30">
-                          Código FIPE: {car.fipeCode || '004487-3'}
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                        <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
-                          <span className="text-slate-400 block mb-0.5">Preço Médio FIPE:</span>
-                          <span className="text-base font-black text-white">
-                            R$ {(car.fipePrice || (car.price * 1.04)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                          </span>
-                          <span className="text-[10px] text-slate-500 block mt-0.5">Mês ref.: Setembro/2024</span>
-                        </div>
-                        <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
-                          <span className="text-slate-400 block mb-0.5">Preço deste Anúncio:</span>
-                          <span className="text-base font-black text-emerald-400">
-                            R$ {typeof car.price === 'number' ? car.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : car.price}
-                          </span>
-                          <span className="text-[10px] text-slate-500 block mt-0.5">Valor do veículo</span>
-                        </div>
-                        <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800 flex flex-col justify-center">
-                          <span className="text-slate-400 block mb-1">Comparativo FIPE:</span>
-                          {(car.fipePrice || car.price * 1.04) > car.price ? (
-                            <span className="text-xs font-bold text-emerald-400 flex items-center gap-1">
-                              <TrendingDown className="w-3.5 h-3.5" />
-                              R$ {Math.round((car.fipePrice || car.price * 1.04) - car.price).toLocaleString('pt-BR')} abaixo da FIPE
-                            </span>
-                          ) : (
-                            <span className="text-xs font-bold text-slate-300">
-                              No valor de mercado da Tabela FIPE
-                            </span>
-                          )}
-                        </div>
-                      </div>
+              {/* Resultado: Preço FIPE com AccordionPanel */}
+              <AccordionPanel isOpen={activeAccordion === 'fipe'}>
+                <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <div className="flex items-center gap-2">
+                      <Tag className="w-5 h-5 text-cyan-400" />
+                      <h4 className="font-bold text-sm text-white">Tabela FIPE Oficial</h4>
                     </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                    <span className="text-xs bg-cyan-500/20 text-cyan-300 font-bold px-3 py-1 rounded-full border border-cyan-500/30">
+                      Código FIPE: {car.fipeCode || '004487-3'}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                    <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+                      <span className="text-slate-400 block mb-0.5">Preço Médio FIPE:</span>
+                      <span className="text-base font-black text-white">
+                        R$ {(car.fipePrice || (car.price * 1.04)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                      </span>
+                      <span className="text-[10px] text-slate-500 block mt-0.5">Mês ref.: Setembro/2026</span>
+                    </div>
+                    <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+                      <span className="text-slate-400 block mb-0.5">Preço deste Anúncio:</span>
+                      <span className="text-base font-black text-emerald-400">
+                        R$ {typeof car.price === 'number' ? car.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : car.price}
+                      </span>
+                      <span className="text-[10px] text-slate-500 block mt-0.5">Valor do veículo</span>
+                    </div>
+                    <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800 flex flex-col justify-center">
+                      <span className="text-slate-400 block mb-1">Comparativo FIPE:</span>
+                      {(car.fipePrice || car.price * 1.04) > car.price ? (
+                        <span className="text-xs font-bold text-emerald-400 flex items-center gap-1">
+                          <TrendingDown className="w-3.5 h-3.5" />
+                          R$ {Math.round((car.fipePrice || car.price * 1.04) - car.price).toLocaleString('pt-BR')} abaixo da FIPE
+                        </span>
+                      ) : (
+                        <span className="text-xs font-bold text-slate-300">
+                          No valor de mercado da Tabela FIPE
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </AccordionPanel>
             </div>
 
             {/* Sobre o Veículo — Nome, Metadados, Descrição e Ficha Técnica Consolidados */}
@@ -1457,12 +1450,18 @@ export default function ShowcaseVehicleDetails() {
         car={car}
       />
 
-      <VehicleComparatorModal
-        isOpen={isComparatorOpen}
+      <ErrorBoundary
+        title="Comparador Multidimensional Temporariamente Indisponível"
+        description="Ocorreu uma instabilidade ao confrontar os dados deste veículo. Você pode recarregar ou continuar navegando na vitrine."
         onClose={() => setIsComparatorOpen(false)}
-        baseCar={car}
-        availableCars={allInventoryCars.length > 0 ? allInventoryCars : showcaseCars}
-      />
+      >
+        <VehicleComparatorModal
+          isOpen={isComparatorOpen}
+          onClose={() => setIsComparatorOpen(false)}
+          baseCar={car}
+          availableCars={allInventoryCars.length > 0 ? allInventoryCars : showcaseCars}
+        />
+      </ErrorBoundary>
     </div>
   );
 }

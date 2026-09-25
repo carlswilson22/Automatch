@@ -10,6 +10,7 @@ import { showcaseCars } from '../data/showcaseData';
 import { mockCars } from '../data/mockData';
 import { getNewCars } from '../data/newCarsManager';
 import VehicleComparatorModal from '../components/vehicle/VehicleComparatorModal';
+import ErrorBoundary from '../components/common/ErrorBoundary';
 
 export default function FavoritesPage() {
   const navigate = useNavigate();
@@ -328,13 +329,19 @@ export default function FavoritesPage() {
         )}
       </main>
 
-      {/* Modal Comparador Multidimensional */}
-      <VehicleComparatorModal
-        isOpen={isComparatorOpen}
+      {/* Modal Comparador Multidimensional com ErrorBoundary */}
+      <ErrorBoundary
+        title="Comparador Multidimensional Indisponível"
+        description="Não foi possível inicializar o comparador para os veículos curtidos. Tente novamente ou desmarque algum veículo."
         onClose={() => setIsComparatorOpen(false)}
-        initialVehicles={vehiclesToCompare.length >= 2 ? vehiclesToCompare : favoriteCars.slice(0, 2)}
-        availableVehicles={favoriteCars}
-      />
+      >
+        <VehicleComparatorModal
+          isOpen={isComparatorOpen}
+          onClose={() => setIsComparatorOpen(false)}
+          initialVehicles={vehiclesToCompare.length >= 2 ? vehiclesToCompare : favoriteCars.slice(0, 2)}
+          availableVehicles={favoriteCars}
+        />
+      </ErrorBoundary>
     </div>
   );
 }

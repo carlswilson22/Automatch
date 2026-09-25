@@ -207,7 +207,7 @@ def run_full_system_review():
     ch_ids = [c["id"] for c in channels_resp.json().get("canais", [])]
     assert "autoavaliar" in ch_ids, "AutoAvaliar deve estar homologado"
     assert "olx" in ch_ids, "OLX Autos deve estar homologado"
-    assert "autocerto" not in ch_ids, "AutoCerto deve ter sido descontinuado"
+    assert "autocerto" in ch_ids, "AutoCerto DMS deve estar homologado como conexão"
     assert "webmotors" not in ch_ids, "Webmotors deve ter sido substituído"
 
     sync_resp = client.post("/api/integrations/sync", json={

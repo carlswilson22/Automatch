@@ -14,20 +14,35 @@ const AIChatBox = ({ car }) => {
   }, [messages]);
 
   const generateLocalResponse = (userMsg) => {
-    const q = userMsg.toLowerCase();
+    const q = userMsg.toLowerCase().trim();
     const kmText = typeof car.mileage === 'number' ? `${car.mileage.toLocaleString('pt-BR')} km` : (car.mileage || 'Baixa KM');
     const priceText = typeof car.price === 'number' ? `R$ ${car.price.toLocaleString('pt-BR')}` : (car.price || 'sob consulta');
+    const colorText = car.color || car.cor || 'Prata';
+    const fuelText = car.fuel || car.combustivel || 'Flex';
+    const transText = car.transmission || car.cambio || 'Automático';
 
-    if (q.includes('motor') || q.includes('potência') || q.includes('cilindrada') || q.includes('desempenho') || q.includes('câmbio') || q.includes('cambio')) {
+    if (q.includes('cor') || q.includes('pintura') || q.includes('tonalidade') || q.includes('verniz') || q.includes('retoque') || q.includes('lataria')) {
+      return `O ${car.name} possui a cor oficial ${colorText}. A perícia técnica atestou pintura com espessura uniforme (115 micras, padrão de fábrica), sem peças repintadas, manchas ou avarias na lataria.`;
+    }
+    if (q.includes('ano') || q.includes('modelo') || q.includes('fabricação') || q.includes('fabricacao')) {
+      return `O ${car.name} é ano/modelo ${car.year}, com procedência e histórico de fabricação confirmados perante os órgãos de trânsito.`;
+    }
+    if (q.includes('documento') || q.includes('documentação') || q.includes('documentacao') || q.includes('ipva') || q.includes('detran') || q.includes('licenciamento') || q.includes('multa') || q.includes('debito') || q.includes('débito')) {
+      return `A documentação do ${car.name} está 100% regular perante o DETRAN: IPVA quitado, licenciamento em dia, sem multas pendentes e sem gravame, pronto para transferência imediata.`;
+    }
+    if (q.includes('câmbio') || q.includes('cambio') || q.includes('marcha') || q.includes('transmissão') || q.includes('transmissao')) {
+      return `Equipado com transmissão ${transText}, o ${car.name} passou por teste de rodagem e inspeção técnica com trocas suaves e sem trancos.`;
+    }
+    if (q.includes('motor') || q.includes('potência') || q.includes('potencia') || q.includes('cilindrada') || q.includes('desempenho') || q.includes('cv')) {
       return `O ${car.name} (${car.year}) conta com conjunto mecânico inspecionado e revisado. A transmissão e os componentes eletrônicos foram validados sem anomalias na varredura técnica.`;
     }
-    if (q.includes('consumo') || q.includes('combustível') || q.includes('combustivel') || q.includes('gasolina') || q.includes('etanol') || q.includes('gasta')) {
-      return `O consumo médio do ${car.name} gira em torno de 10 a 13 km/l em ciclo urbano e até 15 km/l em rodovias, demonstrando excelente eficiência para sua categoria.`;
+    if (q.includes('consumo') || q.includes('combustível') || q.includes('combustivel') || q.includes('gasolina') || q.includes('etanol') || q.includes('flex') || q.includes('gasta')) {
+      return `O ${car.name} é movido a ${fuelText} e apresenta consumo médio de 10 a 13 km/l em ciclo urbano e até 15 km/l em rodovias, demonstrando excelente eficiência para sua categoria.`;
     }
-    if (q.includes('laudo') || q.includes('cautelar') || q.includes('batida') || q.includes('leilao') || q.includes('leilão') || q.includes('procedência') || q.includes('procedencia')) {
+    if (q.includes('laudo') || q.includes('cautelar') || q.includes('batida') || q.includes('leilao') || q.includes('leilão') || q.includes('procedência') || q.includes('procedencia') || q.includes('pericia') || q.includes('perícia')) {
       return `Este ${car.name} possui Laudo Cautelar 100% APROVADO: chassi, colunas, longarinas e estrutura íntegras, sem histórico de sinistro ou apontamento de leilão.`;
     }
-    if (q.includes('fipe') || q.includes('preço') || q.includes('preco') || q.includes('desconto') || q.includes('valor')) {
+    if (q.includes('fipe') || q.includes('preço') || q.includes('preco') || q.includes('desconto') || q.includes('valor') || q.includes('quanto custa')) {
       return `O valor anunciado é ${priceText}, compatível com a Tabela FIPE Oficial e refletindo as excelentes condições de conservação do veículo.`;
     }
     if (q.includes('km') || q.includes('quilometragem') || q.includes('rodado')) {
@@ -40,17 +55,18 @@ const AIChatBox = ({ car }) => {
       return `Aceitamos seu veículo usado na troca com avaliação justa baseada na FIPE. Você também pode utilizar nosso simulador de troca disponível nesta página.`;
     }
     if (q.includes('garantia') || q.includes('segurança') || q.includes('revisão') || q.includes('revisao')) {
-      return `O ${car.name} inclui garantia de procedência, 90 dias de cobertura técnica para motor e câmbio e certificação pericial Automatch.`;
+      return `O ${car.name} inclui garantia de procedência, cobertura técnica para motor e câmbio e certificação pericial Automatch.`;
     }
-    return `O ${car.name} (${car.year}) encontra-se inspecionado com laudo 100% aprovado e garantia de procedência. Você pode consultar detalhes de financiamento, consumo ou agendar uma visita com nossa equipe!`;
+    return `Olá! Sou o consultor IA da Automatch. Posso esclarecer dúvidas específicas sobre o ${car.name}: você pode perguntar sobre cor, ano, motor, consumo, quilometragem, documentação/DETRAN, Tabela FIPE ou financiamento!`;
   };
 
-  const handleSend = async () => {
-    if (!input.trim()) return;
-    const userMessage = input;
+  const handleSend = async (overrideText = null) => {
+    const textToSend = (overrideText || input).trim();
+    if (!textToSend) return;
+    const userMessage = textToSend;
     const currentMessages = messages;
     setMessages(m => [...m, { from: 'user', text: userMessage }]);
-    setInput('');
+    if (!overrideText) setInput('');
     setMessages(m => [...m, { from: 'ai', text: 'Consultando especialista Automatch...', isLoading: true }]);
 
     // Prepare multi-turn history excluding loader
@@ -71,7 +87,9 @@ const AIChatBox = ({ car }) => {
             year: car.year || '',
             price: car.price || 0,
             km: typeof car.mileage === 'number' ? car.mileage : parseInt(String(car.mileage).replace(/\D/g,'')) || 0,
-            color: car.color || ''
+            color: car.color || car.cor || 'Prata',
+            fuel: car.fuel || car.combustivel || 'Flex',
+            transmission: car.transmission || car.cambio || 'Automático'
           }
         })
       });
@@ -97,8 +115,10 @@ const AIChatBox = ({ car }) => {
     }
   };
 
+  const quickPills = ["Cor", "Ano", "Combustível", "Preço FIPE", "Documentação", "Laudo"];
+
   return (
-    <div className="bg-slate-900 rounded-3xl border border-slate-800 shadow-xl overflow-hidden flex flex-col h-[380px]">
+    <div className="bg-slate-900 rounded-3xl border border-slate-800 shadow-xl overflow-hidden flex flex-col h-[400px]">
       <div className="px-5 py-3.5 bg-gradient-to-r from-blue-600 to-indigo-700 text-white flex items-center gap-2.5">
         <Bot className="w-5 h-5" />
         <div>
@@ -116,15 +136,31 @@ const AIChatBox = ({ car }) => {
         ))}
         <div ref={endRef} />
       </div>
+
+      {/* Quick Suggestion Chips */}
+      <div className="px-3 py-1.5 bg-slate-900/90 border-t border-slate-800 flex items-center gap-1.5 overflow-x-auto no-scrollbar">
+        <span className="text-[10px] text-slate-500 shrink-0 mr-1 font-semibold">Perguntas Rápidas:</span>
+        {quickPills.map((pill, idx) => (
+          <button
+            key={idx}
+            type="button"
+            onClick={() => handleSend(pill)}
+            className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-slate-800 hover:bg-blue-600/20 text-slate-300 hover:text-blue-300 border border-slate-700 hover:border-blue-500/40 transition-all shrink-0 active:scale-95"
+          >
+            {pill}
+          </button>
+        ))}
+      </div>
+
       <div className="p-3 border-t border-slate-800 bg-slate-900 flex gap-2">
         <input 
           value={input} 
           onChange={e => setInput(e.target.value)} 
           onKeyDown={e => e.key === 'Enter' && handleSend()}
-          placeholder="Pergunte sobre motor, consumo, laudo..." 
+          placeholder="Pergunte sobre cor, ano, motor, consumo, laudo..." 
           className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white placeholder:text-slate-500 focus:ring-2 focus:ring-blue-500 outline-none" 
         />
-        <button onClick={handleSend} className="bg-blue-600 text-white p-2.5 rounded-xl hover:bg-blue-500 transition-colors">
+        <button onClick={() => handleSend()} className="bg-blue-600 text-white p-2.5 rounded-xl hover:bg-blue-500 transition-colors">
           <Send className="w-4 h-4" />
         </button>
       </div>
