@@ -4,7 +4,7 @@ import logging
 from datetime import datetime
 from typing import List, Optional, Dict, Any
 
-from fastapi import APIRouter, HTTPException, Depends, Header
+from fastapi import APIRouter, HTTPException, Depends, Header, Response
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, and_
 
@@ -369,12 +369,15 @@ def get_shared_inventory(
     q: Optional[str] = None,
     max_price: Optional[float] = None,
     store_id: Optional[int] = None,
+    limit: Optional[int] = None,
+    offset: int = 0,
+    response: Response = None,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_b2b_user)
 ):
     """
     Retorna veículos disponíveis no estoque compartilhado de lojas com as quais
-    o lojista atual possui parceria ativa.
+    o lojista atual possui parceria ativa, com suporte a paginação assíncrona.
     """
     refresh_expired_reservations(db)
     my_store_id = current_user.store_id or 1
@@ -400,6 +403,9 @@ def get_shared_inventory(
         partner_store_ids = {s.id for s in db.query(models.Store).all()}
 
     if not partner_store_ids:
+        if response:
+            response.headers["X-Total-Count"] = "0"
+            response.headers["X-Has-More"] = "false"
         return []
 
     # Consulta veículos compartilháveis das lojas parceiras
@@ -425,7 +431,20 @@ def get_shared_inventory(
     if max_price:
         query = query.filter(models.Car.valor_minimo_repasse <= max_price)
 
-    cars = query.order_by(models.Car.year.desc()).all()
+    total_count = query.count()
+    ordered_query = query.order_by(models.Car.year.desc())
+
+    if offset > 0:
+        ordered_query = ordered_query.offset(offset)
+    if limit is not None and limit > 0:
+        ordered_query = ordered_query.limit(limit)
+
+    cars = ordered_query.all()
+
+    if response:
+        response.headers["X-Total-Count"] = str(total_count)
+        has_more = (offset + len(cars)) < total_count
+        response.headers["X-Has-More"] = "true" if has_more else "false"
 
     # Otimização: Carrega todas as lojas envolvidas em 1 única query em lote
     car_store_ids = {c.store_id for c in cars if c.store_id}

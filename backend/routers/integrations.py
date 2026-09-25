@@ -27,15 +27,6 @@ CHANNELS = [
         "anuncios_sincronizados": 18,
         "ultima_sincronizacao": "Há 18 minutos",
         "badge_cor": "#6e0ad6"
-    },
-    {
-        "id": "autocerto",
-        "nome": "AutoCerto DMS",
-        "status": "conectado",
-        "tipo_integracao": "Carga Direta DMS / Feed XML + REST",
-        "anuncios_sincronizados": 18,
-        "ultima_sincronizacao": "Há 2 minutos",
-        "badge_cor": "#0066cc"
     }
 ]
 
@@ -44,7 +35,7 @@ class SyncRequest(BaseModel):
     car_id: Optional[str] = None
     car_name: Optional[str] = "Veículo"
     store_id: Optional[int] = 1
-    channels: Optional[List[str]] = ["autoavaliar", "olx", "autocerto"]
+    channels: Optional[List[str]] = ["autoavaliar", "olx"]
 
 
 @router.get("/channels")
@@ -63,11 +54,11 @@ async def sincronizar_estoque_multicanal(
     current_user: models.User = Depends(get_current_user_from_header)
 ) -> Dict[str, Any]:
     """
-    Dispara a sincronização de estoque multi-plataforma com AutoAvaliar, OLX e AutoCerto DMS.
+    Dispara a sincronização de estoque multi-plataforma com canais homologados (AutoAvaliar, OLX).
     Gera protocolo de envio e links de confirmação.
     """
     protocolo = f"SYNC-{uuid.uuid4().hex[:8].upper()}"
-    selected = payload.channels or ["autoavaliar", "olx", "autocerto"]
+    selected = payload.channels or ["autoavaliar", "olx"]
 
     resultados = []
     for cid in selected:
@@ -114,28 +105,4 @@ async def gerar_feed_xml():
         </veiculo>
     </concessionaria>
 </estoque>"""
-    return Response(content=xml_content, media_type="application/xml")
-
-
-@router.get("/autocerto/feed.xml")
-async def gerar_feed_autocerto():
-    """Gera o Feed XML no padrão homologado pelo AutoCerto DMS."""
-    xml_content = """<?xml version="1.0" encoding="UTF-8"?>
-<carga_autocerto versao="3.1">
-    <identificador_loja>AUTOMATCH-B2B-01</identificador_loja>
-    <timestamp>""" + datetime.utcnow().isoformat() + """Z</timestamp>
-    <veiculos>
-        <veiculo id="1" status="disponivel">
-            <marca>Volkswagen</marca>
-            <modelo>Golf GTI 2.0 TSI</modelo>
-            <ano_fab>2021</ano_fab>
-            <ano_mod>2021</ano_mod>
-            <valor>142000.00</valor>
-            <valor_fipe>145800.00</valor_fipe>
-            <km>42000</km>
-            <integrador>AutoCerto DMS</integrador>
-            <laudo_cautelar_status>APROVADO</laudo_cautelar_status>
-        </veiculo>
-    </veiculos>
-</carga_autocerto>"""
     return Response(content=xml_content, media_type="application/xml")

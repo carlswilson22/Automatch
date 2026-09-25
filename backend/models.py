@@ -53,11 +53,11 @@ class Car(Base):
     user_id = Column(String(36), ForeignKey("users.id"), nullable=True, index=True)
     
     # B2B Estoque Compartilhado & Repasse
-    compartilhavel = Column(Integer, default=0) # 0 = False, 1 = True
+    compartilhavel = Column(Integer, default=0, index=True) # 0 = False, 1 = True (Indexado para busca rápida)
     valor_minimo_repasse = Column(Float, nullable=True)
     comissao_fixa = Column(Float, nullable=True)
     observacoes_repasse = Column(Text, nullable=True)
-    status_reserva = Column(String(32), default="disponivel") # disponivel, reservado, em_fechamento, vendido
+    status_reserva = Column(String(32), default="disponivel", index=True) # disponivel, reservado, em_fechamento, vendido
 
 class LaudoWatchlist(Base):
     __tablename__ = "laudo_watchlist"

@@ -42,15 +42,21 @@ const AIChatBox = ({ car }) => {
     if (q.includes('garantia') || q.includes('segurança') || q.includes('revisão') || q.includes('revisao')) {
       return `O ${car.name} inclui garantia de procedência, 90 dias de cobertura técnica para motor e câmbio e certificação pericial Automatch.`;
     }
-    return `O ${car.name} (${car.year}) está disponível em ótimo estado, com ${kmText}, laudo aprovado e documentação 100% regularizada. Deseja simular um financiamento ou falar com o vendedor?`;
+    return `O ${car.name} (${car.year}) encontra-se inspecionado com laudo 100% aprovado e garantia de procedência. Você pode consultar detalhes de financiamento, consumo ou agendar uma visita com nossa equipe!`;
   };
 
   const handleSend = async () => {
     if (!input.trim()) return;
     const userMessage = input;
+    const currentMessages = messages;
     setMessages(m => [...m, { from: 'user', text: userMessage }]);
     setInput('');
     setMessages(m => [...m, { from: 'ai', text: 'Consultando especialista Automatch...', isLoading: true }]);
+
+    // Prepare multi-turn history excluding loader
+    const historico = currentMessages
+      .filter(m => !m.isLoading && m.text)
+      .map(m => ({ from: m.from, text: m.text }));
 
     try {
       const response = await fetch('/api/chat', {
@@ -58,6 +64,7 @@ const AIChatBox = ({ car }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           mensagem: userMessage,
+          historico,
           car_context: {
             brand: car.brand || '',
             model: car.name || '',

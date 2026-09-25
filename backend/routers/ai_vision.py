@@ -30,6 +30,7 @@ class AnaliseVisualRequest(BaseModel):
 
 class ChatRequest(BaseModel):
     mensagem: str
+    historico: Optional[List[Dict[str, Any]]] = []
     car_context: Optional[Dict[str, Any]] = None
 
 
@@ -152,10 +153,11 @@ async def analisar_avarias_veiculo(payload: AnaliseVisualRequest) -> Dict[str, A
 @router.post("/api/chat")
 async def chat_automatch(payload: ChatRequest) -> Dict[str, Any]:
     """
-    Chat consultivo assíncrono com Gemini 1.5 Flash e limite de 200 tokens (RAG habilitado).
+    Chat consultivo assíncrono com Gemini 1.5 Flash e limite de 200 tokens (RAG e histórico habilitados).
     """
     api_key = os.getenv("GEMINI_API_KEY", "").strip()
     user_msg = payload.mensagem.strip()
+    historico = payload.historico or []
     car_context = payload.car_context
     
     system_prompt = "Você é o assistente virtual da plataforma Automatch. Seja prestativo, rápido e conciso em até 3 frases sobre compra, venda e laudo cautelar de veículos."
@@ -164,36 +166,87 @@ async def chat_automatch(payload: ChatRequest) -> Dict[str, Any]:
             f"Você é um consultor especialista focado no veículo atual do usuário: "
             f"{car_context.get('brand')} {car_context.get('model')} {car_context.get('year')}, "
             f"cor {car_context.get('color', 'N/A')}, {car_context.get('km')}km rodados, "
-            f"preço R${car_context.get('price')}. Responda estritamente sobre este veículo."
+            f"preço R${car_context.get('price')}. Responda estritamente sobre este veículo e distinga cada pergunta sem repetição."
         )
 
     if api_key:
-        contents = [{"parts": [{"text": user_msg}]}]
+        contents = []
+        for msg in historico[-6:]:
+            role = "user" if msg.get("from") == "user" or msg.get("role") == "user" else "model"
+            contents.append({"role": role, "parts": [{"text": msg.get("text", "") or msg.get("content", "")}]})
+        contents.append({"role": "user", "parts": [{"text": user_msg}]})
         result = await call_gemini_generate(api_key, contents, max_tokens=200, temperature=0.3, system_prompt=system_prompt)
         if result:
             return {"status": "success", "modelo": "gemini-1.5-flash", "resposta": result}
 
-    # Resposta inteligente consultiva (fallback resiliente e contextual)
+    # Resposta inteligente consultiva (fallback semântico desacoplado e contextual)
     q = user_msg.lower()
-    car_name = f"{car_context.get('brand', '')} {car_context.get('model', '')}".strip() if car_context else ""
+    car_name = f"{car_context.get('brand', '')} {car_context.get('model', '')}".strip() if car_context else "Veículo"
+    year_text = car_context.get('year', '2024') if car_context else "2024"
+    km_val = car_context.get('km', 0) if car_context else 0
+    km_text = f"{km_val:,} km".replace(',', '.') if isinstance(km_val, int) else str(km_val or "baixa km")
+    price_val = car_context.get('price') if car_context else None
+    price_text = f"R$ {price_val:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.') if isinstance(price_val, (int, float)) else str(price_val or 'sob consulta')
 
-    if car_context and any(term in q for term in ["este carro", "esse carro", "o carro", "veículo", "veiculo", "motor", "km", "preço", "preco"]):
+    # 1. Motor / Câmbio / Mecânica
+    if any(k in q for k in ["motor", "cilindrada", "potencia", "potência", "cv", "cavalos", "cambio", "câmbio", "transmissao", "transmissão", "torque"]):
         reply = (
-            f"O {car_name} ({car_context.get('year', '2024')}) está anunciado por R$ {car_context.get('price', 'sob consulta')}. "
-            f"Possui {car_context.get('km', 0)} km rodados, laudo cautelar 100% aprovado e integridade estrutural validada pela Automatch."
+            f"O {car_name} ({year_text}) conta com trem de força inspecionado e revisado pela perícia técnica. "
+            f"Câmbio e componentes eletrônicos operam em conformidade, sem apontamentos mecânicos."
         )
-    elif "laudo" in q or "cautelar" in q or "detran" in q or "procedencia" in q or "leilao" in q:
-        reply = "Todos os veículos na Automatch contam com Laudo Cautelar 100% Aprovado, verificação de restrições no DETRAN e checagem detalhada de chassi, motor e histórico de leilão."
-    elif "financiamento" in q or "parcela" in q or "taxa" in q or "banco" in q or "entrada" in q:
-        reply = "Simulamos financiamento em tempo real com taxas competitivas a partir de 1,29% a.m. com os maiores bancos do país, permitindo parcelar em até 60x."
-    elif "fipe" in q or "tabela" in q or "valor" in q or "desconto" in q:
-        reply = "Nossos veículos possuem cotação atualizada na Tabela FIPE Oficial, garantindo preços transparentes e justos tanto para compradores quanto para vendedores."
-    elif "troca" in q or "troco" in q or "usado" in q:
-        reply = "Aceitamos seu veículo usado na troca com avaliação técnica justa pela FIPE. Utilize também nosso simulador de Troca com Troco disponível no anúncio!"
-    elif "garantia" in q or "seguro" in q or "revisão" in q:
-        reply = "Os carros contam com certificação pericial Automatch e garantia técnica legal mínima de 90 dias para motor e câmbio pelas concessionárias parceiras."
+    # 2. Consumo / Eficiência
+    elif any(k in q for k in ["consumo", "combustivel", "combustível", "gasolina", "etanol", "flex", "km/l", "gasta", "autonomia", "tanque"]):
+        reply = (
+            f"O consumo médio estimado para o {car_name} é de 10 a 13 km/l em ciclo urbano e até 15 km/l em rodovias, "
+            f"oferecendo excelente eficiência energética para sua categoria."
+        )
+    # 3. Garantia / Revisão / Cobertura
+    elif any(k in q for k in ["garantia", "revisao", "revisão", "revisoes", "revisões", "seguranca", "segurança", "cobertura"]):
+        reply = (
+            f"O {car_name} inclui a Certificação Pericial Automatch, histórico comprovado de manutenções periódicas "
+            f"e garantia técnica legal mínima de 90 dias para motor e câmbio fornecida pela concessionária parceira."
+        )
+    # 4. Laudo Cautelar / Detran / Histórico / Sinistro / Leilão
+    elif any(k in q for k in ["laudo", "cautelar", "detran", "procedencia", "procedência", "leilao", "leilão", "sinistro", "batida", "batido", "estrutura", "pericia", "perícia"]):
+        reply = (
+            f"Este {car_name} conta com Laudo Cautelar 100% Aprovado e Certidão DETRAN limpa: "
+            f"estrutura, chassi e longarinas íntegras, sem histórico de leilão, sinistro ou apontamentos desabonadores."
+        )
+    # 5. Financiamento / Parcelamento / Entrada
+    elif any(k in q for k in ["financiamento", "parcela", "parcelas", "taxa", "banco", "entrada", "financiar", "juros", "simular"]):
+        reply = (
+            f"Simulamos financiamento em tempo real com taxas competitivas a partir de 1,29% ao mês. "
+            f"Você pode parcelar a entrada e financiar o saldo em até 60 meses com os maiores bancos parceiros."
+        )
+    # 6. Preço / Tabela FIPE / Desconto / Valor
+    elif any(k in q for k in ["fipe", "tabela", "desconto", "a vista", "avista", "preco", "preço", "valor"]):
+        reply = (
+            f"O valor anunciado deste {car_name} é de {price_text}, compatível com a Tabela FIPE Oficial "
+            f"e refletindo o excelente padrão de conservação do veículo."
+        )
+    # 7. KM / Hodômetro / Rodagem
+    elif any(k in q for k in ["km", "quilometragem", "rodados", "hodometro", "hodômetro"]):
+        reply = (
+            f"O {car_name} possui {km_text} originais comprovados em laudo pericial, com hodômetro verificado "
+            f"e histórico de revisões em dia."
+        )
+    # 8. Troca / Veículo Usado
+    elif any(k in q for k in ["troca", "troco", "usado", "meu carro", "avaliar meu"]):
+        reply = (
+            f"Aceitamos seu veículo usado na troca com avaliação técnica justa pela Tabela FIPE. "
+            f"Utilize também nosso simulador de Troca com Troco disponível no anúncio!"
+        )
+    # 9. Apresentação geral do carro
+    elif car_context and any(k in q for k in ["este carro", "esse carro", "sobre o carro", "detalhes do veiculo", "detalhes do veículo"]):
+        reply = (
+            f"O {car_name} ({year_text}) está disponível por {price_text} com {km_text} e laudo 100% aprovado. "
+            f"Deseja agendar uma visita ou simular financiamento?"
+        )
     else:
-        reply = "Olá! Sou o assistente virtual da Automatch. Posso esclarecer dúvidas sobre Laudo Cautelar, simulação de financiamento, Tabela FIPE ou orientar sua negociação na plataforma!"
+        reply = (
+            f"Olá! Sou o consultor IA da Automatch. Posso esclarecer dúvidas específicas sobre o {car_name}: "
+            f"especificações do motor, consumo, laudo cautelar, Tabela FIPE ou simulação de financiamento!"
+        )
 
     return {"status": "success", "modelo": "automatch-consultor-ai", "resposta": reply}
 

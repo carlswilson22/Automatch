@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, X, CheckCircle2, MessageCircle, Mail, Sparkles, TrendingDown } from 'lucide-react';
+import { Bell, X, CheckCircle2, MessageCircle, Mail, TrendingDown } from 'lucide-react';
 import axios from 'axios';
 
 const PriceAlertModal = ({ isOpen, onClose, car }) => {
   const [targetPrice, setTargetPrice] = useState(car?.price ? Math.round(car.price * 0.95) : 135000);
-  const [channel, setChannel] = useState('whatsapp'); // 'whatsapp' | 'email' | 'webpush'
+  const [channel, setChannel] = useState('whatsapp'); // 'whatsapp' | 'email'
   const [contactValue, setContactValue] = useState('');
   const [notifyBelowFipe, setNotifyBelowFipe] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -118,7 +118,7 @@ const PriceAlertModal = ({ isOpen, onClose, car }) => {
                 <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-2">
                   Como prefere ser avisado?
                 </label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-2.5">
                   <button
                     type="button"
                     onClick={() => setChannel('whatsapp')}
@@ -144,26 +144,13 @@ const PriceAlertModal = ({ isOpen, onClose, car }) => {
                     <Mail className="w-3.5 h-3.5" />
                     <span>E-mail</span>
                   </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setChannel('webpush')}
-                    className={`py-2 px-3 rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 border transition-all ${
-                      channel === 'webpush'
-                        ? 'bg-purple-500/20 border-purple-500 text-purple-300 font-black'
-                        : 'bg-slate-950 border-slate-800 text-slate-400 hover:border-slate-700'
-                    }`}
-                  >
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>WebPush</span>
-                  </button>
                 </div>
               </div>
 
               {/* Input de Contato */}
               <div>
                 <label className="text-[11px] font-bold text-slate-400 block mb-1">
-                  {channel === 'whatsapp' ? 'Número de WhatsApp com DDD' : (channel === 'email' ? 'Seu E-mail' : 'Identificador')}
+                  {channel === 'whatsapp' ? 'Número de WhatsApp com DDD' : 'Seu E-mail'}
                 </label>
                 <input
                   type={channel === 'email' ? 'email' : 'text'}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, Users, Car, Clock, FileText, CheckCircle2, AlertTriangle, 
@@ -8,6 +8,7 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 import PartnerChatModal from './PartnerChatModal';
 import NewPartnershipInviteCard from './NewPartnershipInviteCard';
+import B2BInventorySkeleton from './B2BInventorySkeleton';
 import { getVehicleImageUrl, handleVehicleImageError } from '../../utils/imageHelper';
 
 export default function PartnershipHubModal({ isOpen, onClose }) {
@@ -22,8 +23,16 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [inventoryLoading, setInventoryLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMoreCars, setHasMoreCars] = useState(false);
+  const [currentOffset, setCurrentOffset] = useState(0);
   const [actionLoading, setActionLoading] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState({ type: '', text: '' });
+
+  // Refs para controle de concorrência e cache local de estoque (TTL 60s)
+  const sharedCarsCacheRef = useRef({});
+  const isFetchingRef = useRef(false);
+  const searchDebounceRef = useRef(null);
 
   // Filters
   const [searchCar, setSearchCar] = useState('');
@@ -54,22 +63,77 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
     };
   }, [user]);
 
-  // Carregamento isolado de dados por aba (Lazy Loading)
-  const loadSharedInventory = async (query = searchCar) => {
-    setInventoryLoading(true);
+  // Carregamento paginado e assíncrono com cache local de alta performance
+  const loadSharedInventory = async (query = searchCar, offset = 0, isAppend = false) => {
+    const cleanQuery = (query || '').trim().toLowerCase();
+    const cacheKey = `${cleanQuery}_off_${offset}`;
+    const now = Date.now();
+
+    // Reutiliza cache do cliente caso ainda esteja dentro do TTL de 60s
+    if (!isAppend && sharedCarsCacheRef.current[cacheKey]) {
+      const cached = sharedCarsCacheRef.current[cacheKey];
+      if (now - cached.timestamp < 60000) {
+        setSharedCars(cached.items);
+        setHasMoreCars(cached.hasMore);
+        setCurrentOffset(offset);
+        return;
+      }
+    }
+
+    if (isAppend) {
+      setLoadingMore(true);
+    } else {
+      setInventoryLoading(true);
+    }
+
+    isFetchingRef.current = true;
+
     try {
-      const res = await fetch(`/api/partnerships/shared-inventory?q=${encodeURIComponent(query)}`, {
-        headers: getAuthHeaders()
-      });
+      const res = await fetch(
+        `/api/partnerships/shared-inventory?limit=12&offset=${offset}&q=${encodeURIComponent(query)}`,
+        { headers: getAuthHeaders() }
+      );
+
       if (res.ok) {
         const data = await res.json();
-        setSharedCars(data);
+        const hasMoreHeader = res.headers.get('X-Has-More');
+        const hasMore = hasMoreHeader !== null ? (hasMoreHeader === 'true') : (Array.isArray(data) && data.length >= 12);
+
+        setHasMoreCars(hasMore);
+        setCurrentOffset(offset);
+
+        if (isAppend) {
+          setSharedCars(prev => {
+            const combined = [...prev, ...(Array.isArray(data) ? data : [])];
+            const seen = new Set();
+            return combined.filter(c => {
+              if (seen.has(c.id)) return false;
+              seen.add(c.id);
+              return true;
+            });
+          });
+        } else {
+          setSharedCars(Array.isArray(data) ? data : []);
+          sharedCarsCacheRef.current[cacheKey] = {
+            items: Array.isArray(data) ? data : [],
+            hasMore,
+            timestamp: now
+          };
+        }
       }
     } catch (e) {
-      console.error(e);
+      console.error('Erro ao buscar estoque B2B compartilhado:', e);
     } finally {
       setInventoryLoading(false);
+      setLoadingMore(false);
+      isFetchingRef.current = false;
     }
+  };
+
+  const handleLoadMore = () => {
+    if (loadingMore || !hasMoreCars) return;
+    const nextOffset = currentOffset + 12;
+    loadSharedInventory(searchCar, nextOffset, true);
   };
 
   const loadPartnerships = async () => {
@@ -105,8 +169,9 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
 
   const refreshAll = async () => {
     setLoading(true);
+    sharedCarsCacheRef.current = {};
     await Promise.all([
-      loadSharedInventory(searchCar),
+      loadSharedInventory(searchCar, 0, false),
       loadPartnerships(),
       loadReservations(),
       loadTransactions()
@@ -114,12 +179,16 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
     setLoading(false);
   };
 
-  // Carregamento sob demanda (Lazy Loading) de acordo com a aba ativa
+  // Carregamento sob demanda unificado e com debounce (zero duplicidade de chamadas)
   useEffect(() => {
     if (!isOpen) return;
 
     if (activeTab === 'inventory') {
-      loadSharedInventory(searchCar);
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+      searchDebounceRef.current = setTimeout(() => {
+        loadSharedInventory(searchCar, 0, false);
+      }, 250);
+      return () => clearTimeout(searchDebounceRef.current);
     } else if (activeTab === 'partnerships') {
       loadPartnerships();
     } else if (activeTab === 'reservations') {
@@ -127,16 +196,7 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
     } else if (activeTab === 'transactions') {
       loadTransactions();
     }
-  }, [isOpen, activeTab]);
-
-  // Debounce de 300ms estrito para a busca no estoque sem re-disparo do modal inteiro
-  useEffect(() => {
-    if (!isOpen || activeTab !== 'inventory') return;
-    const timer = setTimeout(() => {
-      loadSharedInventory(searchCar);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [searchCar, isOpen]);
+  }, [isOpen, activeTab, searchCar]);
 
   // Polling ativo exclusivamente na aba de reservas em tempo real
   useEffect(() => {
@@ -483,8 +543,10 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
                 </div>
               </div>
 
-              {/* Grid of Shared Cars */}
-              {sharedCars.length === 0 ? (
+              {/* Grid of Shared Cars ou Skeleton Loader */}
+              {inventoryLoading && sharedCars.length === 0 ? (
+                <B2BInventorySkeleton count={6} />
+              ) : sharedCars.length === 0 ? (
                 <div className="bg-white rounded-3xl p-12 text-center border border-slate-200 flex flex-col items-center">
                   <Car className="w-12 h-12 text-slate-300 mb-3" />
                   <h3 className="text-lg font-bold text-slate-700">Nenhum veículo no estoque compartilhado</h3>
@@ -499,112 +561,129 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
                   </button>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {sharedCars.map((car) => {
-                    const piso = car.valor_minimo_repasse || (car.price * 0.90);
-                    const currentMarkup = markupMap[car.id] !== undefined ? markupMap[car.id] : 5000;
-                    const precoFinalCliente = piso + Number(currentMarkup || 0);
-                    const isReserved = car.status_reserva === 'reservado';
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {sharedCars.map((car) => {
+                      const piso = car.valor_minimo_repasse || (car.price * 0.90);
+                      const currentMarkup = markupMap[car.id] !== undefined ? markupMap[car.id] : 5000;
+                      const precoFinalCliente = piso + Number(currentMarkup || 0);
+                      const isReserved = car.status_reserva === 'reservado';
 
-                    return (
-                      <div
-                        key={car.id}
-                        className={`bg-white rounded-3xl border transition-all overflow-hidden flex flex-col ${
-                          isReserved
-                            ? 'border-amber-200 opacity-80'
-                            : 'border-slate-200 hover:border-blue-300 hover:shadow-lg'
-                        }`}
-                      >
-                        {/* Car Image + Badges */}
-                        <div className="relative h-48 bg-slate-900 overflow-hidden group">
-                          <img
-                            src={getVehicleImageUrl(car.image)}
-                            alt={`${car.brand} ${car.model}`}
-                            onError={handleVehicleImageError}
-                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                          />
-                          <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
-                            <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-900/80 backdrop-blur-md text-white">
-                              {car.store_name}
-                            </span>
-                            {isReserved && (
-                              <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500 text-white flex items-center gap-1">
-                                <Clock className="w-3 h-3" /> Em Reserva
+                      return (
+                        <div
+                          key={car.id}
+                          className={`bg-white rounded-3xl border transition-all overflow-hidden flex flex-col ${
+                            isReserved
+                              ? 'border-amber-200 opacity-80'
+                              : 'border-slate-200 hover:border-blue-300 hover:shadow-lg'
+                          }`}
+                        >
+                          {/* Car Image + Badges */}
+                          <div className="relative h-48 bg-slate-900 overflow-hidden group">
+                            <img
+                              src={getVehicleImageUrl(car.image)}
+                              alt={`${car.brand} ${car.model}`}
+                              onError={handleVehicleImageError}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                            />
+                            <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
+                              <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-900/80 backdrop-blur-md text-white">
+                                {car.store_name}
                               </span>
-                            )}
-                          </div>
-                          <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-xl bg-white/90 backdrop-blur-md text-[11px] font-bold text-slate-700 shadow-sm">
-                            {car.year} • {Number(car.km).toLocaleString('pt-BR')} km
-                          </div>
-                        </div>
-
-                        {/* Body Details */}
-                        <div className="p-5 flex-1 flex flex-col justify-between">
-                          <div>
-                            <h3 className="text-base font-black text-slate-800 leading-tight">
-                              {car.brand} {car.model}
-                            </h3>
-                            <p className="text-xs text-slate-400 mt-0.5">{car.location || 'Localização não informada'}</p>
-
-                            {/* Repasse Pricing Box */}
-                            <div className="mt-4 p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2.5">
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs font-bold text-slate-500">Piso Mínimo de Repasse:</span>
-                                <span className="text-sm font-black text-amber-700">
-                                  R$ {piso.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                              {isReserved && (
+                                <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500 text-white flex items-center gap-1">
+                                  <Clock className="w-3 h-3" /> Em Reserva
                                 </span>
-                              </div>
-
-                              {/* Markup Simulator Input */}
-                              <div className="pt-2 border-t border-slate-200/80">
-                                <div className="flex items-center justify-between mb-1">
-                                  <label className="text-[11px] font-black uppercase text-slate-400">
-                                    Sua Margem Lojista:
-                                  </label>
-                                  <span className="text-xs font-bold text-emerald-600">
-                                    + R$ {Number(currentMarkup).toLocaleString('pt-BR')}
-                                  </span>
-                                </div>
-                                <input
-                                  type="range"
-                                  min="1000"
-                                  max="25000"
-                                  step="500"
-                                  value={currentMarkup}
-                                  onChange={(e) =>
-                                    setMarkupMap({ ...markupMap, [car.id]: Number(e.target.value) })
-                                  }
-                                  className="w-full accent-emerald-600 cursor-pointer"
-                                />
-                              </div>
-
-                              {/* Suggested Price to Customer */}
-                              <div className="pt-2 border-t border-slate-200/80 flex items-center justify-between">
-                                <span className="text-[11px] font-bold text-slate-600">Sugerido ao Cliente:</span>
-                                <span className="text-base font-black text-slate-900">
-                                  R$ {precoFinalCliente.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                                </span>
-                              </div>
+                              )}
+                            </div>
+                            <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-xl bg-white/90 backdrop-blur-md text-[11px] font-bold text-slate-700 shadow-sm">
+                              {car.year} • {Number(car.km).toLocaleString('pt-BR')} km
                             </div>
                           </div>
 
-                          {/* Action Button */}
-                          <button
-                            onClick={() => openReservationModal(car)}
-                            disabled={isReserved}
-                            className={`w-full mt-4 py-3 rounded-2xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
-                              isReserved
-                                ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                                : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/20 active:scale-95'
-                            }`}
-                          >
-                            <Clock className="w-4 h-4" />
-                            {isReserved ? 'Veículo Reservado' : 'Reservar para Cliente (Hold Lock)'}
-                          </button>
+                          {/* Body Details */}
+                          <div className="p-5 flex-1 flex flex-col justify-between">
+                            <div>
+                              <h3 className="text-base font-black text-slate-800 leading-tight">
+                                {car.brand} {car.model}
+                              </h3>
+                              <p className="text-xs text-slate-400 mt-0.5">{car.location || 'Localização não informada'}</p>
+
+                              {/* Repasse Pricing Box */}
+                              <div className="mt-4 p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2.5">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs font-bold text-slate-500">Piso Mínimo de Repasse:</span>
+                                  <span className="text-sm font-black text-amber-700">
+                                    R$ {piso.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                  </span>
+                                </div>
+
+                                {/* Markup Simulator Input */}
+                                <div className="pt-2 border-t border-slate-200/80">
+                                  <div className="flex items-center justify-between mb-1">
+                                    <label className="text-[11px] font-black uppercase text-slate-400">
+                                      Sua Margem Lojista:
+                                    </label>
+                                    <span className="text-xs font-bold text-emerald-600">
+                                      + R$ {Number(currentMarkup).toLocaleString('pt-BR')}
+                                    </span>
+                                  </div>
+                                  <input
+                                    type="range"
+                                    min="1000"
+                                    max="25000"
+                                    step="500"
+                                    value={currentMarkup}
+                                    onChange={(e) =>
+                                      setMarkupMap({ ...markupMap, [car.id]: Number(e.target.value) })
+                                    }
+                                    className="w-full accent-emerald-600 cursor-pointer"
+                                  />
+                                </div>
+
+                                {/* Suggested Price to Customer */}
+                                <div className="pt-2 border-t border-slate-200/80 flex items-center justify-between">
+                                  <span className="text-[11px] font-bold text-slate-600">Sugerido ao Cliente:</span>
+                                  <span className="text-base font-black text-slate-900">
+                                    R$ {precoFinalCliente.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Action Button */}
+                            <button
+                              onClick={() => openReservationModal(car)}
+                              disabled={isReserved}
+                              className={`w-full mt-4 py-3 rounded-2xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
+                                isReserved
+                                  ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                                  : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/20 active:scale-95'
+                              }`}
+                            >
+                              <Clock className="w-4 h-4" />
+                              {isReserved ? 'Veículo Reservado' : 'Reservar para Cliente (Hold Lock)'}
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
+                  </div>
+
+                  {/* Botão Paginado de Carregar Mais */}
+                  {hasMoreCars && (
+                    <div className="pt-2 pb-4 flex justify-center">
+                      <button
+                        type="button"
+                        onClick={handleLoadMore}
+                        disabled={loadingMore}
+                        className="px-6 py-3 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center gap-2 transition-all shadow-md active:scale-95 disabled:opacity-50 cursor-pointer"
+                      >
+                        <RefreshCw className={`w-4 h-4 ${loadingMore ? 'animate-spin text-cyan-400' : 'text-slate-400'}`} />
+                        <span>{loadingMore ? 'Carregando mais veículos...' : 'Carregar Mais Veículos'}</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -698,50 +777,6 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
                     })}
                   </div>
                 )}
-              </div>
-
-              {/* Discover & Invite Other Stores */}
-              <div className="space-y-4 pt-6 border-t border-slate-200">
-                <h3 className="text-lg font-black text-slate-800 flex items-center gap-2">
-                  <PlusCircle className="w-5 h-5 text-blue-600" />
-                  Conectar com Outras Lojas Cadastradas
-                </h3>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {availableStores.map((store) => {
-                    const hasActive = store.partnership_status === 'ativa';
-                    const hasPending = store.partnership_status === 'pendente';
-
-                    return (
-                      <div
-                        key={store.id}
-                        className="bg-white p-5 rounded-3xl border border-slate-200 shadow-sm flex flex-col justify-between"
-                      >
-                        <div>
-                          <h4 className="font-bold text-sm text-slate-800">{store.name}</h4>
-                          <p className="text-xs text-slate-400 mt-1 line-clamp-2">
-                            {store.description || 'Concessionária participante da Automatch'}
-                          </p>
-                        </div>
-
-                        <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between">
-                          <span className="text-[11px] font-bold text-slate-400">
-                            {hasActive ? 'Parceiro Ativo' : hasPending ? 'Convite em análise' : 'Disponível'}
-                          </span>
-                          {!hasActive && !hasPending && (
-                            <button
-                              onClick={() => handleInvite(store.id)}
-                              disabled={actionLoading}
-                              className="px-4 py-2 bg-blue-50 hover:bg-blue-600 hover:text-white text-blue-600 rounded-xl text-xs font-bold transition-all flex items-center gap-1 active:scale-95"
-                            >
-                              <Send className="w-3.5 h-3.5" /> Enviar Convite
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
               </div>
             </div>
           )}

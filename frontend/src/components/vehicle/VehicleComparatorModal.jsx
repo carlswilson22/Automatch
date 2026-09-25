@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -73,6 +73,44 @@ export default function VehicleComparatorModal({
     const pmt = financed * (i * Math.pow(1 + i, n)) / (Math.pow(1 + i, n) - 1);
     return Math.round(pmt);
   };
+
+  const [debouncedSelectorSearch, setDebouncedSelectorSearch] = useState('');
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSelectorSearch(selectorSearch);
+    }, 150);
+    return () => clearTimeout(timer);
+  }, [selectorSearch]);
+
+  const filteredAvailable = useMemo(() => {
+    const unselected = allAvailable.filter(c => !selectedVehicles.some(sv => String(sv.id) === String(c.id)));
+    if (!debouncedSelectorSearch.trim()) {
+      return unselected.slice(0, 15);
+    }
+    const q = debouncedSelectorSearch.toLowerCase();
+    return unselected.filter(c => {
+      const carLabel = (c.name || `${c.brand || ''} ${c.model || ''}`).toLowerCase();
+      return carLabel.includes(q);
+    }).slice(0, 15);
+  }, [allAvailable, selectedVehicles, debouncedSelectorSearch]);
+
+  const comparisons = useMemo(() => {
+    return selectedVehicles.map(car => {
+      const fipe = car.fipePrice || car.fipe_price || (car.price * 1.04);
+      const fipeComparison = calculateFipeDiff(car.price, fipe);
+      const km = Number(car.mileage || car.km || 0);
+      const kmPerYear = calculateKmPerYear(km, car.year);
+      const monthlyPayment = estimateMonthlyPayment(car.price);
+      return {
+        fipe,
+        fipeComparison,
+        km,
+        kmPerYear,
+        isLowKm: kmPerYear <= 12000,
+        monthlyPayment
+      };
+    });
+  }, [selectedVehicles]);
 
   const handleSelectCarForSlot = (car, slotIndex) => {
     const updated = [...selectedVehicles];
@@ -243,38 +281,30 @@ export default function VehicleComparatorModal({
                     />
                   </div>
                   <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
-                    {allAvailable
-                      .filter(c => !selectedVehicles.some(sv => String(sv.id) === String(c.id)))
-                      .filter(c => {
-                        if (!selectorSearch.trim()) return true;
-                        const q = selectorSearch.toLowerCase();
-                        const carLabel = (c.name || `${c.brand} ${c.model}`).toLowerCase();
-                        return carLabel.includes(q);
-                      })
-                      .map(c => (
-                        <button
-                          key={c.id}
-                          type="button"
-                          onClick={() => handleSelectCarForSlot(c, selectorOpenSlot)}
-                          className="w-full flex items-center gap-3 p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 hover:border-cyan-500/50 hover:bg-slate-800 transition-all text-left group"
-                        >
-                          <div className="w-14 h-10 rounded-lg overflow-hidden bg-slate-800 shrink-0">
-                            <img
-                              src={c.image || c.imagem || '/images/FotoHondaCivic.jpeg'}
-                              alt={c.name || c.model}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-bold text-white truncate">{c.name || `${c.brand} ${c.model}`}</p>
-                            <p className="text-[10px] text-slate-400">{c.year} • {Number(c.mileage || c.km || 0).toLocaleString('pt-BR')} km</p>
-                          </div>
-                          <span className="text-xs font-bold text-cyan-400 shrink-0">
-                            {formatMoney(c.price)}
-                          </span>
-                        </button>
-                      ))}
-                    {allAvailable.filter(c => !selectedVehicles.some(sv => String(sv.id) === String(c.id))).length === 0 && (
+                    {filteredAvailable.map(c => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => handleSelectCarForSlot(c, selectorOpenSlot)}
+                        className="w-full flex items-center gap-3 p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 hover:border-cyan-500/50 hover:bg-slate-800 transition-all text-left group"
+                      >
+                        <div className="w-14 h-10 rounded-lg overflow-hidden bg-slate-800 shrink-0">
+                          <img
+                            src={c.image || c.imagem || '/images/FotoHondaCivic.jpeg'}
+                            alt={c.name || c.model}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold text-white truncate">{c.name || `${c.brand} ${c.model}`}</p>
+                          <p className="text-[10px] text-slate-400">{c.year} • {Number(c.mileage || c.km || 0).toLocaleString('pt-BR')} km</p>
+                        </div>
+                        <span className="text-xs font-bold text-cyan-400 shrink-0">
+                          {formatMoney(c.price)}
+                        </span>
+                      </button>
+                    ))}
+                    {filteredAvailable.length === 0 && (
                       <p className="text-xs text-slate-500 text-center py-4">Nenhum veículo disponível</p>
                     )}
                   </div>
@@ -289,26 +319,25 @@ export default function VehicleComparatorModal({
               </div>
               <div className={`grid gap-4 ${selectedVehicles.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
                 {selectedVehicles.map((car, idx) => {
-                  const fipe = car.fipePrice || car.fipe_price || (car.price * 1.04);
-                  const comparison = calculateFipeDiff(car.price, fipe);
+                  const comp = comparisons[idx];
                   return (
                     <div key={idx} className="space-y-1.5 p-3 rounded-xl bg-slate-900/60 border border-slate-800">
                       <div className="flex justify-between text-xs">
                         <span className="text-slate-400">Tabela FIPE:</span>
-                        <span className="font-bold text-slate-200">{formatMoney(fipe)}</span>
+                        <span className="font-bold text-slate-200">{formatMoney(comp?.fipe)}</span>
                       </div>
                       <div className="flex justify-between text-xs">
                         <span className="text-slate-400">Variação:</span>
                         <span className={`font-bold flex items-center gap-1 ${
-                          comparison?.isBelow ? 'text-emerald-400' : 'text-slate-300'
+                          comp?.fipeComparison?.isBelow ? 'text-emerald-400' : 'text-slate-300'
                         }`}>
-                          {comparison?.isBelow ? <TrendingDown className="w-3.5 h-3.5" /> : <TrendingUp className="w-3.5 h-3.5" />}
-                          {comparison?.label}
+                          {comp?.fipeComparison?.isBelow ? <TrendingDown className="w-3.5 h-3.5" /> : <TrendingUp className="w-3.5 h-3.5" />}
+                          {comp?.fipeComparison?.label}
                         </span>
                       </div>
                       <div className="flex justify-between text-xs pt-1 border-t border-slate-800/80">
                         <span className="text-slate-400">Simulação 48x:</span>
-                        <span className="font-bold text-cyan-300">~{formatMoney(estimateMonthlyPayment(car.price))}/mês</span>
+                        <span className="font-bold text-cyan-300">~{formatMoney(comp?.monthlyPayment)}/mês</span>
                       </div>
                     </div>
                   );
@@ -323,26 +352,24 @@ export default function VehicleComparatorModal({
               </div>
               <div className={`grid gap-4 ${selectedVehicles.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
                 {selectedVehicles.map((car, idx) => {
-                  const km = Number(car.mileage || car.km || 0);
-                  const kmPerYear = calculateKmPerYear(km, car.year);
-                  const isLowKm = kmPerYear <= 12000;
+                  const comp = comparisons[idx];
                   return (
                     <div key={idx} className="space-y-1.5 p-3 rounded-xl bg-slate-900/60 border border-slate-800">
                       <div className="flex justify-between text-xs">
                         <span className="text-slate-400">Total Rodado:</span>
-                        <span className="font-bold text-white">{km.toLocaleString('pt-BR')} km</span>
+                        <span className="font-bold text-white">{(comp?.km || 0).toLocaleString('pt-BR')} km</span>
                       </div>
                       <div className="flex justify-between text-xs">
                         <span className="text-slate-400">Média Anual:</span>
-                        <span className="font-bold text-slate-200">{kmPerYear.toLocaleString('pt-BR')} km/ano</span>
+                        <span className="font-bold text-slate-200">{(comp?.kmPerYear || 0).toLocaleString('pt-BR')} km/ano</span>
                       </div>
                       <div className="pt-1">
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full inline-block ${
-                          isLowKm 
+                          comp?.isLowKm 
                             ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
                             : 'bg-slate-800 text-slate-300'
                         }`}>
-                          {isLowKm ? '✓ Baixa Quilometragem Anual' : 'Uso Médio Convencional'}
+                          {comp?.isLowKm ? '✓ Baixa Quilometragem Anual' : 'Uso Médio Convencional'}
                         </span>
                       </div>
                     </div>

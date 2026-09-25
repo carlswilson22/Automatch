@@ -14,9 +14,11 @@ import io
 sys.path.insert(0, os.path.dirname(__file__))
 
 from main import app
+from database import Base, engine
 import models
 import security
 
+Base.metadata.create_all(bind=engine)
 client = TestClient(app)
 
 def run_full_system_review():
@@ -197,23 +199,23 @@ def run_full_system_review():
     print("✅ SUÍTE 8 CONCLUÍDA COM SUCESSO!")
 
     # -------------------------------------------------------------------------
-    # SUÍTE 9: Sincronização Multicanal B2B (AutoAvaliar, AutoCerto, OLX) e Feeds
+    # SUÍTE 9: Sincronização Multicanal B2B (AutoAvaliar, OLX) e Feeds
     # -------------------------------------------------------------------------
     print("\n[SUÍTE 9] Sincronização Multicanal B2B e Feeds XML...")
     channels_resp = client.get("/api/integrations/channels")
     assert channels_resp.status_code == 200
     ch_ids = [c["id"] for c in channels_resp.json().get("canais", [])]
     assert "autoavaliar" in ch_ids, "AutoAvaliar deve estar homologado"
-    assert "autocerto" in ch_ids, "AutoCerto deve estar homologado"
     assert "olx" in ch_ids, "OLX Autos deve estar homologado"
+    assert "autocerto" not in ch_ids, "AutoCerto deve ter sido descontinuado"
     assert "webmotors" not in ch_ids, "Webmotors deve ter sido substituído"
 
     sync_resp = client.post("/api/integrations/sync", json={
         "car_id": "1",
-        "channels": ["autoavaliar", "autocerto", "olx"]
+        "channels": ["autoavaliar", "olx"]
     }, headers=auth_headers)
     assert sync_resp.status_code == 200
-    assert sync_resp.json().get("total_sincronizados") == 3
+    assert sync_resp.json().get("total_sincronizados") == 2
 
     # Feed XML
     feed_resp = client.get("/api/integrations/feed.xml")

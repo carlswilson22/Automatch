@@ -7,10 +7,27 @@ from fastapi.testclient import TestClient
 from main import app
 from database import get_db, Base, engine
 import models
+import security
 
 # Inicializa schema e client
 Base.metadata.create_all(bind=engine)
+db = next(get_db())
+admin = db.query(models.User).filter(models.User.email == "admin@automatch.com").first()
+if not admin:
+    admin = models.User(
+        id="admin-1",
+        name="Administrador",
+        email="admin@automatch.com",
+        hashed_password="hash",
+        role="admin",
+        store_id=1
+    )
+    db.add(admin)
+    db.commit()
+
 client = TestClient(app)
+admin_token = security.create_access_token({"sub": "admin-1", "role": "admin"})
+admin_headers = {"Authorization": f"Bearer {admin_token}"}
 
 def run_full_battery_usecases():
     print("=" * 80)
@@ -127,7 +144,7 @@ def run_full_battery_usecases():
         "fipe_price": 96000.0,
         "image": "/images/yaris_test.jpg",
         "store_id": 1
-    }, headers={"Authorization": "Bearer demo-admin-token"})
+    }, headers=admin_headers)
     assert test_car.status_code == 200, f"Falha ao criar veículo de teste: {test_car.text}"
     car_id = test_car.json()["id"]
 
@@ -148,27 +165,27 @@ def run_full_battery_usecases():
     results["UC-05: Dossiê PDF & QR Code"] = "PASS"
 
     # -------------------------------------------------------------------------
-    # CASO DE USO 06: Sincronização B2B Multicanal (AutoAvaliar, AutoCerto, OLX)
+    # CASO DE USO 06: Sincronização B2B Multicanal (AutoAvaliar, OLX)
     # -------------------------------------------------------------------------
-    print("\n[UC-06] TESTE B2B: Homologação Multicanal AutoAvaliar, AutoCerto DMS e OLX Autos")
+    print("\n[UC-06] TESTE B2B: Homologação Multicanal AutoAvaliar e OLX Autos")
     resp_sync = client.post("/api/integrations/sync", json={
         "car_id": car_id,
-        "channels": ["autoavaliar", "autocerto", "olx"]
-    }, headers={"Authorization": "Bearer demo-admin-token"})
+        "channels": ["autoavaliar", "olx"]
+    }, headers=admin_headers)
     assert resp_sync.status_code == 200
 
     sync_data = resp_sync.json()
     assert sync_data.get("status") == "success"
     synced = sync_data.get("canais_sincronizados", [])
-    assert len(synced) == 3, f"Esperado 3 canais sincronizados, obteve {len(synced)}: {sync_data}"
+    assert len(synced) == 2, f"Esperado 2 canais sincronizados, obteve {len(synced)}: {sync_data}"
     canal_ids = [c["canal_id"] for c in synced]
-    print(f"  -> Sincronização B2B: 3/3 canais homologados com sucesso: {canal_ids}")
+    print(f"  -> Sincronização B2B: 2/2 canais homologados com sucesso: {canal_ids}")
 
-    # Feed XML AutoCerto DMS
-    resp_feed = client.get("/api/integrations/autocerto/feed.xml")
+    # Feed XML Padrão Integrador
+    resp_feed = client.get("/api/integrations/feed.xml")
     assert resp_feed.status_code == 200
-    assert b"xml" in resp_feed.content or b"carga_autocerto" in resp_feed.content
-    print(f"  -> Feed XML AutoCerto DMS: Disponível em /api/integrations/autocerto/feed.xml!")
+    assert b"xml" in resp_feed.content or b"estoque" in resp_feed.content
+    print(f"  -> Feed XML Integrador: Disponível em /api/integrations/feed.xml!")
     results["UC-06: Hub B2B Multicanal"] = "PASS"
 
     # -------------------------------------------------------------------------

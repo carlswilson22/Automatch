@@ -794,7 +794,6 @@ export default function ShowcaseVehicleDetails() {
               <Vehicle360Viewer
                 vehicleImage={car.image || car.imagem}
                 carName={car.name}
-                damagePoints={currentDamagePoints}
                 imagesByAngle={{
                   0: getVehicleImageUrl('carro_360_frente.jpg'),
                   45: getVehicleImageUrl('carro_360_diagonal.jpg'),
@@ -1175,49 +1174,60 @@ export default function ShowcaseVehicleDetails() {
               )}
               </AnimatePresence>
 
-              {/* Resultado: Preço FIPE estilo OLX / Webmotors */}
-              {fipeInfoOpen && (
-                <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
-                  <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                    <div className="flex items-center gap-2">
-                      <Tag className="w-5 h-5 text-blue-400" />
-                      <h4 className="font-bold text-sm text-white">Tabela FIPE Oficial</h4>
-                    </div>
-                    <span className="text-xs bg-blue-500/20 text-blue-300 font-bold px-3 py-1 rounded-full border border-blue-500/30">
-                      Código FIPE: {car.fipeCode || '004487-3'}
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                    <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
-                      <span className="text-slate-400 block mb-0.5">Preço Médio FIPE:</span>
-                      <span className="text-base font-black text-white">
-                        R$ {(car.fipePrice || (car.price * 1.04)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      </span>
-                      <span className="text-[10px] text-slate-500 block mt-0.5">Mês ref.: Setembro/2024</span>
-                    </div>
-                    <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
-                      <span className="text-slate-400 block mb-0.5">Preço deste Anúncio:</span>
-                      <span className="text-base font-black text-emerald-400">
-                        R$ {typeof car.price === 'number' ? car.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : car.price}
-                      </span>
-                      <span className="text-[10px] text-slate-500 block mt-0.5">Valor do veículo</span>
-                    </div>
-                    <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800 flex flex-col justify-center">
-                      <span className="text-slate-400 block mb-1">Comparativo FIPE:</span>
-                      {(car.fipePrice || car.price * 1.04) > car.price ? (
-                        <span className="text-xs font-bold text-emerald-400 flex items-center gap-1">
-                          <TrendingDown className="w-3.5 h-3.5" />
-                          R$ {Math.round((car.fipePrice || car.price * 1.04) - car.price).toLocaleString('pt-BR')} abaixo da FIPE
+              {/* Resultado: Preço FIPE estilo OLX / Webmotors com Animação Suave */}
+              <AnimatePresence>
+                {fipeInfoOpen && (
+                  <motion.div
+                    key="fipe-accordion-container"
+                    initial={{ opacity: 0, height: 0, scale: 0.98 }}
+                    animate={{ opacity: 1, height: 'auto', scale: 1 }}
+                    exit={{ opacity: 0, height: 0, scale: 0.98 }}
+                    transition={{ duration: 0.22, ease: 'easeOut' }}
+                    className="overflow-hidden"
+                  >
+                    <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
+                      <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                        <div className="flex items-center gap-2">
+                          <Tag className="w-5 h-5 text-blue-400" />
+                          <h4 className="font-bold text-sm text-white">Tabela FIPE Oficial</h4>
+                        </div>
+                        <span className="text-xs bg-blue-500/20 text-blue-300 font-bold px-3 py-1 rounded-full border border-blue-500/30">
+                          Código FIPE: {car.fipeCode || '004487-3'}
                         </span>
-                      ) : (
-                        <span className="text-xs font-bold text-slate-300">
-                          No valor de mercado da Tabela FIPE
-                        </span>
-                      )}
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                        <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+                          <span className="text-slate-400 block mb-0.5">Preço Médio FIPE:</span>
+                          <span className="text-base font-black text-white">
+                            R$ {(car.fipePrice || (car.price * 1.04)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </span>
+                          <span className="text-[10px] text-slate-500 block mt-0.5">Mês ref.: Setembro/2024</span>
+                        </div>
+                        <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
+                          <span className="text-slate-400 block mb-0.5">Preço deste Anúncio:</span>
+                          <span className="text-base font-black text-emerald-400">
+                            R$ {typeof car.price === 'number' ? car.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : car.price}
+                          </span>
+                          <span className="text-[10px] text-slate-500 block mt-0.5">Valor do veículo</span>
+                        </div>
+                        <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800 flex flex-col justify-center">
+                          <span className="text-slate-400 block mb-1">Comparativo FIPE:</span>
+                          {(car.fipePrice || car.price * 1.04) > car.price ? (
+                            <span className="text-xs font-bold text-emerald-400 flex items-center gap-1">
+                              <TrendingDown className="w-3.5 h-3.5" />
+                              R$ {Math.round((car.fipePrice || car.price * 1.04) - car.price).toLocaleString('pt-BR')} abaixo da FIPE
+                            </span>
+                          ) : (
+                            <span className="text-xs font-bold text-slate-300">
+                              No valor de mercado da Tabela FIPE
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
-                  </div>
-                </motion.div>
-              )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* Sobre o Veículo — Nome, Metadados, Descrição e Ficha Técnica Consolidados */}

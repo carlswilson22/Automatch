@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Share2, X, CheckCircle2, RefreshCw, ExternalLink, Globe2, FileCode, Check } from 'lucide-react';
+import { Share2, X, CheckCircle2, RefreshCw, ExternalLink, Globe2, Check } from 'lucide-react';
 import axios from 'axios';
 
 const CHANNELS_CONFIG = [
   { id: 'autoavaliar', name: 'AutoAvaliar', color: '#ff6600', type: 'API B2B + Carga de Estoque', iconText: 'AA', portalUrl: 'https://www.autoavaliar.com.br' },
-  { id: 'olx', name: 'OLX Autos', color: '#6e0ad6', type: 'AutoXML / Carga de Estoque', iconText: 'OLX', portalUrl: 'https://www.olx.com.br/autos' },
-  { id: 'autocerto', name: 'AutoCerto DMS', color: '#0066cc', type: 'Carga Direta DMS / Feed XML', iconText: 'AC', portalUrl: 'https://www.autocerto.com' }
+  { id: 'olx', name: 'OLX Autos', color: '#6e0ad6', type: 'AutoXML / Carga de Estoque', iconText: 'OLX', portalUrl: 'https://www.olx.com.br/autos' }
 ];
 
 const MultichannelSyncModal = ({ isOpen, onClose, car }) => {
@@ -28,7 +27,7 @@ const MultichannelSyncModal = ({ isOpen, onClose, car }) => {
       const resp = await axios.post('/api/integrations/sync', {
         car_id: car?.id || '1',
         car_name: car?.name || 'Veículo',
-        channels: ['autoavaliar', 'olx', 'autocerto']
+        channels: ['autoavaliar', 'olx']
       }, { headers });
 
       if (resp.data && resp.data.status === 'success') {
@@ -127,28 +126,17 @@ const MultichannelSyncModal = ({ isOpen, onClose, car }) => {
           </div>
         )}
 
-        {/* Action Buttons */}
-        <div className="flex flex-col sm:flex-row items-center gap-3">
+        {/* Action Button */}
+        <div>
           <button
             type="button"
             onClick={handleRunSync}
             disabled={isSyncing}
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-500 via-blue-600 to-cyan-500 hover:opacity-90 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-indigo-900/40 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full py-3.5 rounded-xl bg-gradient-to-r from-indigo-500 via-blue-600 to-cyan-500 hover:opacity-90 text-white font-black text-xs uppercase tracking-wider shadow-lg shadow-indigo-900/40 transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
           >
             <RefreshCw className={`w-4 h-4 ${isSyncing ? 'animate-spin' : ''}`} />
-            <span>{isSyncing ? 'Transmitindo para 3 canais...' : 'Sincronizar em Todos os 3 Canais'}</span>
+            <span>{isSyncing ? 'Transmitindo para portais parceiros...' : 'Sincronizar em Todos os Canais'}</span>
           </button>
-
-          <a
-            href="/api/integrations/autocerto/feed.xml"
-            target="_blank"
-            rel="noreferrer"
-            className="w-full sm:w-auto px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-xs flex items-center justify-center gap-2 border border-slate-700 transition-all whitespace-nowrap"
-            title="Visualizar Feed XML do AutoCerto"
-          >
-            <FileCode className="w-4 h-4 text-cyan-400" />
-            <span>Feed AutoCerto XML</span>
-          </a>
         </div>
       </motion.div>
     </div>

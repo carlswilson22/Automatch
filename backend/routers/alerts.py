@@ -31,7 +31,7 @@ class AlertCreateRequest(BaseModel):
     car_name: Optional[str] = "Veículo"
     current_price: float
     target_price: Optional[float] = None
-    contact_type: str = "whatsapp"  # "whatsapp" | "email" | "webpush"
+    contact_type: str = "whatsapp"  # "whatsapp" | "email"
     contact_value: str
     notify_below_fipe: Optional[bool] = True
 
@@ -65,6 +65,9 @@ async def criar_alerta(
     """
     alerta_id = f"alt-{uuid.uuid4().hex[:8]}"
     target = payload.target_price or round(payload.current_price * 0.95, 2)
+    sanitized_contact_type = payload.contact_type.lower().strip()
+    if sanitized_contact_type not in ["whatsapp", "email"]:
+        sanitized_contact_type = "email"
 
     novo_alerta = {
         "id": alerta_id,
@@ -73,7 +76,7 @@ async def criar_alerta(
         "car_name": payload.car_name,
         "current_price": payload.current_price,
         "target_price": target,
-        "contact_type": payload.contact_type,
+        "contact_type": sanitized_contact_type,
         "contact_value": payload.contact_value,
         "notify_below_fipe": payload.notify_below_fipe,
         "created_at": datetime.utcnow().isoformat() + "Z",
@@ -81,7 +84,7 @@ async def criar_alerta(
     }
     ALERTS_DB.insert(0, novo_alerta)
 
-    canal_formatado = "WhatsApp" if payload.contact_type == "whatsapp" else ("E-mail" if payload.contact_type == "email" else "WebPush")
+    canal_formatado = "WhatsApp" if sanitized_contact_type == "whatsapp" else "E-mail"
     return {
         "status": "success",
         "alerta_id": alerta_id,
