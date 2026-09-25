@@ -468,6 +468,7 @@ def get_shared_inventory(
             "comissao_fixa": comissao,
             "observacoes_repasse": c.observacoes_repasse,
             "status_reserva": c.status_reserva or "disponivel",
+            "compartilhavel": True,
             "image": c.image,
             "store_id": c.store_id,
             "store_name": store.name if store else f"Loja #{c.store_id}",

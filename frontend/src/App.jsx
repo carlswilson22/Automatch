@@ -14,6 +14,7 @@ import PublicValidationPage from './pages/PublicValidationPage';
 import MyAdsPage from './pages/MyAdsPage';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
+import GlobalErrorBoundary from './components/common/GlobalErrorBoundary';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -25,10 +26,11 @@ function ScrollToTop() {
 
 function App() {
   return (
-    <AuthProvider>
-      <Router>
-        <ScrollToTop />
-        <Routes>
+    <GlobalErrorBoundary>
+      <AuthProvider>
+        <Router>
+          <ScrollToTop />
+          <Routes>
           {/* Main App Routes */}
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<AuthPage />} />
@@ -82,6 +84,7 @@ function App() {
         </Routes>
       </Router>
     </AuthProvider>
+  </GlobalErrorBoundary>
   );
 }
 
