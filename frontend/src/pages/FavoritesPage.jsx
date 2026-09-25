@@ -331,6 +331,8 @@ export default function FavoritesPage() {
 
       {/* Modal Comparador Multidimensional com ErrorBoundary */}
       <ErrorBoundary
+        isOpen={isComparatorOpen}
+        resetKey={isComparatorOpen ? 'open' : 'closed'}
         title="Comparador Multidimensional Indisponível"
         description="Não foi possível inicializar o comparador para os veículos curtidos. Tente novamente ou desmarque algum veículo."
         onClose={() => setIsComparatorOpen(false)}

@@ -89,7 +89,9 @@ export default function TcoCalculatorCard({
       seguroMensal: Math.round(seguroMensal),
       seguroAnual: Math.round(seguroAnual),
       manutencaoMensal: Math.round(manutencaoMensal),
+      manutencaoAnual: Math.round(manutencaoMensal * 12),
       combustivelMensal: Math.round(combustivelMensal),
+      combustivelAnual: Math.round(combustivelMensal * 12),
       unitsConsumed: Math.round(unitsPerMonth),
       fuelUnit: currentFuelConf.unit,
       fuelName: currentFuelConf.name,
@@ -123,10 +125,10 @@ export default function TcoCalculatorCard({
         </div>
 
         {/* Card de Destaque Custo Diário */}
-        <div className="bg-slate-950/80 px-3.5 py-2 rounded-xl border border-slate-800 text-right">
+        <div className="bg-slate-950/80 px-4 py-2 rounded-xl border border-slate-800 text-right">
           <span className="text-[10px] text-slate-400 uppercase font-semibold block">Custo Diário</span>
-          <span className="text-base font-black text-cyan-400">
-            R$ {calculations.custoDiario} / dia
+          <span className="text-base font-black text-cyan-400 whitespace-nowrap">
+            R$ {calculations.custoDiario.toLocaleString('pt-BR')} / dia
           </span>
         </div>
       </div>
@@ -164,7 +166,7 @@ export default function TcoCalculatorCard({
               <Gauge className="w-3.5 h-3.5 text-cyan-400" />
               <span>Uso Mensal</span>
             </span>
-            <span className="text-cyan-400 font-bold lowercase">{monthlyKm.toLocaleString('pt-BR')} km/mês</span>
+            <span className="text-cyan-400 font-bold lowercase whitespace-nowrap">{monthlyKm.toLocaleString('pt-BR')} km/mês</span>
           </div>
           <input
             type="range"
@@ -209,116 +211,167 @@ export default function TcoCalculatorCard({
 
       </div>
 
-      {/* Breakdown de Custos em Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      {/* Lista Analítica Hierárquica de Custos (Anti-Quebra & Responsiva) */}
+      <div className="space-y-2.5">
         
-        {/* Card IPVA */}
-        <div className="bg-slate-950/70 p-3.5 rounded-2xl border border-slate-800/90 hover:border-slate-700 transition-all">
-          <div className="flex items-center justify-between text-slate-400 text-xs mb-1.5">
-            <span className="flex items-center gap-1.5 font-bold">
-              <Building2 className="w-3.5 h-3.5 text-blue-400" /> IPVA ({selectedUf})
-            </span>
-            <span className="text-[10px] font-mono font-bold text-blue-400">{String(calculations.ufRate).replace('.', ',')}%</span>
+        {/* Item 1: IPVA */}
+        <div className="bg-slate-950/70 p-4 rounded-2xl border border-slate-800/90 hover:border-slate-700/80 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-w-0">
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center shrink-0">
+              <Building2 className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h4 className="text-sm font-bold text-white">IPVA Estimado</h4>
+                <span className="text-[10px] font-mono font-bold bg-blue-500/10 text-blue-300 border border-blue-500/30 px-2 py-0.5 rounded-full whitespace-nowrap">
+                  {selectedUf} ({String(calculations.ufRate).replace('.', ',')}%)
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400 mt-0.5 break-words [overflow-wrap:anywhere]">
+                Calculado com base no valor venal FIPE oficial (R$ {numFipe.toLocaleString('pt-BR')})
+              </p>
+            </div>
           </div>
-          <p className="text-xl font-black text-white">
-            R$ {calculations.ipvaMensal} <span className="text-[10px] text-slate-400 font-normal">/mês</span>
-          </p>
-          <span className="text-[10px] text-slate-500 block mt-0.5">
-            R$ {calculations.ipvaAnual.toLocaleString('pt-BR')} /ano
-          </span>
+
+          <div className="text-left sm:text-right shrink-0 border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-800/80">
+            <div className="text-base sm:text-lg font-black text-white whitespace-nowrap tabular-nums">
+              R$ {calculations.ipvaMensal.toLocaleString('pt-BR')} <span className="text-xs text-slate-400 font-normal">/mês</span>
+            </div>
+            <div className="text-[11px] text-slate-400 font-medium whitespace-nowrap tabular-nums mt-0.5">
+              R$ {calculations.ipvaAnual.toLocaleString('pt-BR')} /ano
+            </div>
+          </div>
         </div>
 
-        {/* Card Seguro Médio */}
-        <div className="bg-slate-950/70 p-3.5 rounded-2xl border border-slate-800/90 hover:border-slate-700 transition-all">
-          <div className="flex items-center justify-between text-slate-400 text-xs mb-1.5">
-            <span className="flex items-center gap-1.5 font-bold">
-              <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Seguro Estimado
-            </span>
-            <span className="text-[10px] text-emerald-400 font-semibold">4,5% a.a.</span>
+        {/* Item 2: Seguro Médio */}
+        <div className="bg-slate-950/70 p-4 rounded-2xl border border-slate-800/90 hover:border-slate-700/80 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-w-0">
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h4 className="text-sm font-bold text-white">Seguro Auto Compreensivo</h4>
+                <span className="text-[10px] font-semibold bg-emerald-500/10 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full whitespace-nowrap">
+                  4,5% a.a.
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400 mt-0.5 break-words [overflow-wrap:anywhere]">
+                Estimativa para cobertura total (colisão, roubo/furto, terceiros e guincho 24h)
+              </p>
+            </div>
           </div>
-          <p className="text-xl font-black text-white">
-            R$ {calculations.seguroMensal} <span className="text-[10px] text-slate-400 font-normal">/mês</span>
-          </p>
-          <span className="text-[10px] text-slate-500 block mt-0.5">
-            R$ {calculations.seguroAnual.toLocaleString('pt-BR')} /ano
-          </span>
+
+          <div className="text-left sm:text-right shrink-0 border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-800/80">
+            <div className="text-base sm:text-lg font-black text-white whitespace-nowrap tabular-nums">
+              R$ {calculations.seguroMensal.toLocaleString('pt-BR')} <span className="text-xs text-slate-400 font-normal">/mês</span>
+            </div>
+            <div className="text-[11px] text-slate-400 font-medium whitespace-nowrap tabular-nums mt-0.5">
+              R$ {calculations.seguroAnual.toLocaleString('pt-BR')} /ano
+            </div>
+          </div>
         </div>
 
-        {/* Card Manutenção */}
-        <div className="bg-slate-950/70 p-3.5 rounded-2xl border border-slate-800/90 hover:border-slate-700 transition-all">
-          <div className="flex items-center justify-between text-slate-400 text-xs mb-1.5">
-            <span className="flex items-center gap-1.5 font-bold">
-              <Wrench className="w-3.5 h-3.5 text-amber-400" /> Manutenção
-            </span>
-            {calculations.isEletrico ? (
-              <span className="text-[10px] bg-emerald-500/15 text-emerald-300 font-bold px-2 py-0.5 rounded-full border border-emerald-500/30 flex items-center gap-1">
-                <Sparkles className="w-3 h-3 text-emerald-400" /> VE: -45%
-              </span>
-            ) : (
-              <span className="text-[10px] text-amber-400 font-semibold">Preventiva</span>
-            )}
+        {/* Item 3: Manutenção Preventiva */}
+        <div className="bg-slate-950/70 p-4 rounded-2xl border border-slate-800/90 hover:border-slate-700/80 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-w-0">
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+              <Wrench className="w-5 h-5" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h4 className="text-sm font-bold text-white">Manutenção Preventiva</h4>
+                {calculations.isEletrico ? (
+                  <span className="text-[10px] bg-emerald-500/15 text-emerald-300 font-bold px-2 py-0.5 rounded-full border border-emerald-500/30 flex items-center gap-1 whitespace-nowrap">
+                    <Sparkles className="w-3 h-3 text-emerald-400" /> VE: -45%
+                  </span>
+                ) : (
+                  <span className="text-[10px] bg-amber-500/10 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full font-semibold whitespace-nowrap">
+                    Revisões Periódicas
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] text-slate-400 mt-0.5 break-words [overflow-wrap:anywhere]">
+                {calculations.isEletrico
+                  ? 'Filtro de cabine, arrefecimento da bateria, pastilhas regenerativas e pneus'
+                  : 'Troca de óleo, filtros, velas, pastilhas de freio e alinhamento'
+                }
+              </p>
+            </div>
           </div>
-          <p className="text-xl font-black text-white">
-            R$ {calculations.manutencaoMensal} <span className="text-[10px] text-slate-400 font-normal">/mês</span>
-          </p>
-          <span className="text-[10px] text-slate-500 block mt-0.5">
-            {calculations.isEletrico
-              ? 'Filtro de cabine, arrefecimento da bateria, pastilhas regenerativas e pneus'
-              : 'Óleo, filtros, pneus e pastilhas'
-            }
-          </span>
+
+          <div className="text-left sm:text-right shrink-0 border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-800/80">
+            <div className="text-base sm:text-lg font-black text-white whitespace-nowrap tabular-nums">
+              R$ {calculations.manutencaoMensal.toLocaleString('pt-BR')} <span className="text-xs text-slate-400 font-normal">/mês</span>
+            </div>
+            <div className="text-[11px] text-slate-400 font-medium whitespace-nowrap tabular-nums mt-0.5">
+              R$ {calculations.manutencaoAnual.toLocaleString('pt-BR')} /ano
+            </div>
+          </div>
         </div>
 
-        {/* Card Combustível */}
-        <div className="bg-slate-950/70 p-3.5 rounded-2xl border border-slate-800/90 hover:border-slate-700 transition-all">
-          <div className="flex items-center justify-between text-slate-400 text-xs mb-1.5">
-            <span className="flex items-center gap-1.5 font-bold">
-              {calculations.isEletrico
-                ? <><Zap className="w-3.5 h-3.5 text-emerald-400" /> Energia / Recarga</>
-                : <><Fuel className="w-3.5 h-3.5 text-cyan-400" /> Combustível</>
-              }
-            </span>
-            <span className={`text-[10px] font-semibold ${calculations.isEletrico ? 'text-emerald-400' : 'text-cyan-400'}`}>{calculations.unitsConsumed} {calculations.fuelUnit}</span>
+        {/* Item 4: Combustível / Energia */}
+        <div className="bg-slate-950/70 p-4 rounded-2xl border border-slate-800/90 hover:border-slate-700/80 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3 min-w-0">
+          <div className="flex items-center gap-3.5 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 flex items-center justify-center shrink-0">
+              {calculations.isEletrico ? <Zap className="w-5 h-5 text-emerald-400" /> : <Fuel className="w-5 h-5 text-cyan-400" />}
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h4 className="text-sm font-bold text-white">
+                  {calculations.isEletrico ? 'Energia / Recarga' : `Combustível (${calculations.fuelName})`}
+                </h4>
+                <span className="text-[10px] font-semibold bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 px-2 py-0.5 rounded-full whitespace-nowrap">
+                  {calculations.unitsConsumed} {calculations.fuelUnit} / mês
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400 mt-0.5 break-words [overflow-wrap:anywhere]">
+                Projeção baseada em {monthlyKm.toLocaleString('pt-BR')} km rodados por mês
+              </p>
+            </div>
           </div>
-          <p className="text-xl font-black text-white">
-            R$ {calculations.combustivelMensal} <span className="text-[10px] text-slate-400 font-normal">/mês</span>
-          </p>
-          <span className="text-[10px] text-slate-500 block mt-0.5">
-            Base: {monthlyKm} km rodados
-          </span>
+
+          <div className="text-left sm:text-right shrink-0 border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-800/80">
+            <div className="text-base sm:text-lg font-black text-white whitespace-nowrap tabular-nums">
+              R$ {calculations.combustivelMensal.toLocaleString('pt-BR')} <span className="text-xs text-slate-400 font-normal">/mês</span>
+            </div>
+            <div className="text-[11px] text-slate-400 font-medium whitespace-nowrap tabular-nums mt-0.5">
+              R$ {calculations.combustivelAnual.toLocaleString('pt-BR')} /ano
+            </div>
+          </div>
         </div>
 
       </div>
 
       {/* Card Totalizador Principal */}
-      <div className="bg-gradient-to-r from-blue-950/80 via-slate-900 to-slate-950 p-5 rounded-2xl border border-blue-500/30 flex items-center justify-between gap-4 flex-wrap">
+      <div className="bg-gradient-to-r from-blue-950/80 via-slate-900 to-slate-950 p-5 sm:p-6 rounded-2xl border border-blue-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <span className="text-xs font-bold uppercase tracking-wider text-cyan-400 block mb-1">
             Custo Total Mensal Estimado
           </span>
-          <div className="flex items-baseline gap-2">
-            <p className="text-3xl sm:text-4xl font-black text-white">
+          <div className="flex items-baseline gap-2 flex-wrap">
+            <p className="text-3xl sm:text-4xl font-black text-white whitespace-nowrap tabular-nums">
               R$ {calculations.totalMensal.toLocaleString('pt-BR')}
             </p>
-            <span className="text-xs text-slate-400 font-medium">/ mês (TCO)</span>
+            <span className="text-xs text-slate-400 font-medium whitespace-nowrap">/ mês (TCO)</span>
           </div>
-          <p className="text-[11px] text-slate-400 mt-1">
+          <p className="text-[11px] text-slate-400 mt-1 break-words [overflow-wrap:anywhere]">
             Soma de IPVA mensal + Seguro + Manutenção + Combustível projetado
           </p>
         </div>
 
-        <div className="text-right">
+        <div className="text-left sm:text-right shrink-0 border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-800/80">
           <span className="text-xs text-slate-400 block font-semibold">Compromisso Anual</span>
-          <span className="text-xl font-black text-slate-200">
+          <span className="text-xl font-black text-slate-200 whitespace-nowrap tabular-nums">
             R$ {calculations.totalAnual.toLocaleString('pt-BR')} <span className="text-xs text-slate-400 font-normal">/ano</span>
           </span>
         </div>
       </div>
 
       {/* Rodapé explicativo */}
-      <div className="flex items-center gap-2 text-[11px] text-slate-400 bg-slate-950/40 px-3 py-2 rounded-xl">
-        <Info className="w-3.5 h-3.5 shrink-0 text-cyan-400" />
-        <span>
+      <div className="flex items-center gap-2 text-[11px] text-slate-400 bg-slate-950/40 px-3.5 py-2.5 rounded-xl border border-slate-800/60">
+        <Info className="w-4 h-4 shrink-0 text-cyan-400" />
+        <span className="break-words [overflow-wrap:anywhere]">
           Valores projetados para fins de planejamento financeiro. Seguros e revisões dependem do perfil do condutor e concessionária.
         </span>
       </div>
