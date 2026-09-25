@@ -17,6 +17,7 @@ concurrency:
 jobs:
   build:
     name: Build Frontend
+    if: github.repository == 'carlswilson22/Automatch'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

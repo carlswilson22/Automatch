@@ -44,11 +44,11 @@ jobs:
           node-version: '20' # Mude para a versão do Node que você usa
 
       - name: Instalar dependências (criando o node_modules na nuvem)
-        # Se o seu frontend estiver dentro de uma pasta (ex: /frontend), use "cd frontend && npm install"
-        run: npm install
+        working-directory: ./frontend
+        run: npm ci || npm install
 
       - name: Testar o Build do Vite
-        # Garante que o Vite e o Tailwind conseguem compilar o projeto sem erros
+        working-directory: ./frontend
         run: npm run build
 
   # 3. VERIFICAÇÃO DO DOCKER (Opcional, mas recomendado)
