@@ -1,13 +1,13 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// Plugin para garantir que requisições diretas a /images/* no dev server sejam resolvidas sob /AutoMatch/images/*
+// Plugin para garantir que requisições diretas a /images/* no dev server sejam resolvidas sob /Automatch/images/*
 const serveRootImagesPlugin = () => ({
   name: 'serve-root-images',
   configureServer(server) {
     server.middlewares.use((req, res, next) => {
       if (req.url && req.url.startsWith('/images/')) {
-        req.url = '/AutoMatch' + req.url;
+        req.url = '/Automatch' + req.url;
       }
       next();
     });
@@ -15,7 +15,7 @@ const serveRootImagesPlugin = () => ({
 });
 
 export default defineConfig({
-  base: '/AutoMatch/',
+  base: '/Automatch/',
   plugins: [react(), serveRootImagesPlugin()],
   server: {
     host: '0.0.0.0',

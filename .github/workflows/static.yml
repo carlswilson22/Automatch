@@ -36,7 +36,9 @@ jobs:
 
       - name: Build frontend
         working-directory: ./frontend
-        run: npm run build
+        run: |
+          npm run build
+          cp -n dist/index.html dist/404.html || true
 
       - name: Setup Pages
         if: github.repository == 'carlswilson22/Automatch'
