@@ -28,7 +28,7 @@ function App() {
   return (
     <GlobalErrorBoundary>
       <AuthProvider>
-        <Router>
+        <Router basename={import.meta.env.BASE_URL}>
           <ScrollToTop />
           <Routes>
           {/* Main App Routes */}
