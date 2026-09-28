@@ -1,0 +1,10 @@
+# Robots.txt - AutoMatch Plataforma de Veículos
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /dashboard
+Disallow: /perfil
+Disallow: /checkout/
+Disallow: /novo-anuncio
+
+Sitemap: https://carlswilson22.github.io/Automatch/sitemap.xml
