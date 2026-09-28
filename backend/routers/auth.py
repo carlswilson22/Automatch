@@ -115,7 +115,7 @@ def login(request: schemas.UserLogin, db: Session = Depends(get_db)) -> Dict[str
     email = request.email.strip().lower()
 
     # Proteção defensiva contra Brute Force (OWASP A07)
-    allowed, remaining = login_rate_limiter.is_allowed(email)
+    allowed, remaining = login_rate_limiter.is_allowed(email, record=False)
     if not allowed:
         logger.warning("Tentativa de login bloqueada por rate limit para o e-mail: %s", mask_email(email))
         raise HTTPException(

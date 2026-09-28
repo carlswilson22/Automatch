@@ -36,29 +36,32 @@ class TestImprovementsBattery(unittest.TestCase):
         db: Session = SessionLocal()
 
         # Garante loja base
-        cls.store = db.query(models.Store).first()
-        if not cls.store:
-            cls.store = models.Store(name="Loja Segurança", slug="loja-seguranca", logo="/images/logo.png")
-            db.add(cls.store)
+        store = db.query(models.Store).first()
+        if not store:
+            store = models.Store(name="Loja Segurança", slug="loja-seguranca", logo="/images/logo.png")
+            db.add(store)
             db.commit()
-            db.refresh(cls.store)
+            db.refresh(store)
+        cls.store_id = store.id
 
         # Garante usuário titular para testes LGPD e login
-        cls.test_user = db.query(models.User).filter(models.User.email == "titular.seguro@automatch.com.br").first()
-        if not cls.test_user:
-            cls.test_user = models.User(
+        test_user = db.query(models.User).filter(models.User.email == "titular.seguro@automatch.com.br").first()
+        if not test_user:
+            test_user = models.User(
                 name="Titular de Teste LGPD",
                 email="titular.seguro@automatch.com.br",
                 hashed_password=security.hash_password("SenhaForte123!"),
                 role="lojista",
                 sub_role="owner",
-                store_id=cls.store.id
+                store_id=cls.store_id
             )
-            db.add(cls.test_user)
+            db.add(test_user)
             db.commit()
-            db.refresh(cls.test_user)
+            db.refresh(test_user)
 
-        cls.user_token = security.create_access_token({"sub": str(cls.test_user.id), "email": cls.test_user.email})
+        cls.user_id = test_user.id
+        cls.user_email = test_user.email
+        cls.user_token = security.create_access_token({"sub": str(cls.user_id), "email": cls.user_email})
         cls.auth_headers = {"Authorization": f"Bearer {cls.user_token}"}
         db.close()
 
@@ -144,7 +147,7 @@ class TestImprovementsBattery(unittest.TestCase):
             hashed_password=security.hash_password("Segura123!"),
             role="lojista",
             sub_role="seller",
-            store_id=self.store.id
+            store_id=self.store_id
         )
         db.add(temp_user)
         db.commit()
