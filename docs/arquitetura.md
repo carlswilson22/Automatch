@@ -101,3 +101,24 @@ sequenceDiagram
 | **Latência no upload de imagens pesadas** | Médio | Pré-compressão com algoritmo *LANCZOS* reduzindo fotos para 1024x1024 antes da transmissão. |
 | **Indisponibilidade de APIs governamentais (DETRAN/FIPE)** | Alto | Cache persistente em Redis com expiração configurável e dados simulados de contingência. |
 | **Sobrecarga em consultas concorrentes de estoque** | Médio | Pool assíncrono de conexões com SQLAlchemy e indexação por chaves primárias UUID e códigos FIPE. |
+
+---
+
+## 7. Hardening de Infraestrutura e Contêineres (CIS Benchmark & OWASP)
+
+Em conformidade com as melhores práticas de segurança de contêineres, o sistema implementa segregação estrita entre os perfis de desenvolvimento e produção:
+
+### 7.1. Matriz de Exposição de Portas e Redes
+
+| Serviço | Porta Interna | Porta em Desenvolvimento (`docker-compose.yml`) | Porta em Produção (`docker-compose.prod.yml`) | Política de Isolamento |
+| :--- | :---: | :---: | :---: | :--- |
+| **`gateway`** | `80` | `80:80`, `3000:80` (Acesso Local) | `80:80`, `443:443` (Acesso Público) | Ponto único de entrada HTTP/HTTPS. |
+| **`frontend`** | `5173` / `80` | `127.0.0.1:5173:5173` | **Nenhuma porta exposta no host** | Servido exclusivamente através do Gateway. |
+| **`backend`** | `8000` | `127.0.0.1:8000:8000` (Docs Swagger) | **Nenhuma porta exposta no host** | Isolado 100% na rede interna `automatch-prod-network`. |
+| **`db` (Postgres)** | `5432` | `127.0.0.1:5432:5432` (DBeaver Local) | **Nenhuma porta exposta no host** | Acessível unicamente pelo contêiner do `backend`. |
+| **`redis`** | `6379` | `127.0.0.1:6379:6379` (Auth Ativa) | **Nenhuma porta exposta no host** | `--requirepass` obrigatório em todos os ambientes. |
+
+### 7.2. ADR-04: Segregação de Perfis de Orquestração
+- **Decisão**: Manter o `docker-compose.yml` voltado para DX (live-reload com volumes) e criar `docker-compose.prod.yml` com build imutável e multi-workers.
+- **Justificativa**: Evita vazamento de portas de banco de dados para a internet em servidores de produção e padroniza a gestão de segredos através do `.env.example`.
+

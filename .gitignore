@@ -5,9 +5,9 @@
 # Segurança e Segredos
 .env
 .env.*
-!.env.example
 *.env
 *.env.*
+!.env.example
 !.env.template
 .env.local
 .env.development.local
