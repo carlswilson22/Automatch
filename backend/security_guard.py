@@ -22,10 +22,11 @@ class RateLimiter:
         self._history: Dict[str, List[float]] = {}
         self._blocked_until: Dict[str, float] = {}
 
-    def is_allowed(self, key: str) -> Tuple[bool, int]:
+    def is_allowed(self, key: str, record: bool = True) -> Tuple[bool, int]:
         """
         Verifica se a chave (IP ou e-mail) pode efetuar a requisição.
         Retorna (permitido: bool, tempo_restante_bloqueio_segundos: int).
+        Se record=True, contabiliza a requisição atual no histórico.
         """
         now = time.time()
 
@@ -51,16 +52,30 @@ class RateLimiter:
                 return False, self.block_duration
             return False, int(self.window_seconds - (now - valid_timestamps[0])) + 1
 
-        # Registra a tentativa
-        self._history[key].append(now)
+        # Registra a tentativa apenas quando solicitado
+        if record:
+            self._history[key].append(now)
+
         return True, 0
 
     def record_failure(self, key: str) -> Tuple[bool, int]:
         """
         Registra especificamente uma falha (ex: senha incorreta).
-        Se atingir max_requests, bloqueia.
+        Se atingir max_requests, ativa o bloqueio.
         """
-        return self.is_allowed(key)
+        now = time.time()
+        timestamps = self._history.get(key, [])
+        valid_timestamps = [t for t in timestamps if now - t < self.window_seconds]
+        valid_timestamps.append(now)
+        self._history[key] = valid_timestamps
+
+        if len(valid_timestamps) >= self.max_requests:
+            if self.block_duration > 0:
+                self._blocked_until[key] = now + self.block_duration
+                return False, self.block_duration
+            return False, int(self.window_seconds)
+
+        return True, 0
 
     def reset(self, key: str):
         """Limpa o histórico de uma chave (ex: após login bem-sucedido)."""
