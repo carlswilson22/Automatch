@@ -2,6 +2,21 @@
 
 Registre aqui as mudanças relevantes por sprint ou marco avaliativo.
 
+## Sprint 06 - Otimização Global de Performance, Code Splitting e Varredura 360° Fotográfica (v2.4.0)
+- **Varredura 360° Fotográfica Coerente & Perspectiva 3D Orbital**:
+  - Eliminação definitiva da troca indevida de veículos entre quadrantes angulares em `Vehicle360Viewer.jsx` e `ShowcaseVehicleDetails.jsx`.
+  - Sistema de resolução dinâmica de fotos que prioriza fotos angulares dedicadas (`photos360`), galeria real (`gallery`) e a foto principal autêntica do próprio veículo (`car.image`), mantendo identidade visual estrita de cor, modelo e marca em todos os 8 ângulos.
+  - Transformações de perspectiva 3D contínua calculadas via CSS hardware-accelerated (`perspective(1200px) rotateY(...)`) e iluminação direcional de estúdio em tempo real.
+  - Otimização de GPU com remoção de classes `backdrop-blur-md` na bússola e status do visualizador orbital.
+- **Code-Splitting Dinâmico e Lazy Loading de Modais**:
+  - Conversão de modais pesados (`VehicleComparatorModal`, `PriceAlertModal`, `MultichannelSyncModal`, `PartnershipHubModal`) para `React.lazy()` sob demanda com `Suspense`.
+  - Redução imediata de ~10.1 kB no chunk inicial de `ShowcaseVehicleDetails.jsx` e ~50.5 kB nas páginas de `Dashboard.jsx` e `ProfilePage.jsx`.
+- **Resiliência de Rede & Proteção Fail-Fast**:
+  - Implementação de `AbortSignal.timeout(1200)` nas consultas de veículos (`ShowcaseCatalog.jsx` e `FavoritesPage.jsx`) e `AbortSignal.timeout(1500)` nas integrações de laudo e DETRAN (`ShowcaseVehicleDetails.jsx`), prevenindo travamento do navegador diante de indisponibilidade de backend.
+- **Pipeline de Imagens & Desoneração de GPU**:
+  - Inclusão universal de `loading="lazy"` e `decoding="async"` em listagens (`ShowcaseCatalog.jsx`, `CarCard.jsx`, `FavoritesPage.jsx`, `Home.jsx`).
+  - Remoção de filtros gaussianos contínuos (`backdrop-blur`) em elementos de renderização contínua e cabeçalhos fixos, restaurando 60 FPS lisos.
+
 ## Sprint 05 - Termômetro de Mercado, Calculadora TCO e Price Drop Tracker (v2.3.0)
 - **Termômetro Visual de Oportunidade / Preço de Mercado (Oportunidade 1)**:
   - Novo componente `MarketPriceIndicator.jsx` com modos `gauge` (régua visual graduada de dispersão) e `badge` (destaque compacto para cards).

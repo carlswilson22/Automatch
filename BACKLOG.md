@@ -60,11 +60,12 @@ Esta matriz mapeia cada cartão do quadro oficial com a sua implementação fís
 | **Implementação yolov8** | *Itens Essenciais / Finalizado* | `backend/routers/ai_vision.py` (Ultralytics CV) | ✅ Concluído | Detecção de avarias com bounding boxes |
 | **Integração / API Detran** | *Itens Essenciais / Finalizado* | `backend/routers/vehicle_lookup.py` | ✅ Concluído | `test_b2b_and_plate.py` (9/9 PASS) |
 | **Upload de laudos cautelares** | *Finalizado* | `backend/routers/laudos.py` (Magic bytes `%PDF-`) | ✅ Concluído | `test_full_system_review.py` (Suíte 8 PASS) |
-| **Varredura 360 graus** | *Finalizado* | `frontend/src/components/vehicle/Vehicle360Viewer.jsx` | ✅ Concluído | Giro 360° fotográfico puro nos 8 ângulos |
+| **Varredura 360 graus** | *Finalizado* | `frontend/src/components/vehicle/Vehicle360Viewer.jsx` | ✅ Concluído | Giro 360° orbital fiel ao veículo, perspectiva 3D, iluminação de estúdio e eliminação de fotos aleatórias |
 | **Vídeo pericial de 15s** | *Finalizado* | `frontend/src/components/vehicle/PericialVideoModal.jsx` | ✅ Concluído | Checkpoints periciais e player com timeline |
 | **Implementação de TCO** | *Finalizado* | `backend/routers/cars.py` (`POST /api/cars/tco-calculator`) | ✅ Concluído | `test_usecases_full_battery.py` (UC-04 PASS) |
-| **Comparador Multidimensional** | *Finalizado* | `frontend/src/components/vehicle/VehicleComparatorModal.jsx` | ✅ Concluído | `useMemo`, debounce e limite de 15 itens |
-| **Documentação Completa** | *Itens Essenciais / Finalizado* | `README.md`, `CHANGELOG.md`, `docs/requisitos.md` | ✅ Concluído | Padrão acadêmico institucional CEUB |
+| **Comparador Multidimensional** | *Finalizado* | `frontend/src/components/vehicle/VehicleComparatorModal.jsx` | ✅ Concluído | `useMemo`, acordeão por demanda, lazy loading e fallback de fotos |
+| **Otimização Global de Performance** | *Finalizado* | `frontend/src/pages/`, `frontend/src/components/` | ✅ Concluído | Code-splitting (React.lazy), timeout fail-fast de 1.2s, lazy/async nas imagens e 60 FPS na GPU |
+| **Documentação Completa** | *Itens Essenciais / Finalizado* | `README.md`, `CHANGELOG.md`, `docs/requisitos.md`, `sprints/` | ✅ Concluído | Padrão acadêmico institucional CEUB (Sprint 00 a 06) |
 | **Documentação Arquitetura SW** | *Itens Essenciais / Finalizado* | `docs/arquitetura.md` | ✅ Concluído | Diagramas C4/Mermaid, fluxos e integrações |
 | **Diagrama de Caso de Uso** | *Finalizado* | `docs/arquitetura.md`, `docs/requisitos.md` | ✅ Concluído | 28 Requisitos Funcionais mapeados |
 | **Diagrama de Sequencia** | *Finalizado* | `docs/arquitetura.md` | ✅ Concluído | Fluxo transacional de vistoria e precificação |

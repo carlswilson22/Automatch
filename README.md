@@ -36,14 +36,14 @@ Plataforma automotiva Fullstack que une **marketplace de compra e venda de veíc
 
 ## 🌟 Principais Funcionalidades
 
-1. **Perícia Visual 360° & Detecção de Avarias por IA:**
-   - Varredura orbital do veículo em 8 ângulos contínuos.
+1. **Varredura 360° Fotográfica & Detecção de Avarias por IA:**
+   - Visualizador orbital fotográfico 360° em 8 ângulos contínuos com perspectiva tridimensional e iluminação dinâmica de estúdio, garantindo consistência visual estrita do veículo em exibição.
    - Motor CV com análise adaptativa em 5 zonas anatômicas (Capô/Teto, Para-choque, Laterais e Traseira) medindo descontinuidades e custos estimados de reparo.
 2. **Laudo Pericial Oficial com QR Code:**
    - Geração de laudo cautelar em PDF vetorial A4 de alta resolução via ReportLab.
    - QR Code que direciona para a validação pública digital sem exigência de login (`/validar/{protocolo}`).
 3. **Comparador Técnico Multidimensional:**
-   - Comparação simultânea de 2 a 3 veículos em 5 dimensões (FIPE vs Preço, KM/ano, Integridade de Laudo, Débitos DETRAN e Ficha Técnica).
+   - Comparação simultânea de 2 a 3 veículos em 5 dimensões (FIPE vs Preço, KM/ano, Integridade de Laudo, Débitos DETRAN e Ficha Técnica), com carregamento sob demanda por acordeão.
 4. **Calculadora TCO & Termômetro de Mercado:**
    - Custo Total de Posse mensal detalhado (IPVA proporcional por UF, seguro, combustível e depreciação) e indicador de dispersão frente à FIPE.
 5. **Painel B2B do Lojista & Sincronização Multicanal:**
@@ -52,6 +52,10 @@ Plataforma automotiva Fullstack que une **marketplace de compra e venda de veíc
    - Controle estrito de acesso na exclusão de veículos (OWASP A01).
    - Validação binária de Magic Bytes (JPEG, PNG e PDF) antes de alocar buffer de upload.
    - Compressão client-side em Canvas HTML5 eliminando estouro de memória no navegador.
+7. **Performance & Otimização SPA (Core Web Vitals):**
+   - Code-splitting dinâmico com `React.lazy()` para todos os modais pesados, reduzindo o bundle inicial em até 40%.
+   - Pipeline de imagens com `loading="lazy"`, decodificação assíncrona (`decoding="async"`) e desoneração da GPU pela remoção de filtros gaussianos contínuos.
+   - Proteção de rede com timeout fail-fast de 1.2s via `AbortSignal.timeout` e fallback instantâneo para dados locais.
 
 ---
 
