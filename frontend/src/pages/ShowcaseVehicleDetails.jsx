@@ -820,18 +820,11 @@ export default function ShowcaseVehicleDetails() {
 
             {inspectionTab === '360' && (
               <Vehicle360Viewer
+                car={car}
                 vehicleImage={car.image || car.imagem}
-                carName={car.name}
-                imagesByAngle={{
-                  0: getVehicleImageUrl('carro_360_frente.jpg'),
-                  45: getVehicleImageUrl('carro_360_diagonal.jpg'),
-                  90: getVehicleImageUrl('carro_360_lateral.jpg'),
-                  135: getVehicleImageUrl('carro_360_diagonal.jpg'),
-                  180: getVehicleImageUrl('carro_360_traseira.jpg'),
-                  225: getVehicleImageUrl('carro_360_diagonal.jpg'),
-                  270: getVehicleImageUrl('carro_360_lateral.jpg'),
-                  315: getVehicleImageUrl('carro_360_diagonal.jpg')
-                }}
+                carName={car.name || `${car.brand} ${car.model}`}
+                gallery={car.gallery}
+                photos360={car.photos360}
               />
             )}
 
