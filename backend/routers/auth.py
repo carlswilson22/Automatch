@@ -14,6 +14,7 @@ import models
 import schemas
 import security
 from database import get_db
+from security_guard import login_rate_limiter, mask_email
 
 logger = logging.getLogger("automatch")
 router = APIRouter(prefix="/api", tags=["Auth"])
@@ -112,13 +113,28 @@ def register(request: schemas.UserCreate, db: Session = Depends(get_db)) -> Dict
 @router.post("/login", response_model=schemas.UserResponse)
 def login(request: schemas.UserLogin, db: Session = Depends(get_db)) -> Dict[str, Any]:
     email = request.email.strip().lower()
+
+    # Proteção defensiva contra Brute Force (OWASP A07)
+    allowed, remaining = login_rate_limiter.is_allowed(email)
+    if not allowed:
+        logger.warning("Tentativa de login bloqueada por rate limit para o e-mail: %s", mask_email(email))
+        raise HTTPException(
+            status_code=429,
+            detail=f"Muitas tentativas incorretas. Conta temporariamente bloqueada. Tente novamente em {remaining} segundos.",
+            headers={"Retry-After": str(remaining)}
+        )
+
     user = db.query(models.User).filter(models.User.email == email).first()
     
     if not user or not security.verify_password(request.password, user.hashed_password):
+        login_rate_limiter.record_failure(email)
         raise HTTPException(
             status_code=401,
             detail="E-mail ou senha incorretos."
         )
+
+    # Limpa tentativas prévias com sucesso
+    login_rate_limiter.reset(email)
     
     token = security.create_access_token({"sub": user.id, "email": user.email})
     return {
@@ -234,12 +250,12 @@ def forgot_password(request: schemas.ForgotPasswordRequest, db: Session = Depend
     # Registrar tentativa de rate limiting
     _reset_attempts[email].append(now)
 
-    # Simulação de envio de e-mail — loga no stdout
+    # Simulação de envio de e-mail — loga com proteção LGPD de PII
     logger.info("=" * 60)
-    logger.info(f"📧 CÓDIGO OTP DE RECUPERAÇÃO DE SENHA")
-    logger.info(f"   E-mail: {email}")
-    logger.info(f"   Código: {otp_code}")
-    logger.info(f"   Expira em: 15 minutos")
+    logger.info("📧 CÓDIGO OTP DE RECUPERAÇÃO DE SENHA")
+    logger.info(f"   Destinatário (LGPD): {mask_email(email)}")
+    logger.info("   Código de uso único gerado e armazenado de forma criptográfica.")
+    logger.info("   Expira em: 15 minutos")
     logger.info("=" * 60)
 
     # Em modo dev, retorna o código no response para popup no frontend
@@ -323,5 +339,91 @@ def checkout(
         "method": request.payment_method.upper(),
         "customer": request.customer_name,
         "status": "Aprovado"
+    }
+
+
+# ==============================================================================
+# CONFORMIDADE COM A LGPD (Art. 18 — Direitos do Titular)
+# ==============================================================================
+
+@router.get("/users/me/export-data")
+def export_user_data(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user_from_header)
+) -> Dict[str, Any]:
+    """
+    LGPD Art. 18, V (Portabilidade de dados):
+    Exporta todos os dados pessoais, anúncios e transações vinculadas ao titular autenticado.
+    """
+    user_cars = db.query(models.Car).filter(models.Car.user_id == current_user.id).all()
+    user_orders = db.query(models.PaymentOrder).filter(models.PaymentOrder.customer_email == current_user.email).all()
+
+    return {
+        "status": "success",
+        "timestamp_exportacao": datetime.utcnow().isoformat() + "Z",
+        "titular": {
+            "id": current_user.id,
+            "nome": current_user.name,
+            "email": current_user.email,
+            "data_registro": current_user.member_since,
+            "papel": current_user.role,
+            "sub_papel": current_user.sub_role,
+            "loja_id": current_user.store_id
+        },
+        "anuncios_cadastrados": [
+            {
+                "id": c.id,
+                "marca": c.brand,
+                "modelo": c.model,
+                "ano": c.year,
+                "preco": c.price,
+                "placa_ofuscada": c.plate[:3] + "****" if c.plate else None
+            }
+            for c in user_cars
+        ],
+        "historico_pedidos": [
+            {
+                "protocolo": o.protocol,
+                "descricao": o.item_description,
+                "valor": o.amount,
+                "status": o.status,
+                "data": o.created_at
+            }
+            for o in user_orders
+        ]
+    }
+
+
+@router.delete("/users/me")
+def delete_or_anonymize_user_account(
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user_from_header)
+) -> Dict[str, Any]:
+    """
+    LGPD Art. 18, VI (Eliminação / Anonimização de dados pessoais):
+    Anonimiza os dados cadastrais do titular, desvincula anúncios ativos e invalida credenciais,
+    preservando identificadores fiscais anônimos necessários ao cumprimento de obrigação legal.
+    """
+    user_id = current_user.id
+    anonymized_id = f"anonimizado_{user_id[:8]}"
+    
+    current_user.name = "Titular Anonimizado (LGPD)"
+    current_user.email = f"{anonymized_id}@anonimizado.automatch.local"
+    current_user.photo = None
+    current_user.hashed_password = "ANONYMIZED_LGPD_INACTIVE"
+
+    # Desvincula anúncios
+    db.query(models.Car).filter(models.Car.user_id == user_id).update({"user_id": None})
+    
+    # Invalida tokens de reset pendentes
+    db.query(models.PasswordResetToken).filter(models.PasswordResetToken.user_id == user_id).update({"used": 1})
+
+    db.commit()
+    logger.info("Conta do usuário %s anonimizada com sucesso conforme solicitação LGPD.", user_id)
+
+    return {
+        "status": "success",
+        "message": "Conta e dados pessoais foram devidamente anonimizados e desvinculados em conformidade com o Art. 18 da LGPD.",
+        "titular_id": anonymized_id
     }
 

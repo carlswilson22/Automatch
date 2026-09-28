@@ -29,12 +29,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r backend/requirements.txt
 
-      - name: Executar Bateria Completa de Testes de Regressão (9 Cenários)
+      - name: Executar Bateria Completa de Testes de Regressão e Melhorias
         working-directory: ./backend
         env:
           DATABASE_URL: "sqlite:////tmp/ci_audit_test.db"
         run: |
           python -m unittest test_audit_full_battery.py
+          python -m unittest test_improvements_battery.py
 
   # 2. VERIFICAÇÃO DO FRONTEND (REACT + VITE + TAILWIND)
   testar-frontend:

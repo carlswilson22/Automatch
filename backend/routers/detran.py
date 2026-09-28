@@ -5,7 +5,8 @@ from datetime import datetime
 from typing import Dict, Any, Optional
 
 import httpx
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Request
+from security_guard import plate_rate_limiter
 
 logger = logging.getLogger("automatch")
 router = APIRouter(tags=["DETRAN & Laudo Cautelar"])
@@ -135,12 +136,22 @@ def normalize_plate(plate: str) -> str:
 @router.get("/api/detran/{placa}")
 @router.get("/api/v1/detran/{placa}")
 @router.get("/api/v1/integracoes/detran/{placa}")
-async def consultar_detran(placa: str) -> Dict[str, Any]:
+async def consultar_detran(placa: str, request: Request = None) -> Dict[str, Any]:
     """
     Endpoint de Consulta DETRAN:
     Retorna os dados cadastrais oficiais, restrições financeiras/judiciais,
     débitos de IPVA/licenciamento e histórico de vistorias por placa veicular.
+    Protegido por Rate Limiter defensivo contra scraping (máx 30 req/min).
     """
+    client_ip = request.client.host if (request and request.client) else "127.0.0.1"
+    allowed, remaining = plate_rate_limiter.is_allowed(client_ip)
+    if not allowed:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Limite de consultas à base veicular excedido. Tente novamente em {remaining} segundos.",
+            headers={"Retry-After": str(remaining)}
+        )
+
     clean_plate = normalize_plate(placa)
     
     if not clean_plate or len(clean_plate) < 6:

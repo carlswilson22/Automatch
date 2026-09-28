@@ -1,5 +1,5 @@
 # pyrefly: ignore [missing-import]
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, Float
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, Float, Index
 from sqlalchemy.orm import relationship
 import uuid
 from database import Base
@@ -227,5 +227,10 @@ class PartnershipAuditLog(Base):
     store_id = Column(Integer, nullable=True, index=True)
     action = Column(String, nullable=False)
     details = Column(Text, nullable=True)
-    created_at = Column(String, nullable=False)
+    created_at = Column(String, nullable=False, index=True)
+
+
+# ── Índices de Alta Performance (Consultas e Filtros Compostos) ───────────────
+Index("idx_cars_brand_price", Car.brand, Car.price)
+
 

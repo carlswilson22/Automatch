@@ -30,17 +30,10 @@ def get_current_b2b_user(
     Atribui store_id padrão (store-1) caso o lojista ainda não tenha store_id associado.
     """
     if not authorization or not authorization.startswith("Bearer "):
-        # Fallback para desenvolvimento / lojista padrão caso sem token explícito
-        user = db.query(models.User).filter(models.User.email == "admin@automatch.com").first()
-        if user:
-            if not user.store_id:
-                user.store_id = 1
-                try:
-                    db.commit()
-                except Exception:
-                    db.rollback()
-            return user
-        raise HTTPException(status_code=401, detail="Autenticação necessária para acessar o módulo B2B.")
+        raise HTTPException(
+            status_code=401,
+            detail="Token de autenticação obrigatório para acessar o ecossistema B2B."
+        )
 
     token = authorization.removeprefix("Bearer ").strip()
 
