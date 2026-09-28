@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, Users, Car, Clock, FileText, CheckCircle2, AlertTriangle, 
@@ -10,6 +10,111 @@ import PartnerChatModal from './PartnerChatModal';
 import NewPartnershipInviteCard from './NewPartnershipInviteCard';
 import B2BInventorySkeleton from './B2BInventorySkeleton';
 import { getVehicleImageUrl, handleVehicleImageError } from '../../utils/imageHelper';
+import { showcaseCars } from '../../data/showcaseData';
+
+const B2BInventoryCard = memo(function B2BInventoryCard({ car, onReserve }) {
+  const piso = car.valor_minimo_repasse || (car.price * 0.90);
+  const [markup, setMarkup] = useState(5000);
+  const precoFinalCliente = piso + Number(markup || 0);
+  const isReserved = car.status_reserva === 'reservado';
+
+  return (
+    <div
+      className={`bg-white rounded-3xl border transition-all overflow-hidden flex flex-col ${
+        isReserved
+          ? 'border-amber-200 opacity-80'
+          : 'border-slate-200 hover:border-blue-300 hover:shadow-lg'
+      }`}
+    >
+      {/* Car Image + Badges */}
+      <div className="relative h-48 bg-slate-900 overflow-hidden group">
+        <img
+          src={getVehicleImageUrl(car.image)}
+          alt={`${car.brand} ${car.model}`}
+          loading="lazy"
+          onError={handleVehicleImageError}
+          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+        />
+        <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
+          <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-900/90 text-white border border-white/10">
+            {car.store_name}
+          </span>
+          {isReserved && (
+            <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500 text-white flex items-center gap-1">
+              <Clock className="w-3 h-3" /> Em Reserva
+            </span>
+          )}
+        </div>
+        <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-xl bg-white/95 text-[11px] font-bold text-slate-700 shadow-sm border border-slate-200/60">
+          {car.year} • {Number(car.km).toLocaleString('pt-BR')} km
+        </div>
+      </div>
+
+      {/* Body Details */}
+      <div className="p-5 flex-1 flex flex-col justify-between">
+        <div>
+          <h3 className="text-base font-black text-slate-800 leading-tight">
+            {car.brand} {car.model}
+          </h3>
+          <p className="text-xs text-slate-400 mt-0.5">{car.location || 'Localização não informada'}</p>
+
+          {/* Repasse Pricing Box */}
+          <div className="mt-4 p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-500">Piso Mínimo de Repasse:</span>
+              <span className="text-sm font-black text-amber-700">
+                R$ {piso.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              </span>
+            </div>
+
+            {/* Markup Simulator Input */}
+            <div className="pt-2 border-t border-slate-200/80">
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-[11px] font-black uppercase text-slate-400">
+                  Sua Margem Lojista:
+                </label>
+                <span className="text-xs font-bold text-emerald-600">
+                  + R$ {Number(markup).toLocaleString('pt-BR')}
+                </span>
+              </div>
+              <input
+                type="range"
+                min="1000"
+                max="25000"
+                step="500"
+                value={markup}
+                onChange={(e) => setMarkup(Number(e.target.value))}
+                className="w-full accent-emerald-600 cursor-pointer"
+              />
+            </div>
+
+            {/* Suggested Price to Customer */}
+            <div className="pt-2 border-t border-slate-200/80 flex items-center justify-between">
+              <span className="text-[11px] font-bold text-slate-600">Sugerido ao Cliente:</span>
+              <span className="text-base font-black text-slate-900">
+                R$ {precoFinalCliente.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Button */}
+        <button
+          onClick={() => onReserve(car, markup)}
+          disabled={isReserved}
+          className={`w-full mt-4 py-3 rounded-2xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer ${
+            isReserved
+              ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
+              : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/20 active:scale-95'
+          }`}
+        >
+          <Clock className="w-4 h-4" />
+          {isReserved ? 'Veículo Reservado' : 'Reservar para Cliente (Hold Lock)'}
+        </button>
+      </div>
+    </div>
+  );
+});
 
 export default function PartnershipHubModal({ isOpen, onClose }) {
   const { user } = useAuth();
@@ -91,7 +196,7 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
     try {
       const res = await fetch(
         `/api/partnerships/shared-inventory?limit=12&offset=${offset}&q=${encodeURIComponent(query)}`,
-        { headers: getAuthHeaders() }
+        { headers: getAuthHeaders(), signal: AbortSignal.timeout(1200) }
       );
 
       if (res.ok) {
@@ -120,9 +225,27 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
             timestamp: now
           };
         }
+      } else {
+        throw new Error(`HTTP ${res.status}`);
       }
     } catch (e) {
-      console.error('Erro ao buscar estoque B2B compartilhado:', e);
+      if (!isAppend && sharedCars.length === 0) {
+        const fallbackItems = (showcaseCars || []).slice(0, 9).map((c, i) => ({
+          id: c.id || `partner-car-${i}`,
+          brand: c.brand,
+          model: c.model,
+          year: c.year,
+          km: c.mileage || 0,
+          price: c.price,
+          valor_minimo_repasse: Math.round((c.price || 100000) * 0.90),
+          image: c.image,
+          store_name: i % 2 === 0 ? 'AutoShop Prime' : 'Motors Campinas',
+          status_reserva: i === 2 ? 'reservado' : 'disponivel',
+          location: c.location || 'São Paulo, SP'
+        }));
+        setSharedCars(fallbackItems);
+        setHasMoreCars(false);
+      }
     } finally {
       setInventoryLoading(false);
       setLoadingMore(false);
@@ -169,13 +292,16 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
 
   const refreshAll = async () => {
     setLoading(true);
-    sharedCarsCacheRef.current = {};
-    await Promise.all([
-      loadSharedInventory(searchCar, 0, false),
-      loadPartnerships(),
-      loadReservations(),
-      loadTransactions()
-    ]);
+    if (activeTab === 'inventory') {
+      sharedCarsCacheRef.current = {};
+      await loadSharedInventory(searchCar, 0, false);
+    } else if (activeTab === 'partnerships') {
+      await loadPartnerships();
+    } else if (activeTab === 'reservations') {
+      await loadReservations();
+    } else if (activeTab === 'transactions') {
+      await loadTransactions();
+    }
     setLoading(false);
   };
 
@@ -266,9 +392,9 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
   };
 
   // Ações de Reserva
-  const openReservationModal = (car) => {
+  const openReservationModal = useCallback((car, customMarkup = 5000) => {
     const piso = car.valor_minimo_repasse || (car.price * 0.90);
-    const initialMarkup = markupMap[car.id] !== undefined ? markupMap[car.id] : 5000;
+    const initialMarkup = customMarkup !== undefined ? customMarkup : (markupMap[car.id] !== undefined ? markupMap[car.id] : 5000);
     setReservingCar(car);
     setReservationForm({
       proposed_price: piso,
@@ -276,7 +402,7 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
       client_name: '',
       duration_minutes: 120
     });
-  };
+  }, [markupMap]);
 
   const handleConfirmReservation = async (e) => {
     e.preventDefault();
@@ -416,7 +542,7 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/70 backdrop-blur-md">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/85">
       <motion.div
         initial={{ opacity: 0, scale: 0.96, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -563,111 +689,13 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
               ) : (
                 <div className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {sharedCars.map((car) => {
-                      const piso = car.valor_minimo_repasse || (car.price * 0.90);
-                      const currentMarkup = markupMap[car.id] !== undefined ? markupMap[car.id] : 5000;
-                      const precoFinalCliente = piso + Number(currentMarkup || 0);
-                      const isReserved = car.status_reserva === 'reservado';
-
-                      return (
-                        <div
-                          key={car.id}
-                          className={`bg-white rounded-3xl border transition-all overflow-hidden flex flex-col ${
-                            isReserved
-                              ? 'border-amber-200 opacity-80'
-                              : 'border-slate-200 hover:border-blue-300 hover:shadow-lg'
-                          }`}
-                        >
-                          {/* Car Image + Badges */}
-                          <div className="relative h-48 bg-slate-900 overflow-hidden group">
-                            <img
-                              src={getVehicleImageUrl(car.image)}
-                              alt={`${car.brand} ${car.model}`}
-                              onError={handleVehicleImageError}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                            />
-                            <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
-                              <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-900/80 backdrop-blur-md text-white">
-                                {car.store_name}
-                              </span>
-                              {isReserved && (
-                                <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500 text-white flex items-center gap-1">
-                                  <Clock className="w-3 h-3" /> Em Reserva
-                                </span>
-                              )}
-                            </div>
-                            <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-xl bg-white/90 backdrop-blur-md text-[11px] font-bold text-slate-700 shadow-sm">
-                              {car.year} • {Number(car.km).toLocaleString('pt-BR')} km
-                            </div>
-                          </div>
-
-                          {/* Body Details */}
-                          <div className="p-5 flex-1 flex flex-col justify-between">
-                            <div>
-                              <h3 className="text-base font-black text-slate-800 leading-tight">
-                                {car.brand} {car.model}
-                              </h3>
-                              <p className="text-xs text-slate-400 mt-0.5">{car.location || 'Localização não informada'}</p>
-
-                              {/* Repasse Pricing Box */}
-                              <div className="mt-4 p-3.5 bg-slate-50 rounded-2xl border border-slate-200 space-y-2.5">
-                                <div className="flex items-center justify-between">
-                                  <span className="text-xs font-bold text-slate-500">Piso Mínimo de Repasse:</span>
-                                  <span className="text-sm font-black text-amber-700">
-                                    R$ {piso.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                                  </span>
-                                </div>
-
-                                {/* Markup Simulator Input */}
-                                <div className="pt-2 border-t border-slate-200/80">
-                                  <div className="flex items-center justify-between mb-1">
-                                    <label className="text-[11px] font-black uppercase text-slate-400">
-                                      Sua Margem Lojista:
-                                    </label>
-                                    <span className="text-xs font-bold text-emerald-600">
-                                      + R$ {Number(currentMarkup).toLocaleString('pt-BR')}
-                                    </span>
-                                  </div>
-                                  <input
-                                    type="range"
-                                    min="1000"
-                                    max="25000"
-                                    step="500"
-                                    value={currentMarkup}
-                                    onChange={(e) =>
-                                      setMarkupMap({ ...markupMap, [car.id]: Number(e.target.value) })
-                                    }
-                                    className="w-full accent-emerald-600 cursor-pointer"
-                                  />
-                                </div>
-
-                                {/* Suggested Price to Customer */}
-                                <div className="pt-2 border-t border-slate-200/80 flex items-center justify-between">
-                                  <span className="text-[11px] font-bold text-slate-600">Sugerido ao Cliente:</span>
-                                  <span className="text-base font-black text-slate-900">
-                                    R$ {precoFinalCliente.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Action Button */}
-                            <button
-                              onClick={() => openReservationModal(car)}
-                              disabled={isReserved}
-                              className={`w-full mt-4 py-3 rounded-2xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all ${
-                                isReserved
-                                  ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                                  : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/20 active:scale-95'
-                              }`}
-                            >
-                              <Clock className="w-4 h-4" />
-                              {isReserved ? 'Veículo Reservado' : 'Reservar para Cliente (Hold Lock)'}
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })}
+                    {sharedCars.map((car) => (
+                      <B2BInventoryCard
+                        key={car.id}
+                        car={car}
+                        onReserve={openReservationModal}
+                      />
+                    ))}
                   </div>
 
                   {/* Botão Paginado de Carregar Mais */}

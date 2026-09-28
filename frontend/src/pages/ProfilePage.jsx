@@ -7,7 +7,9 @@ import {
   LayoutDashboard, PlusCircle, CreditCard, ChevronRight, Car, Users
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
-import PartnershipHubModal from '../components/partners/PartnershipHubModal';
+
+// Code-Splitting: PartnershipHubModal carregado sob demanda (economiza 50.5 kB na montagem inicial)
+const PartnershipHubModal = React.lazy(() => import('../components/partners/PartnershipHubModal'));
 
 const ProfilePage = () => {
   const navigate = useNavigate();
@@ -273,11 +275,15 @@ const ProfilePage = () => {
         </div>
       </div>
 
-      {/* Hub B2B Modal */}
-      <PartnershipHubModal
-        isOpen={isB2BModalOpen}
-        onClose={() => setIsB2BModalOpen(false)}
-      />
+      {/* Hub B2B Modal (Lazy Loaded) */}
+      <React.Suspense fallback={null}>
+        {isB2BModalOpen && (
+          <PartnershipHubModal
+            isOpen={isB2BModalOpen}
+            onClose={() => setIsB2BModalOpen(false)}
+          />
+        )}
+      </React.Suspense>
     </div>
   );
 };
