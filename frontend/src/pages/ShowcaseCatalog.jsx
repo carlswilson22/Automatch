@@ -549,7 +549,7 @@ const ShowcaseCatalog = () => {
       {/* ── Header ── */}
       <nav className="w-full px-4 sm:px-6 py-4 bg-white border-b border-slate-200 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto flex items-center gap-4">
-          <button onClick={() => navigate('/')} className="p-2 hover:bg-slate-100 rounded-full transition-colors shrink-0">
+          <button onClick={() => navigate('/')} aria-label="Voltar para a página inicial" className="p-2 hover:bg-slate-100 rounded-full transition-colors shrink-0">
             <ArrowLeft className="w-5 h-5 text-slate-600" />
           </button>
           <div className="flex items-center gap-2 cursor-pointer shrink-0" onClick={() => navigate('/')}>
@@ -563,7 +563,7 @@ const ShowcaseCatalog = () => {
                 placeholder="Buscar por nome, tipo ou cor..."
                 className="w-full bg-slate-50 border border-slate-200 rounded-full pl-10 pr-10 py-2.5 text-sm focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue focus:outline-none transition-all" />
               {searchQuery && (
-                <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2">
+                <button onClick={() => setSearchQuery('')} aria-label="Limpar campo de busca" className="absolute right-3 top-1/2 -translate-y-1/2">
                   <X className="w-4 h-4 text-slate-400 hover:text-slate-600" />
                 </button>
               )}
@@ -703,10 +703,12 @@ const ShowcaseCatalog = () => {
               </div>
               <div className="bg-white border border-slate-200 rounded-xl flex overflow-hidden">
                 <button onClick={() => setViewMode('grid')}
+                  aria-label="Visualização em grade"
                   className={`px-3 py-2.5 text-sm transition-colors ${viewMode === 'grid' ? 'bg-brand-blue text-white' : 'text-slate-500 hover:bg-slate-50'}`}>
                   <SlidersHorizontal className="w-4 h-4 rotate-90" />
                 </button>
                 <button onClick={() => setViewMode('list')}
+                  aria-label="Visualização em lista"
                   className={`px-3 py-2.5 text-sm transition-colors ${viewMode === 'list' ? 'bg-brand-blue text-white' : 'text-slate-500 hover:bg-slate-50'}`}>
                   <SlidersHorizontal className="w-4 h-4" />
                 </button>
