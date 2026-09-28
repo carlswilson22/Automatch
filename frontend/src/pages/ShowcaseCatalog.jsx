@@ -14,6 +14,7 @@ import {
   Car, ChevronDown, X, Star, RotateCcw, Tag, UserPlus, LogIn, Sparkles, Loader2
 } from 'lucide-react';
 import { getVehicleImageUrl, handleVehicleImageError } from '../utils/imageHelper';
+import VehicleCardSkeleton from '../components/common/VehicleCardSkeleton';
 
 
 // ─── UTILS DE FORMATAÇÃO ──────────────────────────────────────────────────
@@ -95,7 +96,7 @@ const PRICE_RANGES = [
 ];
 
 // ─── CAR CARD ────────────────────────────────────────────────────────────────
-const CarCard = ({ car, index, viewMode }) => {
+const CarCard = React.memo(({ car, index, viewMode }) => {
   const navigate = useNavigate();
   const [liked, setLiked] = useState(() => isFavorite(car.id));
 
@@ -132,6 +133,7 @@ const CarCard = ({ car, index, viewMode }) => {
             </div>
           )}
           <button onClick={handleLike}
+            aria-label={liked ? "Remover dos favoritos" : "Curtir veículo"}
             title={liked ? "Remover dos favoritos" : "Curtir veículo"}
             className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors shadow-md z-10">
             <Heart className={`w-4 h-4 transition-all ${liked ? 'fill-red-500 text-red-500 scale-110' : 'text-slate-400 hover:text-red-500'}`} />
@@ -196,6 +198,7 @@ const CarCard = ({ car, index, viewMode }) => {
           <PriceDropBadge originalPrice={car.originalPrice} currentPrice={car.price} variant="badge" />
         </div>
         <button onClick={handleLike}
+          aria-label={liked ? "Remover dos favoritos" : "Curtir veículo"}
           title={liked ? "Remover dos favoritos" : "Curtir veículo"}
           className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors shadow-md z-10">
           <Heart className={`w-4 h-4 transition-all ${liked ? 'fill-red-500 text-red-500 scale-110' : 'text-slate-400 hover:text-red-500'}`} />
@@ -236,14 +239,16 @@ const CarCard = ({ car, index, viewMode }) => {
           <button onClick={(e) => { e.stopPropagation(); navigate(`/encontrar/${car.id}`); }} className="flex-1 py-2.5 bg-brand-blue text-white rounded-xl font-semibold text-sm hover:bg-blue-700 transition-colors flex items-center justify-center gap-1.5">
             <Eye className="w-4 h-4" /> Ver Detalhes
           </button>
-          <button className="py-2.5 px-3 bg-slate-100 text-slate-600 rounded-xl text-sm hover:bg-slate-200 transition-colors" onClick={e => e.stopPropagation()}>
+          <button aria-label="Ver localização" className="py-2.5 px-3 bg-slate-100 text-slate-600 rounded-xl text-sm hover:bg-slate-200 transition-colors" onClick={e => e.stopPropagation()}>
             <MapPin className="w-4 h-4" />
           </button>
         </div>
       </div>
     </motion.div>
   );
-};
+});
+CarCard.displayName = 'CarCard';
+
 
 // ─── FILTER CHIP (for active filters) ────────────────────────────────────────
 const FilterChip = ({ label, onRemove }) => (
@@ -722,28 +727,38 @@ const ShowcaseCatalog = () => {
             </div>
           )}
 
-          {/* Loading Indicator */}
-          {isLoading && (
-            <div className="py-6 flex items-center justify-center gap-2 text-slate-500">
-              <Loader2 className="w-5 h-5 text-brand-blue animate-spin" />
-              <span className="text-xs font-semibold">Carregando catálogo...</span>
+          {/* Results & Skeletons */}
+          {isLoading && results.length === 0 ? (
+            <div className={viewMode === 'grid' ? "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6" : "flex flex-col gap-5"}>
+              {Array.from({ length: 6 }).map((_, idx) => (
+                <VehicleCardSkeleton key={idx} viewMode={viewMode} />
+              ))}
             </div>
-          )}
+          ) : (
+            <>
+              {/* Subtle indicator during background page fetch */}
+              {isLoading && (
+                <div className="py-2 mb-4 flex items-center justify-center gap-2 text-slate-500">
+                  <Loader2 className="w-4 h-4 text-brand-blue animate-spin" />
+                  <span className="text-xs font-semibold">Atualizando catálogo...</span>
+                </div>
+              )}
 
-          {/* Results */}
-          <AnimatePresence mode="wait">
-            {viewMode === 'grid' ? (
-              <motion.div key={`grid-page-${currentPage}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
-                {results.map((c, i) => <CarCard key={c.id} car={c} index={i} viewMode="grid" />)}
-              </motion.div>
-            ) : (
-              <motion.div key={`list-page-${currentPage}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                className="flex flex-col gap-5">
-                {results.map((c, i) => <CarCard key={c.id} car={c} index={i} viewMode="list" />)}
-              </motion.div>
-            )}
-          </AnimatePresence>
+              <AnimatePresence mode="wait">
+                {viewMode === 'grid' ? (
+                  <motion.div key={`grid-page-${currentPage}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                    className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {results.map((c, i) => <CarCard key={c.id} car={c} index={i} viewMode="grid" />)}
+                  </motion.div>
+                ) : (
+                  <motion.div key={`list-page-${currentPage}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                    className="flex flex-col gap-5">
+                    {results.map((c, i) => <CarCard key={c.id} car={c} index={i} viewMode="list" />)}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </>
+          )}
 
           {results.length === 0 && !isLoading && (
             <div className="w-full py-20 flex flex-col items-center justify-center text-slate-500">

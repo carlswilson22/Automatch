@@ -1,20 +1,23 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import Home from './pages/Home';
-import ShowcaseCatalog from './pages/ShowcaseCatalog';
-import ShowcaseVehicleDetails from './pages/ShowcaseVehicleDetails';
-import AuthPage from './pages/AuthPage';
-import ProfilePage from './pages/ProfilePage';
-import HowItWorksPage from './pages/HowItWorksPage';
-import FavoritesPage from './pages/FavoritesPage';
-import CheckoutPage from './pages/CheckoutPage';
-import Dashboard from './pages/Dashboard';
-import NewCarAdForm from './pages/NewCarAdForm';
-import PublicValidationPage from './pages/PublicValidationPage';
-import MyAdsPage from './pages/MyAdsPage';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 import GlobalErrorBoundary from './components/common/GlobalErrorBoundary';
+import RouteLoadingSkeleton from './components/common/RouteLoadingSkeleton';
+
+// Code Splitting: Lazy loading dinâmico de rotas para reduzir o tamanho inicial do bundle
+const Home = React.lazy(() => import('./pages/Home'));
+const ShowcaseCatalog = React.lazy(() => import('./pages/ShowcaseCatalog'));
+const ShowcaseVehicleDetails = React.lazy(() => import('./pages/ShowcaseVehicleDetails'));
+const AuthPage = React.lazy(() => import('./pages/AuthPage'));
+const ProfilePage = React.lazy(() => import('./pages/ProfilePage'));
+const HowItWorksPage = React.lazy(() => import('./pages/HowItWorksPage'));
+const FavoritesPage = React.lazy(() => import('./pages/FavoritesPage'));
+const CheckoutPage = React.lazy(() => import('./pages/CheckoutPage'));
+const Dashboard = React.lazy(() => import('./pages/Dashboard'));
+const NewCarAdForm = React.lazy(() => import('./pages/NewCarAdForm'));
+const PublicValidationPage = React.lazy(() => import('./pages/PublicValidationPage'));
+const MyAdsPage = React.lazy(() => import('./pages/MyAdsPage'));
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -30,9 +33,10 @@ function App() {
       <AuthProvider>
         <Router basename={import.meta.env.BASE_URL}>
           <ScrollToTop />
-          <Routes>
-          {/* Main App Routes */}
-          <Route path="/" element={<Home />} />
+          <Suspense fallback={<RouteLoadingSkeleton />}>
+            <Routes>
+            {/* Main App Routes */}
+            <Route path="/" element={<Home />} />
           <Route path="/login" element={<AuthPage />} />
           <Route path="/encontrar" element={<ShowcaseCatalog />} />
           <Route path="/encontrar/:id" element={<ShowcaseVehicleDetails />} />
@@ -82,7 +86,8 @@ function App() {
           {/* Catch-all fallback */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </Router>
+      </Suspense>
+    </Router>
     </AuthProvider>
   </GlobalErrorBoundary>
   );

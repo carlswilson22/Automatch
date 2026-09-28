@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Car, 
@@ -11,7 +11,9 @@ import {
   TrendingUp,
   Package,
   FileText,
-  Users
+  Users,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { stores, inventory } from '../data/inventoryData';
@@ -25,6 +27,8 @@ export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState('grid');
   const [isB2BModalOpen, setIsB2BModalOpen] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12;
 
   const filteredInventory = inventory.filter(item => {
     const matchesStore = !selectedStoreId || item.storeId === selectedStoreId;
@@ -33,6 +37,16 @@ export default function Dashboard() {
                          item.plate.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesStore && matchesSearch;
   });
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedStoreId, searchQuery]);
+
+  const totalPages = Math.ceil(filteredInventory.length / itemsPerPage) || 1;
+  const paginatedInventory = useMemo(() => {
+    const start = (currentPage - 1) * itemsPerPage;
+    return filteredInventory.slice(start, start + itemsPerPage);
+  }, [filteredInventory, currentPage, itemsPerPage]);
 
   const getStoreStats = () => {
     const totalAssets = filteredInventory.length;
@@ -143,7 +157,7 @@ export default function Dashboard() {
               exit={{ opacity: 0 }}
               className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
             >
-              {filteredInventory.map((item, idx) => {
+              {paginatedInventory.map((item, idx) => {
                 const store = stores.find(s => s.id === item.storeId);
                 return (
                   <motion.div
@@ -219,7 +233,7 @@ export default function Dashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredInventory.map((item) => {
+                  {paginatedInventory.map((item) => {
                     const store = stores.find(s => s.id === item.storeId);
                     return (
                       <tr key={item.id} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
@@ -257,7 +271,50 @@ export default function Dashboard() {
           )}
         </AnimatePresence>
         
+        {/* Pagination Bar */}
+        {filteredInventory.length > itemsPerPage && (
+          <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white border border-slate-200 rounded-2xl px-6 py-4 shadow-sm">
+            <p className="text-xs font-medium text-slate-500">
+              Mostrando <span className="font-bold text-slate-700">{(currentPage - 1) * itemsPerPage + 1}</span> a <span className="font-bold text-slate-700">{Math.min(currentPage * itemsPerPage, filteredInventory.length)}</span> de <span className="font-bold text-slate-700">{filteredInventory.length}</span> ativos
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                disabled={currentPage === 1}
+                aria-label="Página anterior"
+                className="p-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <div className="flex items-center gap-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
+                  <button
+                    key={pageNum}
+                    onClick={() => setCurrentPage(pageNum)}
+                    className={`w-8 h-8 rounded-xl text-xs font-bold transition-all ${
+                      currentPage === pageNum
+                        ? 'bg-brand-blue text-white shadow-sm'
+                        : 'text-slate-600 hover:bg-slate-100'
+                    }`}
+                  >
+                    {pageNum}
+                  </button>
+                ))}
+              </div>
+              <button
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages}
+                aria-label="Próxima página"
+                className="p-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        )}
+
         {filteredInventory.length === 0 && (
+
           <div className="py-20 flex flex-col items-center justify-center text-slate-400">
              <Car className="w-12 h-12 mb-4 opacity-20" />
              <p className="font-medium">Nenhum ativo encontrado para esta unidade.</p>
