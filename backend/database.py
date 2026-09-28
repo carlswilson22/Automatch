@@ -10,6 +10,12 @@ DATABASE_URL = os.getenv(
     "postgresql://postgres:postgres@db:5432/automatch"
 )
 
+# SQLAlchemy 2.0: Assegura compatibilidade com psycopg2 quando a URL inicia com postgresql:// ou postgres://
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg2://", 1)
+elif DATABASE_URL.startswith("postgresql://"):
+    DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://", 1)
+
 # Engine setup com Pool de Conexões Industrial e Healthcheck automático
 engine_kwargs = {}
 if "sqlite" in DATABASE_URL:
