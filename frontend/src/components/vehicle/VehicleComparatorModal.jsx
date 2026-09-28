@@ -5,8 +5,59 @@ import {
   X, Check, AlertCircle, ShieldCheck, ArrowRight, DollarSign,
   Calendar, Gauge, Fuel, CheckCircle2, SlidersHorizontal, Plus,
   TrendingDown, TrendingUp, Minus, Car, Sparkles, Scale, ExternalLink,
-  Search
+  Search, ChevronDown, ChevronUp
 } from 'lucide-react';
+import { getVehicleImageUrl, handleVehicleImageError } from '../../utils/imageHelper';
+
+const CURRENT_YEAR = 2026;
+
+const normalizeCar = (car) => {
+  if (!car) return null;
+  const name = car.name || `${car.brand || ''} ${car.model || 'Veículo'}`.trim();
+  const price = Number(car.price) || 0;
+  const mileage = Number(car.mileage || car.km) || 0;
+  const image = car.image || car.imagem || '/images/FotoHondaCivic.jpeg';
+  const year = Number(car.year) || CURRENT_YEAR;
+  return { ...car, name, price, mileage, image, year };
+};
+
+const formatMoney = (val) => {
+  if (!val || isNaN(val)) return 'R$ 0,00';
+  return Number(val).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+};
+
+const calculateKmPerYear = (km, year) => {
+  const age = Math.max(1, CURRENT_YEAR - (year || CURRENT_YEAR));
+  return Math.round((km || 0) / age);
+};
+
+const calculateFipeDiff = (price, fipe) => {
+  if (!price || !fipe) return null;
+  const diff = price - fipe;
+  const pct = (diff / fipe) * 100;
+  if (isNaN(pct)) return null;
+  return {
+    diff,
+    pct,
+    isBelow: diff < 0,
+    label: diff < 0 
+      ? `${Math.abs(pct).toFixed(1)}% abaixo da FIPE` 
+      : diff === 0 
+        ? 'Exatamente na FIPE' 
+        : `${pct.toFixed(1)}% acima da FIPE`
+  };
+};
+
+const estimateMonthlyPayment = (price) => {
+  if (!price || isNaN(price)) return 0;
+  const entry = price * 0.3; // 30% de entrada
+  const financed = price - entry;
+  // 48x taxa média 1.45% a.m.
+  const i = 0.0145;
+  const n = 48;
+  const pmt = financed * (i * Math.pow(1 + i, n)) / (Math.pow(1 + i, n) - 1);
+  return Math.round(pmt) || 0;
+};
 
 export default function VehicleComparatorModal({
   isOpen,
@@ -17,17 +68,6 @@ export default function VehicleComparatorModal({
   availableVehicles = []
 }) {
   const navigate = useNavigate();
-  const currentYear = 2026;
-
-  const normalizeCar = (car) => {
-    if (!car) return null;
-    const name = car.name || `${car.brand || ''} ${car.model || 'Veículo'}`.trim();
-    const price = Number(car.price) || 0;
-    const mileage = Number(car.mileage || car.km) || 0;
-    const image = car.image || car.imagem || '/images/FotoHondaCivic.jpeg';
-    const year = Number(car.year) || currentYear;
-    return { ...car, name, price, mileage, image, year };
-  };
 
   const allAvailable = useMemo(() => {
     const raw = (availableCars && availableCars.length > 0) ? availableCars : (availableVehicles || []);
@@ -36,9 +76,24 @@ export default function VehicleComparatorModal({
 
   // Permite comparar de 2 a 3 veículos simultaneamente com sincronização reativa
   const [selectedVehicles, setSelectedVehicles] = useState([]);
+  const [selectorOpenSlot, setSelectorOpenSlot] = useState(null);
+  const [selectorSearch, setSelectorSearch] = useState('');
+  const [debouncedSelectorSearch, setDebouncedSelectorSearch] = useState('');
+  const [openSections, setOpenSections] = useState({
+    fipe: true,
+    km: false,
+    laudo: false,
+    detran: false,
+    specs: false
+  });
+
+  const toggleSection = (sectionKey) => {
+    setOpenSections(prev => ({ ...prev, [sectionKey]: !prev[sectionKey] }));
+  };
 
   useEffect(() => {
     if (!isOpen) return;
+    if (selectedVehicles.length > 0) return;
     const normalizedBase = normalizeCar(baseCar);
     const normalizedInit = (initialVehicles || []).map(normalizeCar).filter(Boolean);
 
@@ -54,52 +109,8 @@ export default function VehicleComparatorModal({
     } else {
       setSelectedVehicles([]);
     }
-  }, [isOpen, baseCar, initialVehicles, allAvailable]);
+  }, [isOpen, baseCar, initialVehicles, allAvailable, selectedVehicles.length]);
 
-  const [selectorOpenSlot, setSelectorOpenSlot] = useState(null);
-  const [selectorSearch, setSelectorSearch] = useState('');
-
-  if (!isOpen) return null;
-
-  const formatMoney = (val) => {
-    if (!val || isNaN(val)) return 'R$ 0,00';
-    return Number(val).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-  };
-
-  const calculateKmPerYear = (km, year) => {
-    const age = Math.max(1, currentYear - (year || currentYear));
-    return Math.round((km || 0) / age);
-  };
-
-  const calculateFipeDiff = (price, fipe) => {
-    if (!price || !fipe) return null;
-    const diff = price - fipe;
-    const pct = (diff / fipe) * 100;
-    if (isNaN(pct)) return null;
-    return {
-      diff,
-      pct,
-      isBelow: diff < 0,
-      label: diff < 0 
-        ? `${Math.abs(pct).toFixed(1)}% abaixo da FIPE` 
-        : diff === 0 
-          ? 'Exatamente na FIPE' 
-          : `${pct.toFixed(1)}% acima da FIPE`
-    };
-  };
-
-  const estimateMonthlyPayment = (price) => {
-    if (!price || isNaN(price)) return 0;
-    const entry = price * 0.3; // 30% de entrada
-    const financed = price - entry;
-    // 48x taxa média 1.45% a.m.
-    const i = 0.0145;
-    const n = 48;
-    const pmt = financed * (i * Math.pow(1 + i, n)) / (Math.pow(1 + i, n) - 1);
-    return Math.round(pmt) || 0;
-  };
-
-  const [debouncedSelectorSearch, setDebouncedSelectorSearch] = useState('');
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSelectorSearch(selectorSearch);
@@ -110,13 +121,13 @@ export default function VehicleComparatorModal({
   const filteredAvailable = useMemo(() => {
     const unselected = allAvailable.filter(c => c && !selectedVehicles.some(sv => sv && String(sv.id) === String(c.id)));
     if (!debouncedSelectorSearch.trim()) {
-      return unselected.slice(0, 15);
+      return unselected.slice(0, 8);
     }
     const q = debouncedSelectorSearch.toLowerCase();
     return unselected.filter(c => {
       const carLabel = (c.name || `${c.brand || ''} ${c.model || ''}`).toLowerCase();
       return carLabel.includes(q);
-    }).slice(0, 15);
+    }).slice(0, 8);
   }, [allAvailable, selectedVehicles, debouncedSelectorSearch]);
 
   const comparisons = useMemo(() => {
@@ -138,6 +149,8 @@ export default function VehicleComparatorModal({
       };
     });
   }, [selectedVehicles]);
+
+  if (!isOpen) return null;
 
   const handleSelectCarForSlot = (car, slotIndex) => {
     if (!car) return;
@@ -178,7 +191,7 @@ export default function VehicleComparatorModal({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={onClose}
-          className="fixed inset-0 bg-slate-950/80 backdrop-blur-md"
+          className="fixed inset-0 bg-slate-950/85"
         />
 
         {/* Modal Window */}
@@ -256,11 +269,13 @@ export default function VehicleComparatorModal({
                 <div key={idx} className="relative bg-slate-950/70 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between group">
                   <div className="relative aspect-[16/10] rounded-xl overflow-hidden mb-3 bg-slate-900 border border-slate-800/60">
                     <img
-                      src={car.image || car.imagem || '/images/FotoHondaCivic.jpeg'}
+                      src={getVehicleImageUrl(car.image || car.imagem)}
                       alt={car.name || `${car.brand} ${car.model}`}
+                      loading="lazy"
+                      onError={handleVehicleImageError}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     />
-                    <div className="absolute top-2 right-2 bg-slate-950/80 backdrop-blur-md px-2 py-0.5 rounded-lg text-[10px] font-bold text-slate-300 border border-white/10">
+                    <div className="absolute top-2 right-2 bg-slate-950/90 px-2 py-0.5 rounded-lg text-[10px] font-bold text-slate-300 border border-white/10">
                       Carro {idx + 1}
                     </div>
                   </div>
@@ -351,8 +366,10 @@ export default function VehicleComparatorModal({
                       >
                         <div className="w-14 h-10 rounded-lg overflow-hidden bg-slate-800 shrink-0">
                           <img
-                            src={c.image || c.imagem || '/images/FotoHondaCivic.jpeg'}
+                            src={getVehicleImageUrl(c.image || c.imagem)}
                             alt={c.name || c.model}
+                            loading="lazy"
+                            onError={handleVehicleImageError}
                             className="w-full h-full object-cover"
                           />
                         </div>
@@ -375,203 +392,263 @@ export default function VehicleComparatorModal({
 
             {/* Dimension 1: Preço Anunciado vs Tabela FIPE */}
             <div className="bg-slate-950/50 border border-slate-800 rounded-2xl p-4">
-              <div className="text-xs font-black uppercase tracking-wider text-cyan-400 mb-3 flex items-center gap-1.5">
-                <DollarSign className="w-4 h-4" /> 1. Preço de Mercado vs Tabela FIPE Oficial
-              </div>
-              <div className={`grid gap-4 ${selectedVehicles.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
-                {selectedVehicles.map((car, idx) => {
-                  const comp = comparisons[idx] || {};
-                  return (
-                    <div key={idx} className="space-y-1.5 p-3 rounded-xl bg-slate-900/60 border border-slate-800">
-                      <div className="flex justify-between text-xs">
-                        <span className="text-slate-400">Tabela FIPE:</span>
-                        <span className="font-bold text-slate-200">{formatMoney(comp?.fipe)}</span>
+              <button
+                type="button"
+                onClick={() => toggleSection('fipe')}
+                className="w-full flex items-center justify-between text-xs font-black uppercase tracking-wider text-cyan-400 group cursor-pointer"
+              >
+                <div className="flex items-center gap-1.5">
+                  <DollarSign className="w-4 h-4 text-cyan-400" />
+                  <span>1. Preço de Mercado vs Tabela FIPE Oficial</span>
+                </div>
+                <div className="p-1 rounded-lg bg-slate-900 text-slate-400 group-hover:text-cyan-400 transition-colors">
+                  {openSections.fipe ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                </div>
+              </button>
+              {openSections.fipe && (
+                <div className={`grid gap-4 mt-3 ${selectedVehicles.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+                  {selectedVehicles.map((car, idx) => {
+                    const comp = comparisons[idx] || {};
+                    return (
+                      <div key={idx} className="space-y-1.5 p-3 rounded-xl bg-slate-900/60 border border-slate-800">
+                        <div className="flex justify-between text-xs">
+                          <span className="text-slate-400">Tabela FIPE:</span>
+                          <span className="font-bold text-slate-200">{formatMoney(comp?.fipe)}</span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-slate-400">Variação:</span>
+                          <span className={`font-bold flex items-center gap-1 ${
+                            comp?.fipeComparison?.isBelow ? 'text-emerald-400' : 'text-slate-300'
+                          }`}>
+                            {comp?.fipeComparison?.isBelow ? <TrendingDown className="w-3.5 h-3.5" /> : <TrendingUp className="w-3.5 h-3.5" />}
+                            {comp?.fipeComparison?.label || 'Compatível'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-xs pt-1 border-t border-slate-800/80">
+                          <span className="text-slate-400">Simulação 48x:</span>
+                          <span className="font-bold text-cyan-300">~{formatMoney(comp?.monthlyPayment)}/mês</span>
+                        </div>
                       </div>
-                      <div className="flex justify-between text-xs">
-                        <span className="text-slate-400">Variação:</span>
-                        <span className={`font-bold flex items-center gap-1 ${
-                          comp?.fipeComparison?.isBelow ? 'text-emerald-400' : 'text-slate-300'
-                        }`}>
-                          {comp?.fipeComparison?.isBelow ? <TrendingDown className="w-3.5 h-3.5" /> : <TrendingUp className="w-3.5 h-3.5" />}
-                          {comp?.fipeComparison?.label || 'Compatível'}
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-xs pt-1 border-t border-slate-800/80">
-                        <span className="text-slate-400">Simulação 48x:</span>
-                        <span className="font-bold text-cyan-300">~{formatMoney(comp?.monthlyPayment)}/mês</span>
-                      </div>
+                    );
+                  })}
+                  {selectedVehicles.length === 1 && (
+                    <div 
+                      onClick={() => { setSelectorOpenSlot(1); setSelectorSearch(''); }}
+                      className="p-4 rounded-xl bg-slate-900/40 border border-dashed border-cyan-500/30 hover:border-cyan-400 flex flex-col items-center justify-center text-center cursor-pointer group transition-all"
+                    >
+                      <Plus className="w-4 h-4 text-cyan-400 group-hover:scale-110 mb-1" />
+                      <span className="text-xs font-bold text-slate-300 group-hover:text-cyan-300">Escolha o 2° veículo</span>
+                      <span className="text-[10px] text-slate-500">Confronte a Tabela FIPE lado a lado</span>
                     </div>
-                  );
-                })}
-                {selectedVehicles.length === 1 && (
-                  <div 
-                    onClick={() => { setSelectorOpenSlot(1); setSelectorSearch(''); }}
-                    className="p-4 rounded-xl bg-slate-900/40 border border-dashed border-cyan-500/30 hover:border-cyan-400 flex flex-col items-center justify-center text-center cursor-pointer group transition-all"
-                  >
-                    <Plus className="w-4 h-4 text-cyan-400 group-hover:scale-110 mb-1" />
-                    <span className="text-xs font-bold text-slate-300 group-hover:text-cyan-300">Escolha o 2° veículo</span>
-                    <span className="text-[10px] text-slate-500">Confronte a Tabela FIPE lado a lado</span>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Dimension 2: Quilometragem & Rodagem Anual */}
             <div className="bg-slate-950/50 border border-slate-800 rounded-2xl p-4">
-              <div className="text-xs font-black uppercase tracking-wider text-cyan-400 mb-3 flex items-center gap-1.5">
-                <Gauge className="w-4 h-4" /> 2. Quilometragem & Intensidade de Uso
-              </div>
-              <div className={`grid gap-4 ${selectedVehicles.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
-                {selectedVehicles.map((car, idx) => {
-                  const comp = comparisons[idx] || {};
-                  return (
-                    <div key={idx} className="space-y-1.5 p-3 rounded-xl bg-slate-900/60 border border-slate-800">
-                      <div className="flex justify-between text-xs">
-                        <span className="text-slate-400">Total Rodado:</span>
-                        <span className="font-bold text-white">{(comp?.km || 0).toLocaleString('pt-BR')} km</span>
+              <button
+                type="button"
+                onClick={() => toggleSection('km')}
+                className="w-full flex items-center justify-between text-xs font-black uppercase tracking-wider text-cyan-400 group cursor-pointer"
+              >
+                <div className="flex items-center gap-1.5">
+                  <Gauge className="w-4 h-4 text-cyan-400" />
+                  <span>2. Quilometragem & Intensidade de Uso</span>
+                </div>
+                <div className="p-1 rounded-lg bg-slate-900 text-slate-400 group-hover:text-cyan-400 transition-colors">
+                  {openSections.km ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                </div>
+              </button>
+              {openSections.km && (
+                <div className={`grid gap-4 mt-3 ${selectedVehicles.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+                  {selectedVehicles.map((car, idx) => {
+                    const comp = comparisons[idx] || {};
+                    return (
+                      <div key={idx} className="space-y-1.5 p-3 rounded-xl bg-slate-900/60 border border-slate-800">
+                        <div className="flex justify-between text-xs">
+                          <span className="text-slate-400">Total Rodado:</span>
+                          <span className="font-bold text-white">{(comp?.km || 0).toLocaleString('pt-BR')} km</span>
+                        </div>
+                        <div className="flex justify-between text-xs">
+                          <span className="text-slate-400">Média Anual:</span>
+                          <span className="font-bold text-slate-200">{(comp?.kmPerYear || 0).toLocaleString('pt-BR')} km/ano</span>
+                        </div>
+                        <div className="pt-1">
+                          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full inline-block ${
+                            comp?.isLowKm 
+                              ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
+                              : 'bg-slate-800 text-slate-300'
+                          }`}>
+                            {comp?.isLowKm ? '✓ Baixa Quilometragem Anual' : 'Uso Médio Convencional'}
+                          </span>
+                        </div>
                       </div>
-                      <div className="flex justify-between text-xs">
-                        <span className="text-slate-400">Média Anual:</span>
-                        <span className="font-bold text-slate-200">{(comp?.kmPerYear || 0).toLocaleString('pt-BR')} km/ano</span>
-                      </div>
-                      <div className="pt-1">
-                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full inline-block ${
-                          comp?.isLowKm 
-                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
-                            : 'bg-slate-800 text-slate-300'
-                        }`}>
-                          {comp?.isLowKm ? '✓ Baixa Quilometragem Anual' : 'Uso Médio Convencional'}
-                        </span>
-                      </div>
+                    );
+                  })}
+                  {selectedVehicles.length === 1 && (
+                    <div 
+                      onClick={() => { setSelectorOpenSlot(1); setSelectorSearch(''); }}
+                      className="p-4 rounded-xl bg-slate-900/40 border border-dashed border-cyan-500/30 hover:border-cyan-400 flex flex-col items-center justify-center text-center cursor-pointer group transition-all"
+                    >
+                      <Plus className="w-4 h-4 text-cyan-400 group-hover:scale-110 mb-1" />
+                      <span className="text-xs font-bold text-slate-300 group-hover:text-cyan-300">Escolha o 2° veículo</span>
+                      <span className="text-[10px] text-slate-500">Confronte o hodômetro e uso anual</span>
                     </div>
-                  );
-                })}
-                {selectedVehicles.length === 1 && (
-                  <div 
-                    onClick={() => { setSelectorOpenSlot(1); setSelectorSearch(''); }}
-                    className="p-4 rounded-xl bg-slate-900/40 border border-dashed border-cyan-500/30 hover:border-cyan-400 flex flex-col items-center justify-center text-center cursor-pointer group transition-all"
-                  >
-                    <Plus className="w-4 h-4 text-cyan-400 group-hover:scale-110 mb-1" />
-                    <span className="text-xs font-bold text-slate-300 group-hover:text-cyan-300">Escolha o 2° veículo</span>
-                    <span className="text-[10px] text-slate-500">Confronte o hodômetro e uso anual</span>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Dimension 3: Laudo Cautelar & Estrutura */}
             <div className="bg-slate-950/50 border border-slate-800 rounded-2xl p-4">
-              <div className="text-xs font-black uppercase tracking-wider text-cyan-400 mb-3 flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4" /> 3. Laudo Cautelar & Integridade Estrutural
-              </div>
-              <div className={`grid gap-4 ${selectedVehicles.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
-                {selectedVehicles.map((car, idx) => (
-                  <div key={idx} className="space-y-1.5 p-3 rounded-xl bg-slate-900/60 border border-slate-800">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-slate-400">Veredito do Laudo:</span>
-                      <span className="font-bold text-emerald-400 flex items-center gap-1">
-                        <CheckCircle2 className="w-3.5 h-3.5" /> Aprovado 100%
-                      </span>
+              <button
+                type="button"
+                onClick={() => toggleSection('laudo')}
+                className="w-full flex items-center justify-between text-xs font-black uppercase tracking-wider text-cyan-400 group cursor-pointer"
+              >
+                <div className="flex items-center gap-1.5">
+                  <ShieldCheck className="w-4 h-4 text-cyan-400" />
+                  <span>3. Laudo Cautelar & Integridade Estrutural</span>
+                </div>
+                <div className="p-1 rounded-lg bg-slate-900 text-slate-400 group-hover:text-cyan-400 transition-colors">
+                  {openSections.laudo ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                </div>
+              </button>
+              {openSections.laudo && (
+                <div className={`grid gap-4 mt-3 ${selectedVehicles.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+                  {selectedVehicles.map((car, idx) => (
+                    <div key={idx} className="space-y-1.5 p-3 rounded-xl bg-slate-900/60 border border-slate-800">
+                      <div className="flex justify-between text-xs">
+                        <span className="text-slate-400">Veredito do Laudo:</span>
+                        <span className="font-bold text-emerald-400 flex items-center gap-1">
+                          <CheckCircle2 className="w-3.5 h-3.5" /> Aprovado 100%
+                        </span>
+                      </div>
+                      <div className="flex justify-between text-xs">
+                        <span className="text-slate-400">Estrutura & Longarinas:</span>
+                        <span className="font-medium text-slate-200">Sem Soldas / Original</span>
+                      </div>
+                      <div className="flex justify-between text-xs">
+                        <span className="text-slate-400">Leilão / Sinistro:</span>
+                        <span className="font-bold text-emerald-400">Nenhum Registro</span>
+                      </div>
+                      <div className="flex justify-between text-xs">
+                        <span className="text-slate-400">Pintura Micrométrica:</span>
+                        <span className="font-medium text-slate-300">Padrão Original (115µm)</span>
+                      </div>
                     </div>
-                    <div className="flex justify-between text-xs">
-                      <span className="text-slate-400">Estrutura & Longarinas:</span>
-                      <span className="font-medium text-slate-200">Sem Soldas / Original</span>
+                  ))}
+                  {selectedVehicles.length === 1 && (
+                    <div 
+                      onClick={() => { setSelectorOpenSlot(1); setSelectorSearch(''); }}
+                      className="p-4 rounded-xl bg-slate-900/40 border border-dashed border-cyan-500/30 hover:border-cyan-400 flex flex-col items-center justify-center text-center cursor-pointer group transition-all"
+                    >
+                      <Plus className="w-4 h-4 text-cyan-400 group-hover:scale-110 mb-1" />
+                      <span className="text-xs font-bold text-slate-300 group-hover:text-cyan-300">Escolha o 2° veículo</span>
+                      <span className="text-[10px] text-slate-500">Confronte a perícia cautelar</span>
                     </div>
-                    <div className="flex justify-between text-xs">
-                      <span className="text-slate-400">Leilão / Sinistro:</span>
-                      <span className="font-bold text-emerald-400">Nenhum Registro</span>
-                    </div>
-                    <div className="flex justify-between text-xs">
-                      <span className="text-slate-400">Pintura Micrométrica:</span>
-                      <span className="font-medium text-slate-300">Padrão Original (115µm)</span>
-                    </div>
-                  </div>
-                ))}
-                {selectedVehicles.length === 1 && (
-                  <div 
-                    onClick={() => { setSelectorOpenSlot(1); setSelectorSearch(''); }}
-                    className="p-4 rounded-xl bg-slate-900/40 border border-dashed border-cyan-500/30 hover:border-cyan-400 flex flex-col items-center justify-center text-center cursor-pointer group transition-all"
-                  >
-                    <Plus className="w-4 h-4 text-cyan-400 group-hover:scale-110 mb-1" />
-                    <span className="text-xs font-bold text-slate-300 group-hover:text-cyan-300">Escolha o 2° veículo</span>
-                    <span className="text-[10px] text-slate-500">Confronte a perícia cautelar</span>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Dimension 4: Situação Cadastral DETRAN */}
             <div className="bg-slate-950/50 border border-slate-800 rounded-2xl p-4">
-              <div className="text-xs font-black uppercase tracking-wider text-cyan-400 mb-3 flex items-center gap-1.5">
-                <CheckCircle2 className="w-4 h-4" /> 4. Situação Cadastral & Débitos DETRAN
-              </div>
-              <div className={`grid gap-4 ${selectedVehicles.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
-                {selectedVehicles.map((car, idx) => (
-                  <div key={idx} className="space-y-1.5 p-3 rounded-xl bg-slate-900/60 border border-slate-800">
-                    <div className="flex justify-between text-xs">
-                      <span className="text-slate-400">IPVA / Licenciamento:</span>
-                      <span className="font-bold text-emerald-400">100% Quitado</span>
+              <button
+                type="button"
+                onClick={() => toggleSection('detran')}
+                className="w-full flex items-center justify-between text-xs font-black uppercase tracking-wider text-cyan-400 group cursor-pointer"
+              >
+                <div className="flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-cyan-400" />
+                  <span>4. Situação Cadastral & Débitos DETRAN</span>
+                </div>
+                <div className="p-1 rounded-lg bg-slate-900 text-slate-400 group-hover:text-cyan-400 transition-colors">
+                  {openSections.detran ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                </div>
+              </button>
+              {openSections.detran && (
+                <div className={`grid gap-4 mt-3 ${selectedVehicles.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+                  {selectedVehicles.map((car, idx) => (
+                    <div key={idx} className="space-y-1.5 p-3 rounded-xl bg-slate-900/60 border border-slate-800">
+                      <div className="flex justify-between text-xs">
+                        <span className="text-slate-400">IPVA / Licenciamento:</span>
+                        <span className="font-bold text-emerald-400">100% Quitado</span>
+                      </div>
+                      <div className="flex justify-between text-xs">
+                        <span className="text-slate-400">Multas e Débitos:</span>
+                        <span className="font-bold text-emerald-400">R$ 0,00 (Nada Consta)</span>
+                      </div>
+                      <div className="flex justify-between text-xs">
+                        <span className="text-slate-400">Restrição Financeira:</span>
+                        <span className="font-medium text-slate-200">Sem Gravame (Livre)</span>
+                      </div>
                     </div>
-                    <div className="flex justify-between text-xs">
-                      <span className="text-slate-400">Multas e Débitos:</span>
-                      <span className="font-bold text-emerald-400">R$ 0,00 (Nada Consta)</span>
+                  ))}
+                  {selectedVehicles.length === 1 && (
+                    <div 
+                      onClick={() => { setSelectorOpenSlot(1); setSelectorSearch(''); }}
+                      className="p-4 rounded-xl bg-slate-900/40 border border-dashed border-cyan-500/30 hover:border-cyan-400 flex flex-col items-center justify-center text-center cursor-pointer group transition-all"
+                    >
+                      <Plus className="w-4 h-4 text-cyan-400 group-hover:scale-110 mb-1" />
+                      <span className="text-xs font-bold text-slate-300 group-hover:text-cyan-300">Escolha o 2° veículo</span>
+                      <span className="text-[10px] text-slate-500">Confronte débitos e gravame DETRAN</span>
                     </div>
-                    <div className="flex justify-between text-xs">
-                      <span className="text-slate-400">Restrição Financeira:</span>
-                      <span className="font-medium text-slate-200">Sem Gravame (Livre)</span>
-                    </div>
-                  </div>
-                ))}
-                {selectedVehicles.length === 1 && (
-                  <div 
-                    onClick={() => { setSelectorOpenSlot(1); setSelectorSearch(''); }}
-                    className="p-4 rounded-xl bg-slate-900/40 border border-dashed border-cyan-500/30 hover:border-cyan-400 flex flex-col items-center justify-center text-center cursor-pointer group transition-all"
-                  >
-                    <Plus className="w-4 h-4 text-cyan-400 group-hover:scale-110 mb-1" />
-                    <span className="text-xs font-bold text-slate-300 group-hover:text-cyan-300">Escolha o 2° veículo</span>
-                    <span className="text-[10px] text-slate-500">Confronte débitos e gravame DETRAN</span>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Dimension 5: Mecânica & Especificações */}
             <div className="bg-slate-950/50 border border-slate-800 rounded-2xl p-4">
-              <div className="text-xs font-black uppercase tracking-wider text-cyan-400 mb-3 flex items-center gap-1.5">
-                <Fuel className="w-4 h-4" /> 5. Especificações & Categoria
-              </div>
-              <div className={`grid gap-4 ${selectedVehicles.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
-                {selectedVehicles.map((car, idx) => (
-                  <div key={idx} className="space-y-1.5 p-3 rounded-xl bg-slate-900/60 border border-slate-800 text-xs">
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">Carroceria:</span>
-                      <span className="font-bold text-white">{car.bodyType || 'SUV / Hatch'}</span>
+              <button
+                type="button"
+                onClick={() => toggleSection('specs')}
+                className="w-full flex items-center justify-between text-xs font-black uppercase tracking-wider text-cyan-400 group cursor-pointer"
+              >
+                <div className="flex items-center gap-1.5">
+                  <Fuel className="w-4 h-4 text-cyan-400" />
+                  <span>5. Especificações & Categoria</span>
+                </div>
+                <div className="p-1 rounded-lg bg-slate-900 text-slate-400 group-hover:text-cyan-400 transition-colors">
+                  {openSections.specs ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                </div>
+              </button>
+              {openSections.specs && (
+                <div className={`grid gap-4 mt-3 ${selectedVehicles.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+                  {selectedVehicles.map((car, idx) => (
+                    <div key={idx} className="space-y-1.5 p-3 rounded-xl bg-slate-900/60 border border-slate-800 text-xs">
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Carroceria:</span>
+                        <span className="font-bold text-white">{car.bodyType || 'SUV / Hatch'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Combustível:</span>
+                        <span className="font-medium text-slate-300">{car.fuel || 'Flex'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Câmbio:</span>
+                        <span className="font-medium text-slate-300">{car.transmission || 'Automático'}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-slate-400">Procedência:</span>
+                        <span className="font-semibold text-emerald-400">Garantia Automatch</span>
+                      </div>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">Combustível:</span>
-                      <span className="font-medium text-slate-300">{car.fuel || 'Flex'}</span>
+                  ))}
+                  {selectedVehicles.length === 1 && (
+                    <div 
+                      onClick={() => { setSelectorOpenSlot(1); setSelectorSearch(''); }}
+                      className="p-4 rounded-xl bg-slate-900/40 border border-dashed border-cyan-500/30 hover:border-cyan-400 flex flex-col items-center justify-center text-center cursor-pointer group transition-all"
+                    >
+                      <Plus className="w-4 h-4 text-cyan-400 group-hover:scale-110 mb-1" />
+                      <span className="text-xs font-bold text-slate-300 group-hover:text-cyan-300">Escolha o 2° veículo</span>
+                      <span className="text-[10px] text-slate-500">Confronte itens de série e câmbio</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">Câmbio:</span>
-                      <span className="font-medium text-slate-300">{car.transmission || 'Automático'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-400">Procedência:</span>
-                      <span className="font-semibold text-emerald-400">Garantia Automatch</span>
-                    </div>
-                  </div>
-                ))}
-                {selectedVehicles.length === 1 && (
-                  <div 
-                    onClick={() => { setSelectorOpenSlot(1); setSelectorSearch(''); }}
-                    className="p-4 rounded-xl bg-slate-900/40 border border-dashed border-cyan-500/30 hover:border-cyan-400 flex flex-col items-center justify-center text-center cursor-pointer group transition-all"
-                  >
-                    <Plus className="w-4 h-4 text-cyan-400 group-hover:scale-110 mb-1" />
-                    <span className="text-xs font-bold text-slate-300 group-hover:text-cyan-300">Escolha o 2° veículo</span>
-                    <span className="text-[10px] text-slate-500">Confronte itens de série e câmbio</span>
-                  </div>
-                )}
-              </div>
+                  )}
+                </div>
+              )}
             </div>
             </>
             )}

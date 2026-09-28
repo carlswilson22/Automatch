@@ -9,6 +9,7 @@ import {
   Star
 } from 'lucide-react';
 import StoreIdentifier from './StoreIdentifier';
+import { getVehicleImageUrl, handleVehicleImageError } from '../../utils/imageHelper';
 
 /**
  * Standardized Master Component for Car Ads
@@ -42,8 +43,11 @@ const CarCard = ({ data, index = 0 }) => {
       {/* Image Section (16:9) */}
       <div className="relative aspect-[16/9] overflow-hidden bg-slate-100">
         <img
-          src={image || '/images/FotoGolfGTI.jpeg'}
+          src={getVehicleImageUrl(image || 'FotoGolfGTI.jpeg')}
           alt={`${brand} ${model}`}
+          loading="lazy"
+          decoding="async"
+          onError={handleVehicleImageError}
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-out"
         />
 
@@ -56,7 +60,7 @@ const CarCard = ({ data, index = 0 }) => {
         <div className="absolute top-4 right-4 z-20 flex flex-col gap-2">
           <button
             onClick={(e) => { e.stopPropagation(); setLiked(!liked); }}
-            className="w-10 h-10 rounded-full bg-white/70 backdrop-blur-md flex items-center justify-center hover:bg-white transition-all shadow-lg"
+            className="w-10 h-10 rounded-full bg-white/95 border border-slate-200/50 flex items-center justify-center hover:bg-white transition-all shadow-md"
           >
             <Heart className={`w-5 h-5 transition-colors ${liked ? 'fill-red-500 text-red-500' : 'text-slate-600'}`} />
           </button>
@@ -64,7 +68,7 @@ const CarCard = ({ data, index = 0 }) => {
 
         {/* Featured Tag */}
         {featured && (
-          <div className="absolute bottom-4 left-4 bg-amber-500/90 backdrop-blur-sm text-white text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl shadow-lg flex items-center gap-1.5 border border-amber-400/50">
+          <div className="absolute bottom-4 left-4 bg-amber-500/95 text-white text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-xl shadow-lg flex items-center gap-1.5 border border-amber-400/50">
             <Star className="w-3.5 h-3.5 fill-white" /> Destaque
           </div>
         )}

@@ -124,6 +124,8 @@ const CarCard = React.memo(({ car, index, viewMode }) => {
           <img 
             src={getVehicleImageUrl(car.image || 'FotoGolfGTI.jpeg')} 
             alt={car.name} 
+            loading="lazy"
+            decoding="async"
             onError={handleVehicleImageError}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
           />
@@ -135,7 +137,7 @@ const CarCard = React.memo(({ car, index, viewMode }) => {
           <button onClick={handleLike}
             aria-label={liked ? "Remover dos favoritos" : "Curtir veículo"}
             title={liked ? "Remover dos favoritos" : "Curtir veículo"}
-            className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors shadow-md z-10">
+            className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/95 border border-slate-200/60 flex items-center justify-center hover:bg-white transition-colors shadow-sm z-10">
             <Heart className={`w-4 h-4 transition-all ${liked ? 'fill-red-500 text-red-500 scale-110' : 'text-slate-400 hover:text-red-500'}`} />
           </button>
 
@@ -185,6 +187,8 @@ const CarCard = React.memo(({ car, index, viewMode }) => {
         <img 
           src={getVehicleImageUrl(car.image || 'FotoGolfGTI.jpeg')} 
           alt={car.name} 
+          loading="lazy"
+          decoding="async"
           onError={handleVehicleImageError}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
         />
@@ -200,7 +204,7 @@ const CarCard = React.memo(({ car, index, viewMode }) => {
         <button onClick={handleLike}
           aria-label={liked ? "Remover dos favoritos" : "Curtir veículo"}
           title={liked ? "Remover dos favoritos" : "Curtir veículo"}
-          className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/90 backdrop-blur-sm flex items-center justify-center hover:bg-white transition-colors shadow-md z-10">
+          className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/95 border border-slate-200/60 flex items-center justify-center hover:bg-white transition-colors shadow-sm z-10">
           <Heart className={`w-4 h-4 transition-all ${liked ? 'fill-red-500 text-red-500 scale-110' : 'text-slate-400 hover:text-red-500'}`} />
         </button>
 
@@ -354,7 +358,7 @@ const ShowcaseCatalog = () => {
       if (!isNaN(storeNum)) params.set('store_id', storeNum.toString());
     }
 
-    fetch(`/api/cars?${params.toString()}`)
+    fetch(`/api/cars?${params.toString()}`, { signal: AbortSignal.timeout(1200) })
       .then(res => {
         if (!res.ok) throw new Error('Falha ao consultar API');
         return res.json();

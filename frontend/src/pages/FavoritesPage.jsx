@@ -9,8 +9,11 @@ import { getFavorites, removeFavorite, subscribeFavorites } from '../data/favori
 import { showcaseCars } from '../data/showcaseData';
 import { mockCars } from '../data/mockData';
 import { getNewCars } from '../data/newCarsManager';
-import VehicleComparatorModal from '../components/vehicle/VehicleComparatorModal';
+import { getVehicleImageUrl, handleVehicleImageError } from '../utils/imageHelper';
 import ErrorBoundary from '../components/common/ErrorBoundary';
+
+// Code-Splitting: Comparador carregado sob demanda
+const VehicleComparatorModal = React.lazy(() => import('../components/vehicle/VehicleComparatorModal'));
 
 export default function FavoritesPage() {
   const navigate = useNavigate();
@@ -34,8 +37,8 @@ export default function FavoritesPage() {
       }
     }) : () => {};
 
-    // Carrega carros do backend para resolver IDs do banco de dados
-    fetch('/api/cars?limit=100')
+    // Carrega carros do backend para resolver IDs do banco de dados (com timeout de 1.2s)
+    fetch('/api/cars?limit=100', { signal: AbortSignal.timeout(1200) })
       .then(res => res.ok ? res.json() : null)
       .then(data => {
         const items = Array.isArray(data) ? data : (data?.items || []);
@@ -144,7 +147,7 @@ export default function FavoritesPage() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans">
       {/* Header */}
-      <nav className="w-full px-6 py-4 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50">
+      <nav className="w-full px-6 py-4 bg-slate-900/98 border-b border-slate-800 sticky top-0 z-50 shadow-md">
         <div className="max-w-5xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
             <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-800 rounded-full text-slate-400 hover:text-white transition-colors">
@@ -260,10 +263,13 @@ export default function FavoritesPage() {
                     }`}
                   >
                     {/* Image */}
-                    <div className="relative aspect-[16/10] overflow-hidden">
+                    <div className="relative aspect-[16/10] overflow-hidden bg-slate-900">
                       <img
-                        src={car.image}
+                        src={getVehicleImageUrl(car.image)}
                         alt={car.name}
+                        loading="lazy"
+                        decoding="async"
+                        onError={handleVehicleImageError}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                       
@@ -271,10 +277,10 @@ export default function FavoritesPage() {
                       {favoriteCars.length >= 2 && (
                         <button
                           onClick={() => toggleSelectForCompare(car.id)}
-                          className={`absolute top-3 left-3 px-2.5 py-1.5 rounded-xl backdrop-blur-md text-xs font-bold flex items-center gap-1.5 transition-all shadow-md ${
+                          className={`absolute top-3 left-3 px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-md ${
                             isSelected 
                               ? 'bg-blue-600 text-white border border-blue-400' 
-                              : 'bg-slate-950/80 text-slate-300 hover:text-white border border-slate-700'
+                              : 'bg-slate-950/90 text-slate-300 hover:text-white border border-slate-700'
                           }`}
                           title="Selecionar para comparação"
                         >
@@ -286,7 +292,7 @@ export default function FavoritesPage() {
                       {/* Botão de Remover */}
                       <button
                         onClick={() => handleRemove(car.id)}
-                        className="absolute top-3 right-3 p-2 bg-slate-950/80 backdrop-blur-sm rounded-full text-red-400 hover:bg-red-500 hover:text-white transition-all border border-slate-700"
+                        className="absolute top-3 right-3 p-2 bg-slate-950/90 rounded-full text-red-400 hover:bg-red-500 hover:text-white transition-all border border-slate-700 shadow-sm"
                         title="Remover dos favoritos"
                       >
                         <Trash2 className="w-4 h-4" />
@@ -329,21 +335,25 @@ export default function FavoritesPage() {
         )}
       </main>
 
-      {/* Modal Comparador Multidimensional com ErrorBoundary */}
-      <ErrorBoundary
-        isOpen={isComparatorOpen}
-        resetKey={isComparatorOpen ? 'open' : 'closed'}
-        title="Comparador Multidimensional Indisponível"
-        description="Não foi possível inicializar o comparador para os veículos curtidos. Tente novamente ou desmarque algum veículo."
-        onClose={() => setIsComparatorOpen(false)}
-      >
-        <VehicleComparatorModal
-          isOpen={isComparatorOpen}
-          onClose={() => setIsComparatorOpen(false)}
-          initialVehicles={vehiclesToCompare.length >= 2 ? vehiclesToCompare : favoriteCars.slice(0, 2)}
-          availableVehicles={favoriteCars}
-        />
-      </ErrorBoundary>
+      {/* Modal Comparador Multidimensional (Lazy Mounted com Suspense) */}
+      <React.Suspense fallback={null}>
+        {isComparatorOpen && (
+          <ErrorBoundary
+            isOpen={isComparatorOpen}
+            resetKey={isComparatorOpen ? 'open' : 'closed'}
+            title="Comparador Multidimensional Indisponível"
+            description="Não foi possível inicializar o comparador para os veículos curtidos. Tente novamente ou desmarque algum veículo."
+            onClose={() => setIsComparatorOpen(false)}
+          >
+            <VehicleComparatorModal
+              isOpen={isComparatorOpen}
+              onClose={() => setIsComparatorOpen(false)}
+              initialVehicles={vehiclesToCompare.length >= 2 ? vehiclesToCompare : favoriteCars.slice(0, 2)}
+              availableVehicles={favoriteCars}
+            />
+          </ErrorBoundary>
+        )}
+      </React.Suspense>
     </div>
   );
 }

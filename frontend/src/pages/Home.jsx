@@ -127,6 +127,7 @@ const CarCard = ({ car, index }) => {
           onError={handleVehicleImageError}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           loading="lazy"
+          decoding="async"
         />
 
         {/* Badges - Organizados para não sobrepor */}
@@ -145,8 +146,8 @@ const CarCard = ({ car, index }) => {
 
           {/* Wishlist */}
           <button
-            className={`w-9 h-9 rounded-full backdrop-blur-sm flex items-center justify-center transition-colors shadow-md ${
-              fav ? 'bg-red-50 text-red-500' : 'bg-white/90 text-slate-500 hover:bg-white'
+            className={`w-9 h-9 rounded-full border border-slate-200/50 flex items-center justify-center transition-colors shadow-sm ${
+              fav ? 'bg-red-50 text-red-500' : 'bg-white/95 text-slate-500 hover:bg-white'
             }`}
             title={fav ? "Remover dos favoritos" : "Curtir veículo"}
             onClick={handleFavorite}

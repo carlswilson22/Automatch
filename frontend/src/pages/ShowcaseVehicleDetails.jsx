@@ -19,11 +19,13 @@ import AutomatchScan from '../components/vehicle/AutomatchScan';
 import AIChatBox from '../components/vehicle/AIChatBox';
 import SellerChat from '../components/vehicle/SellerChat';
 import TradeInSimulator from '../components/vehicle/TradeInSimulator';
-import PriceAlertModal from '../components/vehicle/PriceAlertModal';
-import MultichannelSyncModal from '../components/vehicle/MultichannelSyncModal';
 import Vehicle360Viewer from '../components/vehicle/Vehicle360Viewer';
 import PericialVideoViewer from '../components/vehicle/PericialVideoViewer';
-import VehicleComparatorModal from '../components/vehicle/VehicleComparatorModal';
+
+// Code-Splitting: Carregamento sob demanda para modais secundários (reduz bundle inicial em ~40 kB)
+const PriceAlertModal = React.lazy(() => import('../components/vehicle/PriceAlertModal'));
+const MultichannelSyncModal = React.lazy(() => import('../components/vehicle/MultichannelSyncModal'));
+const VehicleComparatorModal = React.lazy(() => import('../components/vehicle/VehicleComparatorModal'));
 import MarketPriceIndicator from '../components/vehicle/MarketPriceIndicator';
 import TcoCalculatorCard from '../components/vehicle/TcoCalculatorCard';
 import PriceDropBadge from '../components/vehicle/PriceDropBadge';
@@ -89,7 +91,7 @@ export default function ShowcaseVehicleDetails() {
     });
 
     // Carrega inventário para alimentar o comparador
-    fetch('/api/cars?limit=30')
+    fetch('/api/cars?limit=30', { signal: AbortSignal.timeout(1200) })
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         const items = Array.isArray(data) ? data : (data?.items || []);
@@ -215,7 +217,7 @@ export default function ShowcaseVehicleDetails() {
     }
 
     // 2. Busca no banco de dados PostgreSQL via API
-    fetch(`/api/cars/${id}`)
+    fetch(`/api/cars/${id}`, { signal: AbortSignal.timeout(1200) })
       .then(res => res.ok ? res.json() : null)
       .then(dbCar => {
         if (dbCar) {
@@ -360,7 +362,7 @@ export default function ShowcaseVehicleDetails() {
       setIsLaudoLoading(true);
       try {
         const fipeCode = car?.fipeCode || '004487-3';
-        const res = await fetch(`/api/v1/integracoes/laudo-cautelar/${fipeCode}`);
+        const res = await fetch(`/api/v1/integracoes/laudo-cautelar/${fipeCode}`, { signal: AbortSignal.timeout(1500) });
         if (res.ok) {
           const data = await res.json();
           laudoCacheRef.current = data;
@@ -391,7 +393,7 @@ export default function ShowcaseVehicleDetails() {
       setIsDetranLoading(true);
       try {
         const plate = car?.plate || 'ABC1234';
-        const res = await fetch(`/api/v1/integracoes/detran/${plate}`);
+        const res = await fetch(`/api/v1/integracoes/detran/${plate}`, { signal: AbortSignal.timeout(1500) });
         if (res.ok) {
           const data = await res.json();
           detranCacheRef.current = data;
@@ -669,7 +671,7 @@ export default function ShowcaseVehicleDetails() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans pb-20">
       {/* Navigation Header */}
-      <nav className="w-full px-6 py-4 bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50">
+      <nav className="w-full px-6 py-4 bg-slate-900/98 border-b border-slate-800 sticky top-0 z-50 shadow-md">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
             <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-800 rounded-full text-slate-400 hover:text-white transition-colors">
@@ -1456,33 +1458,41 @@ export default function ShowcaseVehicleDetails() {
         </div>
       </main>
 
-      {/* Modais Globais de Funcionalidades */}
-      <PriceAlertModal
-        isOpen={isAlertModalOpen}
-        onClose={() => setIsAlertModalOpen(false)}
-        car={car}
-      />
+      {/* Modais Globais de Funcionalidades (Lazy Mounted) */}
+      <React.Suspense fallback={null}>
+        {isAlertModalOpen && (
+          <PriceAlertModal
+            isOpen={isAlertModalOpen}
+            onClose={() => setIsAlertModalOpen(false)}
+            car={car}
+          />
+        )}
 
-      <MultichannelSyncModal
-        isOpen={isSyncModalOpen}
-        onClose={() => setIsSyncModalOpen(false)}
-        car={car}
-      />
+        {isSyncModalOpen && (
+          <MultichannelSyncModal
+            isOpen={isSyncModalOpen}
+            onClose={() => setIsSyncModalOpen(false)}
+            car={car}
+          />
+        )}
 
-      <ErrorBoundary
-        isOpen={isComparatorOpen}
-        resetKey={isComparatorOpen ? 'open' : 'closed'}
-        title="Comparador Multidimensional Temporariamente Indisponível"
-        description="Ocorreu uma instabilidade ao confrontar os dados deste veículo. Você pode recarregar ou continuar navegando na vitrine."
-        onClose={() => setIsComparatorOpen(false)}
-      >
-        <VehicleComparatorModal
-          isOpen={isComparatorOpen}
-          onClose={() => setIsComparatorOpen(false)}
-          baseCar={car}
-          availableCars={allInventoryCars.length > 0 ? allInventoryCars : showcaseCars}
-        />
-      </ErrorBoundary>
+        {isComparatorOpen && (
+          <ErrorBoundary
+            isOpen={isComparatorOpen}
+            resetKey={isComparatorOpen ? 'open' : 'closed'}
+            title="Comparador Multidimensional Temporariamente Indisponível"
+            description="Ocorreu uma instabilidade ao confrontar os dados deste veículo. Você pode recarregar ou continuar navegando na vitrine."
+            onClose={() => setIsComparatorOpen(false)}
+          >
+            <VehicleComparatorModal
+              isOpen={isComparatorOpen}
+              onClose={() => setIsComparatorOpen(false)}
+              baseCar={car}
+              availableCars={allInventoryCars.length > 0 ? allInventoryCars : showcaseCars}
+            />
+          </ErrorBoundary>
+        )}
+      </React.Suspense>
     </div>
   );
 }

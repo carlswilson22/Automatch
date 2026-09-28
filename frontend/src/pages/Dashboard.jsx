@@ -19,7 +19,9 @@ import { useNavigate } from 'react-router-dom';
 import { stores, inventory } from '../data/inventoryData';
 import StoreSelector from '../components/layout/StoreSelector';
 import StoreIdentifier from '../components/ui/StoreIdentifier';
-import PartnershipHubModal from '../components/partners/PartnershipHubModal';
+
+// Code-Splitting: PartnershipHubModal carregado sob demanda (economiza 50.5 kB na montagem inicial)
+const PartnershipHubModal = React.lazy(() => import('../components/partners/PartnershipHubModal'));
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -322,11 +324,15 @@ export default function Dashboard() {
         )}
       </main>
 
-      {/* Hub B2B Modal */}
-      <PartnershipHubModal
-        isOpen={isB2BModalOpen}
-        onClose={() => setIsB2BModalOpen(false)}
-      />
+      {/* Hub B2B Modal (Lazy Loaded) */}
+      <React.Suspense fallback={null}>
+        {isB2BModalOpen && (
+          <PartnershipHubModal
+            isOpen={isB2BModalOpen}
+            onClose={() => setIsB2BModalOpen(false)}
+          />
+        )}
+      </React.Suspense>
     </div>
   );
 }
