@@ -222,17 +222,10 @@ export default function VehicleComparatorModal({
             </div>
 
             <div className="flex items-center gap-3">
-              {selectedVehicles.length < 3 && (
-                <button
-                  onClick={handleAddThirdCar}
-                  className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-cyan-400 bg-cyan-500/10 border border-cyan-500/30 hover:bg-cyan-500/20 px-3 py-2 rounded-xl transition-all"
-                >
-                  <Plus className="w-3.5 h-3.5" /> {selectedVehicles.length === 1 ? 'Adicionar 2º Carro' : 'Adicionar 3º Carro'}
-                </button>
-              )}
               <button
                 onClick={onClose}
                 className="p-2 text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-700 rounded-full transition-colors"
+                title="Fechar comparador"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -316,79 +309,92 @@ export default function VehicleComparatorModal({
                 </div>
               ))}
 
-              {/* Empty slot for adding 2nd or 3rd car */}
+              {/* Slot para adicionar 2º ou 3º carro: estado vazio ou seletor interativo em foco */}
               {selectedVehicles.length < 3 && (
-                <div
-                  onClick={handleAddThirdCar}
-                  className="border-2 border-dashed border-cyan-500/30 hover:border-cyan-400 bg-slate-950/40 hover:bg-slate-900/60 rounded-2xl p-6 flex flex-col items-center justify-center min-h-[220px] transition-all cursor-pointer group"
-                >
-                  <Plus className="w-8 h-8 text-cyan-400 group-hover:scale-125 transition-transform mb-3" />
-                  <span className="text-sm font-bold text-slate-200 group-hover:text-cyan-300 transition-colors">
-                    {selectedVehicles.length === 1 ? 'Escolher 2° Carro para Comparar' : 'Adicionar 3° Carro'}
-                  </span>
-                  <span className="text-[10px] text-slate-500 mt-1">Clique para buscar no estoque</span>
-                </div>
+                selectorOpenSlot !== null ? (
+                  <div className="relative bg-slate-950 border-2 border-cyan-500/50 rounded-2xl p-4 flex flex-col justify-between shadow-2xl shadow-cyan-950/40 min-h-[260px]">
+                    <div>
+                      <div className="flex items-center justify-between mb-3 pb-2 border-b border-slate-800">
+                        <div className="flex items-center gap-1.5">
+                          <Sparkles className="w-4 h-4 text-cyan-400" />
+                          <h4 className="text-xs font-black uppercase tracking-wider text-white">
+                            {selectedVehicles.length === 1 ? 'Escolher 2º Carro' : 'Escolher 3º Carro'}
+                          </h4>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setSelectorOpenSlot(null)}
+                          className="p-1 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+                          title="Cancelar seleção"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      {/* Campo de Busca Rápida */}
+                      <div className="relative mb-3">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+                        <input
+                          type="text"
+                          autoFocus
+                          value={selectorSearch}
+                          onChange={e => setSelectorSearch(e.target.value)}
+                          placeholder="Buscar por marca, modelo..."
+                          className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500 transition-colors"
+                        />
+                      </div>
+
+                      {/* Lista de Carros Disponíveis com Imagem, Ano, Km e Preço */}
+                      <div className="max-h-56 overflow-y-auto space-y-2 pr-1">
+                        {filteredAvailable.map(c => (
+                          <button
+                            key={c.id}
+                            type="button"
+                            onClick={() => handleSelectCarForSlot(c, selectorOpenSlot)}
+                            className="w-full flex items-center gap-3 p-2 rounded-xl bg-slate-900/90 border border-slate-800 hover:border-cyan-500/60 hover:bg-slate-850 hover:shadow-md transition-all text-left group cursor-pointer"
+                          >
+                            <div className="w-12 h-9 rounded-lg overflow-hidden bg-slate-800 shrink-0 border border-slate-700/60">
+                              <img
+                                src={getVehicleImageUrl(c.image || c.imagem)}
+                                alt={c.name || c.model}
+                                loading="lazy"
+                                onError={handleVehicleImageError}
+                                className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-bold text-white truncate group-hover:text-cyan-300 transition-colors">
+                                {c.name || `${c.brand} ${c.model}`}
+                              </p>
+                              <p className="text-[10px] text-slate-400">
+                                {c.year} • {Number(c.mileage || c.km || 0).toLocaleString('pt-BR')} km
+                              </p>
+                            </div>
+                            <span className="text-xs font-black text-cyan-400 shrink-0">
+                              {formatMoney(c.price)}
+                            </span>
+                          </button>
+                        ))}
+                        {filteredAvailable.length === 0 && (
+                          <p className="text-xs text-slate-500 text-center py-6">Nenhum veículo disponível no estoque</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div
+                    onClick={handleAddThirdCar}
+                    className="border-2 border-dashed border-cyan-500/30 hover:border-cyan-400 bg-slate-950/40 hover:bg-slate-900/60 rounded-2xl p-6 flex flex-col items-center justify-center min-h-[220px] transition-all cursor-pointer group"
+                  >
+                    <Plus className="w-8 h-8 text-cyan-400 group-hover:scale-125 transition-transform mb-3" />
+                    <span className="text-sm font-bold text-slate-200 group-hover:text-cyan-300 transition-colors">
+                      {selectedVehicles.length === 1 ? 'Escolher 2° Carro para Comparar' : 'Adicionar 3° Carro'}
+                    </span>
+                    <span className="text-[10px] text-slate-500 mt-1">Clique para buscar no estoque</span>
+                  </div>
+                )
               )}
             </div>
-
-            {/* Vehicle Selector Popover */}
-            <AnimatePresence>
-              {selectorOpenSlot !== null && (
-                <motion.div
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 10 }}
-                  className="bg-slate-950 border border-cyan-500/30 rounded-2xl p-4 shadow-2xl space-y-3"
-                >
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-bold text-white">Escolher Veículo</h4>
-                    <button onClick={() => setSelectorOpenSlot(null)} className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors">
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
-                    <input
-                      type="text"
-                      value={selectorSearch}
-                      onChange={e => setSelectorSearch(e.target.value)}
-                      placeholder="Buscar por nome..."
-                      className="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-cyan-500 transition-colors"
-                    />
-                  </div>
-                  <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
-                    {filteredAvailable.map(c => (
-                      <button
-                        key={c.id}
-                        type="button"
-                        onClick={() => handleSelectCarForSlot(c, selectorOpenSlot)}
-                        className="w-full flex items-center gap-3 p-2.5 rounded-xl bg-slate-900/80 border border-slate-800 hover:border-cyan-500/50 hover:bg-slate-800 transition-all text-left group"
-                      >
-                        <div className="w-14 h-10 rounded-lg overflow-hidden bg-slate-800 shrink-0">
-                          <img
-                            src={getVehicleImageUrl(c.image || c.imagem)}
-                            alt={c.name || c.model}
-                            loading="lazy"
-                            onError={handleVehicleImageError}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-bold text-white truncate">{c.name || `${c.brand} ${c.model}`}</p>
-                          <p className="text-[10px] text-slate-400">{c.year} • {Number(c.mileage || c.km || 0).toLocaleString('pt-BR')} km</p>
-                        </div>
-                        <span className="text-xs font-bold text-cyan-400 shrink-0">
-                          {formatMoney(c.price)}
-                        </span>
-                      </button>
-                    ))}
-                    {filteredAvailable.length === 0 && (
-                      <p className="text-xs text-slate-500 text-center py-4">Nenhum veículo disponível</p>
-                    )}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
 
             {/* Dimension 1: Preço Anunciado vs Tabela FIPE */}
             <div className="bg-slate-950/50 border border-slate-800 rounded-2xl p-4">
