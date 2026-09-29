@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, ArrowLeft, Save, CheckCircle, AlertCircle, Loader2, UploadCloud, X, FileText, Copy, ExternalLink, PlusCircle, Bot, Scan, CheckCircle2, AlertTriangle, Car, Sparkles, Search, Lock, Users, Video, Play, Image as ImageIcon, Trash2 } from 'lucide-react';
+import { ShieldCheck, ArrowLeft, Save, CheckCircle, AlertCircle, Loader2, UploadCloud, X, FileText, Copy, ExternalLink, PlusCircle, Bot, Scan, CheckCircle2, AlertTriangle, Car, Sparkles, Search, Lock, Users, Video, Play, Image as ImageIcon, Trash2, Film, Link as LinkIcon, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { stores as defaultStores } from '../data/inventoryData';
 import { addNewCar } from '../data/newCarsManager';
@@ -44,10 +44,13 @@ const compressImageToJpeg = (file, maxDimension = 1200, quality = 0.82) => {
   });
 };
 
-// Parser utilitário para extrair embed URL de vídeo (YouTube, Vimeo ou MP4 direto)
+// Parser utilitário para extrair embed URL de vídeo (YouTube, Vimeo, Blob local ou MP4 direto)
 const getEmbedVideoUrl = (url) => {
   if (!url || typeof url !== 'string') return null;
   const str = url.trim();
+  if (str.startsWith('blob:') || str.startsWith('data:video/')) {
+    return { type: 'local', src: str };
+  }
   const ytMatch = str.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
   if (ytMatch && ytMatch[1]) {
     return { type: 'youtube', src: `https://www.youtube-nocookie.com/embed/${ytMatch[1]}` };
@@ -70,10 +73,15 @@ const NewCarAdForm = () => {
   const isLojista = Boolean(
     user?.tipo === 'lojista' || 
     user?.role === 'lojista' || 
+    user?.role === 'admin' || 
+    user?.tipo === 'admin' || 
     user?.is_dealer || 
     user?.is_store || 
     user?.store_id
   );
+
+  const [videoSourceType, setVideoSourceType] = useState('file'); // 'file' | 'url'
+  const [videoFileName, setVideoFileName] = useState('');
 
   const [formData, setFormData] = useState({
     marca: '',
@@ -98,6 +106,33 @@ const NewCarAdForm = () => {
     comissao_fixa: '3.0',
     observacoes_repasse: ''
   });
+
+  const handleVideoFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('video/')) {
+      alert('Por favor, selecione um arquivo de vídeo válido (.mp4, .webm, .mov).');
+      return;
+    }
+    if (file.size > 80 * 1024 * 1024) {
+      alert('O tamanho do vídeo deve ser de até 80 MB.');
+      return;
+    }
+    if (formData.video_url && formData.video_url.startsWith('blob:')) {
+      try { URL.revokeObjectURL(formData.video_url); } catch (err) {}
+    }
+    const localUrl = URL.createObjectURL(file);
+    setVideoFileName(file.name);
+    setFormData(prev => ({ ...prev, video_url: localUrl }));
+  };
+
+  const handleClearVideo = () => {
+    if (formData.video_url && formData.video_url.startsWith('blob:')) {
+      try { URL.revokeObjectURL(formData.video_url); } catch (err) {}
+    }
+    setVideoFileName('');
+    setFormData(prev => ({ ...prev, video_url: '' }));
+  };
 
   const [isUploadingGallery, setIsUploadingGallery] = useState(false);
 
@@ -1179,35 +1214,124 @@ const NewCarAdForm = () => {
             </div>
 
             {/* ── VÍDEO DO VEÍCULO (OPCIONAL) ──────────────────────────────── */}
-            <div className="space-y-3 pt-6 border-t border-slate-100">
-              <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
-                <Video className="w-4 h-4 text-rose-600" />
-                Vídeo do Veículo (Opcional)
-              </label>
-              <p className="text-xs text-slate-500">
-                Insira o link de um vídeo do veículo (YouTube, Vimeo ou link direto MP4) para exibição na vitrine.
-              </p>
+            <div className="space-y-4 pt-6 border-t border-slate-100">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                    <Video className="w-4 h-4 text-rose-600" />
+                    Vídeo do Veículo (Opcional)
+                  </label>
+                  <p className="text-xs text-slate-500">
+                    Destaque o funcionamento do motor, interior e detalhes através de um vídeo dinâmico.
+                  </p>
+                </div>
 
-              <div className="relative">
-                <input
-                  type="url"
-                  name="video_url"
-                  value={formData.video_url}
-                  onChange={handleChange}
-                  placeholder="Ex: https://www.youtube.com/watch?v=dQw4w9WgXcQ ou https://vimeo.com/123456"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all shadow-sm"
-                />
-                {formData.video_url && (
+                {/* Seletor de Modo de Inserção de Vídeo */}
+                <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200 self-start sm:self-auto">
                   <button
                     type="button"
-                    onClick={() => setFormData(p => ({ ...p, video_url: '' }))}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
-                    title="Limpar link do vídeo"
+                    onClick={() => setVideoSourceType('file')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
+                      videoSourceType === 'file'
+                        ? 'bg-white text-rose-600 shadow-sm border border-slate-200/60'
+                        : 'text-slate-500 hover:text-slate-800'
+                    }`}
                   >
-                    <X className="w-4 h-4" />
+                    <Film className="w-3.5 h-3.5" />
+                    <span>Upload de Arquivo</span>
                   </button>
-                )}
+                  <button
+                    type="button"
+                    onClick={() => setVideoSourceType('url')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
+                      videoSourceType === 'url'
+                        ? 'bg-white text-rose-600 shadow-sm border border-slate-200/60'
+                        : 'text-slate-500 hover:text-slate-800'
+                    }`}
+                  >
+                    <LinkIcon className="w-3.5 h-3.5" />
+                    <span>Link (YouTube/Vimeo)</span>
+                  </button>
+                </div>
               </div>
+
+              {/* Aba 1: Upload Direto de Arquivo */}
+              {videoSourceType === 'file' && (
+                <div>
+                  {formData.video_url && formData.video_url.startsWith('blob:') ? (
+                    <div className="p-4 bg-rose-50/50 border border-rose-200/80 rounded-2xl flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-10 h-10 rounded-xl bg-rose-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                          <Film className="w-5 h-5" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-slate-800 truncate">
+                              {videoFileName || 'Vídeo Carregado do Dispositivo'}
+                            </span>
+                            <span className="text-[10px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-bold shrink-0">
+                              Pronto para o Anúncio
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-slate-500 mt-0.5">
+                            Arquivo carregado com sucesso. Você pode reproduzi-lo no player abaixo.
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleClearVideo}
+                        className="px-3 py-1.5 bg-white hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm shrink-0 active:scale-95"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Remover</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="border-2 border-dashed border-slate-300 hover:border-rose-400 bg-slate-50/70 hover:bg-rose-50/20 rounded-2xl p-6 flex flex-col items-center justify-center cursor-pointer transition-all group">
+                      <div className="w-12 h-12 rounded-2xl bg-white shadow-sm border border-slate-200 flex items-center justify-center text-rose-500 group-hover:scale-110 transition-transform mb-3">
+                        <UploadCloud className="w-6 h-6" />
+                      </div>
+                      <span className="text-xs font-bold text-slate-700 group-hover:text-rose-600 transition-colors text-center">
+                        Clique para selecionar ou arraste o vídeo do veículo aqui
+                      </span>
+                      <span className="text-[11px] text-slate-400 mt-1 text-center">
+                        Formatos aceitos: MP4, WebM ou MOV (tamanho máximo de 80 MB)
+                      </span>
+                      <input
+                        type="file"
+                        accept="video/mp4,video/webm,video/quicktime"
+                        onChange={handleVideoFileChange}
+                        className="hidden"
+                      />
+                    </label>
+                  )}
+                </div>
+              )}
+
+              {/* Aba 2: Link Externo (YouTube / Vimeo / MP4 Web) */}
+              {videoSourceType === 'url' && (
+                <div className="relative">
+                  <input
+                    type="url"
+                    name="video_url"
+                    value={formData.video_url}
+                    onChange={handleChange}
+                    placeholder="Cole o link do YouTube, Vimeo ou link direto MP4 (Ex: https://youtube.com/watch?v=...)"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-rose-500 focus:bg-white transition-all shadow-sm pr-10"
+                  />
+                  {formData.video_url && (
+                    <button
+                      type="button"
+                      onClick={handleClearVideo}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+                      title="Limpar link do vídeo"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              )}
 
               {/* Player de Preview do Vídeo */}
               {(() => {
@@ -1219,9 +1343,18 @@ const NewCarAdForm = () => {
                       <span className="flex items-center gap-1.5 text-white">
                         <Play className="w-3.5 h-3.5 text-rose-500 fill-rose-500" /> Pré-visualização do Vídeo
                       </span>
-                      <span className="text-[10px] uppercase font-mono bg-slate-800 px-2 py-0.5 rounded text-slate-300">
-                        {videoData.type}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[10px] uppercase font-mono bg-slate-800 px-2 py-0.5 rounded text-slate-300">
+                          {videoData.type === 'local' ? 'Arquivo Local' : videoData.type}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={handleClearVideo}
+                          className="text-slate-400 hover:text-rose-400 text-[11px] font-bold flex items-center gap-1"
+                        >
+                          <Trash2 className="w-3 h-3" /> Limpar
+                        </button>
+                      </div>
                     </div>
                     <div className="aspect-video w-full rounded-xl overflow-hidden bg-black border border-slate-800">
                       {videoData.type === 'youtube' || videoData.type === 'vimeo' ? (
@@ -1251,8 +1384,8 @@ const NewCarAdForm = () => {
               <textarea name="descricao" value={formData.descricao} onChange={handleChange} rows="5" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all shadow-sm resize-y" placeholder="Destaque as qualidades do veículo, opcionais, estado de conservação..."></textarea>
             </div>
 
-            {/* ── REDE B2B DE ESTOQUE COMPARTILHADO ────────────────────────── */}
-            {isLojista ? (
+            {/* ── REDE B2B DE ESTOQUE COMPARTILHADO (EXCLUSIVO PARA LOJISTAS / ADMIN) ── */}
+            {isLojista && (
               <div className="p-6 bg-gradient-to-r from-slate-50 via-indigo-50/30 to-blue-50/40 border border-indigo-100 rounded-2xl space-y-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -1357,26 +1490,6 @@ const NewCarAdForm = () => {
                     </motion.div>
                   )}
                 </AnimatePresence>
-              </div>
-            ) : (
-              /* Aviso amigável e bloqueado para vendedores particulares */
-              <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-between gap-4">
-                <div className="flex items-center gap-3.5">
-                  <div className="w-10 h-10 rounded-xl bg-slate-200 text-slate-500 flex items-center justify-center shrink-0">
-                    <Lock className="w-5 h-5 text-slate-500" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-sm font-bold text-slate-700">Compartilhamento de Estoque B2B</h3>
-                      <span className="text-[10px] font-black uppercase tracking-wider bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">
-                        Exclusivo para Lojistas
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-500 mt-0.5">
-                      O repasse de estoque entre concessionárias e reserva temporária com piso protegido está disponível exclusivamente para lojistas parceiros cadastrados.
-                    </p>
-                  </div>
-                </div>
               </div>
             )}
 

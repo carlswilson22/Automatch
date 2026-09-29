@@ -11,6 +11,24 @@ export const showcaseCars = [
     ],
     color: 'Branco Pérola',
     mileage: 12000, image: '/images/FotoCorollaCross.jpg',
+    photos360: [
+      '/images/FotoCorollaCross.jpg',
+      '/images/carro_360_diagonal.jpg',
+      '/images/carro_360_lateral.jpg',
+      '/images/FotoToyotaCorolla.jpg',
+      '/images/carro_360_traseira.jpg',
+      '/images/carro_360_diagonal.jpg',
+      '/images/carro_360_lateral.jpg',
+      '/images/carro_360_frente.jpg'
+    ],
+    gallery: [
+      '/images/FotoCorollaCross.jpg',
+      '/images/FotoToyotaCorolla.jpg',
+      '/images/carro_360_diagonal.jpg',
+      '/images/carro_360_lateral.jpg',
+      '/images/carro_360_traseira.jpg',
+      '/images/carro_360_frente.jpg'
+    ],
     bodyType: 'SUV',
     icon: Car, featured: true, location: 'São Paulo, SP', storeId: 'store-1',
     description: 'SUV híbrido flex topo de linha, teto solar elétrico, pacote Toyota Safety Sense e revisões em concessionária.',
@@ -34,6 +52,24 @@ Laudo cautelar 100% aprovado, sem qualquer retoque de funilaria ou histórico de
     ],
     color: 'Vermelho',
     mileage: 18500, image: '/images/FotoPoloTSI.jpg',
+    photos360: [
+      '/images/FotoPoloTSI.jpg',
+      '/images/carro_360_diagonal.jpg',
+      '/images/carro_360_lateral.jpg',
+      '/images/FotoGolfGTI.jpeg',
+      '/images/carro_360_traseira.jpg',
+      '/images/carro_360_diagonal.jpg',
+      '/images/carro_360_lateral.jpg',
+      '/images/carro_360_frente.jpg'
+    ],
+    gallery: [
+      '/images/FotoPoloTSI.jpg',
+      '/images/FotoGolfGTI.jpeg',
+      '/images/carro_360_diagonal.jpg',
+      '/images/carro_360_lateral.jpg',
+      '/images/carro_360_traseira.jpg',
+      '/images/carro_360_frente.jpg'
+    ],
     bodyType: 'Hatch',
     icon: Car, featured: false, location: 'Campinas, SP', storeId: 'store-2',
     description: 'Hatch esportivo e econômico com motor 1.0 TSI Turbo, painel 100% digital Active Info Display e VW Play.',
@@ -52,6 +88,24 @@ Acompanha laudo pericial cautelar sem apontamentos, manual do proprietário com 
     id: 'sc-003', name: 'Hyundai HB20 Platinum', brand: 'Hyundai', model: 'HB20',
     year: 2024, price: 105000, fipePrice: 110000, color: 'Prata',
     mileage: 5000, image: '/images/FotoHyundaiHB20.jpg',
+    photos360: [
+      '/images/FotoHyundaiHB20.jpg',
+      '/images/carro_360_diagonal.jpg',
+      '/images/carro_360_lateral.jpg',
+      '/images/FotoHondaCivic.jpeg',
+      '/images/carro_360_traseira.jpg',
+      '/images/carro_360_diagonal.jpg',
+      '/images/carro_360_lateral.jpg',
+      '/images/carro_360_frente.jpg'
+    ],
+    gallery: [
+      '/images/FotoHyundaiHB20.jpg',
+      '/images/FotoHondaCivic.jpeg',
+      '/images/carro_360_diagonal.jpg',
+      '/images/carro_360_lateral.jpg',
+      '/images/carro_360_traseira.jpg',
+      '/images/carro_360_frente.jpg'
+    ],
     bodyType: 'Hatch',
     icon: Car, featured: true, location: 'Rio de Janeiro, RJ', storeId: 'store-3',
     description: 'Versão Platinum com motor TGDI Turbo, pacote Hyundai SmartSense de segurança e apenas 5.000 km rodados.',
@@ -75,6 +129,24 @@ Veículo com procedência certificada de único dono, selo de vistoria cautelar 
     ],
     color: 'Azul Escuro',
     mileage: 8500, image: '/images/FotoChevroletTracker.jpg',
+    photos360: [
+      '/images/FotoChevroletTracker.jpg',
+      '/images/carro_360_diagonal.jpg',
+      '/images/carro_360_lateral.jpg',
+      '/images/FotoJeepCompassLimited.jpeg',
+      '/images/carro_360_traseira.jpg',
+      '/images/carro_360_diagonal.jpg',
+      '/images/carro_360_lateral.jpg',
+      '/images/carro_360_frente.jpg'
+    ],
+    gallery: [
+      '/images/FotoChevroletTracker.jpg',
+      '/images/FotoJeepCompassLimited.jpeg',
+      '/images/carro_360_diagonal.jpg',
+      '/images/carro_360_lateral.jpg',
+      '/images/carro_360_traseira.jpg',
+      '/images/carro_360_frente.jpg'
+    ],
     bodyType: 'SUV',
     icon: Car, featured: true, location: 'Curitiba, PR', storeId: 'store-1',
     description: 'SUV Premier com teto solar panorâmico, motor 1.2 Turbo, assistente de estacionamento autônomo e Wi-Fi nativo.',
@@ -93,6 +165,24 @@ Carro de único proprietário, revisado em concessionária, sem qualquer avaria 
     id: 'sc-005', name: 'Fiat Pulse Abarth', brand: 'Fiat', model: 'Pulse Abarth',
     year: 2024, price: 145000, fipePrice: 149900, color: 'Vermelho',
     mileage: 3200, image: '/images/FotoFiatPulse.jpg',
+    photos360: [
+      '/images/FotoFiatPulse.jpg',
+      '/images/carro_360_diagonal.jpg',
+      '/images/carro_360_lateral.jpg',
+      '/images/FotoGolfGTI.jpeg',
+      '/images/carro_360_traseira.jpg',
+      '/images/carro_360_diagonal.jpg',
+      '/images/carro_360_lateral.jpg',
+      '/images/carro_360_frente.jpg'
+    ],
+    gallery: [
+      '/images/FotoFiatPulse.jpg',
+      '/images/FotoGolfGTI.jpeg',
+      '/images/carro_360_diagonal.jpg',
+      '/images/carro_360_lateral.jpg',
+      '/images/carro_360_traseira.jpg',
+      '/images/carro_360_frente.jpg'
+    ],
     bodyType: 'SUV',
     icon: Car, featured: true, location: 'Belo Horizonte, MG', storeId: 'store-2',
     description: 'O puro esportivo da divisão do escorpião com motor Turbo 270 de 185 cv, modo Poison e escape esportivo duplo.',

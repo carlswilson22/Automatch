@@ -106,16 +106,12 @@ const Vehicle360Viewer = ({
 
   const currentAngleObj = ORBITAL_SEQUENCE.find((a) => a.angle === currentAngle) || ORBITAL_SEQUENCE[0];
 
-  // Determina a foto ativa mapeando proporcionalmente para as fotos disponíveis
+  // Determina a foto ativa mapeando proporcionalmente para as fotos disponíveis (mínimo 8 ângulos)
   const getActiveImage = () => {
-    // 1. Sequência completa de fotos 360 (ex: 24, 36 ou N fotos do veículo)
-    const photoArray = Array.isArray(photos360) ? photos360 : (Array.isArray(car?.photos360) ? car.photos360 : null);
-    if (photoArray && photoArray.length > 0) {
-      const idx = Math.floor((currentAngle / 360) * photoArray.length) % photoArray.length;
-      if (photoArray[idx]) {
-        return getVehicleImageUrl(photoArray[idx]);
-      }
-    }
+    // 1. Sequência completa de fotos 360 (se tiver >= 4 fotos)
+    let photoArray = (Array.isArray(photos360) && photos360.length >= 4) 
+      ? photos360 
+      : (Array.isArray(car?.photos360) && car.photos360.length >= 4 ? car.photos360 : null);
 
     // 2. Dicionário de fotos por ângulo explícito (ex: { 0: '...', 45: '...', ... })
     const photoMap = (!Array.isArray(photos360) && photos360) || (!Array.isArray(car?.photos360) && car?.photos360);
@@ -123,19 +119,42 @@ const Vehicle360Viewer = ({
       return getVehicleImageUrl(photoMap[currentAngle]);
     }
 
-    // 3. Galeria fotográfica real do veículo
-    const gal = (car?.gallery && Array.isArray(car.gallery) && car.gallery.length > 0) 
-      ? car.gallery 
-      : (Array.isArray(gallery) ? gallery : null);
-
-    if (gal && gal.length > 0) {
-      const idx = Math.floor((currentAngle / 360) * gal.length) % gal.length;
-      if (gal[idx]) return getVehicleImageUrl(gal[idx]);
+    // 3. Galeria fotográfica real do veículo (se tiver >= 4 fotos)
+    if (!photoArray) {
+      const gal = (car?.gallery && Array.isArray(car.gallery) && car.gallery.length >= 4) 
+        ? car.gallery 
+        : (Array.isArray(gallery) && gallery.length >= 4 ? gallery : null);
+      if (gal) photoArray = gal;
     }
 
-    // 4. Imagem autêntica do próprio veículo
-    const baseImg = vehicleImage || car?.image || car?.imagem;
-    return getVehicleImageUrl(baseImg || 'FotoGolfGTI.jpeg');
+    // 4. Se o anúncio tiver menos de 4 fotos cadastradas, expande para 8 ângulos cardeais
+    if (!photoArray || photoArray.length < 4) {
+      const baseImg = vehicleImage || car?.image || car?.imagem || '/images/FotoGolfGTI.jpeg';
+      const userPhotos = Array.isArray(photos360) && photos360.length > 0 
+        ? photos360 
+        : (Array.isArray(car?.photos360) && car.photos360.length > 0 
+            ? car.photos360 
+            : (Array.isArray(car?.images) && car.images.length > 0 ? car.images : [baseImg]));
+
+      // Sequência harmônica de 8 ângulos cardeais (0°, 45°, 90°, 135°, 180°, 225°, 270°, 315°)
+      photoArray = [
+        userPhotos[0] || baseImg,
+        '/images/carro_360_diagonal.jpg',
+        '/images/carro_360_lateral.jpg',
+        userPhotos[1] || '/images/carro_360_diagonal.jpg',
+        '/images/carro_360_traseira.jpg',
+        '/images/carro_360_diagonal.jpg',
+        '/images/carro_360_lateral.jpg',
+        userPhotos[0] || '/images/carro_360_frente.jpg'
+      ];
+    }
+
+    const idx = Math.floor((currentAngle / 360) * photoArray.length) % photoArray.length;
+    if (photoArray[idx]) {
+      return getVehicleImageUrl(photoArray[idx]);
+    }
+
+    return getVehicleImageUrl(vehicleImage || car?.image || car?.imagem || 'FotoGolfGTI.jpeg');
   };
 
   const activeImage = getActiveImage();
