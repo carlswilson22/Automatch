@@ -30,7 +30,24 @@ export default function HomeSupportChat({ isOpen, onClose }) {
   }, [isOpen, onClose]);
 
   const generateAssistantResponse = (text) => {
-    const q = (text || '').toLowerCase();
+    const q = (text || '').toLowerCase().trim();
+
+    // Intenção direta de busca e visualização de veículos / estoque
+    if (
+      q === 'carros' || 
+      q === 'carro' || 
+      q.includes('carro') || 
+      q.includes('veiculo') || 
+      q.includes('veículo') || 
+      q.includes('estoque') || 
+      q.includes('modelos') || 
+      q.includes('catalogo') || 
+      q.includes('catálogo') || 
+      q.includes('seminovo')
+    ) {
+      return "Temos diversos carros e seminovos certificados disponíveis na Vitrine Digital! Você encontra opções como SUVs (Corolla Cross, Tracker, Pulse), Hatches (Polo TSI, HB20) e Sedãs (Civic) com Laudo Cautelar Aprovado. Você pode pesquisar por marca ou categoria na aba 'Vitrine Digital'. Qual modelo você tem em mente?";
+    }
+
     if (q.includes('laudo') || q.includes('cautelar') || q.includes('vistoria') || q.includes('pericia') || q.includes('procedencia')) {
       return "Todos os veículos na Automatch possuem Laudo Cautelar 100% Aprovado e Dossiê de Transparência auditado, cobrindo integridade estrutural, pintura, histórico de leilão e documentação no DETRAN.";
     }
@@ -83,7 +100,7 @@ export default function HomeSupportChat({ isOpen, onClose }) {
       setTimeout(() => {
         setIsTyping(false);
         setMessages(prev => [...prev, { id: Date.now(), text: generateAssistantResponse(textToSend), sender: 'system' }]);
-      }, 700);
+      }, 250);
     }
   };
 
@@ -175,7 +192,7 @@ export default function HomeSupportChat({ isOpen, onClose }) {
                 {/* Quick Chips */}
                 {messages.length <= 2 && (
                   <div className="flex flex-wrap gap-2 mb-3">
-                    {['Laudo Cautelar', 'Financiamento', 'Tabela FIPE', 'Garantia', 'Troca'].map((chip) => (
+                    {['Ver Carros', 'Laudo Cautelar', 'Financiamento', 'Tabela FIPE', 'Garantia', 'Troca'].map((chip) => (
                       <button
                         key={chip}
                         type="button"

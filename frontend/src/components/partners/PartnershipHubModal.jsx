@@ -330,12 +330,13 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
   };
 
   const loadPartnerships = async () => {
+    let remotePartnerships = [];
     try {
       const [pRes, sRes] = await Promise.all([
         fetch('/api/partnerships/my', { headers: getAuthHeaders(), signal: AbortSignal.timeout(1500) }),
         fetch('/api/partnerships/stores-available', { headers: getAuthHeaders(), signal: AbortSignal.timeout(1500) })
       ]);
-      if (pRes.ok) setPartnerships(await pRes.json());
+      if (pRes.ok) remotePartnerships = await pRes.json();
       if (sRes.ok) {
         const remoteStores = await sRes.json();
         if (Array.isArray(remoteStores) && remoteStores.length > 0) {
@@ -370,6 +371,24 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
         cars_count: 14
       })));
     }
+
+    // Unifica com solicitações salvas localmente
+    const localInvites = JSON.parse(localStorage.getItem('automatch_b2b_partnerships') || '[]');
+    const combinedPartnerships = Array.isArray(remotePartnerships) ? [...remotePartnerships] : [];
+    localInvites.forEach(inv => {
+      if (!combinedPartnerships.some(p => p.id === inv.id || p.receiver_store_id === inv.partner_store_id)) {
+        combinedPartnerships.unshift({
+          id: inv.id,
+          receiver_store_name: inv.partner_store_name,
+          receiver_store_id: inv.partner_store_id,
+          commission_rate: inv.commission_rate || 3.0,
+          status: inv.status || 'pendente',
+          is_incoming: false,
+          created_at: inv.created_at || new Date().toISOString()
+        });
+      }
+    });
+    setPartnerships(combinedPartnerships);
   };
 
   const loadReservations = async () => {
@@ -1088,31 +1107,31 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
                     return (
                       <div
                         key={res.id}
-                        className={`rounded-3xl p-6 border shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-6 transition-all ${
+                        className={`rounded-3xl p-6 border shadow-sm grid grid-cols-1 lg:grid-cols-12 items-center gap-5 transition-all ${
                           isClosing
                             ? 'bg-amber-50/40 border-amber-300 opacity-70 grayscale-[15%]'
                             : 'bg-white border-slate-200'
                         }`}
                       >
-                        {/* Vehicle & Store info */}
-                        <div className="flex items-center gap-4">
+                        {/* 1. Vehicle & Store info (Col 1-5) */}
+                        <div className="lg:col-span-5 flex items-center gap-4 min-w-0">
                           {res.car_image ? (
                             <img
                               src={getVehicleImageUrl(res.car_image)}
                               alt={res.car_title}
                               onError={handleVehicleImageError}
-                              className="w-20 h-16 object-cover rounded-2xl border border-slate-200"
+                              className="w-20 h-16 object-cover rounded-2xl border border-slate-200 shrink-0"
                             />
                           ) : (
-                            <div className="w-20 h-16 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400">
+                            <div className="w-20 h-16 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 shrink-0">
                               <Car className="w-6 h-6" />
                             </div>
                           )}
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <h4 className="font-bold text-base text-slate-800">{res.car_title}</h4>
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h4 className="font-bold text-base text-slate-800 truncate">{res.car_title}</h4>
                               <span
-                                className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full ${
+                                className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full shrink-0 ${
                                   isClosing
                                     ? 'bg-amber-100 text-amber-800 border border-amber-200'
                                     : res.status === 'ativa'
@@ -1127,7 +1146,7 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
                                 {isClosing ? 'em fechamento' : isExpired ? 'expirada' : res.status}
                               </span>
                             </div>
-                            <p className="text-xs text-slate-400 mt-1">
+                            <p className="text-xs text-slate-400 mt-1 truncate">
                               {isOwner ? (
                                 <>Solicitado por: <span className="font-bold text-slate-700">{res.requesting_store_name}</span></>
                               ) : (
@@ -1138,24 +1157,25 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
                           </div>
                         </div>
 
-                        {/* Price & Countdown Timer / Status */}
-                        <div className="flex items-center gap-6">
-                          <div className="text-right">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Proposta</span>
-                            <span className="text-lg font-black text-slate-900">
-                              R$ {Number(res.proposed_price).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                            </span>
-                          </div>
+                        {/* 2. Proposal Price (Col 6-7) */}
+                        <div className="lg:col-span-2 text-left lg:text-right">
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Proposta</span>
+                          <span className="text-base sm:text-lg font-black text-slate-900 whitespace-nowrap">
+                            R$ {Number(res.proposed_price).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                          </span>
+                        </div>
 
+                        {/* 3. Countdown Timer / Status (Col 8-9) */}
+                        <div className="lg:col-span-2 flex justify-start lg:justify-center">
                           {isClosing ? (
-                            <div className="px-4 py-2 border border-amber-300 bg-amber-50 rounded-2xl text-center">
+                            <div className="px-3.5 py-2 border border-amber-300 bg-amber-50 rounded-2xl text-center w-full max-w-[170px]">
                               <span className="text-[10px] font-black uppercase tracking-wider block text-amber-700">Status</span>
-                              <span className="text-xs font-bold text-amber-900 flex items-center gap-1 mt-0.5">
-                                <CheckCircle2 className="w-3.5 h-3.5 text-amber-600" /> Fechamento Solicitado
+                              <span className="text-xs font-bold text-amber-900 flex items-center justify-center gap-1 mt-0.5">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-amber-600 shrink-0" /> Fechamento
                               </span>
                             </div>
                           ) : res.status === 'ativa' ? (
-                            <div className={`px-4 py-2 border rounded-2xl text-center ${
+                            <div className={`px-3.5 py-2 border rounded-2xl text-center w-full max-w-[170px] ${
                               isExpired ? 'bg-rose-50 border-rose-200' : 'bg-purple-50 border-purple-200'
                             }`}>
                               <span className={`text-[10px] font-black uppercase tracking-wider block ${
@@ -1168,35 +1188,35 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
                           ) : null}
                         </div>
 
-                        {/* Actions */}
-                        <div className="flex flex-wrap items-center gap-2">
+                        {/* 4. Actions (Col 10-12) */}
+                        <div className="lg:col-span-3 flex items-center justify-start lg:justify-end gap-2 flex-wrap">
                           <button
                             onClick={() => setActiveChatReservation(res)}
-                            className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+                            className="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap"
                           >
-                            <MessageSquare className="w-4 h-4 text-indigo-600" /> Chat B2B
+                            <MessageSquare className="w-4 h-4 text-indigo-600 shrink-0" /> Chat B2B
                           </button>
 
                           {/* Se for loja solicitante */}
                           {!isOwner && (res.status === 'ativa' || isClosing) && (
                             <>
                               {isClosing ? (
-                                <span className="text-xs font-bold text-amber-800 bg-amber-100/80 px-3.5 py-2 rounded-xl border border-amber-300 flex items-center gap-1.5 shadow-sm">
-                                  <CheckCircle2 className="w-4 h-4 text-amber-600" />
-                                  Aguardando Aprovação do Lojista
+                                <span className="text-xs font-bold text-amber-800 bg-amber-100/80 px-3 py-2 rounded-xl border border-amber-300 flex items-center gap-1.5 shadow-sm text-center">
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+                                  Aguardando Lojista
                                 </span>
                               ) : (
                                 <button
                                   onClick={() => handleRequestClosing(res.id)}
                                   disabled={actionLoading}
-                                  className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-500/20 active:scale-95 transition-all cursor-pointer"
+                                  className="px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-500/20 active:scale-95 transition-all cursor-pointer whitespace-nowrap"
                                 >
                                   Solicitar Fechamento
                                 </button>
                               )}
                               <button
                                 onClick={() => handleCancelReservation(res.id)}
-                                className="p-2.5 hover:bg-red-50 hover:text-red-600 text-slate-400 rounded-xl text-xs transition-all cursor-pointer"
+                                className="p-2.5 hover:bg-red-50 hover:text-red-600 text-slate-400 rounded-xl text-xs transition-all cursor-pointer shrink-0"
                                 title="Cancelar Reserva"
                               >
                                 <XCircle className="w-4 h-4" />
@@ -1210,7 +1230,7 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
                               <button
                                 onClick={() => handleConsentDecision(res.id, true)}
                                 disabled={actionLoading}
-                                className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-500/20 active:scale-95 transition-all cursor-pointer"
+                                className="px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-500/20 active:scale-95 transition-all cursor-pointer"
                               >
                                 Aprovar Venda
                               </button>
