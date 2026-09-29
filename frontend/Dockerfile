@@ -2,6 +2,8 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+ENV BROWSERSLIST_IGNORE_OLD_DATA=true
+
 # Install dependencies first for better layer caching
 COPY package.json package-lock.json ./
 RUN npm install
