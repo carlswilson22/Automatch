@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, ArrowLeft, Save, CheckCircle, AlertCircle, Loader2, UploadCloud, X, FileText, Copy, ExternalLink, PlusCircle, Bot, Scan, CheckCircle2, AlertTriangle, Car, Sparkles, Search, Lock, Users } from 'lucide-react';
+import { ShieldCheck, ArrowLeft, Save, CheckCircle, AlertCircle, Loader2, UploadCloud, X, FileText, Copy, ExternalLink, PlusCircle, Bot, Scan, CheckCircle2, AlertTriangle, Car, Sparkles, Search, Lock, Users, Video, Play, Image as ImageIcon, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { stores as defaultStores } from '../data/inventoryData';
 import { addNewCar } from '../data/newCarsManager';
@@ -44,9 +44,37 @@ const compressImageToJpeg = (file, maxDimension = 1200, quality = 0.82) => {
   });
 };
 
+// Parser utilitário para extrair embed URL de vídeo (YouTube, Vimeo ou MP4 direto)
+const getEmbedVideoUrl = (url) => {
+  if (!url || typeof url !== 'string') return null;
+  const str = url.trim();
+  const ytMatch = str.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
+  if (ytMatch && ytMatch[1]) {
+    return { type: 'youtube', src: `https://www.youtube-nocookie.com/embed/${ytMatch[1]}` };
+  }
+  const vimeoMatch = str.match(/(?:vimeo\.com\/)(\d+)/);
+  if (vimeoMatch && vimeoMatch[1]) {
+    return { type: 'vimeo', src: `https://player.vimeo.com/video/${vimeoMatch[1]}` };
+  }
+  if (/\.(mp4|webm|ogg)(\?.*)?$/i.test(str)) {
+    return { type: 'video', src: str };
+  }
+  return null;
+};
+
 const NewCarAdForm = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  // Verificação estrita de lojista para acesso ao Estoque B2B
+  const isLojista = Boolean(
+    user?.tipo === 'lojista' || 
+    user?.role === 'lojista' || 
+    user?.is_dealer || 
+    user?.is_store || 
+    user?.store_id
+  );
+
   const [formData, setFormData] = useState({
     marca: '',
     modelo: '',
@@ -57,6 +85,8 @@ const NewCarAdForm = () => {
     transmissao: 'Automático',
     descricao: '',
     imagem: '',
+    fotos_adicionais: [],
+    video_url: '',
     localizacao: '',
     laudo: 'Aprovado',
     debitos: 'Sem débitos',
@@ -68,6 +98,37 @@ const NewCarAdForm = () => {
     comissao_fixa: '3.0',
     observacoes_repasse: ''
   });
+
+  const [isUploadingGallery, setIsUploadingGallery] = useState(false);
+
+  const handleAdditionalPhotos = async (files) => {
+    if (!files || files.length === 0) return;
+    setIsUploadingGallery(true);
+    const newPhotos = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(file.type)) {
+        try {
+          const compressed = await compressImageToJpeg(file, 1024, 0.80);
+          if (compressed) newPhotos.push(compressed);
+        } catch (e) {
+          console.warn('Erro ao comprimir foto adicional:', e);
+        }
+      }
+    }
+    setFormData(prev => ({
+      ...prev,
+      fotos_adicionais: [...(prev.fotos_adicionais || []), ...newPhotos]
+    }));
+    setIsUploadingGallery(false);
+  };
+
+  const removeAdditionalPhoto = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      fotos_adicionais: (prev.fotos_adicionais || []).filter((_, i) => i !== index)
+    }));
+  };
 
   // Estados da Consulta Inteligente de Placa
   const [plateInput, setPlateInput] = useState('');
@@ -198,8 +259,9 @@ const NewCarAdForm = () => {
   const handleNewCar = () => {
     setFormData({
       marca: '', modelo: '', ano: '', preco: '', km: '', cor: '',
-      transmissao: '', descricao: '', imagem: '', localizacao: '',
-      laudo: '', debitos: '', leilao: '', store_id: ''
+      transmissao: '', descricao: '', imagem: '', fotos_adicionais: [], video_url: '', localizacao: '',
+      laudo: '', debitos: '', leilao: '', store_id: '',
+      compartilhavel: false, valor_minimo_repasse: '', comissao_fixa: '3.0', observacoes_repasse: ''
     });
     setCreatedCar(null);
     setCopied(false);
@@ -362,6 +424,8 @@ const NewCarAdForm = () => {
       transmissao: formData.transmissao,
       descricao: formData.descricao,
       imagem: formData.imagem || '',
+      fotos_adicionais: formData.fotos_adicionais || [],
+      video_url: formData.video_url || null,
       localizacao: formData.localizacao,
       laudo: formData.laudo,
       debitos: formData.debitos,
@@ -381,6 +445,8 @@ const NewCarAdForm = () => {
       km: formData.km ? Number(formData.km) : 0,
       price: numericPrice,
       image: formData.imagem || '',
+      fotos_adicionais: formData.fotos_adicionais || [],
+      video_url: formData.video_url || null,
       store_id: storeNumericId,
       color: formData.cor,
       transmission: formData.transmissao,
@@ -391,11 +457,11 @@ const NewCarAdForm = () => {
       auction_history: formData.leilao,
       laudo_url: laudoUploadedUrl || null,
       laudo_feedback: laudoFeedback ? JSON.stringify(laudoFeedback) : null,
-      // B2B Repasse
-      compartilhavel: formData.compartilhavel ? 1 : 0,
-      valor_minimo_repasse: formData.valor_minimo_repasse ? Number(formData.valor_minimo_repasse.replace(/[^0-9,-]+/g,"").replace(",", ".")) : null,
-      comissao_fixa: formData.comissao_fixa ? parseFloat(formData.comissao_fixa) : 3.0,
-      observacoes_repasse: formData.observacoes_repasse || null,
+      // B2B Repasse (acessível exclusivamente para lojistas verificados)
+      compartilhavel: (isLojista && formData.compartilhavel) ? 1 : 0,
+      valor_minimo_repasse: (isLojista && formData.valor_minimo_repasse) ? Number(formData.valor_minimo_repasse.replace(/[^0-9,-]+/g,"").replace(",", ".")) : null,
+      comissao_fixa: (isLojista && formData.comissao_fixa) ? parseFloat(formData.comissao_fixa) : 3.0,
+      observacoes_repasse: isLojista ? (formData.observacoes_repasse || null) : null,
       plate: plateInput.replace(/[^A-Za-z0-9]/g, '').toUpperCase() || null
     };
 
@@ -945,63 +1011,42 @@ const NewCarAdForm = () => {
               </div>
             </div>
 
-            {/* Imagem Upload */}
+            {/* Imagem Upload (Foto de Capa) */}
             <div className="space-y-3 pt-6 border-t border-slate-100">
-              <label className="text-sm font-bold text-slate-700">Foto da Capa do Veículo</label>
+              <label className="text-sm font-bold text-slate-700">Foto da Capa do Veículo *</label>
               
               {!formData.imagem ? (
-                <div className="space-y-5">
-                  <div 
-                    className={`relative flex flex-col items-center justify-center w-full h-48 rounded-xl border-2 border-dashed transition-all cursor-pointer overflow-hidden ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-slate-300 bg-slate-50 hover:bg-slate-100'}`}
-                    onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
-                    onDragLeave={() => setIsDragging(false)}
-                    onDrop={handleDrop}
-                  >
-                    <input 
-                      type="file" 
-                      accept=".jpg,.jpeg,.png"
-                      onChange={(e) => processFile(e.target.files?.[0])}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                    />
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6 text-slate-500 pointer-events-none">
-                      <UploadCloud className={`w-10 h-10 mb-3 ${isDragging ? 'text-blue-500' : 'text-slate-400'}`} />
-                      <p className="mb-2 text-sm font-semibold text-slate-600 text-center px-4">
-                        Arraste a foto do carro aqui ou <span className="text-blue-600">clique para selecionar</span>
-                      </p>
-                      <p className="text-xs text-slate-500">Apenas arquivos .jpg, .jpeg, .png</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-4 px-2">
-                    <div className="flex-1 h-px bg-slate-200"></div>
-                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">OU</span>
-                    <div className="flex-1 h-px bg-slate-200"></div>
-                  </div>
-
-                  <div className="space-y-2 pb-2">
-                    <label className="text-sm font-bold text-slate-700">Ou cole o link da imagem (URL)</label>
-                    <input 
-                      type="url" 
-                      name="imagem" 
-                      value={formData.imagem} 
-                      onChange={handleChange} 
-                      className={`w-full bg-slate-50 border ${formData.imagem && !isValidImageExt ? 'border-amber-400 focus:ring-amber-500' : 'border-slate-200 focus:ring-blue-500'} rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:bg-white transition-all shadow-sm text-slate-700`} 
-                      placeholder="https://exemplo.com/fotocarro.jpg" 
-                    />
-                    {formData.imagem && !isValidImageExt && <p className="text-xs text-amber-600 mt-1">Atenção: A URL informada parece não terminar com extensão aceita (.jpg, .png)</p>}
+                <div 
+                  className={`relative flex flex-col items-center justify-center w-full h-48 rounded-xl border-2 border-dashed transition-all cursor-pointer overflow-hidden ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-slate-300 bg-slate-50 hover:bg-slate-100'}`}
+                  onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
+                  onDragLeave={() => setIsDragging(false)}
+                  onDrop={handleDrop}
+                >
+                  <input 
+                    type="file" 
+                    accept=".jpg,.jpeg,.png,.webp"
+                    onChange={(e) => processFile(e.target.files?.[0])}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  />
+                  <div className="flex flex-col items-center justify-center pt-5 pb-6 text-slate-500 pointer-events-none">
+                    <UploadCloud className={`w-10 h-10 mb-3 ${isDragging ? 'text-blue-500' : 'text-slate-400'}`} />
+                    <p className="mb-1 text-sm font-semibold text-slate-700 text-center px-4">
+                      Arraste a foto principal aqui ou <span className="text-blue-600">clique para selecionar</span>
+                    </p>
+                    <p className="text-xs text-slate-400">Arquivos JPG, PNG ou WEBP • Compressão automática</p>
                   </div>
                 </div>
               ) : (
                 <div className="mt-4 space-y-3">
                   <div className="rounded-xl overflow-hidden border border-slate-200 aspect-[21/9] max-w-full bg-slate-100 relative group">
-                    <img src={formData.imagem} alt="Preview" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
+                    <img src={formData.imagem} alt="Capa" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
                       <button 
                         type="button"
                         onClick={() => { setFormData(p => ({ ...p, imagem: '' })); setPhotoAiResult(null); setPhotoAiScanStatus('idle'); }}
-                        className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition-colors flex items-center gap-2"
+                        className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition-colors flex items-center gap-2 cursor-pointer shadow-lg"
                       >
-                        <X className="w-4 h-4" /> Remover Foto
+                        <X className="w-4 h-4" /> Remover Foto de Capa
                       </button>
                     </div>
                   </div>
@@ -1019,7 +1064,7 @@ const NewCarAdForm = () => {
                       type="button"
                       onClick={() => scanCarPhotoAi(formData.imagem)}
                       disabled={photoAiScanStatus === 'scanning'}
-                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 shadow-sm disabled:opacity-50"
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-all flex items-center gap-1.5 shadow-sm disabled:opacity-50 cursor-pointer"
                     >
                       {photoAiScanStatus === 'scanning' ? (
                         <>
@@ -1072,118 +1117,268 @@ const NewCarAdForm = () => {
               )}
             </div>
 
+            {/* ── GALERIA DE FOTOS ADICIONAIS ──────────────────────────────── */}
+            <div className="space-y-3 pt-6 border-t border-slate-100">
+              <div className="flex items-center justify-between">
+                <div>
+                  <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                    <ImageIcon className="w-4 h-4 text-blue-600" />
+                    Fotos Adicionais do Veículo (Galeria)
+                  </label>
+                  <p className="text-xs text-slate-500">
+                    Adicione fotos do interior, painel, porta-malas, rodas e motor para enriquecer o anúncio.
+                  </p>
+                </div>
+                {formData.fotos_adicionais?.length > 0 && (
+                  <span className="text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
+                    {formData.fotos_adicionais.length} {formData.fotos_adicionais.length === 1 ? 'foto' : 'fotos'}
+                  </span>
+                )}
+              </div>
+
+              {/* Botão de Upload da Galeria */}
+              <div className="flex items-center gap-3">
+                <label className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold cursor-pointer transition-all border border-slate-200 shadow-sm active:scale-95">
+                  <UploadCloud className="w-4 h-4 text-blue-600" />
+                  <span>{isUploadingGallery ? 'Processando fotos...' : 'Adicionar Mais Fotos'}</span>
+                  <input
+                    type="file"
+                    multiple
+                    accept=".jpg,.jpeg,.png,.webp"
+                    disabled={isUploadingGallery}
+                    onChange={(e) => handleAdditionalPhotos(e.target.files)}
+                    className="hidden"
+                  />
+                </label>
+                {isUploadingGallery && (
+                  <div className="flex items-center gap-2 text-xs text-slate-500">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-600" />
+                    <span>Otimizando imagens...</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Grade de Miniaturas da Galeria */}
+              {formData.fotos_adicionais?.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3 pt-2">
+                  {formData.fotos_adicionais.map((foto, idx) => (
+                    <div key={idx} className="relative aspect-square rounded-xl overflow-hidden border border-slate-200 group bg-slate-100 shadow-sm">
+                      <img src={foto} alt={`Foto ${idx + 1}`} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                      <button
+                        type="button"
+                        onClick={() => removeAdditionalPhoto(idx)}
+                        className="absolute top-1.5 right-1.5 w-6 h-6 bg-red-600/90 hover:bg-red-700 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-md cursor-pointer"
+                        title="Remover foto"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* ── VÍDEO DO VEÍCULO (OPCIONAL) ──────────────────────────────── */}
+            <div className="space-y-3 pt-6 border-t border-slate-100">
+              <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                <Video className="w-4 h-4 text-rose-600" />
+                Vídeo do Veículo (Opcional)
+              </label>
+              <p className="text-xs text-slate-500">
+                Insira o link de um vídeo do veículo (YouTube, Vimeo ou link direto MP4) para exibição na vitrine.
+              </p>
+
+              <div className="relative">
+                <input
+                  type="url"
+                  name="video_url"
+                  value={formData.video_url}
+                  onChange={handleChange}
+                  placeholder="Ex: https://www.youtube.com/watch?v=dQw4w9WgXcQ ou https://vimeo.com/123456"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all shadow-sm"
+                />
+                {formData.video_url && (
+                  <button
+                    type="button"
+                    onClick={() => setFormData(p => ({ ...p, video_url: '' }))}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+                    title="Limpar link do vídeo"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+
+              {/* Player de Preview do Vídeo */}
+              {(() => {
+                const videoData = getEmbedVideoUrl(formData.video_url);
+                if (!videoData) return null;
+                return (
+                  <div className="mt-3 p-3 bg-slate-900 rounded-2xl border border-slate-800 space-y-2">
+                    <div className="flex items-center justify-between text-xs text-slate-400 font-semibold px-1">
+                      <span className="flex items-center gap-1.5 text-white">
+                        <Play className="w-3.5 h-3.5 text-rose-500 fill-rose-500" /> Pré-visualização do Vídeo
+                      </span>
+                      <span className="text-[10px] uppercase font-mono bg-slate-800 px-2 py-0.5 rounded text-slate-300">
+                        {videoData.type}
+                      </span>
+                    </div>
+                    <div className="aspect-video w-full rounded-xl overflow-hidden bg-black border border-slate-800">
+                      {videoData.type === 'youtube' || videoData.type === 'vimeo' ? (
+                        <iframe
+                          src={videoData.src}
+                          title="Vídeo do Veículo"
+                          className="w-full h-full border-0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                        />
+                      ) : (
+                        <video
+                          src={videoData.src}
+                          controls
+                          className="w-full h-full object-contain"
+                        />
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
+            </div>
+
             {/* Descrição */}
-            <div className="space-y-2">
+            <div className="space-y-2 pt-6 border-t border-slate-100">
               <label className="text-sm font-bold text-slate-700">Descrição do Veículo</label>
               <textarea name="descricao" value={formData.descricao} onChange={handleChange} rows="5" className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all shadow-sm resize-y" placeholder="Destaque as qualidades do veículo, opcionais, estado de conservação..."></textarea>
             </div>
 
             {/* ── REDE B2B DE ESTOQUE COMPARTILHADO ────────────────────────── */}
-            <div className="p-6 bg-gradient-to-r from-slate-50 via-indigo-50/30 to-blue-50/40 border border-indigo-100 rounded-2xl space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-sm">
-                    <Users className="w-5 h-5" />
+            {isLojista ? (
+              <div className="p-6 bg-gradient-to-r from-slate-50 via-indigo-50/30 to-blue-50/40 border border-indigo-100 rounded-2xl space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-sm">
+                      <Users className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">
+                        Compartilhamento de Estoque B2B
+                      </h3>
+                      <p className="text-xs text-slate-500">
+                        Disponibilize este veículo para lojistas parceiros consultarem e oferecerem aos seus clientes.
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">
-                      Compartilhamento de Estoque B2B
-                    </h3>
-                    <p className="text-xs text-slate-500">
-                      Disponibilize este veículo para lojistas parceiros consultarem e oferecerem aos seus clientes.
-                    </p>
-                  </div>
+
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.compartilhavel}
+                      onChange={(e) => setFormData({ ...formData, compartilhavel: e.target.checked })}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                  </label>
                 </div>
 
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.compartilhavel}
-                    onChange={(e) => setFormData({ ...formData, compartilhavel: e.target.checked })}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                </label>
-              </div>
+                <AnimatePresence>
+                  {formData.compartilhavel && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="pt-4 border-t border-indigo-100 space-y-4 overflow-hidden"
+                    >
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                            <Lock className="w-3.5 h-3.5 text-amber-600" />
+                            Valor Mínimo de Repasse (Piso Inviolável) *
+                          </label>
+                          <input
+                            type="text"
+                            name="valor_minimo_repasse"
+                            value={formData.valor_minimo_repasse}
+                            onChange={(e) => {
+                              let value = e.target.value.replace(/\D/g, "");
+                              if (value === "") {
+                                setFormData(p => ({ ...p, valor_minimo_repasse: "" }));
+                                return;
+                              }
+                              const formatted = (Number(value) / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                              setFormData(p => ({ ...p, valor_minimo_repasse: formatted }));
+                            }}
+                            placeholder="R$ 0,00"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-amber-800 focus:ring-2 focus:ring-indigo-500 outline-none"
+                          />
+                          <span className="text-[10px] text-slate-400">
+                            Nenhum lojista parceiro poderá reservar este veículo abaixo deste valor.
+                          </span>
+                        </div>
 
-              <AnimatePresence>
-                {formData.compartilhavel && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="pt-4 border-t border-indigo-100 space-y-4 overflow-hidden"
-                  >
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-                          <Lock className="w-3.5 h-3.5 text-amber-600" />
-                          Valor Mínimo de Repasse (Piso Inviolável) *
-                        </label>
-                        <input
-                          type="text"
-                          name="valor_minimo_repasse"
-                          value={formData.valor_minimo_repasse}
-                          onChange={(e) => {
-                            let value = e.target.value.replace(/\D/g, "");
-                            if (value === "") {
-                              setFormData(p => ({ ...p, valor_minimo_repasse: "" }));
-                              return;
-                            }
-                            const formatted = (Number(value) / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-                            setFormData(p => ({ ...p, valor_minimo_repasse: formatted }));
-                          }}
-                          placeholder="R$ 0,00"
-                          className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-amber-800 focus:ring-2 focus:ring-indigo-500 outline-none"
-                        />
-                        <span className="text-[10px] text-slate-400">
-                          Nenhum lojista parceiro poderá reservar este veículo abaixo deste valor.
-                        </span>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                            Comissão Fixa de Parceria (%)
+                          </label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            name="comissao_fixa"
+                            value={formData.comissao_fixa}
+                            onChange={handleChange}
+                            placeholder="3.0"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none"
+                          />
+                          <span className="text-[10px] text-slate-400">
+                            Percentual acordado repassado à loja parceira na conclusão da venda.
+                          </span>
+                        </div>
                       </div>
 
                       <div className="space-y-1.5">
                         <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                          Comissão Fixa de Parceria (%)
+                          Observações de Repasse para Lojas Parceiras
                         </label>
                         <input
-                          type="number"
-                          step="0.1"
-                          name="comissao_fixa"
-                          value={formData.comissao_fixa}
+                          type="text"
+                          name="observacoes_repasse"
+                          value={formData.observacoes_repasse}
                           onChange={handleChange}
-                          placeholder="3.0"
-                          className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none"
+                          placeholder="Ex: Veículo revisado em concessionária com chave reserva e manual. Aceita contraproposta à vista."
+                          className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none"
                         />
-                        <span className="text-[10px] text-slate-400">
-                          Percentual acordado repassado à loja parceira na conclusão da venda.
+                      </div>
+
+                      <div className="p-3 bg-amber-50/80 border border-amber-200/80 rounded-xl text-xs text-amber-900 flex items-center gap-2">
+                        <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0" />
+                        <span>
+                          <strong>Confidencialidade Garantida:</strong> O valor mínimo de repasse e a margem de parceria nunca serão exibidos aos clientes finais na vitrine pública.
                         </span>
                       </div>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                        Observações de Repasse para Lojas Parceiras
-                      </label>
-                      <input
-                        type="text"
-                        name="observacoes_repasse"
-                        value={formData.observacoes_repasse}
-                        onChange={handleChange}
-                        placeholder="Ex: Veículo revisado em concessionária com chave reserva e manual. Aceita contraproposta à vista."
-                        className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none"
-                      />
-                    </div>
-
-                    <div className="p-3 bg-amber-50/80 border border-amber-200/80 rounded-xl text-xs text-amber-900 flex items-center gap-2">
-                      <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0" />
-                      <span>
-                        <strong>Confidencialidade Garantida:</strong> O valor mínimo de repasse e a margem de parceria nunca serão exibidos aos clientes finais na vitrine pública.
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            ) : (
+              /* Aviso amigável e bloqueado para vendedores particulares */
+              <div className="p-5 bg-slate-50 border border-slate-200 rounded-2xl flex items-center justify-between gap-4">
+                <div className="flex items-center gap-3.5">
+                  <div className="w-10 h-10 rounded-xl bg-slate-200 text-slate-500 flex items-center justify-center shrink-0">
+                    <Lock className="w-5 h-5 text-slate-500" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-bold text-slate-700">Compartilhamento de Estoque B2B</h3>
+                      <span className="text-[10px] font-black uppercase tracking-wider bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">
+                        Exclusivo para Lojistas
                       </span>
                     </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      O repasse de estoque entre concessionárias e reserva temporária com piso protegido está disponível exclusivamente para lojistas parceiros cadastrados.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Botoes */}
             <div className="pt-8 flex flex-col sm:flex-row gap-4">
