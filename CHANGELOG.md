@@ -2,6 +2,28 @@
 
 Registre aqui as mudanças relevantes por sprint ou marco avaliativo.
 
+## Sprint 07 - Refinamento de UX/UI, Conexão B2B, Filtros em Cascata e Governança de Backlog (v2.5.0)
+- **Catálogo & Vitrine Digital Otimizada**:
+  - Implementação de barra de busca centralizada e reativa no topo da vitrine com pesquisa em tempo real por termos de modelo e marca.
+  - Motor de filtros em cascata com sincronização inteligente: a lista de modelos é dinamicamente restrita à marca escolhida pelo usuário.
+  - Seletores analíticos de ano, câmbio (Manual/Automático), combustível e intervalo de preço mínimo/máximo com sliders e inputs.
+  - Higienização visual completa: remoção do ícone estático de localização nos cards, eliminação de nomes indevidos de lojas terceiras sobre botões de ação e substituição do ícone de Preço Justo pelo badge visual de oportunidade "Preço Baixou". Remoção do botão redundante de limpar filtros.
+- **Rede de Conexão B2B & Parcerias**:
+  - Alinhamento da aba "Minhas Reservas" no modal de parcerias (`PartnershipHubModal.jsx`) com grid responsivo de 12 colunas, padronizando dados de hold lock, cronômetro de 30 minutos, valores e botões de liberação.
+  - Resiliência na criação e envio de convites de parceria (`NewPartnershipInviteCard.jsx`) com tratamento defensivo contra falhas de conexão de rede ou backend.
+- **Cadastro de Veículos com Galeria Multifoto e Vídeo 15s**:
+  - Novo uploader drag-and-drop multifoto em `NewCarAdForm.jsx` permitindo carregar múltiplos arquivos locais de uma vez, com visualização em grade, exclusão individual e indicação da foto principal de capa.
+  - Campo de URL de vídeo pericial de 15 segundos acompanhado de preview dinâmico com player de mídia integrado.
+  - Condicionamento do checkbox de compartilhamento na Rede B2B para exibição exclusiva a perfis autenticados como lojista (`isLojista`).
+- **Página de Favoritos**:
+  - Inclusão de pill badge informativo com a contagem de veículos salvos diretamente no título principal `<h1>` e remoção do contador redundante da barra superior de navegação.
+- **Assistente IA e Chat Consultor**:
+  - Calibração de resposta rápida em `HomeSupportChat.jsx` para termos e intenções relacionados a "carros", "estoque" e busca automotiva (< 150ms), com chips de navegação rápida para o catálogo.
+- **Hardening de Docker & CI/CD**:
+  - Atualização do pacote `caniuse-lite` e definição da variável de ambiente `ENV BROWSERSLIST_IGNORE_OLD_DATA=true` nos arquivos `frontend/Dockerfile` e `frontend/Dockerfile.prod`, garantindo builds limpos e sem advertências nos contêineres.
+- **Governança de Backlog e Projeto**:
+  - Consolidação oficial do documento `BACKLOG.md` estruturado no modelo Kanban de 5 colunas (Backlog do Projeto, Itens Essenciais, A Fazer, Fazendo, Finalizado) com matriz de rastreabilidade completa (código ↔ testes ↔ requisitos), OKRs e histórias de usuário.
+
 ## Sprint 06 - Otimização Global de Performance, Code Splitting, Varredura 360° e Resiliência B2B (v2.4.1)
 - **Comparador Multidimensional & Seleção de Terceiro Veículo**:
   - Remoção do botão redundante `Adicionar 3º Carro` no canto superior direito do cabeçalho em `VehicleComparatorModal.jsx`, mantendo o layout limpo e focado.

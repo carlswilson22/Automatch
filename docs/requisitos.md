@@ -49,7 +49,7 @@ A desconfiança generalizada gerada por fotos de baixa qualidade, históricos de
 | **RF-11** | **Radar de Oportunidades** | O sistema deve permitir o cadastro de alertas de queda de preço com notificações via WhatsApp, E-mail e WebPush. |
 | **RF-12** | **Assistente IA Especialista (RAG)** | O sistema deve disponibilizar chatbot consultivo com respostas contextualizadas no veículo em visualização. |
 | **RF-13** | **Chat com o Vendedor** | O sistema deve permitir o envio de mensagens em tempo real e redirecionamento de contato para o WhatsApp. |
-| **RF-14** | **Sincronizador Multicanal B2B** | O sistema deve permitir a exportação simultânea de anúncios para os 3 canais homologados: Webmotors, OLX Autos e AutoCerto DMS. |
+| **RF-14** | **Sincronizador Multicanal B2B** | O sistema deve permitir a exportação simultânea de anúncios para os canais parceiros homologados (Webmotors, OLX Autos, AutoAvaliar). |
 | **RF-15** | **Feed XML Automotivo** | O sistema deve fornecer endpoint com feed de estoque padronizado no formato AutoXML / Webmotors. |
 | **RF-16** | **Publicação de Anúncios com IA** | O sistema deve guiar o anunciante em etapas com compressão de imagens e pré-análise pericial automática. |
 | **RF-17** | **Exclusão Atômica de Anúncios** | O sistema deve permitir a exclusão segura de anúncios (`DELETE /api/cars/{id}`) com confirmação no frontend. |
@@ -64,6 +64,11 @@ A desconfiança generalizada gerada por fotos de baixa qualidade, históricos de
 | **RF-26** | **Auditoria de Laudos em PDF por IA** | O sistema deve receber laudos periciais em PDF anexados pelo anunciante, validar integridade via magic bytes (`%PDF-`) e executar auditoria pericial automatizada com Gemini AI e motor heurístico local. |
 | **RF-27** | **Vídeo Pericial de 15 Segundos** | O sistema deve exibir player de vídeo pericial de 15s integrado aos anúncios com timeline interativa, checkpoints periciais (frente, lateral/pneus e traseira/motor) e endpoint para upload de mídias de vistoria. |
 | **RF-28** | **Comparador Multidimensional Lado a Lado** | O sistema deve permitir a comparação simultânea de até 3 veículos lado a lado analisando preço vs FIPE, quilometragem anual estimada, integridade pericial de laudo, pendências DETRAN e ficha técnica sem utilização de trustscore. |
+| **RF-29** | **Rede de Conexão B2B & Repasse de Estoque** | O sistema deve disponibilizar painel para concessionárias e lojistas credenciados visualizarem estoque compartilhado, efetuarem reservas com hold lock temporário de 30 minutos e gerenciarem convites de parceria. |
+| **RF-30** | **Calculadora de Custo Total de Posse (TCO)** | O sistema deve fornecer projeção mensal e diária de despesas decomposta em 4 pilares: IPVA por estado, seguro anualizado, combustível estimado por km e manutenção preventiva. |
+| **RF-31** | **Termômetro de Mercado FIPE & Price Drop Tracker** | O sistema deve apresentar régua de oportunidade visual comparando o valor anunciado com a Tabela FIPE oficial e exibir histórico expansível de reajustes de preço do veículo. |
+| **RF-32** | **Filtros em Cascata e Busca Reativa no Catálogo** | O sistema deve fornecer barra de pesquisa no topo central com filtragem dinâmica por marca e modelo, além de filtros dependentes em cascata onde a seleção de marca delimita os modelos disponíveis. |
+| **RF-33** | **Galeria Multifoto e Vídeo Pericial no Cadastro** | O sistema deve disponibilizar uploader drag-and-drop multifoto com preview em grade e exclusão individual no cadastro de carros, além de inclusão e pré-visualização de vídeo pericial de 15 segundos. |
 
 ---
 
