@@ -3,6 +3,8 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+ENV BROWSERSLIST_IGNORE_OLD_DATA=true
+
 # Instala dependencias com cache de camadas
 COPY package.json package-lock.json ./
 RUN npm ci || npm install
