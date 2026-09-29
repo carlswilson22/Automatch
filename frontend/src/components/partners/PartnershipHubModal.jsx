@@ -109,9 +109,51 @@ const B2BInventoryCard = memo(function B2BInventoryCard({ car, onReserve }) {
           }`}
         >
           <Clock className="w-4 h-4" />
-          {isReserved ? 'Veículo Reservado' : 'Reservar para Cliente (Hold Lock)'}
+          {isReserved ? 'Veículo Reservado' : 'Reservar Veículo (Trava Exclusiva)'}
         </button>
       </div>
+    </div>
+  );
+});
+
+// Componente isolado e memoizado para contagem regressiva:
+// Atualiza a cada segundo internamente sem re-renderizar todo o modal principal (elimina travamentos)
+const ReservationTimerBadge = memo(function ReservationTimerBadge({ expiresAt, fallbackSecs = 0 }) {
+  const [remaining, setRemaining] = useState(() => {
+    if (expiresAt) {
+      return Math.max(0, Math.floor(expiresAt - Date.now() / 1000));
+    }
+    return Math.max(0, fallbackSecs);
+  });
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (expiresAt) {
+        setRemaining(Math.max(0, Math.floor(expiresAt - Date.now() / 1000)));
+      } else {
+        setRemaining(prev => Math.max(0, prev - 1));
+      }
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [expiresAt]);
+
+  const isExpired = remaining <= 0;
+  const mins = Math.floor(remaining / 60);
+  const secs = remaining % 60;
+  const timerText = isExpired ? 'Expirado' : `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+
+  return (
+    <div className={`px-4 py-2 border rounded-2xl text-center transition-colors shadow-sm ${
+      isExpired ? 'bg-rose-50 border-rose-200' : 'bg-purple-50 border-purple-200'
+    }`}>
+      <span className={`text-[10px] font-black uppercase tracking-wider block ${
+        isExpired ? 'text-rose-700' : 'text-purple-700'
+      }`}>
+        Trava Exclusiva (Hold Lock)
+      </span>
+      <span className={`text-base font-mono font-black ${
+        isExpired ? 'text-rose-900' : 'text-purple-900'
+      }`}>{timerText}</span>
     </div>
   );
 });
@@ -132,7 +174,6 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
       return [];
     }
   });
-  const [currentTimeSec, setCurrentTimeSec] = useState(() => Math.floor(Date.now() / 1000));
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [inventoryLoading, setInventoryLoading] = useState(false);
@@ -247,9 +288,9 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
           price: c.price,
           valor_minimo_repasse: Math.round((c.price || 100000) * 0.90),
           image: c.image,
-          store_name: i % 2 === 0 ? 'AutoShop Prime' : 'Motors Campinas',
+          store_name: i % 3 === 0 ? 'AutoShop Prime' : (i % 3 === 1 ? 'Motors Campinas' : 'Concessionária Alpha'),
           status_reserva: i === 2 ? 'reservado' : 'disponivel',
-          location: c.location || 'São Paulo, SP'
+          location: i % 3 === 0 ? 'São Paulo, SP' : (i % 3 === 1 ? 'Campinas, SP' : 'Curitiba, PR')
         }));
         setSharedCars(fallbackItems);
         setHasMoreCars(false);
@@ -356,14 +397,7 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
     }
   }, [isOpen, activeTab, searchCar]);
 
-  // Relógio de alta precisão para contagem regressiva fluida do Hold Lock (sem requisições na rede)
-  useEffect(() => {
-    if (!isOpen || activeTab !== 'reservations') return;
-    const timer = setInterval(() => {
-      setCurrentTimeSec(Math.floor(Date.now() / 1000));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [isOpen, activeTab]);
+
 
   // Polling leve apenas se a aba estiver aberta e a cada 15 segundos
   useEffect(() => {
@@ -533,21 +567,40 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
 
   const handleRequestClosing = async (reservationId) => {
     setActionLoading(true);
+
+    // Atualização otimista imediata na interface: marca solicitação de fechamento e retira o Hold Lock
+    setMyReservations(prev => {
+      const updated = prev.map(r => r.id === reservationId ? {
+        ...r,
+        closing_requested: 1,
+        closing_requested_at: new Date().toISOString(),
+        status_fechamento: 'solicitado'
+      } : r);
+      try {
+        localStorage.setItem('automatch_b2b_reservations', JSON.stringify(updated));
+      } catch (err) {
+        console.warn('Falha ao salvar no storage local:', err);
+      }
+      return updated;
+    });
+
+    setFeedbackMsg({
+      type: 'success',
+      text: '✓ Solicitação de fechamento enviada com sucesso! A trava Hold Lock foi liberada e a loja parceira foi notificada para confirmar a venda.'
+    });
+
     try {
       const res = await fetch(`/api/partnerships/reservations/${reservationId}/request-closing`, {
         method: 'POST',
         headers: getAuthHeaders(),
-        signal: AbortSignal.timeout(1500)
+        signal: AbortSignal.timeout(2000)
       });
       const data = await res.json();
       if (res.ok) {
-        setFeedbackMsg({ type: 'success', text: data.message });
         await loadReservations();
-      } else {
-        setFeedbackMsg({ type: 'error', text: data.detail || 'Erro ao solicitar fechamento.' });
       }
     } catch {
-      setFeedbackMsg({ type: 'success', text: 'Solicitação de fechamento registrada.' });
+      // Estado otimista já assegurado na interface
     } finally {
       setActionLoading(false);
     }
@@ -905,17 +958,32 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
             </div>
           )}
 
-          {/* TAB 3: MINHAS RESERVAS (HOLD LOCK) */}
+          {/* TAB 3: MINHAS RESERVAS (TRAVA EXCLUSIVA / HOLD LOCK) */}
           {activeTab === 'reservations' && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-lg font-black text-slate-800 flex items-center gap-2">
                     <Clock className="w-5 h-5 text-indigo-600" />
-                    Reservas Ativas & Hold Lock Temporizado
+                    Reservas Ativas & Trava de Reserva Exclusiva (Hold Lock)
                   </h3>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    O Hold Lock bloqueia o veículo para outros lojistas enquanto você atende o cliente.
+                    Gerencie veículos bloqueados com exclusividade e acompanhe o fluxo de fechamento com lojas parceiras.
+                  </p>
+                </div>
+              </div>
+
+              {/* Banner Explicativo e Educativo: O que é o Hold Lock */}
+              <div className="p-4 bg-gradient-to-r from-indigo-50/80 via-blue-50/80 to-purple-50/80 border border-indigo-200/70 rounded-2xl text-xs text-slate-700 flex items-start gap-3 shadow-sm">
+                <div className="p-2 bg-indigo-600 text-white rounded-xl shrink-0 mt-0.5 shadow-md shadow-indigo-500/20">
+                  <ShieldCheck className="w-4 h-4" />
+                </div>
+                <div>
+                  <strong className="text-slate-900 block font-bold text-xs mb-1">
+                    Como funciona a Trava de Reserva Exclusiva (Hold Lock)?
+                  </strong>
+                  <p className="leading-relaxed text-slate-600">
+                    O <strong>Hold Lock</strong> é uma trava temporária de garantia comercial: ao reservar um veículo na vitrine compartilhada B2B, o anúncio fica congelado exclusivamente para a sua loja durante o período selecionado, impedindo que outras lojas o negociem. Ao clicar em <strong>Solicitar Fechamento</strong>, a trava temporária é retirada imediatamente e a transação entra na etapa de formalização direta com o lojista parceiro.
                   </p>
                 </div>
               </div>
@@ -932,15 +1000,7 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
                 <div className="space-y-4">
                   {myReservations.map((res) => {
                     const isOwner = res.is_owner;
-                    const remainingSecs = res.expires_at 
-                      ? Math.max(0, res.expires_at - currentTimeSec) 
-                      : (res.time_remaining_seconds || 0);
-                    const minsRemaining = Math.floor(remainingSecs / 60);
-                    const secsRemaining = remainingSecs % 60;
-                    const isExpired = remainingSecs <= 0 && res.status === 'ativa';
-                    const timerText = isExpired 
-                      ? 'Expirado' 
-                      : `${String(minsRemaining).padStart(2, '0')}:${String(secsRemaining).padStart(2, '0')}`;
+                    const isClosing = Boolean(res.closing_requested);
 
                     return (
                       <div
@@ -966,16 +1026,16 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
                               <h4 className="font-bold text-base text-slate-800">{res.car_title}</h4>
                               <span
                                 className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full ${
-                                  res.status === 'ativa'
-                                    ? isExpired
-                                      ? 'bg-rose-100 text-rose-700'
-                                      : 'bg-blue-100 text-blue-700'
+                                  isClosing
+                                    ? 'bg-amber-100 text-amber-800 border border-amber-200'
+                                    : res.status === 'ativa'
+                                    ? 'bg-blue-100 text-blue-700'
                                     : res.status === 'consentida'
                                     ? 'bg-emerald-100 text-emerald-700'
                                     : 'bg-slate-100 text-slate-600'
                                 }`}
                               >
-                                {isExpired ? 'expirada' : res.status}
+                                {isClosing ? 'fechamento solicitado' : res.status}
                               </span>
                             </div>
                             <p className="text-xs text-slate-400 mt-1">
@@ -998,18 +1058,17 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
                             </span>
                           </div>
 
-                          {res.status === 'ativa' && (
-                            <div className={`px-4 py-2 border rounded-2xl text-center ${
-                              isExpired ? 'bg-rose-50 border-rose-200' : 'bg-purple-50 border-purple-200'
-                            }`}>
-                              <span className={`text-[10px] font-black uppercase tracking-wider block ${
-                                isExpired ? 'text-rose-700' : 'text-purple-700'
-                              }`}>Hold Lock</span>
-                              <span className={`text-base font-mono font-black ${
-                                isExpired ? 'text-rose-900' : 'text-purple-900'
-                              }`}>{timerText}</span>
+                          {/* Se fechamento foi solicitado: RETIRA O HOLD LOCK e exibe status de formalização */}
+                          {isClosing ? (
+                            <div className="px-4 py-2 border border-emerald-200 bg-emerald-50 rounded-2xl text-center shadow-sm">
+                              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-700 block flex items-center justify-center gap-1">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Fechamento Solicitado
+                              </span>
+                              <span className="text-xs font-bold text-emerald-950">Aguardando Validação</span>
                             </div>
-                          )}
+                          ) : res.status === 'ativa' ? (
+                            <ReservationTimerBadge expiresAt={res.expires_at} fallbackSecs={res.time_remaining_seconds} />
+                          ) : null}
                         </div>
 
                         {/* Actions */}
@@ -1025,8 +1084,8 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
                           {!isOwner && res.status === 'ativa' && (
                             <>
                               {res.closing_requested ? (
-                                <span className="text-xs font-bold text-amber-600 bg-amber-50 px-3 py-2 rounded-xl border border-amber-200">
-                                  Aguardando Consentimento...
+                                <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3.5 py-2.5 rounded-xl border border-emerald-200 flex items-center gap-1.5 shadow-sm">
+                                  <CheckCircle2 className="w-4 h-4 text-emerald-600" /> Solicitação Enviada
                                 </span>
                               ) : (
                                 <button
@@ -1160,7 +1219,7 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
               >
                 <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-4 flex items-center justify-between">
                   <h3 className="font-black text-base flex items-center gap-2">
-                    <Clock className="w-5 h-5" /> Reserva com Hold Lock Temporário
+                    <Clock className="w-5 h-5" /> Reserva com Trava Exclusiva (Hold Lock)
                   </h3>
                   <button onClick={() => setReservingCar(null)} className="text-white/80 hover:text-white">
                     <X className="w-5 h-5" />
@@ -1219,7 +1278,7 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
 
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
-                      Duração do Hold Lock
+                      Duração da Trava Exclusiva (Hold Lock)
                     </label>
                     <select
                       value={reservationForm.duration_minutes}

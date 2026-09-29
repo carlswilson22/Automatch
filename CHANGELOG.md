@@ -2,6 +2,25 @@
 
 Registre aqui as mudanças relevantes por sprint ou marco avaliativo.
 
+## Sprint 07 - Aprimoramento Orbital 360°, Desempenho B2B, Fechamento Resiliente e Unificação de Lojas (v2.5.0)
+- **Varredura 360° Fotográfica Fidedigna & Correção do Quadrante 180°**:
+  - Resolução definitiva do bug de perspectiva: o clique em "Traseira 180°" exibe a imagem traseira autêntica (`/images/carro_360_traseira.jpg`), eliminando a exibição frontal incorreta.
+  - Mapeamento completo de fotos em 8 ângulos (`photos360`) e galeria enriquecida (`gallery`) nos veículos da vitrine (`showcaseData.js`), com miniaturas visuais navegáveis no `Vehicle360Viewer.jsx`.
+- **Interface Limpa & Remoção de Botões Duplicados de Contato**:
+  - Remoção dos botões redundantes "Falar com Vendedor" na barra de navegação superior e no card de preços em `ShowcaseVehicleDetails.jsx`.
+  - Foco na seção centralizada de chat interativo (`#chat-section`) com alternância limpa entre IA Automatch e Vendedor.
+- **Otimização de Performance e Fluidez da Rede B2B**:
+  - Eliminação de travamentos no `PartnershipHubModal.jsx`: isolamento do contador regressivo em `ReservationTimerBadge` memoizado, evitando que o tick de 1 segundo re-renderize todo o modal.
+  - Aplicação de cache local com TTL de 60s e debounce para buscas de estoque compartilhado.
+- **Solicitação de Fechamento com Retirada do Hold Lock e Tradução Explicativa**:
+  - Feedback visual imediato (atualização otimista) com persistência local e banner afirmativo ao clicar em "Solicitar Fechamento".
+  - Retirada automática da trava Hold Lock após a solicitação, liberando o veículo para a formalização da venda e exibindo o status "Fechamento Solicitado / Aguardando Aprovação".
+  - Tradução para "Trava de Reserva Exclusiva (Hold Lock)" com banner educativo explicando seu funcionamento e propósito comercial aos lojistas.
+- **Unificação de Lojas da Vitrine e da Rede B2B**:
+  - Padronização das lojas em todo o ecossistema (AutoShop Prime, Motors Campinas, Concessionária Alpha) em `inventoryData.js`, `showcaseData.js`, `seed.py` e fallbacks do Hub B2B.
+- **Contadores Dinâmicos de Veículos no Perfil do Usuário**:
+  - Integração em tempo real no `ProfilePage.jsx` dos contadores dinâmicos de Meus Carros (`newCarsManager.js`), Carros Favoritos (`favoritesManager.js` com `subscribeFavorites`) e Estoque Total da Vitrine, com atalhos de navegação clicáveis.
+
 ## Sprint 06 - Otimização Global de Performance, Code Splitting, Varredura 360° e Resiliência B2B (v2.4.1)
 - **Comparador Multidimensional & Seleção de Terceiro Veículo**:
   - Remoção do botão redundante `Adicionar 3º Carro` no canto superior direito do cabeçalho em `VehicleComparatorModal.jsx`, mantendo o layout limpo e focado.

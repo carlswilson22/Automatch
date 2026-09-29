@@ -1,23 +1,51 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { RotateCw, Compass, Play, Pause, Sparkles } from 'lucide-react';
+import { RotateCw, Compass, Play, Pause, Sparkles, Camera } from 'lucide-react';
 import { getVehicleImageUrl, handleVehicleImageError } from '../../utils/imageHelper';
 
 const ANGLES = [
   { angle: 0, label: 'Frente', icon: '0°', perspective: 'perspective(1200px) rotateY(0deg) scale(1)', lightX: '50%', flip: false },
   { angle: 45, label: 'Diag. Diant. Dir.', icon: '45°', perspective: 'perspective(1200px) rotateY(6deg) scale(1.02)', lightX: '65%', flip: false },
   { angle: 90, label: 'Lateral Direita', icon: '90°', perspective: 'perspective(1200px) rotateY(10deg) scale(1.03)', lightX: '80%', flip: false },
-  { angle: 135, label: 'Diag. Tras. Dir.', icon: '135°', perspective: 'perspective(1200px) rotateY(6deg) scale(1.015)', lightX: '65%', flip: true },
+  { angle: 135, label: 'Diag. Tras. Dir.', icon: '135°', perspective: 'perspective(1200px) rotateY(6deg) scale(1.015)', lightX: '65%', flip: false },
   { angle: 180, label: 'Traseira', icon: '180°', perspective: 'perspective(1200px) rotateY(0deg) scale(1)', lightX: '50%', flip: false },
   { angle: 225, label: 'Diag. Tras. Esq.', icon: '225°', perspective: 'perspective(1200px) rotateY(-6deg) scale(1.015)', lightX: '35%', flip: true },
   { angle: 270, label: 'Lateral Esquerda', icon: '270°', perspective: 'perspective(1200px) rotateY(-10deg) scale(1.03)', lightX: '20%', flip: true },
-  { angle: 315, label: 'Diag. Diant. Esq.', icon: '315°', perspective: 'perspective(1200px) rotateY(-6deg) scale(1.02)', lightX: '35%', flip: false },
+  { angle: 315, label: 'Diag. Diant. Esq.', icon: '315°', perspective: 'perspective(1200px) rotateY(-6deg) scale(1.02)', lightX: '35%', flip: true },
 ];
+
+/**
+ * Mapeamento padrão de fotos genéricas 360 disponíveis no projeto.
+ * Cada ângulo mapeia para uma foto distinta e fidedigna da perspectiva correspondente:
+ *   0°   (Frente)            → carro_360_frente.jpg
+ *   45°  (Diagonal Diant.)   → carro_360_diagonal.jpg
+ *   90°  (Lateral Direita)   → carro_360_lateral.jpg
+ *   135° (Diagonal Tras.)    → carro_360_diagonal.jpg (espelhada)
+ *   180° (Traseira)          → carro_360_traseira.jpg
+ *   225° (Diag. Tras. Esq.)  → carro_360_diagonal.jpg (espelhada)
+ *   270° (Lateral Esquerda)  → carro_360_lateral.jpg (espelhada)
+ *   315° (Diag. Diant. Esq.) → carro_360_diagonal.jpg (espelhada)
+ */
+const DEFAULT_360_IMAGES = {
+  0:   '/images/carro_360_frente.jpg',
+  45:  '/images/carro_360_diagonal.jpg',
+  90:  '/images/carro_360_lateral.jpg',
+  135: '/images/carro_360_diagonal.jpg',
+  180: '/images/carro_360_traseira.jpg',
+  225: '/images/carro_360_diagonal.jpg',
+  270: '/images/carro_360_lateral.jpg',
+  315: '/images/carro_360_diagonal.jpg',
+};
 
 /**
  * Vehicle360Viewer — Visualizador Orbital Fotográfico 360°
  * Dedicado exclusivamente à exibição das fotos da carroceria do veículo em 8 ângulos contínuos.
  * Garante consistência absoluta: exibe SEMPRE o veículo correto, sem substituição por carros aleatórios.
+ * 
+ * Mapeamento de fotos por ângulo (prioridade):
+ * 1. photos360 explícito do veículo (prop ou car.photos360)
+ * 2. Galeria do veículo (car.gallery) mapeada por posição semântica
+ * 3. Imagens genéricas 360° do projeto (DEFAULT_360_IMAGES)
  */
 const Vehicle360Viewer = ({
   car = null,
@@ -73,31 +101,67 @@ const Vehicle360Viewer = ({
 
   const currentAngleObj = ANGLES.find((a) => a.angle === currentAngle) || ANGLES[0];
 
-  // Determina a foto ativa do quadrante atual garantindo que seja SEMPRE do próprio veículo
-  const getActiveImage = () => {
-    // 1. Fotos específicas 360 se fornecidas explicitamente para o veículo
-    if (photos360 && photos360[currentAngle]) {
-      return getVehicleImageUrl(photos360[currentAngle]);
-    }
-    if (car?.photos360 && car.photos360[currentAngle]) {
-      return getVehicleImageUrl(car.photos360[currentAngle]);
-    }
-
-    // 2. Se car tem galeria com múltiplas fotos reais do próprio veículo
-    const gal = (car?.gallery && Array.isArray(car.gallery) && car.gallery.length > 0) ? car.gallery : (Array.isArray(gallery) ? gallery : null);
-    if (gal && gal.length > 0) {
-      if (currentAngle === 0 && gal[0]) return getVehicleImageUrl(gal[0]);
-      if ((currentAngle === 45 || currentAngle === 315) && gal[1]) return getVehicleImageUrl(gal[1]);
-      if ((currentAngle === 90 || currentAngle === 270) && (gal[2] || gal[1])) return getVehicleImageUrl(gal[2] || gal[1]);
-      if (currentAngle === 180 && (gal[3] || gal[2])) return getVehicleImageUrl(gal[3] || gal[2]);
-    }
-
-    // 3. Fallback fundamental e inegociável: foto autêntica do próprio veículo em exibição
+  // Monta mapa completo de imagens por ângulo com memoização para evitar recálculos
+  const imageMap = useMemo(() => {
+    const map = {};
     const baseImg = vehicleImage || car?.image || car?.imagem;
-    return getVehicleImageUrl(baseImg || 'FotoGolfGTI.jpeg');
-  };
+    const gal = (car?.gallery && Array.isArray(car.gallery) && car.gallery.length > 0) 
+      ? car.gallery 
+      : (Array.isArray(gallery) && gallery.length > 0 ? gallery : null);
+    const p360 = photos360 || car?.photos360 || null;
 
-  const activeImage = getActiveImage();
+    ANGLES.forEach(({ angle }) => {
+      // Prioridade 1: fotos explícitas 360 do veículo
+      if (p360 && p360[angle]) {
+        map[angle] = getVehicleImageUrl(p360[angle]);
+        return;
+      }
+
+      // Prioridade 2: galeria do veículo mapeada por posição semântica
+      // Mapeamento semântico: gal[0]=frente, gal[1]=diagonal dianteira, gal[2]=lateral, 
+      // gal[3]=diagonal traseira, gal[4]=traseira
+      if (gal) {
+        const galLen = gal.length;
+        if (angle === 0 && galLen > 0) { map[angle] = getVehicleImageUrl(gal[0]); return; }
+        if (angle === 45 && galLen > 1) { map[angle] = getVehicleImageUrl(gal[1]); return; }
+        if (angle === 90 && galLen > 2) { map[angle] = getVehicleImageUrl(gal[2]); return; }
+        if (angle === 135 && galLen > 3) { map[angle] = getVehicleImageUrl(gal[3]); return; }
+        if (angle === 180 && galLen > 4) { map[angle] = getVehicleImageUrl(gal[4]); return; }
+        // Para ângulos espelhados (esquerda), reusar as imagens dos equivalentes à direita
+        if (angle === 315 && galLen > 1) { map[angle] = getVehicleImageUrl(gal[1]); return; }
+        if (angle === 270 && galLen > 2) { map[angle] = getVehicleImageUrl(gal[2]); return; }
+        if (angle === 225 && galLen > 3) { map[angle] = getVehicleImageUrl(gal[3]); return; }
+        // Se a galeria tem poucas fotos, usa a imagem base do veículo para o ângulo frontal
+        // e as imagens genéricas 360 para os outros ângulos
+        if (angle === 0 && baseImg) { map[angle] = getVehicleImageUrl(baseImg); return; }
+      }
+
+      // Prioridade 3: imagem principal do veículo para frente (0°)
+      if (angle === 0 && baseImg) {
+        map[angle] = getVehicleImageUrl(baseImg);
+        return;
+      }
+
+      // Prioridade 4: imagens genéricas 360° do projeto com ângulos distintos
+      if (DEFAULT_360_IMAGES[angle]) {
+        map[angle] = getVehicleImageUrl(DEFAULT_360_IMAGES[angle]);
+        return;
+      }
+
+      // Fallback final
+      map[angle] = getVehicleImageUrl(baseImg || 'FotoGolfGTI.jpeg');
+    });
+
+    return map;
+  }, [car?.id, car?.image, car?.imagem, car?.gallery, car?.photos360, vehicleImage, gallery, photos360]);
+
+  const activeImage = imageMap[currentAngle] || imageMap[0];
+
+  // Conta quantas fotos distintas estão disponíveis
+  const uniquePhotoCount = useMemo(() => {
+    const unique = new Set(Object.values(imageMap));
+    return unique.size;
+  }, [imageMap]);
 
   const getAngleLabel = (angle) => {
     const match = ANGLES.find((a) => a.angle === angle);
@@ -120,6 +184,10 @@ const Vehicle360Viewer = ({
               </h4>
               <span className="text-[10px] bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 px-2.5 py-0.5 rounded-full font-black">
                 {currentAngle}° • {getAngleLabel(currentAngle)}
+              </span>
+              <span className="text-[10px] bg-slate-800 text-slate-400 border border-slate-700 px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
+                <Camera className="w-3 h-3" />
+                {uniquePhotoCount} fotos
               </span>
             </div>
             <p className="text-[11px] text-slate-400 mt-0.5">
@@ -197,8 +265,38 @@ const Vehicle360Viewer = ({
         </motion.div>
       </div>
 
+      {/* Miniatura de Navegação Visual — Indicadores de Foto por Ângulo */}
+      <div className="px-4 pt-3 pb-1 bg-slate-950/95 border-t border-slate-800">
+        <div className="flex gap-1.5 overflow-x-auto pb-1">
+          {ANGLES.map((a) => (
+            <button
+              key={`thumb-${a.angle}`}
+              type="button"
+              onClick={() => { setCurrentAngle(a.angle); setIsAutoRotating(false); }}
+              className={`relative w-16 h-10 rounded-lg overflow-hidden border-2 transition-all shrink-0 cursor-pointer ${
+                currentAngle === a.angle
+                  ? 'border-cyan-400 shadow-md shadow-cyan-500/30 scale-105'
+                  : 'border-slate-800 hover:border-slate-600 opacity-60 hover:opacity-100'
+              }`}
+            >
+              <img
+                src={imageMap[a.angle]}
+                alt={`${a.label}`}
+                className="w-full h-full object-cover"
+                style={{ transform: a.flip ? 'scaleX(-1)' : 'none' }}
+                draggable={false}
+                loading="lazy"
+              />
+              {currentAngle === a.angle && (
+                <div className="absolute inset-0 bg-cyan-400/10 pointer-events-none" />
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {/* Quadrantes Angulares Selecionáveis */}
-      <div className="p-4 bg-slate-950/95 border-t border-slate-800">
+      <div className="p-4 bg-slate-950/95 border-t border-slate-800/50">
         <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
           {ANGLES.map((a) => (
             <button

@@ -1,21 +1,24 @@
 export const stores = [
   {
     id: 'store-1',
-    name: 'AutoMatch Premium',
+    name: 'AutoShop Prime',
     logo_url: 'https://api.dicebear.com/7.x/initials/svg?seed=AP&backgroundColor=2563eb',
     color_theme: '#2563eb', // Brand Blue
+    location: 'São Paulo, SP'
   },
   {
     id: 'store-2',
-    name: 'Luxury Car Center',
-    logo_url: 'https://api.dicebear.com/7.x/initials/svg?seed=LC&backgroundColor=8b5cf6',
+    name: 'Motors Campinas',
+    logo_url: 'https://api.dicebear.com/7.x/initials/svg?seed=MC&backgroundColor=8b5cf6',
     color_theme: '#8b5cf6', // Violet
+    location: 'Campinas, SP'
   },
   {
     id: 'store-3',
-    name: 'EcoDrive Motors',
-    logo_url: 'https://api.dicebear.com/7.x/initials/svg?seed=ED&backgroundColor=10b981',
+    name: 'Concessionária Alpha',
+    logo_url: 'https://api.dicebear.com/7.x/initials/svg?seed=CA&backgroundColor=10b981',
     color_theme: '#10b981', // Emerald
+    location: 'Curitiba, PR'
   }
 ];
 

@@ -10,24 +10,24 @@ def seed_db():
     if db.query(models.Store).count() == 0:
         print("Seeding database...")
         
-        # Initial Stores
+        # Initial Stores (Unificados com a Rede B2B)
         store1 = models.Store(
-            name="Euroville BMW",
-            slug="euroville",
+            name="AutoShop Prime",
+            slug="autoshop-prime",
             logo="https://images.unsplash.com/photo-1560179707-f14e90ef3623?auto=format&fit=crop&q=80&w=200",
-            description="A sua concessionária BMW de confiança."
+            description="Concessionária matriz especializada em seminovos periciados e certificados."
         )
         store2 = models.Store(
-            name="Stuttgart Porsche",
-            slug="stuttgart",
+            name="Motors Campinas",
+            slug="motors-campinas",
             logo="https://images.unsplash.com/photo-1542282088-fe8426682b8f?auto=format&fit=crop&q=80&w=200",
-            description="Exclusividade e performance Porsche."
+            description="Referência regional em veículos premium e repasse B2B de alta liquidez."
         )
         store3 = models.Store(
-            name="Tesla Auto",
-            slug="tesla-auto",
+            name="Concessionária Alpha",
+            slug="alpha-motors",
             logo="https://images.unsplash.com/photo-1617704548623-340376564e68?auto=format&fit=crop&q=80&w=200",
-            description="O futuro é agora com Tesla."
+            description="Rede integrada com laudo cautelar aprovado e garantia estendida."
         )
         
         db.add_all([store1, store2, store3])

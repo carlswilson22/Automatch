@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -7,6 +7,9 @@ import {
   LayoutDashboard, PlusCircle, CreditCard, ChevronRight, Car, Users
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { getFavorites, subscribeFavorites } from '../data/favoritesManager';
+import { getNewCars, isCarDeleted } from '../data/newCarsManager';
+import { showcaseCars } from '../data/showcaseData';
 
 // Code-Splitting: PartnershipHubModal carregado sob demanda (economiza 50.5 kB na montagem inicial)
 const PartnershipHubModal = React.lazy(() => import('../components/partners/PartnershipHubModal'));
@@ -22,6 +25,40 @@ const ProfilePage = () => {
     email: user?.email || '',
     bio: 'Apaixonado por tecnologia e carros premium.'
   });
+
+  // Contadores dinâmicos de veículos e favoritos
+  const [favoriteCount, setFavoriteCount] = useState(() => getFavorites().length);
+  const [myCarsCount, setMyCarsCount] = useState(() => {
+    return getNewCars().filter(c => !isCarDeleted(c.id)).length;
+  });
+  const [catalogCarsCount, setCatalogCarsCount] = useState(() => {
+    const userCars = getNewCars().filter(c => !isCarDeleted(c.id)).length;
+    return (showcaseCars?.length || 5) + userCars;
+  });
+
+  useEffect(() => {
+    // Sincronização em tempo real de favoritos
+    const unsubscribeFavs = subscribeFavorites((favs) => {
+      setFavoriteCount(Array.isArray(favs) ? favs.length : getFavorites().length);
+    });
+
+    // Sincronização em tempo real de anúncios do usuário e catálogo
+    const updateCounts = () => {
+      const activeUserCars = getNewCars().filter(c => !isCarDeleted(c.id)).length;
+      setMyCarsCount(activeUserCars);
+      setCatalogCarsCount((showcaseCars?.length || 5) + activeUserCars);
+      setFavoriteCount(getFavorites().length);
+    };
+
+    window.addEventListener('storage', updateCounts);
+    window.addEventListener('focus', updateCounts);
+
+    return () => {
+      unsubscribeFavs();
+      window.removeEventListener('storage', updateCounts);
+      window.removeEventListener('focus', updateCounts);
+    };
+  }, []);
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -178,18 +215,57 @@ const ProfilePage = () => {
             </div>
 
             {/* Account Stats / Highlights */}
-            <div className="grid grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6">
               {[
-                { label: 'Favoritos', icon: Heart, val: '8', color: 'text-red-500', bg: 'bg-red-50', border: 'border-red-100' },
-                { label: 'Buscas Salvas', icon: Shield, val: '3', color: 'text-brand-blue', bg: 'bg-blue-50', border: 'border-blue-100' },
-                { label: 'Visitas', icon: Eye, val: '124', color: 'text-brand-emerald', bg: 'bg-emerald-50', border: 'border-emerald-100' },
+                { 
+                  label: 'Meus Carros', 
+                  icon: Car, 
+                  val: myCarsCount, 
+                  color: 'text-blue-600', 
+                  bg: 'bg-blue-50', 
+                  border: 'border-blue-100',
+                  onClick: () => navigate('/meus-anuncios')
+                },
+                { 
+                  label: 'Carros Favoritos', 
+                  icon: Heart, 
+                  val: favoriteCount, 
+                  color: 'text-red-500', 
+                  bg: 'bg-red-50', 
+                  border: 'border-red-100',
+                  onClick: () => navigate('/favoritos')
+                },
+                { 
+                  label: 'Estoque Vitrine', 
+                  icon: Sparkles, 
+                  val: catalogCarsCount, 
+                  color: 'text-purple-600', 
+                  bg: 'bg-purple-50', 
+                  border: 'border-purple-100',
+                  onClick: () => navigate('/encontrar')
+                },
+                { 
+                  label: 'Visitas ao Perfil', 
+                  icon: Eye, 
+                  val: '124', 
+                  color: 'text-brand-emerald', 
+                  bg: 'bg-emerald-50', 
+                  border: 'border-emerald-100',
+                  onClick: null
+                },
               ].map((stat, i) => (
-                <div key={i} className={`bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col items-center justify-center transition-all hover:shadow-md cursor-default`}>
-                  <div className={`w-12 h-12 rounded-2xl ${stat.bg} ${stat.border} border flex items-center justify-center ${stat.color} mb-3`}>
-                    <stat.icon className="w-6 h-6" />
+                <div 
+                  key={i} 
+                  onClick={stat.onClick || undefined}
+                  className={`bg-white rounded-3xl p-5 border border-slate-200 shadow-sm flex flex-col items-center justify-center transition-all hover:shadow-md ${
+                    stat.onClick ? 'cursor-pointer hover:border-blue-300 active:scale-95' : 'cursor-default'
+                  }`}
+                >
+                  <div className={`w-11 h-11 rounded-2xl ${stat.bg} ${stat.border} border flex items-center justify-center ${stat.color} mb-2.5`}>
+                    <stat.icon className="w-5 h-5" />
                   </div>
                   <span className="text-2xl font-black text-slate-800 tracking-tight leading-tight">{stat.val}</span>
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">{stat.label}</span>
+                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1 text-center">{stat.label}</span>
                 </div>
               ))}
             </div>

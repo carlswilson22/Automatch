@@ -11,6 +11,23 @@ export const showcaseCars = [
     ],
     color: 'Branco Pérola',
     mileage: 12000, image: '/images/FotoCorollaCross.jpg',
+    gallery: [
+      '/images/FotoCorollaCross.jpg',
+      '/images/carro_360_diagonal.jpg',
+      '/images/carro_360_lateral.jpg',
+      '/images/carro_360_diagonal.jpg',
+      '/images/carro_360_traseira.jpg'
+    ],
+    photos360: {
+      0: '/images/FotoCorollaCross.jpg',
+      45: '/images/carro_360_diagonal.jpg',
+      90: '/images/carro_360_lateral.jpg',
+      135: '/images/carro_360_diagonal.jpg',
+      180: '/images/carro_360_traseira.jpg',
+      225: '/images/carro_360_diagonal.jpg',
+      270: '/images/carro_360_lateral.jpg',
+      315: '/images/carro_360_diagonal.jpg'
+    },
     bodyType: 'SUV',
     icon: Car, featured: true, location: 'São Paulo, SP', storeId: 'store-1',
     description: 'SUV híbrido flex topo de linha, teto solar elétrico, pacote Toyota Safety Sense e revisões em concessionária.',
@@ -23,7 +40,7 @@ O pacote de segurança ativa Toyota Safety Sense inclui controle de cruzeiro ada
 Laudo cautelar 100% aprovado, sem qualquer retoque de funilaria ou histórico de sinistro/leilão. Garantia de fábrica vigente de 5 anos no veículo e 8 anos no sistema híbrido. Possui manual, chave reserva presencial e IPVA 2026 totalmente quitado.`,
     tags: ['Híbrido Flex', 'Teto Solar', 'Safety Sense', 'Único Dono', 'Garantia de Fábrica'],
     specs: { motor: '1.8 Híbrido Flex', cambio: 'Automático CVT', combustivel: 'Flex / Elétrico Híbrido', portas: '4 portas', direcao: 'Elétrica Progressiva', freios: 'ABS com EBD nas 4 rodas', airbags: '7 airbags (frontais, laterais, cortina e joelho)', tracao: 'Dianteira' },
-    seller: { name: 'Automatch Oficial', avatar: 'https://images.unsplash.com/photo-1543610892-0b1f7e6d8ac1?auto=format&fit=crop&w=100&h=100', rating: 4.8, ads: 23, since: '2021', bio: 'Loja oficial certificada Automatch.' },
+    seller: { name: 'AutoShop Prime', avatar: 'https://images.unsplash.com/photo-1543610892-0b1f7e6d8ac1?auto=format&fit=crop&w=100&h=100', rating: 4.9, ads: 28, since: '2020', bio: 'Loja matriz oficial certificada AutoShop Prime.' },
   },
   {
     id: 'sc-002', name: 'Volkswagen Polo TSI', brand: 'Volkswagen', model: 'Polo TSI',
@@ -34,6 +51,23 @@ Laudo cautelar 100% aprovado, sem qualquer retoque de funilaria ou histórico de
     ],
     color: 'Vermelho',
     mileage: 18500, image: '/images/FotoPoloTSI.jpg',
+    gallery: [
+      '/images/FotoPoloTSI.jpg',
+      '/images/carro_360_diagonal.jpg',
+      '/images/carro_360_lateral.jpg',
+      '/images/carro_360_diagonal.jpg',
+      '/images/carro_360_traseira.jpg'
+    ],
+    photos360: {
+      0: '/images/FotoPoloTSI.jpg',
+      45: '/images/carro_360_diagonal.jpg',
+      90: '/images/carro_360_lateral.jpg',
+      135: '/images/carro_360_diagonal.jpg',
+      180: '/images/carro_360_traseira.jpg',
+      225: '/images/carro_360_diagonal.jpg',
+      270: '/images/carro_360_lateral.jpg',
+      315: '/images/carro_360_diagonal.jpg'
+    },
     bodyType: 'Hatch',
     icon: Car, featured: false, location: 'Campinas, SP', storeId: 'store-2',
     description: 'Hatch esportivo e econômico com motor 1.0 TSI Turbo, painel 100% digital Active Info Display e VW Play.',
@@ -46,14 +80,31 @@ Veículo de uso estritamente particular, com todas as revisões periódicas efet
 Acompanha laudo pericial cautelar sem apontamentos, manual do proprietário com carimbos de revisão, chave presencial e documentação 2026 totalmente liberada para transferência imediata.`,
     tags: ['1.0 Turbo TSI', 'Painel Digital', 'VW Play', 'Câmbio Automático 6M', 'Laudo Aprovado'],
     specs: { motor: '1.0 Turbo TSI Flex', cambio: 'Automático Tiptronic 6 marchas', combustivel: 'Flex', portas: '4 portas', direcao: 'Elétrica', freios: 'Discos ventilados com ABS e ESC', airbags: '4 airbags', tracao: 'Dianteira' },
-    seller: { name: 'João Carlos', avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=100&h=100', rating: 4.5, ads: 5, since: '2022', bio: 'Vendedor particular.' },
+    seller: { name: 'Motors Campinas', avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=100&h=100', rating: 4.8, ads: 19, since: '2021', bio: 'Concessionária e repasse B2B Motors Campinas.' },
   },
   {
     id: 'sc-003', name: 'Hyundai HB20 Platinum', brand: 'Hyundai', model: 'HB20',
     year: 2024, price: 105000, fipePrice: 110000, color: 'Prata',
     mileage: 5000, image: '/images/FotoHyundaiHB20.jpg',
+    gallery: [
+      '/images/FotoHyundaiHB20.jpg',
+      '/images/carro_360_diagonal.jpg',
+      '/images/carro_360_lateral.jpg',
+      '/images/carro_360_diagonal.jpg',
+      '/images/carro_360_traseira.jpg'
+    ],
+    photos360: {
+      0: '/images/FotoHyundaiHB20.jpg',
+      45: '/images/carro_360_diagonal.jpg',
+      90: '/images/carro_360_lateral.jpg',
+      135: '/images/carro_360_diagonal.jpg',
+      180: '/images/carro_360_traseira.jpg',
+      225: '/images/carro_360_diagonal.jpg',
+      270: '/images/carro_360_lateral.jpg',
+      315: '/images/carro_360_diagonal.jpg'
+    },
     bodyType: 'Hatch',
-    icon: Car, featured: true, location: 'Rio de Janeiro, RJ', storeId: 'store-3',
+    icon: Car, featured: true, location: 'Curitiba, PR', storeId: 'store-3',
     description: 'Versão Platinum com motor TGDI Turbo, pacote Hyundai SmartSense de segurança e apenas 5.000 km rodados.',
     fullDescription: `Oportunidade única para adquirir um HB20 Platinum 2024 praticamente zero quilômetro, com apenas 5.000 km rodados de garagem. Visual sofisticado com nova grade frontal, assinatura em LED contínua e acabamento refinado com materiais premium no habitáculo.
 
@@ -64,7 +115,7 @@ Vem equipado de série com câmera de ré com guias ativas, sensores de estacion
 Veículo com procedência certificada de único dono, selo de vistoria cautelar 100% aprovada e garantia total de fábrica Hyundai até 2029. Não possui qualquer detalhe estético ou mecânico.`,
     tags: ['1.0 TGDI Turbo', 'SmartSense', 'Chave Presencial', 'Garantia até 2029', 'Apenas 5.000 km'],
     specs: { motor: '1.0 TGDI Turbo Flex', cambio: 'Automático de 6 marchas', combustivel: 'Flex', portas: '4 portas', direcao: 'Elétrica progressiva', freios: 'ABS com EBD e controle de tração', airbags: '6 airbags', tracao: 'Dianteira' },
-    seller: { name: 'Maria Souza', avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=100&h=100', rating: 4.9, ads: 2, since: '2023', bio: 'Venda de veículo particular de garagem.' },
+    seller: { name: 'Concessionária Alpha', avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=100&h=100', rating: 4.9, ads: 15, since: '2022', bio: 'Concessionária Alpha - Veículos periciados com garantia.' },
   },
   {
     id: 'sc-004', name: 'Chevrolet Tracker Premier', brand: 'Chevrolet', model: 'Tracker',
@@ -75,8 +126,25 @@ Veículo com procedência certificada de único dono, selo de vistoria cautelar 
     ],
     color: 'Azul Escuro',
     mileage: 8500, image: '/images/FotoChevroletTracker.jpg',
+    gallery: [
+      '/images/FotoChevroletTracker.jpg',
+      '/images/carro_360_diagonal.jpg',
+      '/images/carro_360_lateral.jpg',
+      '/images/carro_360_diagonal.jpg',
+      '/images/carro_360_traseira.jpg'
+    ],
+    photos360: {
+      0: '/images/FotoChevroletTracker.jpg',
+      45: '/images/carro_360_diagonal.jpg',
+      90: '/images/carro_360_lateral.jpg',
+      135: '/images/carro_360_diagonal.jpg',
+      180: '/images/carro_360_traseira.jpg',
+      225: '/images/carro_360_diagonal.jpg',
+      270: '/images/carro_360_lateral.jpg',
+      315: '/images/carro_360_diagonal.jpg'
+    },
     bodyType: 'SUV',
-    icon: Car, featured: true, location: 'Curitiba, PR', storeId: 'store-1',
+    icon: Car, featured: true, location: 'São Paulo, SP', storeId: 'store-1',
     description: 'SUV Premier com teto solar panorâmico, motor 1.2 Turbo, assistente de estacionamento autônomo e Wi-Fi nativo.',
     fullDescription: `Chevrolet Tracker Premier 2024 na exclusiva cor Azul Escuro metálica. Versão de topo mais completa da linha, pensada para famílias que não abrem mão de máximo conforto, segurança e tecnologia de conectividade a bordo.
 
@@ -87,14 +155,31 @@ Equipado com o assistente de estacionamento semiautônomo Easy Park (estaciona s
 Carro de único proprietário, revisado em concessionária, sem qualquer avaria ou histórico desabonador. Laudo pericial atesta estrutura 100% íntegra.`,
     tags: ['1.2 Turbo', 'Teto Panorâmico', 'Easy Park', 'Wi-Fi Nativo', 'Alerta Ponto Cego'],
     specs: { motor: '1.2 Turbo Flex 133cv', cambio: 'Automático de 6 marchas', combustivel: 'Flex', portas: '4 portas', direcao: 'Elétrica', freios: 'Discos dianteiros com ABS/ESC', airbags: '6 airbags', tracao: 'Dianteira' },
-    seller: { name: 'Automatch Oficial', avatar: 'https://images.unsplash.com/photo-1543610892-0b1f7e6d8ac1?auto=format&fit=crop&w=100&h=100', rating: 4.8, ads: 23, since: '2021', bio: 'Loja oficial certificada Automatch.' },
+    seller: { name: 'AutoShop Prime', avatar: 'https://images.unsplash.com/photo-1543610892-0b1f7e6d8ac1?auto=format&fit=crop&w=100&h=100', rating: 4.9, ads: 28, since: '2020', bio: 'Loja matriz oficial certificada AutoShop Prime.' },
   },
   {
     id: 'sc-005', name: 'Fiat Pulse Abarth', brand: 'Fiat', model: 'Pulse Abarth',
     year: 2024, price: 145000, fipePrice: 149900, color: 'Vermelho',
     mileage: 3200, image: '/images/FotoFiatPulse.jpg',
+    gallery: [
+      '/images/FotoFiatPulse.jpg',
+      '/images/carro_360_diagonal.jpg',
+      '/images/carro_360_lateral.jpg',
+      '/images/carro_360_diagonal.jpg',
+      '/images/carro_360_traseira.jpg'
+    ],
+    photos360: {
+      0: '/images/FotoFiatPulse.jpg',
+      45: '/images/carro_360_diagonal.jpg',
+      90: '/images/carro_360_lateral.jpg',
+      135: '/images/carro_360_diagonal.jpg',
+      180: '/images/carro_360_traseira.jpg',
+      225: '/images/carro_360_diagonal.jpg',
+      270: '/images/carro_360_lateral.jpg',
+      315: '/images/carro_360_diagonal.jpg'
+    },
     bodyType: 'SUV',
-    icon: Car, featured: true, location: 'Belo Horizonte, MG', storeId: 'store-2',
+    icon: Car, featured: true, location: 'Campinas, SP', storeId: 'store-2',
     description: 'O puro esportivo da divisão do escorpião com motor Turbo 270 de 185 cv, modo Poison e escape esportivo duplo.',
     fullDescription: `Verdadeiro ícone esportivo desenvolvido sob a chancela da lendária divisão de corrida Abarth. O Pulse Abarth 2024 ostenta o poderoso motor 1.3 Turbo 270 Flex com incríveis 185 cv e 27,5 kgfm de torque, acelerando de 0 a 100 km/h em impressionantes 7,6 segundos.
 
@@ -105,6 +190,6 @@ No volante em couro com base achatada, o botão vermelho "Poison" ativa o mapeam
 Veículo com apenas 3.200 km, impecável, sem detalhes. Laudo cautelar com conformidade total, IPVA 2026 quitado e garantia integral de fábrica.`,
     tags: ['Abarth Oficial', 'Turbo 270 (185cv)', 'Modo Poison', 'Escapamento Duplo', 'Apenas 3.200 km'],
     specs: { motor: '1.3 Turbo 270 Flex 185cv', cambio: 'Automático esportivo 6 marchas', combustivel: 'Flex', portas: '4 portas', direcao: 'Elétrica calibragem esportiva', freios: 'Discos dianteiros de 305mm com ABS', airbags: '4 airbags', tracao: 'Dianteira esportiva' },
-    seller: { name: 'Beto Motors', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&h=100', rating: 4.6, ads: 12, since: '2020', bio: 'Especialista em esportivos e exclusivos.' },
+    seller: { name: 'Motors Campinas', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&h=100', rating: 4.8, ads: 19, since: '2021', bio: 'Motors Campinas - Especialista em esportivos e exclusivos.' },
   },
 ];
