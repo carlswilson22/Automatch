@@ -33,67 +33,67 @@ const ProfilePage = () => {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col pt-20 pb-16 px-6 font-sans">
-      <div className="max-w-4xl mx-auto w-full">
+    <div className="min-h-screen bg-slate-50 flex flex-col justify-center items-center py-8 px-4 sm:px-6 lg:px-8 font-sans">
+      <div className="max-w-5xl mx-auto w-full my-auto">
         {/* Header/Back Link */}
         <button 
           onClick={() => navigate('/')}
-          className="bg-white/50 backdrop-blur-md p-2.5 rounded-full hover:bg-white flex items-center gap-2 text-slate-500 hover:text-brand-blue font-bold text-sm mb-10 transition-all border border-slate-200/50 shadow-sm"
+          className="bg-white/80 backdrop-blur-sm px-4 py-2.5 rounded-full hover:bg-white flex items-center gap-2 text-slate-600 hover:text-brand-blue font-bold text-xs mb-6 transition-all border border-slate-200/80 shadow-sm w-fit active:scale-95"
         >
-          <ArrowLeft className="w-5 h-5 ml-1" />
+          <ArrowLeft className="w-4 h-4 ml-0.5" />
           Voltar para o Início
         </button>
 
-        <div className="grid md:grid-cols-[1fr_2.5fr] gap-10">
+        <div className="grid lg:grid-cols-[300px_1fr] md:grid-cols-[280px_1fr] gap-8 items-start">
           {/* Sidebar - Profile Summary */}
           <motion.div 
-            initial={{ opacity: 0, x: -30 }}
+            initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             className="flex flex-col gap-6"
           >
-            <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-xl shadow-slate-200/50 flex flex-col items-center">
-              <div className="relative mb-6 group">
-                <div className="w-32 h-32 rounded-3xl overflow-hidden border-4 border-slate-100 shadow-inner">
+            <div className="bg-white rounded-3xl p-7 border border-slate-200 shadow-xl shadow-slate-200/50 flex flex-col items-center">
+              <div className="relative mb-5 group">
+                <div className="w-28 h-28 rounded-3xl overflow-hidden border-4 border-slate-100 shadow-inner">
                   <img 
                     src={user.photo || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`} 
                     alt={user.name} 
                     className="w-full h-full object-cover transition-transform group-hover:scale-110 duration-500"
                   />
                 </div>
-                <button className="absolute -bottom-2 -right-2 bg-brand-blue p-2.5 rounded-2xl text-white shadow-lg shadow-blue-200 hover:scale-110 transition-transform active:scale-95 border-2 border-white">
-                  <Camera className="w-5 h-5" />
+                <button className="absolute -bottom-1.5 -right-1.5 bg-brand-blue p-2 rounded-2xl text-white shadow-lg shadow-blue-200 hover:scale-110 transition-transform active:scale-95 border-2 border-white">
+                  <Camera className="w-4 h-4" />
                 </button>
               </div>
               
-              <h2 className="text-xl font-black text-slate-800 tracking-tight text-center leading-tight mb-2">
+              <h2 className="text-lg font-black text-slate-800 tracking-tight text-center leading-tight mb-2">
                 {user.name}
               </h2>
-              <p className="text-sm font-bold text-slate-400 bg-slate-50 px-3 py-1 rounded-full uppercase tracking-widest flex items-center gap-1.5 border border-slate-100">
+              <p className="text-xs font-bold text-slate-400 bg-slate-50 px-3 py-1 rounded-full uppercase tracking-widest flex items-center gap-1.5 border border-slate-100">
                 <ShieldCheck className="w-3.5 h-3.5 text-brand-emerald" /> Verificado
               </p>
 
-              <div className="w-full h-px bg-slate-100 my-8"></div>
+              <div className="w-full h-px bg-slate-100 my-6"></div>
 
-              <div className="w-full space-y-4">
+              <div className="w-full space-y-3.5">
                 <div className="flex items-center gap-3 text-slate-500">
-                  <Calendar className="w-5 h-5 text-slate-400" />
+                  <Calendar className="w-4.5 h-4.5 text-slate-400" />
                   <div className="flex flex-col">
                     <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Desde</span>
-                    <span className="text-sm font-bold text-slate-700">{user.memberSince || 'Março 2024'}</span>
+                    <span className="text-xs font-bold text-slate-700">{user.memberSince || 'Março 2024'}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 text-slate-500">
-                  <Mail className="w-5 h-5 text-slate-400" />
+                  <Mail className="w-4.5 h-4.5 text-slate-400" />
                   <div className="flex flex-col min-w-0">
                     <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">e-mail</span>
-                    <span className="text-sm font-bold text-slate-700 truncate">{user.email}</span>
+                    <span className="text-xs font-bold text-slate-700 truncate">{user.email}</span>
                   </div>
                 </div>
               </div>
 
               <button 
                 onClick={logout}
-                className="w-full mt-10 bg-red-50 hover:bg-red-100 text-red-500 py-3.5 rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 border border-red-100 active:scale-95 transition-all"
+                className="w-full mt-6 bg-red-50 hover:bg-red-100 text-red-500 py-3 rounded-2xl font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-2 border border-red-100 active:scale-95 transition-all"
               >
                 <LogOut className="w-4 h-4" />
                 Sair da Conta
@@ -103,32 +103,32 @@ const ProfilePage = () => {
 
           {/* Main Content - Editing Area */}
           <motion.div 
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col gap-8"
+            className="flex flex-col gap-6"
           >
-            <div className="bg-white rounded-3xl p-10 border border-slate-200 shadow-xl shadow-slate-200/50">
-              <div className="flex justify-between items-center mb-10">
+            <div className="bg-white rounded-3xl p-8 border border-slate-200 shadow-xl shadow-slate-200/50">
+              <div className="flex justify-between items-center mb-6">
                 <div>
-                  <h3 className="text-2xl font-black text-slate-800 tracking-tight flex items-center gap-2 uppercase">
+                  <h3 className="text-xl font-black text-slate-800 tracking-tight flex items-center gap-2 uppercase">
                     Configurações
                   </h3>
-                  <p className="text-slate-500 text-sm font-medium">Gerencie sua identidade na Automatch</p>
+                  <p className="text-slate-500 text-xs font-medium">Gerencie sua identidade e preferências na Automatch</p>
                 </div>
                 {!isEditing ? (
                   <button 
                     onClick={() => setIsEditing(true)}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-slate-100 hover:bg-brand-blue hover:text-white rounded-2xl text-slate-600 font-bold text-xs transition-all uppercase tracking-widest"
+                    className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-brand-blue hover:text-white rounded-xl text-slate-600 font-bold text-xs transition-all uppercase tracking-widest"
                   >
-                    <Edit3 className="w-4 h-4" /> Editar Perfil
+                    <Edit3 className="w-3.5 h-3.5" /> Editar Perfil
                   </button>
                 ) : (
                   <button 
                     onClick={handleSave}
                     disabled={isSaving}
-                    className="flex items-center gap-2 px-5 py-2.5 bg-brand-emerald text-white rounded-2xl font-bold text-xs transition-all uppercase tracking-widest shadow-lg shadow-emerald-200 active:scale-95 disabled:bg-slate-300"
+                    className="flex items-center gap-2 px-4 py-2 bg-brand-emerald text-white rounded-xl font-bold text-xs transition-all uppercase tracking-widest shadow-lg shadow-emerald-200 active:scale-95 disabled:bg-slate-300"
                   >
-                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />} Salvar
+                    {isSaving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />} Salvar
                   </button>
                 )}
               </div>

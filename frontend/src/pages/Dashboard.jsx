@@ -19,6 +19,7 @@ import { useNavigate } from 'react-router-dom';
 import { stores, inventory } from '../data/inventoryData';
 import StoreSelector from '../components/layout/StoreSelector';
 import StoreIdentifier from '../components/ui/StoreIdentifier';
+import { getVehicleImageUrl, handleVehicleImageError } from '../utils/imageHelper';
 
 // Code-Splitting: PartnershipHubModal carregado sob demanda (economiza 50.5 kB na montagem inicial)
 const PartnershipHubModal = React.lazy(() => import('../components/partners/PartnershipHubModal'));
@@ -32,13 +33,38 @@ export default function Dashboard() {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
 
-  const filteredInventory = inventory.filter(item => {
-    const matchesStore = !selectedStoreId || item.storeId === selectedStoreId;
-    const matchesSearch = item.model.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         item.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         item.plate.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesStore && matchesSearch;
-  });
+  const filteredInventory = useMemo(() => {
+    let combined = [...inventory];
+    try {
+      const localAds = JSON.parse(localStorage.getItem('automatch_my_ads') || '[]');
+      if (Array.isArray(localAds) && localAds.length > 0) {
+        localAds.forEach(ad => {
+          if (!combined.some(c => c.id === ad.id)) {
+            combined.unshift({
+              id: ad.id || `custom-${Date.now()}`,
+              storeId: ad.storeId || 'store-1',
+              model: ad.model || ad.title || 'Veículo',
+              brand: ad.brand || 'Marca',
+              plate: ad.plate || 'BR-2026',
+              sale_value: Number(ad.price || ad.sale_value || 85000),
+              financial_status: 'paid',
+              image: ad.image || (ad.gallery && ad.gallery[0]) || '/images/FotoCorollaCross.jpg'
+            });
+          }
+        });
+      }
+    } catch (e) {
+      // Ignora erro de parsing do localStorage
+    }
+
+    return combined.filter(item => {
+      const matchesStore = !selectedStoreId || item.storeId === selectedStoreId;
+      const matchesSearch = (item.model || '').toLowerCase().includes(searchQuery.toLowerCase()) || 
+                           (item.brand || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                           (item.plate || '').toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesStore && matchesSearch;
+    });
+  }, [selectedStoreId, searchQuery]);
 
   useEffect(() => {
     setCurrentPage(1);
@@ -177,8 +203,11 @@ export default function Dashboard() {
                     
                     <div className="aspect-[16/9] overflow-hidden bg-slate-100 relative">
                       <img 
-                        src={item.image || '/images/FotoGolfGTI.jpeg'} 
-                        alt={item.model} 
+                        src={getVehicleImageUrl(item.image || '/images/FotoGolfGTI.jpeg')} 
+                        alt={`${item.brand || ''} ${item.model || ''}`} 
+                        onError={handleVehicleImageError}
+                        loading="lazy"
+                        decoding="async"
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                       />
                       
@@ -243,8 +272,11 @@ export default function Dashboard() {
                           <div className="flex items-center gap-3">
                             <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-slate-200">
                               <img 
-                                src={item.image || '/images/FotoGolfGTI.jpeg'} 
+                                src={getVehicleImageUrl(item.image || '/images/FotoGolfGTI.jpeg')} 
                                 alt="" 
+                                onError={handleVehicleImageError}
+                                loading="lazy"
+                                decoding="async"
                                 className="w-full h-full object-cover" 
                               />
                             </div>
