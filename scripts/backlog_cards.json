@@ -1,257 +1,142 @@
 [
   {
-    "title": "Front-End",
+    "title": "Planilha Excel Backlog do Projeto",
     "column": "Backlog",
-    "body": "Desenvolvimento da interface SPA em React 18, Vite e TailwindCSS."
+    "body": "Consolidação do backlog MoSCoW com Story Points, RICE e rastreabilidade CEUB."
   },
   {
-    "title": "Back-End",
+    "title": "Banco de Dados & Otimização de Pool",
     "column": "Backlog",
-    "body": "API REST assíncrona FastAPI, SQLAlchemy e Pydantic v2."
+    "body": "PostgreSQL 15 com SessionLocal, pool de conexões assíncrono e migrations."
   },
   {
-    "title": "Protótipo",
+    "title": "[ATM-AUTH-02] Recuperação de Senha com OTP",
     "column": "Backlog",
-    "body": "Telas de vitrine, detalhes, comparador, favoritos e dashboard."
+    "body": "Código numérico de 6 dígitos com expiração de 15 minutos e rate limiting defensivo de 3 req/hora."
   },
   {
-    "title": "Modelagem Dados",
+    "title": "[ATM-CAT-03] Paginação no Servidor e Otimização de Busca",
     "column": "Backlog",
-    "body": "Modelos relacionais SQLAlchemy (Car, User, Store, Watchlist)."
+    "body": "Envelope de paginação padronizado e busca textual ilike combinada em brand, model e description."
   },
   {
-    "title": "Diagrama Caso Uso",
+    "title": "[ATM-FIN-04] Sincronizador Multicanal e Feed XML",
     "column": "Backlog",
-    "body": "28 Requisitos funcionais mapeados em docs/requisitos.md e docs/arquitetura.md."
+    "body": "Sincronização automatizada para portais parceiros (AutoAvaliar, OLX Autos) com feed XML padronizado."
   },
   {
-    "title": "Diagrama Sequenc.",
+    "title": "[ATM-FIN-05] Radar de Oportunidades & Alerta de Queda de Preço",
     "column": "Backlog",
-    "body": "Fluxo transacional de vistoria pericial e cotação FIPE."
+    "body": "Notificações de redução de preço focadas via WhatsApp e E-mail com sanitização defensiva."
   },
   {
-    "title": "Diagrama Compon.",
+    "title": "[ATM-AI-03] Consultor IA Automatch com Memória Multi-turn",
     "column": "Backlog",
-    "body": "Arquitetura C4 de microsserviços, cache e reverse proxy."
+    "body": "Chatbot consultor automotivo com memória multi-turn e árvore semântica anti-repetição."
   },
   {
-    "title": "Doc. Completa",
-    "column": "Backlog",
-    "body": "README, CHANGELOG, Sprints e Entregas avaliativas do CEUB."
-  },
-  {
-    "title": "Doc. Arquit. SW",
-    "column": "Backlog",
-    "body": "Especificação detalhada de arquitetura e decisões técnicas (ADRs)."
-  },
-  {
-    "title": "Planilha Excel",
-    "column": "Backlog",
-    "body": "Consolidação do backlog MoSCoW com Story Points e RICE."
-  },
-  {
-    "title": "Impl. API Gemini",
-    "column": "Backlog",
-    "body": "Auditoria pericial de imagens com Google Gemini 1.5 Flash Vision."
-  },
-  {
-    "title": "Impl. API yolov8",
-    "column": "Backlog",
-    "body": "Detector de componentes estruturais e avarias com Ultralytics YOLOv8."
-  },
-  {
-    "title": "Impl. API Detran",
-    "column": "Backlog",
-    "body": "Consulta de multas, débitos de IPVA e restrições judiciais RENAJUD."
-  },
-  {
-    "title": "Banco de Dados",
-    "column": "Backlog",
-    "body": "PostgreSQL 15 conteinerizado com connection pooling e índices."
-  },
-  {
-    "title": "Feedback laudo IA",
-    "column": "Backlog",
-    "body": "Cruzamento visual e parecer entre OCR de PDF e fotos periciais."
-  },
-  {
-    "title": "Varredura 360°",
-    "column": "Backlog",
-    "body": "Visualizador orbital em 8 quadrantes com perspectiva 3D realista."
-  },
-  {
-    "title": "Vídeo pericial 15s",
-    "column": "Backlog",
-    "body": "Timeline pericial de vídeo de 15 segundos em 3 checkpoints."
-  },
-  {
-    "title": "Impl. de TCO",
-    "column": "Backlog",
-    "body": "Calculadora de Custo Total de Posse mensal e diário com IPVA por UF."
-  },
-  {
-    "title": "Comparador Multid.",
-    "column": "Backlog",
-    "body": "Confronto lado a lado de até 3 veículos em 5 dimensões técnicas."
-  },
-  {
-    "title": "Conexão B2B lojas",
-    "column": "Backlog",
-    "body": "Rede de repasse de estoque entre concessionárias com hold lock de 30min."
-  },
-  {
-    "title": "Front-end (Essencial)",
-    "column": "Itens Essenciais",
-    "body": "Interface do catálogo, detalhes, busca reativa e filtros."
-  },
-  {
-    "title": "Back-End (Essencial)",
-    "column": "Itens Essenciais",
-    "body": "Rotas de autenticação JWT, CRUD de anúncios e laudos."
-  },
-  {
-    "title": "Protótipo (Essencial)",
-    "column": "Itens Essenciais",
-    "body": "Fluxo completo de navegação e demonstração funcional."
-  },
-  {
-    "title": "Modelagem Dados (Essencial)",
-    "column": "Itens Essenciais",
-    "body": "Estrutura do banco com integridade referencial."
-  },
-  {
-    "title": "Impl. IA Gemini (Essencial)",
-    "column": "Itens Essenciais",
-    "body": "Análise pericial descritiva e chat consultor assistido."
-  },
-  {
-    "title": "Doc. Completa (Essencial)",
-    "column": "Itens Essenciais",
-    "body": "Relatórios de sprints e entregas acadêmicas do CEUB."
-  },
-  {
-    "title": "Doc. Arquit. SW (Essencial)",
-    "column": "Itens Essenciais",
-    "body": "Documento de arquitetura de software e matriz de requisitos."
-  },
-  {
-    "title": "Impl. API Gemini (Essencial)",
-    "column": "Itens Essenciais",
-    "body": "Integração estável com Google Generative AI v1beta."
-  },
-  {
-    "title": "Impl. yolov8 (Essencial)",
-    "column": "Itens Essenciais",
-    "body": "Identificação automatizada de avarias e caixas delimitadoras."
-  },
-  {
-    "title": "Integ. Detran (Essencial)",
-    "column": "Itens Essenciais",
-    "body": "Consulta cadastral de débitos veiculares e placas."
-  },
-  {
-    "title": "[ATM-AI-05] Fazer implementação de feedback do YOLOv8 após upload de laudos cautelares",
+    "title": "[ATM-AI-05] Fazer implementação de feedback do yolov8 após upload de laudos cautelares",
     "column": "A Fazer",
-    "body": "Extrair fotos de peças anexadas no PDF cautelar via PyMuPDF e submeter ao YOLOv8 para conferir com o laudo textual."
+    "body": "Extrair fotos de peças anexadas no PDF cautelar via PyMuPDF e submeter ao YOLOv8 para confrontar o texto do laudo com as marcações visuais."
   },
   {
     "title": "[ATM-B2B-01] Implementação de Conexão b2b com lojas parceiras",
     "column": "Fazendo",
-    "body": "Conexão entre concessionárias para estoque compartilhado, reservas temporárias e propostas de repasse."
+    "body": "Conexão entre concessionárias para estoque compartilhado, reservas temporárias com hold lock de 30 minutos e propostas de repasse."
   },
   {
-    "title": "Front-end (Finalizado)",
+    "title": "Front-end",
     "column": "Finalizado",
-    "body": "Build em produção com 0 erros, Core Web Vitals otimizado e 60 FPS."
+    "body": "Interface SPA em React 18, Vite e TailwindCSS com 0 erros de build, Core Web Vitals e 60 FPS."
   },
   {
-    "title": "Back-end (Finalizado)",
+    "title": "Back-end",
     "column": "Finalizado",
-    "body": "Serviço FastAPI assíncrono rodando com 100% dos testes aprovados."
+    "body": "API REST assíncrona FastAPI, SQLAlchemy ORM, Pydantic v2 e suíte completa de testes aprovada."
   },
   {
-    "title": "Modelagem de dados (Finalizado)",
+    "title": "Protótipo",
     "column": "Finalizado",
-    "body": "Esquemas SQLAlchemy com índices em compartilhavel e status_reserva."
+    "body": "Fluxo completo de telas navegáveis (Vitrine, Detalhes, Dashboard, Comparador, Favoritos e Checkout)."
   },
   {
-    "title": "Protótipo (Finalizado)",
+    "title": "Modelagem de dados",
     "column": "Finalizado",
-    "body": "Aplicação SPA completa integrada ao backend e contêineres."
+    "body": "Modelos relacionais SQLAlchemy (Car, User, Store, Watchlist) com integridade referencial."
   },
   {
-    "title": "Impl. da IA do gemini (Finalizado)",
+    "title": "Consertando Modelos dentro da Modelagem de Dados",
     "column": "Finalizado",
-    "body": "Gemini 1.5 Flash Vision operacional com cache e compressão LANCZOS."
+    "body": "Adicionados índices index=True em compartilhavel e status_reserva no modelo Car com testes aprovados."
   },
   {
-    "title": "Impl. upload laudos (Finalizado)",
+    "title": "Implementação da IA do gemini",
     "column": "Finalizado",
-    "body": "Validação estrita de magic bytes (%PDF-) e extração de dados."
+    "body": "Google Gemini 1.5 Flash Vision operacional para vistoria descritiva com compressão LANCZOS."
   },
   {
-    "title": "Implementação yolov8 (Finalizado)",
+    "title": "Melhoria de velocidade IA gemini",
     "column": "Finalizado",
-    "body": "Motor Ultralytics CV com detecção de lataria e peças estruturais."
+    "body": "Tempo de resposta de inferência pericial reduzido de 8s para menos de 1.8s."
   },
   {
-    "title": "Melhoria velocidade Gemini (Finalizado)",
+    "title": "Implementação yolov8",
     "column": "Finalizado",
-    "body": "Tempo de resposta reduzido de 8s para < 1.8s."
+    "body": "Motor Ultralytics CV com detecção de avarias estruturais da lataria e caixas delimitadoras."
   },
   {
-    "title": "Doc. arquitetura de sw (Finalizado)",
+    "title": "Fazer implementação de upload de laudos cautelares",
     "column": "Finalizado",
-    "body": "Diagramas C4, sequência, componentes e matriz de riscos."
+    "body": "Upload seguro com validação de magic bytes (%PDF-) rejeitando arquivos inválidos."
   },
   {
-    "title": "Documentação completa (Finalizado)",
+    "title": "Implementação API Detran",
     "column": "Finalizado",
-    "body": "Documentação institucional CEUB (Sprint 00 a 07 e Entregas 01 a 03)."
+    "body": "Consulta cadastral de IPVA, multas e restrições judiciais RENAJUD para placas antigas e Mercosul."
   },
   {
-    "title": "Impl. API Detran (Finalizado)",
+    "title": "Documentação arquitetura de software",
     "column": "Finalizado",
-    "body": "Auditoria cadastral de placas com fallback em memória."
+    "body": "Documento oficial de arquitetura com diagramas C4, sequência, componentes e decisões ADR-01 a ADR-06."
   },
   {
-    "title": "Diagrama de Sequencia (Finalizado)",
+    "title": "Documentação completa",
     "column": "Finalizado",
-    "body": "Mapeamento dos fluxos transacionais do sistema."
+    "body": "Padrão acadêmico institucional CEUB cobrindo Sprints 00 a 07 e Entregas avaliativas 01 a 03."
   },
   {
-    "title": "Diagrama de Componentes (Finalizado)",
+    "title": "Diagrama de Sequencia",
     "column": "Finalizado",
-    "body": "Estrutura dos microsserviços sob o Gateway Nginx."
+    "body": "Mapeamento dos fluxos transacionais de vistoria pericial, cotação FIPE e precificação."
   },
   {
-    "title": "Impl. Varredura 360 graus (Finalizado)",
+    "title": "Diagrama de Componentes",
     "column": "Finalizado",
-    "body": "Giro orbital fiel ao próprio veículo com perspectiva tridimensional."
+    "body": "Arquitetura de microsserviços, gateway Nginx, cache Redis e persistência PostgreSQL."
   },
   {
-    "title": "Diagrama de Caso de Uso (Finalizado)",
+    "title": "Diagrama de Caso de Uso",
     "column": "Finalizado",
-    "body": "33 Requisitos Funcionais especificados e homologados."
+    "body": "33 Requisitos Funcionais e 8 Não-Funcionais especificados em docs/requisitos.md."
   },
   {
-    "title": "Consertando Modelos Dados (Finalizado)",
+    "title": "Implementação de Varredura 360 graus",
     "column": "Finalizado",
-    "body": "Refatoração e testes de integridade relacional."
+    "body": "Visualizador orbital fotográfico 360° em 8 ângulos contínuos com perspectiva 3D realista."
   },
   {
-    "title": "Impl. Vídeo pericial 15s (Finalizado)",
+    "title": "Implementação de Vídeo pericial de 15s",
     "column": "Finalizado",
-    "body": "Player integrado de vídeo de 15 segundos em 3 checkpoints."
+    "body": "Player integrado de vídeo pericial de 15 segundos em 3 checkpoints com timeline interativa."
   },
   {
-    "title": "Implementação de TCO (Finalizado)",
+    "title": "Implementação de TCO",
     "column": "Finalizado",
-    "body": "Calculadora de custo mensal e diário com IPVA estadual."
+    "body": "Calculadora de Custo Total de Posse decomposta em 4 pilares: IPVA por estado, seguro, combustível e manutenção."
   },
   {
-    "title": "Comparador Multidimens. (Finalizado)",
+    "title": "Implementação de Comparador Multidimensional",
     "column": "Finalizado",
-    "body": "Comparador de até 3 carros simultâneos com lazy loading e seletor embutido."
+    "body": "Confronto lado a lado de até 3 veículos em 5 dimensões técnicas com lazy loading e seletor in-slot."
   }
 ]

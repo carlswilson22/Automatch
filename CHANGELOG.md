@@ -22,7 +22,7 @@ Registre aqui as mudanças relevantes por sprint ou marco avaliativo.
 - **Hardening de Docker & CI/CD**:
   - Atualização do pacote `caniuse-lite` e definição da variável de ambiente `ENV BROWSERSLIST_IGNORE_OLD_DATA=true` nos arquivos `frontend/Dockerfile` e `frontend/Dockerfile.prod`, garantindo builds limpos e sem advertências nos contêineres.
 - **Governança de Backlog e Projeto**:
-  - Consolidação oficial do documento `BACKLOG.md` estruturado no modelo Kanban de 5 colunas (Backlog do Projeto, Itens Essenciais, A Fazer, Fazendo, Finalizado) com matriz de rastreabilidade completa (código ↔ testes ↔ requisitos), OKRs e histórias de usuário.
+  - Consolidação oficial do documento `BACKLOG.md` estruturado no modelo Kanban de 4 colunas operacionais (Backlog do Projeto, A Fazer, Fazendo, Finalizado) com matriz de rastreabilidade completa (código ↔ testes ↔ requisitos), OKRs e histórias de usuário.
 
 ## Sprint 06 - Otimização Global de Performance, Code Splitting, Varredura 360° e Resiliência B2B (v2.4.1)
 - **Comparador Multidimensional & Seleção de Terceiro Veículo**:

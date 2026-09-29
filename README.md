@@ -22,7 +22,7 @@ Plataforma automotiva Fullstack de alta fidelidade que une **marketplace de comp
 * **Identificador Acadêmico:** `ADS-AUTOMATCH-2026`
 * **Repositório Primário:** [carlswilson22/Automatch](https://github.com/carlswilson22/Automatch)
 * **Repositório Secundário (Institucional):** [CAMPUSCEUB/ADS-AUTOMATCH](https://github.com/CAMPUSCEUB/ADS-AUTOMATCH)
-* **Quadro de Gestão Ágil (GitHub Projects):** [Desenvolvimento PI 2](https://github.com/users/carlswilson22/projects) (Estruturado em 5 colunas: *Backlog do Projeto*, *Itens Essenciais*, *A Fazer*, *Fazendo* e *Finalizado*)
+* **Quadro de Gestão Ágil (GitHub Projects):** [Desenvolvimento PI 2](https://github.com/users/carlswilson22/projects) (Estruturado em 4 colunas: *Backlog do Projeto*, *A Fazer*, *Fazendo* e *Finalizado*)
 
 ---
 

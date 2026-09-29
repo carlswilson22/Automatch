@@ -21,7 +21,7 @@ Refinar e polir a experiência do usuário (UX/UI) e a gestão de estoque, imple
 - [x] `[ATM-CAD-02]` **Vídeo Pericial no Cadastro**: Campo para inserção de link de vídeo de vistoria pericial de 15 segundos acompanhado de preview dinâmico com player de mídia integrado.
 - [x] `[ATM-CAD-03]` **Privilégio B2B Restrito a Lojistas**: Condicionamento do checkbox de compartilhamento na Rede de Parceiros B2B exclusivamente para usuários com papel de revenda/lojista (`isLojista`).
 - [x] `[ATM-OPS-01]` **Saneamento de Containers Docker**: Atualização de `caniuse-lite` e injeção de variável de ambiente `ENV BROWSERSLIST_IGNORE_OLD_DATA=true` nos Dockerfiles (`frontend/Dockerfile` e `frontend/Dockerfile.prod`), eliminando advertências durante o build em produção.
-- [x] `[ATM-BACKLOG-01]` **Governança Oficial do Backlog PI 2**: Estruturação completa do documento `BACKLOG.md` com o quadro Kanban oficial (20 Backlog, 10 Essenciais, 1 A Fazer, 1 Fazendo, 19 Finalizados), matriz de rastreabilidade, OKRs do produto e definição de pronto (DoD).
+- [x] `[ATM-BACKLOG-01]` **Governança Oficial do Backlog PI 2**: Estruturação completa do documento `BACKLOG.md` com o quadro Kanban oficial em 4 colunas operacionais (Backlog do Projeto, A Fazer, Fazendo, Finalizado), matriz de rastreabilidade, OKRs do produto e definição de pronto (DoD).
 
 ## Responsáveis
 - **Carlos Wilson, Matheus Porto, Paulo Arthur e Vinicius Aurelio**: Equipe de Engenharia de Software, Fullstack e DevOps (CEUB).

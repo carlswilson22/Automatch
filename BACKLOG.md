@@ -9,36 +9,35 @@
 
 ## 📊 1. Quadro Kanban Oficial — Desenvolvimento PI 2
 
-Abaixo está a consolidação fidedigna do quadro de gestão ágil de atividades do projeto (**Desenvolvimento PI 2**), integrando os cartões de planejamento, artefatos essenciais, itens em andamento e funcionalidades finalizadas:
+Abaixo está a consolidação fidedigna do quadro de gestão ágil de atividades do projeto (**Desenvolvimento PI 2**), com cada cartão em sua respectiva coluna de ciclo de vida (sem duplicidades e com eliminação da lista intermediária "Essencial"):
 
 ```
-+-------------------------------------------------------------------------------------------------------------------------+
-|                                             QUADRO: DESENVOLVIMENTO PI 2                                                |
-+---------------------+-------------------+---------------------+-------------------------+-------------------------------+
-| BACKLOG DO PROJETO  | ITENS ESSENCIAIS  | A FAZER             | FAZENDO                 | FINALIZADO                    |
-| (20 cartões)        | (10 cartões)      | (1 cartão)          | (1 cartão)              | (19 cartões)                  |
-+---------------------+-------------------+---------------------+-------------------------+-------------------------------+
-| • Front-End         | • Front-end       | • Fazer             | • Implementação de      | [x] Front-end                 |
-| • Back-End          | • Back-End        |   implementação de  |   Conexão b2b com       | [x] Back-end                  |
-| • Protótipo         | • Protótipo       |   feedback do       |   lojas parceiras       | [x] Modelagem de dados        |
-| • Modelagem Dados   | • Modelagem Dados |   yolov8 após       |   (Concluído no código  | [x] Protótipo                 |
-| • Diagrama Caso Uso | • Impl. IA Gemini |   upload de laudos  |   via VLAEG e validado  | [x] Impl. da IA do gemini     |
-| • Diagrama Sequenc. | • Doc. Completa   |   cautelares        |   com 100% testes!)     | [x] Impl. upload laudos       |
-| • Diagrama Compon.  | • Doc. Arquit. SW |                     |                         | [x] Implementação yolov8      |
-| • Doc. Completa     | • Impl. API Gemini|                     |                         | [x] Melhoria velocidade Gemini|
-| • Doc. Arquit. SW   | • Impl. yolov8    |                     |                         | [x] Doc. arquitetura de sw    |
-| • Planilha Excel    | • Integ. Detran   |                     |                         | [x] Documentação completa     |
-| • Impl. API Gemini  |                   |                     |                         | [x] Impl. API Detran          |
-| • Impl. API yolov8  |                   |                     |                         | [x] Diagrama de Sequencia     |
-| • Impl. API Detran  |                   |                     |                         | [x] Diagrama de Componentes   |
-| • Banco de Dados    |                   |                     |                         | [x] Impl. Varredura 360 graus |
-| • Feedback laudo IA |                   |                     |                         | [x] Diagrama de Caso de Uso   |
-| • Varredura 360°    |                   |                     |                         | [x] Consertando Modelos Dados |
-| • Vídeo pericial 15s|                   |                     |                         | [x] Impl. Vídeo pericial 15s  |
-| • Impl. de TCO      |                   |                     |                         | [x] Implementação de TCO      |
-| • Comparador Multid.|                   |                     |                         | [x] Comparador Multidimens.   |
-| • Conexão B2B lojas |                   |                     |                         |                               |
-+---------------------+-------------------+---------------------+-------------------------+-------------------------------+
++-------------------------------------------------------------------------------------------------------------------+
+|                                           QUADRO: DESENVOLVIMENTO PI 2                                            |
++---------------------------------+-------------------------+-------------------------+-----------------------------+
+| BACKLOG DO PROJETO              | A FAZER                 | FAZENDO                 | FINALIZADO                  |
+| (7 cartões)                     | (1 cartão)              | (1 cartão)              | (19 cartões)                |
++---------------------------------+-------------------------+-------------------------+-----------------------------+
+| • Planilha Excel Backlog        | • Fazer implementação   | • Implementação de      | [x] Front-end               |
+| • Banco de Dados & Pool         |   de feedback do yolov8 |   Conexão b2b com       | [x] Back-end                |
+| • [ATM-AUTH-02] OTP Password    |   após upload de laudos |   lojas parceiras       | [x] Modelagem de dados      |
+| • [ATM-CAT-03] Fulltext Search  |   cautelares            |                         | [x] Protótipo               |
+| • [ATM-FIN-04] Feed XML AutoXML |                         |                         | [x] Impl. da IA do gemini   |
+| • [ATM-FIN-05] Radar de Alertas |                         |                         | [x] Impl. upload laudos     |
+| • [ATM-AI-03] Consultor IA RAG  |                         |                         | [x] Implementação yolov8    |
+|                                 |                         |                         | [x] Melhoria veloc. Gemini  |
+|                                 |                         |                         | [x] Doc. arquitetura de sw  |
+|                                 |                         |                         | [x] Documentação completa   |
+|                                 |                         |                         | [x] Impl. API Detran        |
+|                                 |                         |                         | [x] Diagrama de Sequencia   |
+|                                 |                         |                         | [x] Diagrama de Componentes |
+|                                 |                         |                         | [x] Impl. Varredura 360°    |
+|                                 |                         |                         | [x] Diagrama de Caso de Uso |
+|                                 |                         |                         | [x] Consertando Modelos     |
+|                                 |                         |                         | [x] Impl. Vídeo pericial 15s|
+|                                 |                         |                         | [x] Implementação de TCO    |
+|                                 |                         |                         | [x] Comparador Multidimens. |
++---------------------------------+-------------------------+-------------------------+-----------------------------+
 ```
 
 ---
@@ -49,29 +48,29 @@ Esta matriz mapeia cada cartão do quadro oficial com a sua implementação fís
 
 | Cartão no Kanban | Coluna no Quadro | Módulo / Arquivos Implementados | Status no Sistema | Evidência de Validação |
 | :--- | :---: | :--- | :---: | :--- |
-| **Front-end** | *Itens Essenciais / Finalizado* | `frontend/src/` (React 18 + Vite + TailwindCSS) | ✅ Concluído | `npm run build` (0 erros, 2241 modules) |
-| **Back-end** | *Itens Essenciais / Finalizado* | `backend/main.py`, `backend/routers/` (FastAPI) | ✅ Concluído | Docker container + Uvicorn na porta 8000 |
-| **Protótipo** | *Itens Essenciais / Finalizado* | `frontend/src/pages/`, `frontend/src/components/` | ✅ Concluído | Vitrine, Detalhes, Dashboard, Comparador |
-| **Modelagem de Dados** | *Itens Essenciais / Finalizado* | `backend/models.py`, `backend/database.py` | ✅ Concluído | SQLAlchemy ORM (Car, User, Store, Watchlist) |
+| **Front-end** | *Finalizado* | `frontend/src/` (React 18 + Vite + TailwindCSS) | ✅ Concluído | `npm run build` (0 erros, 2248 modules) |
+| **Back-end** | *Finalizado* | `backend/main.py`, `backend/routers/` (FastAPI) | ✅ Concluído | Docker container + Uvicorn na porta 8000 |
+| **Protótipo** | *Finalizado* | `frontend/src/pages/`, `frontend/src/components/` | ✅ Concluído | Vitrine, Detalhes, Dashboard, Comparador |
+| **Modelagem de Dados** | *Finalizado* | `backend/models.py`, `backend/database.py` | ✅ Concluído | SQLAlchemy ORM (Car, User, Store, Watchlist) |
 | **Consertando Modelos Dados** | *Finalizado* | `backend/models.py` (Índices `compartilhavel`, `status_reserva`) | ✅ Concluído | Migração e testes de integridade relacionais |
-| **Banco de Dados** | *BackLog Do Projeto* | `backend/database.py`, PostgreSQL / SQLite | ✅ Concluído | SessionLocal, Pool de conexões e migrations |
-| **Implementação IA Gemini** | *Itens Essenciais / Finalizado* | `backend/routers/ai_vision.py`, Gemini 1.5 Flash | ✅ Concluído | `test_vision_and_delete.py` (10/10 PASS) |
+| **Banco de Dados** | *Backlog do Projeto* | `backend/database.py`, PostgreSQL / SQLite | ✅ Concluído | SessionLocal, Pool de conexões e migrations |
+| **Implementação IA Gemini** | *Finalizado* | `backend/routers/ai_vision.py`, Gemini 1.5 Flash | ✅ Concluído | `test_vision_and_delete.py` (10/10 PASS) |
 | **Melhoria de velocidade IA Gemini**| *Finalizado* | Pré-compressão LANCZOS, max_tokens e prompt RAG | ✅ Concluído | Inferência reduzida de 8s para < 1.8s |
-| **Implementação yolov8** | *Itens Essenciais / Finalizado* | `backend/routers/ai_vision.py` (Ultralytics CV) | ✅ Concluído | Detecção de avarias com bounding boxes |
-| **Integração / API Detran** | *Itens Essenciais / Finalizado* | `backend/routers/vehicle_lookup.py` | ✅ Concluído | `test_b2b_and_plate.py` (9/9 PASS) |
+| **Implementação yolov8** | *Finalizado* | `backend/routers/ai_vision.py` (Ultralytics CV) | ✅ Concluído | Detecção de avarias com bounding boxes |
+| **Integração / API Detran** | *Finalizado* | `backend/routers/vehicle_lookup.py` | ✅ Concluído | `test_b2b_and_plate.py` (9/9 PASS) |
 | **Upload de laudos cautelares** | *Finalizado* | `backend/routers/laudos.py` (Magic bytes `%PDF-`) | ✅ Concluído | `test_full_system_review.py` (Suíte 8 PASS) |
-| **Varredura 360 graus** | *Finalizado* | `frontend/src/components/vehicle/Vehicle360Viewer.jsx` | ✅ Concluído | Giro 360° orbital fiel ao veículo, perspectiva 3D, iluminação de estúdio e eliminação de fotos aleatórias |
+| **Varredura 360 graus** | *Finalizado* | `frontend/src/components/vehicle/Vehicle360Viewer.jsx` | ✅ Concluído | Giro 360° orbital fiel ao veículo, perspectiva 3D, iluminação de estúdio |
 | **Vídeo pericial de 15s** | *Finalizado* | `frontend/src/components/vehicle/PericialVideoModal.jsx` | ✅ Concluído | Checkpoints periciais e player com timeline |
 | **Implementação de TCO** | *Finalizado* | `backend/routers/cars.py` (`POST /api/cars/tco-calculator`) | ✅ Concluído | `test_usecases_full_battery.py` (UC-04 PASS) |
 | **Comparador Multidimensional** | *Finalizado* | `frontend/src/components/vehicle/VehicleComparatorModal.jsx` | ✅ Concluído | `useMemo`, acordeão por demanda, lazy loading e fallback de fotos |
 | **Otimização Global de Performance** | *Finalizado* | `frontend/src/pages/`, `frontend/src/components/` | ✅ Concluído | Code-splitting (React.lazy), timeout fail-fast de 1.2s, lazy/async nas imagens e 60 FPS na GPU |
-| **Documentação Completa** | *Itens Essenciais / Finalizado* | `README.md`, `CHANGELOG.md`, `docs/requisitos.md`, `sprints/` | ✅ Concluído | Padrão acadêmico institucional CEUB (Sprint 00 a 06) |
-| **Documentação Arquitetura SW** | *Itens Essenciais / Finalizado* | `docs/arquitetura.md` | ✅ Concluído | Diagramas C4/Mermaid, fluxos e integrações |
-| **Diagrama de Caso de Uso** | *Finalizado* | `docs/arquitetura.md`, `docs/requisitos.md` | ✅ Concluído | 28 Requisitos Funcionais mapeados |
+| **Documentação Completa** | *Finalizado* | `README.md`, `CHANGELOG.md`, `docs/requisitos.md`, `sprints/`, `entregas/` | ✅ Concluído | Padrão acadêmico institucional CEUB (Sprint 00 a 07, Entregas 01 a 03) |
+| **Documentação Arquitetura SW** | *Finalizado* | `docs/arquitetura.md` | ✅ Concluído | Diagramas C4/Mermaid, fluxos, decisões ADR-01 a ADR-06 |
+| **Diagrama de Caso de Uso** | *Finalizado* | `docs/arquitetura.md`, `docs/requisitos.md` | ✅ Concluído | 33 Requisitos Funcionais mapeados |
 | **Diagrama de Sequencia** | *Finalizado* | `docs/arquitetura.md` | ✅ Concluído | Fluxo transacional de vistoria e precificação |
 | **Diagrama de Componentes** | *Finalizado* | `docs/arquitetura.md` | ✅ Concluído | Arquitetura de microsserviços e gateways |
-| **Planilha Excel Backlog** | *BackLog Do Projeto* | `BACKLOG.md` (Exportável para XLSX/CSV) | ✅ Concluído | Estrutura MoSCoW com Story Points e RICE |
-| **Conexão B2B com lojas parceiras**| *Fazendo ➔ Finalizado* | `backend/routers/partnerships.py`, `PartnershipHubModal.jsx` | ✅ Concluído | Paginação server-side, cache TTL 60s, skeleton shimmer |
+| **Planilha Excel Backlog** | *Backlog do Projeto* | `BACKLOG.md` (Exportável para XLSX/CSV) | ✅ Concluído | Estrutura MoSCoW com Story Points e RICE |
+| **Conexão B2B com lojas parceiras**| *Fazendo* | `backend/routers/partnerships.py`, `PartnershipHubModal.jsx` | 🔄 Fazendo | Paginação server-side, cache TTL 60s, skeleton shimmer |
 | **Feedback do YOLOv8 pós-laudo** | *A Fazer* | Pipeline de OCR/Visão para fotos anexas no PDF | ⏳ A Fazer | Detalhamento na seção 4 deste documento |
 
 ---
