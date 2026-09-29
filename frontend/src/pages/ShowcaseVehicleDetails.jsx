@@ -735,17 +735,6 @@ export default function ShowcaseVehicleDetails() {
                 {isOpeningComparator ? 'Abrindo...' : 'Comparar'}
               </span>
             </button>
-            <button 
-              onClick={() => {
-                setActiveChat('seller');
-                const chatEl = document.getElementById('chat-section');
-                if (chatEl) chatEl.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-5 py-2.5 rounded-full font-black text-xs uppercase tracking-wider transition-all shadow-lg shadow-emerald-900/40 flex items-center gap-2 active:scale-95"
-            >
-              <MessageCircle className="w-4 h-4" />
-              <span>Falar com Vendedor</span>
-            </button>
           </div>
         </div>
       </nav>
@@ -1390,22 +1379,9 @@ export default function ShowcaseVehicleDetails() {
                 </p>
               </div>
 
-              {/* Main CTAs */}
-              <div className="space-y-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setActiveChat('seller');
-                    const chatEl = document.getElementById('chat-section');
-                    if (chatEl) chatEl.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  className="w-full py-4 bg-gradient-to-r from-emerald-500 via-teal-600 to-emerald-600 hover:opacity-95 text-white rounded-2xl font-black text-sm uppercase tracking-wider transition-all shadow-xl shadow-emerald-950/50 flex items-center justify-center gap-2.5 transform active:scale-95"
-                >
-                  <MessageCircle className="w-5 h-5 text-emerald-200" />
-                  <span>Falar com Vendedor</span>
-                </button>
-
-                {isAuthenticated && (
+              {/* Actions */}
+              {isAuthenticated && (
+                <div className="pt-3">
                   <button
                     type="button"
                     onClick={() => navigate('/meus-anuncios')}
@@ -1413,8 +1389,8 @@ export default function ShowcaseVehicleDetails() {
                   >
                     <span>Gerenciar meus anúncios</span>
                   </button>
-                )}
-              </div>
+                </div>
+              )}
             </div>
 
             {/* Simulador Inteligente: Financiamento Multi-Bancos + Troca com Troco */}
