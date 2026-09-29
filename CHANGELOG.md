@@ -2,7 +2,14 @@
 
 Registre aqui as mudanças relevantes por sprint ou marco avaliativo.
 
-## Sprint 06 - Otimização Global de Performance, Code Splitting e Varredura 360° Fotográfica (v2.4.0)
+## Sprint 06 - Otimização Global de Performance, Code Splitting, Varredura 360° e Resiliência B2B (v2.4.1)
+- **Comparador Multidimensional & Seleção de Terceiro Veículo**:
+  - Remoção do botão redundante `Adicionar 3º Carro` no canto superior direito do cabeçalho em `VehicleComparatorModal.jsx`, mantendo o layout limpo e focado.
+  - Implementação de seletor interativo embutido diretamente no 3º slot vazio com barra de busca, miniatura com foto real, especificações (ano, km) e preço em BRL, preenchendo a 3ª coluna de confronto instantaneamente.
+- **Rede de Conexão B2B & Hold Lock Resiliente**:
+  - Eliminação de travamentos da aplicação ao efetuar reservas com proteção `AbortSignal.timeout(1500)` em `PartnershipHubModal.jsx`.
+  - Mecanismo híbrido de contingência: persistência de reservas no `localStorage` (`automatch_b2b_reservations`) caso o backend ou Docker estejam offline, atualizando o catálogo B2B sem quebrar ou bloquear a interface.
+  - Cronômetro desacoplado de alta precisão atualizado a cada 1 segundo em tempo real a 60 FPS, com indicação clara de expiração.
 - **Varredura 360° Fotográfica Coerente & Perspectiva 3D Orbital**:
   - Eliminação definitiva da troca indevida de veículos entre quadrantes angulares em `Vehicle360Viewer.jsx` e `ShowcaseVehicleDetails.jsx`.
   - Sistema de resolução dinâmica de fotos que prioriza fotos angulares dedicadas (`photos360`), galeria real (`gallery`) e a foto principal autêntica do próprio veículo (`car.image`), mantendo identidade visual estrita de cor, modelo e marca em todos os 8 ângulos.
