@@ -21,6 +21,7 @@ globalThis.localStorage = {
 // Import dinâmico do módulo de dados de inventário
 const inventoryModule = await import('../src/data/inventoryData.js');
 const aiCoreModule = await import('../src/utils/aiConsultantCore.js');
+const scrollLockCoreModule = await import('../src/utils/scrollLockCore.js');
 
 describe('BATERIA DE TESTES 1: Remoção de "Diferenciais e Itens de Série"', () => {
   const showcasePath = path.join(rootDir, 'src/pages/ShowcaseVehicleDetails.jsx');
@@ -1192,4 +1193,106 @@ describe('BATERIA DE TESTES 30: Consultor IA Aprimorado & Remoção de Linha no 
     assert.ok(aiVisionContent.includes('consultor IA da Automatch'), 'ai_vision deve manter identificação de consultor');
   });
 });
+
+describe('BATERIA DE TESTES 31: Gestão de Ativos - Restauração Garantida de Rolagem (Scroll Lock com Reference Counting)', () => {
+  const { lockScroll, unlockScroll, resetScrollLock, getScrollLockCount } = scrollLockCoreModule;
+
+  const dashboardPath = path.join(rootDir, 'src/pages/Dashboard.jsx');
+  const modalPath = path.join(rootDir, 'src/components/inventory/AssetConfigurationModal.jsx');
+  const scrollLockHookPath = path.join(rootDir, 'src/utils/useScrollLock.js');
+  const scrollLockCorePath = path.join(rootDir, 'src/utils/scrollLockCore.js');
+
+  const dashboardContent = fs.readFileSync(dashboardPath, 'utf-8');
+  const modalContent = fs.readFileSync(modalPath, 'utf-8');
+  const scrollLockHookContent = fs.readFileSync(scrollLockHookPath, 'utf-8');
+  const scrollLockCoreContent = fs.readFileSync(scrollLockCorePath, 'utf-8');
+
+  beforeEach(() => {
+    resetScrollLock();
+    if (globalThis.document && globalThis.document.body) {
+      globalThis.document.body.style.overflow = '';
+      globalThis.document.body.style.paddingRight = '';
+    }
+  });
+
+  test('31.1: scrollLockCore implementa reference counting e restaura overflow quando todas as instâncias encerram', () => {
+    globalThis.document = {
+      body: { style: { overflow: '', paddingRight: '' } },
+      documentElement: { clientWidth: 1024 }
+    };
+    globalThis.window = { innerWidth: 1040 };
+
+    assert.strictEqual(getScrollLockCount(), 0);
+    assert.strictEqual(globalThis.document.body.style.overflow, '');
+
+    // Simulação do Filho (AssetConfigurationModal) travando
+    lockScroll();
+    assert.strictEqual(getScrollLockCount(), 1);
+    assert.strictEqual(globalThis.document.body.style.overflow, 'hidden');
+
+    // Simulação do Pai (Dashboard) travando concorrentemente
+    lockScroll();
+    assert.strictEqual(getScrollLockCount(), 2);
+    assert.strictEqual(globalThis.document.body.style.overflow, 'hidden');
+
+    // Filho fecha após salvar (onClose) -> primeiro unlock
+    unlockScroll();
+    assert.strictEqual(getScrollLockCount(), 1);
+    assert.strictEqual(globalThis.document.body.style.overflow, 'hidden', 'Permanece hidden enquanto houver locks pendentes');
+
+    // Pai encerra seu estado -> segundo unlock
+    unlockScroll();
+    assert.strictEqual(getScrollLockCount(), 0);
+    assert.strictEqual(globalThis.document.body.style.overflow, '', 'Deve restaurar perfeitamente para vazio/original');
+  });
+
+  test('31.2: useScrollLock e scrollLockCore estão devidamente desacoplados e exportados', () => {
+    assert.ok(scrollLockCoreContent.includes('export function lockScroll'), 'scrollLockCore deve exportar lockScroll');
+    assert.ok(scrollLockCoreContent.includes('export function unlockScroll'), 'scrollLockCore deve exportar unlockScroll');
+    assert.ok(scrollLockHookContent.includes('import { lockScroll, unlockScroll'), 'useScrollLock deve importar de scrollLockCore');
+    assert.ok(scrollLockHookContent.includes('export function useScrollLock'), 'useScrollLock deve exportar o hook');
+  });
+
+  test('31.3: Dashboard.jsx utiliza useScrollLock centralizado e não sobrescreve body.style.overflow ad-hoc', () => {
+    assert.ok(dashboardContent.includes("import useScrollLock from '../utils/useScrollLock'"), 'Dashboard deve importar useScrollLock');
+    assert.ok(dashboardContent.includes('useScrollLock(isConfigModalOpen || isB2BModalOpen)'), 'Dashboard deve invocar useScrollLock para modais');
+    assert.ok(!dashboardContent.includes('document.body.style.overflow = originalOverflow'), 'Efeito ad-hoc antigo do Dashboard foi removido');
+  });
+
+  test('31.4: AssetConfigurationModal.jsx utiliza useScrollLock centralizado', () => {
+    assert.ok(modalContent.includes("import useScrollLock from '../../utils/useScrollLock'"), 'AssetConfigurationModal deve importar useScrollLock');
+    assert.ok(modalContent.includes('useScrollLock(isOpen)'), 'AssetConfigurationModal deve invocar useScrollLock');
+    assert.ok(!modalContent.includes('const originalOverflow = document.body.style.overflow;'), 'Efeito ad-hoc antigo do modal foi removido');
+  });
+
+  test('31.5: AssetConfigurationModal.jsx implementa fechamento por tecla ESC e clique no backdrop', () => {
+    assert.ok(modalContent.includes("e.key === 'Escape'"), 'Modal deve escutar a tecla Escape');
+    assert.ok(modalContent.includes('e.target === e.currentTarget'), 'Modal deve fechar ao clicar no backdrop externo');
+  });
+
+  test('31.6: AssetConfigurationModal.jsx previne duplo clique/envio concorrente com isSubmitting e desabilita botão', () => {
+    assert.ok(modalContent.includes('isSubmitting'), 'Modal deve possuir estado isSubmitting');
+    assert.ok(modalContent.includes('disabled={hasSaved || isSubmitting}'), 'Botão Salvar deve desabilitar enquanto submete');
+    assert.ok(modalContent.includes('Salvando...'), 'Modal deve exibir feedback de carregamento');
+  });
+
+  test('31.7: Balanceamento de chaves e parênteses em Dashboard.jsx e AssetConfigurationModal.jsx é válido', () => {
+    for (const [name, content] of [['Dashboard', dashboardContent], ['AssetConfigurationModal', modalContent]]) {
+      let braces = 0, parens = 0, brackets = 0;
+      for (let i = 0; i < content.length; i++) {
+        const ch = content[i];
+        if (ch === '{') braces++;
+        else if (ch === '}') braces--;
+        else if (ch === '(') parens++;
+        else if (ch === ')') parens--;
+        else if (ch === '[') brackets++;
+        else if (ch === ']') brackets--;
+      }
+      assert.strictEqual(braces, 0, `Chaves desbalanceadas em ${name}`);
+      assert.strictEqual(parens, 0, `Parênteses desbalanceados em ${name}`);
+      assert.strictEqual(brackets, 0, `Colchetes desbalanceados em ${name}`);
+    }
+  });
+});
+
 

@@ -31,6 +31,7 @@ import StoreSelector from '../components/layout/StoreSelector';
 import StoreIdentifier from '../components/ui/StoreIdentifier';
 import AssetConfigurationModal from '../components/inventory/AssetConfigurationModal';
 import { getVehicleImageUrl, handleVehicleImageError } from '../utils/imageHelper';
+import useScrollLock from '../utils/useScrollLock';
 
 // Code-Splitting: PartnershipHubModal carregado sob demanda (economiza 50.5 kB na montagem inicial)
 const PartnershipHubModal = React.lazy(() => import('../components/partners/PartnershipHubModal'));
@@ -99,16 +100,8 @@ export default function Dashboard() {
     setCurrentPage(1);
   }, [selectedStoreId, searchQuery]);
 
-  // Bloqueio de rolagem da tela principal ao abrir modal de Gestão de Ativos ou Hub B2B
-  useEffect(() => {
-    if (isConfigModalOpen || isB2BModalOpen) {
-      const originalOverflow = document.body.style.overflow;
-      document.body.style.overflow = 'hidden';
-      return () => {
-        document.body.style.overflow = originalOverflow;
-      };
-    }
-  }, [isConfigModalOpen, isB2BModalOpen]);
+  // Bloqueio de rolagem centralizado com contagem de referências ao abrir modal de Gestão de Ativos ou Hub B2B
+  useScrollLock(isConfigModalOpen || isB2BModalOpen);
 
   const totalPages = Math.ceil(filteredInventory.length / itemsPerPage) || 1;
   const paginatedInventory = useMemo(() => {
