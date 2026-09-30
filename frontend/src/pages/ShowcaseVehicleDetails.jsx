@@ -7,7 +7,7 @@ import {
   TrendingDown, TrendingUp, Minus, Car, Truck, Battery, Share2,
   CheckCircle2, AlertTriangle, Clock, Fuel, Settings, Award, Zap, X, 
   UserPlus, LogIn, DollarSign, Calculator, Lock, Check, Scan, Wrench, Tag,
-  RotateCw, Bell, Globe2, FileText, Download, FileDown, Video, Scale, Loader2,
+  RotateCw, Bell, Globe2, FileText, Video, Scale, Loader2,
   Sparkles
 } from 'lucide-react';
 import StoreIdentifier from '../components/ui/StoreIdentifier';
@@ -73,7 +73,6 @@ export default function ShowcaseVehicleDetails() {
   const [inspectionTab, setInspectionTab] = useState('body'); // 'body' | '360' | 'video'
   const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
   const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
-  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [isDossierModalOpen, setIsDossierModalOpen] = useState(false);
   const [inspectionImage, setInspectionImage] = useState(null);
   const [isTcoOpen, setIsTcoOpen] = useState(false);
@@ -431,170 +430,6 @@ export default function ShowcaseVehicleDetails() {
     }
   };
 
-  const downloadClientDossier = (carObj, payload) => {
-    const protocol = `ATM-2026-${String(carObj?.id || '9042').slice(-4).toUpperCase()}`;
-    const dateStr = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
-    const formattedPrice = payload.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    const formattedFipe = payload.fipe_price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    const formattedKm = payload.km.toLocaleString('pt-BR') + ' km';
-
-    const htmlContent = `
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <title>Dossiê Oficial Automatch - ${payload.brand} ${payload.model}</title>
-  <style>
-    @page { size: A4; margin: 15mm; }
-    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; color: #1e293b; line-height: 1.5; margin: 0; padding: 20px; background: #fff; }
-    .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #0284c7; padding-bottom: 15px; margin-bottom: 20px; }
-    .brand { font-size: 24px; font-weight: 900; color: #0f172a; text-transform: uppercase; }
-    .brand span { color: #0284c7; }
-    .badge { background: #dcfce7; color: #166534; padding: 4px 10px; border-radius: 9999px; font-size: 11px; font-weight: 800; text-transform: uppercase; }
-    .protocol { font-size: 11px; color: #64748b; }
-    .title { font-size: 22px; font-weight: 800; color: #0f172a; margin: 0 0 5px 0; }
-    .subtitle { color: #64748b; font-size: 13px; margin-bottom: 20px; }
-    .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 25px; }
-    .card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; }
-    .card-label { font-size: 10px; text-transform: uppercase; font-weight: 700; color: #64748b; margin-bottom: 4px; }
-    .card-val { font-size: 14px; font-weight: 800; color: #0f172a; }
-    .section-title { font-size: 14px; font-weight: 800; color: #0f172a; text-transform: uppercase; border-left: 4px solid #0284c7; padding-left: 8px; margin: 20px 0 10px 0; }
-    .table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 20px; }
-    .table th, .table td { border: 1px solid #e2e8f0; padding: 8px 12px; text-align: left; }
-    .table th { background: #f1f5f9; color: #475569; font-weight: 700; }
-    .status-ok { color: #16a34a; font-weight: 700; }
-    .footer { margin-top: 40px; border-top: 1px solid #e2e8f0; padding-top: 15px; font-size: 10px; color: #94a3b8; text-align: center; }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <div>
-      <div class="brand">AUTO<span>MATCH</span>™</div>
-      <div class="protocol">Protocolo Oficial: <strong>${protocol}</strong> • Emissão: ${dateStr}</div>
-    </div>
-    <div class="badge">✓ Laudo 100% Aprovado</div>
-  </div>
-
-  <h1 class="title">${payload.brand} ${payload.model} (${payload.year})</h1>
-  <div class="subtitle">Dossiê Pericial e Histórico de Autenticidade Veicular Automatch</div>
-
-  <div class="grid">
-    <div class="card"><div class="card-label">Preço Anunciado</div><div class="card-val" style="color: #0284c7;">${formattedPrice}</div></div>
-    <div class="card"><div class="card-label">Referência Tabela FIPE</div><div class="card-val">${formattedFipe}</div></div>
-    <div class="card"><div class="card-label">Quilometragem</div><div class="card-val">${formattedKm}</div></div>
-    <div class="card"><div class="card-label">Cor / Acabamento</div><div class="card-val">${payload.color}</div></div>
-    <div class="card"><div class="card-label">Combustível</div><div class="card-val">${payload.fuel}</div></div>
-    <div class="card"><div class="card-label">Placa / Registro</div><div class="card-val">${payload.plate}</div></div>
-  </div>
-
-  <div class="section-title">Checagem Pericial e Estrutural</div>
-  <table class="table">
-    <thead>
-      <tr><th>Item Inspecionado</th><th>Resultado</th><th>Observação Técnica</th></tr>
-    </thead>
-    <tbody>
-      <tr><td>Estrutura e Longarinas</td><td class="status-ok">Aprovado 100%</td><td>Sem deformações, soldas ou recuperação</td></tr>
-      <tr><td>Pintura e Micragem</td><td class="status-ok">Conforme</td><td>Espessura de tinta em conformidade com o padrão original</td></tr>
-      <tr><td>Histórico de Leilão / Sinistro</td><td class="status-ok">Sem Registros</td><td>Não possui passagem por leilão ou histórico de perda total</td></tr>
-      <tr><td>Débitos e Restrições DETRAN</td><td class="status-ok">Regular</td><td>IPVA e licenciamento conferidos, sem restrições ativas</td></tr>
-      <tr><td>Motor e Transmissão</td><td class="status-ok">Inspecionado</td><td>Varredura eletrônica sem código de falha grave</td></tr>
-    </tbody>
-  </table>
-
-  <div class="section-title">Termo de Conformidade</div>
-  <p style="font-size: 11px; color: #475569; line-height: 1.6;">
-    Este documento certifica que o veículo ${payload.brand} ${payload.model}, ano ${payload.year}, foi periciado e validado pelos padrões de transparência radical da plataforma Automatch. O documento conta com autenticidade eletrônica registrada e verificação pública.
-  </p>
-
-  <div class="footer">
-    Documento emitido digitalmente pela plataforma Automatch — www.automatch.com.br — Autenticidade: ${protocol}
-  </div>
-</body>
-</html>`;
-
-    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const win = window.open(url, '_blank');
-    if (win) {
-      setTimeout(() => {
-        try { win.print(); } catch (e) {}
-      }, 600);
-    } else {
-      const a = document.createElement('a');
-      a.href = url;
-      const cleanName = (payload.brand + '_' + payload.model).replace(/\s+/g, '_');
-      a.download = `Dossie_Oficial_${cleanName}_${protocol}.html`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-    }
-    setTimeout(() => URL.revokeObjectURL(url), 10000);
-  };
-
-  const handleDownloadOfficialPdf = async () => {
-    setIsDownloadingPdf(true);
-    const cleanName = (car?.name || car?.marca || 'Veiculo').replace(/\s+/g, '_');
-    const numericKm = typeof car?.mileage === 'number' ? car.mileage : (parseInt(String(car?.mileage || '').replace(/\D/g, '')) || 0);
-    const numericPrice = typeof car?.price === 'number' ? car.price : (parseFloat(String(car?.price || '').replace(/[^0-9.-]+/g, '')) || 0);
-
-    const carPayload = {
-      brand: car?.brand || car?.marca || (car?.name ? car.name.split(' ')[0] : 'Veículo'),
-      model: car?.model || car?.modelo || car?.name || 'Modelo',
-      year: Number(car?.year || car?.ano) || 2024,
-      km: numericKm,
-      price: numericPrice,
-      color: car?.color || car?.cor || 'Prata',
-      fuel: car?.specs?.combustivel || 'Flex',
-      plate: car?.plate || 'ATM2026',
-      fipe_price: car?.fipePrice || (numericPrice * 1.04),
-      fipe_code: car?.fipeCode || '005391-0',
-      debt_status: car?.timeline?.find(t => t.type === 'debitos')?.description || 'Sem débitos',
-      auction_history: car?.timeline?.find(t => t.type === 'leilao')?.description || 'Não'
-    };
-
-    try {
-      // 1. Tenta POST com os dados completos do carro
-      let res = await fetch(`/api/v1/laudos/${id}/pdf`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(carPayload)
-      });
-
-      // 2. Se POST falhar, tenta GET com query params com dados do carro
-      if (!res.ok) {
-        const query = new URLSearchParams({
-          brand: carPayload.brand,
-          model: carPayload.model,
-          year: String(carPayload.year),
-          km: String(carPayload.km),
-          price: String(carPayload.price),
-          color: carPayload.color,
-          fipe_price: String(carPayload.fipe_price),
-          fipe_code: carPayload.fipe_code
-        }).toString();
-        res = await fetch(`/api/v1/laudos/${id}/pdf?${query}`);
-      }
-
-      if (res.ok) {
-        const blob = await res.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `Dossie_Oficial_Automatch_${cleanName}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        window.URL.revokeObjectURL(url);
-        return;
-      }
-      throw new Error('Falha na resposta do servidor de PDF');
-    } catch (err) {
-      console.warn('Servidor de PDF offline. Gerando Dossiê Oficial fiel no cliente...', err);
-      downloadClientDossier(car, carPayload);
-    } finally {
-      setIsDownloadingPdf(false);
-    }
-  };
 
   const analisarFotoDoCarro = async () => {
     setIsAnalyzing(true);
@@ -1170,33 +1005,6 @@ export default function ShowcaseVehicleDetails() {
                 </button>
               </div>
 
-              {/* Barra de Ação Oficial: Download do Laudo Certificado com QR Code */}
-              <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-950/60 via-slate-900/80 to-cyan-950/60 border border-blue-800/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/30 text-blue-400 flex items-center justify-center shrink-0">
-                    <FileText className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-bold text-white">Dossiê Oficial Automatch™</span>
-                      <span className="text-[10px] bg-cyan-500/20 text-cyan-300 font-bold px-2 py-0.5 rounded-full border border-cyan-500/30">
-                        PDF com QR Code
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-slate-400 mt-0.5">
-                      Documento padronizado em A4 com dados FIPE, certidão DETRAN e autenticidade eletrônica.
-                    </p>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => setIsDossierModalOpen(true)}
-                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white text-xs font-bold shadow-md shadow-blue-500/25 transition-all shrink-0 cursor-pointer active:scale-95"
-                >
-                  <FileDown className="w-4 h-4" /> Visualizar e Baixar Dossiê
-                </button>
-              </div>
 
               {/* Resultado: Laudo Cautelar com AccordionPanel */}
               <AccordionPanel isOpen={activeAccordion === 'laudo' && !!laudoData}>

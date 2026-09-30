@@ -19,9 +19,11 @@ export default function OfficialDossierModal({ isOpen, onClose, car }) {
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [pdfError, setPdfError] = useState('');
 
-  // Fechar com tecla ESC e bloquear scroll do fundo
+  // Fechar com tecla ESC, bloquear scroll do fundo e gerenciar foco acessível
   useEffect(() => {
     if (!isOpen) return;
+
+    const previousActiveElement = document.activeElement;
 
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
@@ -32,9 +34,19 @@ export default function OfficialDossierModal({ isOpen, onClose, car }) {
     window.addEventListener('keydown', handleKeyDown);
     document.body.style.overflow = 'hidden';
 
+    const timer = setTimeout(() => {
+      if (modalRef.current) {
+        modalRef.current.focus?.();
+      }
+    }, 50);
+
     return () => {
+      clearTimeout(timer);
       window.removeEventListener('keydown', handleKeyDown);
       document.body.style.overflow = 'unset';
+      if (previousActiveElement && typeof previousActiveElement.focus === 'function') {
+        previousActiveElement.focus();
+      }
     };
   }, [isOpen, onClose]);
 
@@ -337,7 +349,8 @@ export default function OfficialDossierModal({ isOpen, onClose, car }) {
           role="dialog"
           aria-modal="true"
           aria-labelledby="dossier-title"
-          className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden text-slate-900 my-auto"
+          tabIndex="-1"
+          className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-4xl max-h-[92vh] flex flex-col overflow-hidden text-slate-900 my-auto outline-none"
         >
           {/* Barra Superior de Ações do Modal */}
           <div className="bg-slate-900 text-white px-6 py-4 flex items-center justify-between shrink-0">

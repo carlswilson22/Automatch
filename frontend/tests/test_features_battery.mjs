@@ -1076,5 +1076,33 @@ describe('BATERIA DE TESTES 28: Sprint 09 Tarefa 6 - Detalhes do Anúncio (Sobre
   });
 });
 
+describe('BATERIA DE TESTES 29: Dossiê Oficial sob Demanda - Ocultação na Carga Inicial e Abertura por Botão', () => {
+  const detailsPath = path.join(rootDir, 'src/pages/ShowcaseVehicleDetails.jsx');
+  const detailsContent = fs.readFileSync(detailsPath, 'utf-8');
+  const modalPath = path.join(rootDir, 'src/components/vehicle/OfficialDossierModal.jsx');
+  const modalContent = fs.readFileSync(modalPath, 'utf-8');
 
+  test('29.1: ShowcaseVehicleDetails não renderiza banner estático do dossiê na carga inicial', () => {
+    assert.ok(!detailsContent.includes('Visualizar e Baixar Dossiê'), 'Banner fixo de download do dossiê na página deve ser removido');
+    assert.ok(!detailsContent.includes('Barra de Ação Oficial: Download do Laudo Certificado'), 'Comentário e bloco estático devem ser removidos');
+  });
 
+  test('29.2: Conteúdo do Dossiê é disparado sob demanda exclusivamente pelo botão "Dossiê Oficial Automatch"', () => {
+    assert.ok(detailsContent.includes('Dossiê Oficial Automatch'), 'Botão Dossiê Oficial Automatch deve estar presente no grid de ações');
+    assert.ok(detailsContent.includes('setIsDossierModalOpen(true)'), 'Botão deve abrir o modal ao ser clicado');
+    assert.ok(detailsContent.includes('<OfficialDossierModal'), 'OfficialDossierModal deve ser renderizado condicionalmente');
+  });
+
+  test('29.3: OfficialDossierModal mantém acessibilidade completa com ESC, tabIndex e restauração de foco', () => {
+    assert.ok(modalContent.includes("e.key === 'Escape'"), 'Modal deve fechar ao pressionar ESC');
+    assert.ok(modalContent.includes('previousActiveElement'), 'Modal deve rastrear elemento anterior para restaurar foco');
+    assert.ok(modalContent.includes('previousActiveElement.focus'), 'Foco deve ser devolvido ao botão acionador');
+    assert.ok(modalContent.includes('tabIndex="-1"'), 'Modal deve conter tabIndex para foco programático');
+  });
+
+  test('29.4: Código morto, estados e imports de PDF obsoletos foram limpos em ShowcaseVehicleDetails.jsx', () => {
+    assert.ok(!detailsContent.includes('downloadClientDossier'), 'Função duplicada downloadClientDossier deve ser removida');
+    assert.ok(!detailsContent.includes('handleDownloadOfficialPdf'), 'Função duplicada handleDownloadOfficialPdf deve ser removida');
+    assert.ok(!detailsContent.includes('isDownloadingPdf'), 'Estado redundante isDownloadingPdf deve ser removido de ShowcaseVehicleDetails');
+  });
+});
