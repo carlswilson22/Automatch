@@ -49,77 +49,42 @@ export default function NewPartnershipInviteCard({
     setIsSubmitting(true);
     setFeedback(null);
 
-    const storeToInvite = selectedStore;
-    const proposedRate = Number(commissionRate) || 3.0;
-    const notesText = proposalNotes.trim() || undefined;
-
-    const saveLocalInvite = () => {
-      try {
-        const existing = JSON.parse(localStorage.getItem('automatch_b2b_partnerships') || '[]');
-        const newLocalInvite = {
-          id: `invite_${Date.now()}`,
-          partner_store_name: storeToInvite.name,
-          partner_store_id: storeToInvite.id,
-          direction: 'sent',
-          status: 'pendente',
-          commission_rate: proposedRate,
-          notes: notesText,
-          created_at: new Date().toLocaleDateString('pt-BR')
-        };
-        const updated = [newLocalInvite, ...existing.filter(i => i.partner_store_id !== storeToInvite.id)];
-        localStorage.setItem('automatch_b2b_partnerships', JSON.stringify(updated));
-      } catch (e) {
-        console.error('Erro ao salvar parceria local:', e);
-      }
-    };
-
     try {
       const res = await fetch('/api/partnerships/invite', {
         method: 'POST',
         headers: getAuthHeaders(),
         body: JSON.stringify({
-          receiver_store_id: storeToInvite.id,
-          commission_rate: proposedRate,
-          notes: notesText
+          receiver_store_id: selectedStore.id,
+          commission_rate: Number(commissionRate) || 3.0,
+          notes: proposalNotes.trim() || undefined
         })
       });
 
+      const data = await res.json();
+
       if (res.ok) {
-        saveLocalInvite();
         setFeedback({ 
           type: 'success', 
-          text: `Convite enviado com sucesso para ${storeToInvite.name}! Aguardando aprovação.` 
+          text: `Convite enviado com sucesso para ${selectedStore.name}! Aguardando aprovação.` 
         });
         setSelectedStore(null);
         setProposalNotes('');
         setCommissionRate(3.0);
         setSearchTerm('');
-        if (onInviteSuccess) onInviteSuccess();
+        if (onInviteSuccess) {
+          onInviteSuccess();
+        }
       } else {
-        // Fallback gracioso caso a rota remota retorne erro (ex: mock mode sem backend ativo)
-        saveLocalInvite();
         setFeedback({ 
-          type: 'success', 
-          text: `Solicitação de parceria enviada com sucesso para ${storeToInvite.name}! Registrada na Rede B2B.` 
+          type: 'error', 
+          text: data.detail || 'Não foi possível enviar o convite de parceria.' 
         });
-        setSelectedStore(null);
-        setProposalNotes('');
-        setCommissionRate(3.0);
-        setSearchTerm('');
-        if (onInviteSuccess) onInviteSuccess();
       }
     } catch (err) {
-      // Falha de rede / offline: salva localmente com sucesso transparente
-      saveLocalInvite();
       setFeedback({ 
-        type: 'success', 
-        text: `Solicitação de parceria enviada com sucesso para ${storeToInvite.name}! Registrada na Rede B2B.` 
+        type: 'error', 
+        text: 'Erro de conexão ao enviar o pedido de parceria.' 
       });
-      setSelectedStore(null);
-      setProposalNotes('');
-      setCommissionRate(3.0);
-      setSearchTerm('');
-      if (onInviteSuccess) onInviteSuccess();
     } finally {
       setIsSubmitting(false);
     }

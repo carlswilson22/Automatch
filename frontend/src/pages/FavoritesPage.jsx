@@ -170,6 +170,11 @@ export default function FavoritesPage() {
                 <span>Comparar Veículos ({selectedForCompare.length > 0 ? selectedForCompare.length : '2'})</span>
               </button>
             )}
+            <div className="flex items-center gap-2 text-sm text-slate-400">
+              <Heart className="w-5 h-5 text-red-400 fill-red-400" />
+              <span className="font-bold text-white">{favoriteCars.length}</span>
+              <span className="hidden sm:inline">curtido(s)</span>
+            </div>
           </div>
         </div>
       </nav>
@@ -186,10 +191,7 @@ export default function FavoritesPage() {
           <div>
             <h1 className="text-3xl font-black text-white mb-2 flex items-center gap-3">
               <Heart className="w-8 h-8 text-red-400 fill-red-400" />
-              <span>Meus Carros Curtidos</span>
-              <span className="text-xs font-black px-2.5 py-1 rounded-full bg-red-500/20 text-red-400 border border-red-500/30">
-                {favoriteCars.length}
-              </span>
+              Meus Carros Curtidos
             </h1>
             <p className="text-slate-400 text-sm">
               Os veículos que você marcou como favoritos aparecem aqui para acompanhamento e comparação técnica.

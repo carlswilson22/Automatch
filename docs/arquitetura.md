@@ -122,11 +122,3 @@ Em conformidade com as melhores práticas de segurança de contêineres, o siste
 - **Decisão**: Manter o `docker-compose.yml` voltado para DX (live-reload com volumes) e criar `docker-compose.prod.yml` com build imutável e multi-workers.
 - **Justificativa**: Evita vazamento de portas de banco de dados para a internet em servidores de produção e padroniza a gestão de segredos através do `.env.example`.
 
-### 7.3. ADR-05: Rede de Conexão B2B e Hold Lock de Estoque
-- **Decisão**: Criar módulo de estoque compartilhado entre lojas credenciadas (`/api/partnerships`) com bloqueio temporário de 30 minutos (`hold lock`) e contingência de sincronização no cliente via `localStorage`.
-- **Justificativa**: Garante liquidez entre concessionárias sem risco de venda simultânea de mesmo chassi (double-booking).
-
-### 7.4. ADR-06: Code-Splitting Sob Demanda e Desoneração de GPU (Core Web Vitals)
-- **Decisão**: Carregar todos os modais pesados (`VehicleComparatorModal`, `PartnershipHubModal`, `PriceAlertModal`) sob demanda com `React.lazy()` e eliminar filtros de desfoque contínuo `backdrop-blur`.
-- **Justificativa**: Reduz o chunk inicial do JavaScript em 40% e assegura taxa de quadros estável em 60 FPS mesmo em hardwares integrados.
-

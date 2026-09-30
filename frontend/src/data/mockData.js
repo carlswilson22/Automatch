@@ -10,16 +10,6 @@ export const mockCars = [
     images: [
       '/images/FotoCorollaCross.jpg',
     ],
-    photos360: [
-      '/images/FotoCorollaCross.jpg',
-      '/images/carro_360_diagonal.jpg',
-      '/images/carro_360_lateral.jpg',
-      '/images/FotoToyotaCorolla.jpg',
-      '/images/carro_360_traseira.jpg',
-      '/images/carro_360_diagonal.jpg',
-      '/images/carro_360_lateral.jpg',
-      '/images/carro_360_frente.jpg'
-    ],
     laudoStatus: 'approved_100',
     storeId: 'store-1',
     timeline: [
@@ -56,16 +46,6 @@ export const mockCars = [
     mileage: 18500,
     images: [
       '/images/FotoPoloTSI.jpg',
-    ],
-    photos360: [
-      '/images/FotoPoloTSI.jpg',
-      '/images/carro_360_diagonal.jpg',
-      '/images/carro_360_lateral.jpg',
-      '/images/FotoGolfGTI.jpeg',
-      '/images/carro_360_traseira.jpg',
-      '/images/carro_360_diagonal.jpg',
-      '/images/carro_360_lateral.jpg',
-      '/images/carro_360_frente.jpg'
     ],
     laudoStatus: 'approved_100',
     storeId: 'store-2',
@@ -104,16 +84,6 @@ export const mockCars = [
     images: [
       '/images/FotoHyundaiHB20.jpg',
     ],
-    photos360: [
-      '/images/FotoHyundaiHB20.jpg',
-      '/images/carro_360_diagonal.jpg',
-      '/images/carro_360_lateral.jpg',
-      '/images/FotoHondaCivic.jpeg',
-      '/images/carro_360_traseira.jpg',
-      '/images/carro_360_diagonal.jpg',
-      '/images/carro_360_lateral.jpg',
-      '/images/carro_360_frente.jpg'
-    ],
     laudoStatus: 'approved_100',
     storeId: 'store-3',
     timeline: [
@@ -151,16 +121,6 @@ export const mockCars = [
     images: [
       '/images/FotoChevroletTracker.jpg',
     ],
-    photos360: [
-      '/images/FotoChevroletTracker.jpg',
-      '/images/carro_360_diagonal.jpg',
-      '/images/carro_360_lateral.jpg',
-      '/images/FotoJeepCompassLimited.jpeg',
-      '/images/carro_360_traseira.jpg',
-      '/images/carro_360_diagonal.jpg',
-      '/images/carro_360_lateral.jpg',
-      '/images/carro_360_frente.jpg'
-    ],
     laudoStatus: 'approved_100',
     storeId: 'store-1',
     timeline: [
@@ -197,16 +157,6 @@ export const mockCars = [
     mileage: 3200,
     images: [
       '/images/FotoFiatPulse.jpg',
-    ],
-    photos360: [
-      '/images/FotoFiatPulse.jpg',
-      '/images/carro_360_diagonal.jpg',
-      '/images/carro_360_lateral.jpg',
-      '/images/FotoGolfGTI.jpeg',
-      '/images/carro_360_traseira.jpg',
-      '/images/carro_360_diagonal.jpg',
-      '/images/carro_360_lateral.jpg',
-      '/images/carro_360_frente.jpg'
     ],
     laudoStatus: 'approved_100',
     storeId: 'store-2',

@@ -735,6 +735,17 @@ export default function ShowcaseVehicleDetails() {
                 {isOpeningComparator ? 'Abrindo...' : 'Comparar'}
               </span>
             </button>
+            <button 
+              onClick={() => {
+                setActiveChat('seller');
+                const chatEl = document.getElementById('chat-section');
+                if (chatEl) chatEl.scrollIntoView({ behavior: 'smooth' });
+              }}
+              className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white px-5 py-2.5 rounded-full font-black text-xs uppercase tracking-wider transition-all shadow-lg shadow-emerald-900/40 flex items-center gap-2 active:scale-95"
+            >
+              <MessageCircle className="w-4 h-4" />
+              <span>Falar com Vendedor</span>
+            </button>
           </div>
         </div>
       </nav>
@@ -986,19 +997,6 @@ export default function ShowcaseVehicleDetails() {
                   </motion.div>
                 )}
               </AnimatePresence>
-
-              {/* Disclaimer Preventivo de IA Responsável & Vistoria Presencial */}
-              <div className="p-4 bg-amber-500/10 border-t border-amber-500/30 flex items-start gap-3 text-xs text-amber-200/90 shadow-inner">
-                <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-                <div className="space-y-1">
-                  <h5 className="font-bold text-amber-300 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
-                    Aviso Importante: Scanner Preliminar por IA
-                  </h5>
-                  <p className="text-[11px] text-slate-300 leading-relaxed">
-                    O Scanner Pericial utiliza Inteligência Artificial para análise visual preliminar baseada em imagens. <strong>Não confie 100% no diagnóstico da IA</strong>: o recurso tem caráter consultivo e não substitui a vistoria mecânica e estrutural presencial. Recomendamos sempre verificar o veículo pessoalmente antes de concluir a compra.
-                  </p>
-                </div>
-              </div>
             </div>
             )}
 
@@ -1018,25 +1016,25 @@ export default function ShowcaseVehicleDetails() {
                 </div>
               </div>
 
-              {/* Botões de Ação das APIs Oficiais (Grid Compacto de 4 Colunas com Dossiê) */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3">
+              {/* Botões de Ação das APIs Oficiais */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                 <button
                   type="button"
                   onClick={() => toggleAccordion('laudo')}
                   disabled={isLaudoLoading}
-                  className={`p-3 rounded-2xl border text-left transition-all flex flex-col justify-between group cursor-pointer ${
+                  className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between group ${
                     activeAccordion === 'laudo'
                       ? 'bg-blue-950/80 border-blue-500 shadow-lg shadow-blue-900/30 scale-[1.01]'
                       : 'bg-blue-950/50 hover:bg-blue-900/60 border-blue-800/50'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <Award className="w-4.5 h-4.5 text-blue-400 group-hover:scale-110 transition-transform" />
-                    <span className="text-[9px] bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full font-bold">FIPE + Laudo</span>
+                    <Award className="w-5 h-5 text-blue-400 group-hover:scale-110 transition-transform" />
+                    <span className="text-[10px] bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded-full font-bold">FIPE + Laudo</span>
                   </div>
                   <div>
-                    <h4 className="text-xs sm:text-sm font-bold text-white leading-tight">Laudo Cautelar</h4>
-                    <p className="text-[10px] text-slate-400 mt-0.5 line-clamp-1">{isLaudoLoading ? 'Consultando...' : 'Estrutura e pintura'}</p>
+                    <h4 className="text-sm font-bold text-white">Laudo Cautelar</h4>
+                    <p className="text-[11px] text-slate-400">{isLaudoLoading ? 'Consultando FIPE...' : 'Verificar estrutura e pintura'}</p>
                   </div>
                 </button>
 
@@ -1044,126 +1042,78 @@ export default function ShowcaseVehicleDetails() {
                   type="button"
                   onClick={() => toggleAccordion('detran')}
                   disabled={isDetranLoading}
-                  className={`p-3 rounded-2xl border text-left transition-all flex flex-col justify-between group cursor-pointer ${
+                  className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between group ${
                     activeAccordion === 'detran'
                       ? 'bg-emerald-950/80 border-emerald-500 shadow-lg shadow-emerald-900/30 scale-[1.01]'
                       : 'bg-emerald-950/40 hover:bg-emerald-900/50 border-emerald-800/50'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <ShieldCheck className="w-4.5 h-4.5 text-emerald-400 group-hover:scale-110 transition-transform" />
-                    <span className="text-[9px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-bold">DETRAN</span>
+                    <ShieldCheck className="w-5 h-5 text-emerald-400 group-hover:scale-110 transition-transform" />
+                    <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-bold">DETRAN</span>
                   </div>
                   <div>
-                    <h4 className="text-xs sm:text-sm font-bold text-white leading-tight">Certidão DETRAN</h4>
-                    <p className="text-[10px] text-slate-400 mt-0.5 line-clamp-1">{isDetranLoading ? 'Consultando...' : 'Chassi e débitos'}</p>
+                    <h4 className="text-sm font-bold text-white">Certidão DETRAN</h4>
+                    <p className="text-[11px] text-slate-400">{isDetranLoading ? 'Consultando órgão...' : 'Checar chassi, débitos e gravame'}</p>
                   </div>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => toggleAccordion('fipe')}
-                  className={`p-3 rounded-2xl border text-left transition-all flex flex-col justify-between group cursor-pointer ${
+                  className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between group ${
                     activeAccordion === 'fipe' 
                       ? 'bg-cyan-950/70 border-cyan-500 shadow-lg shadow-cyan-900/30 scale-[1.01]' 
                       : 'bg-slate-950/60 hover:bg-slate-900/80 border-slate-800'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <Tag className="w-4.5 h-4.5 text-cyan-400 group-hover:scale-110 transition-transform" />
-                    <span className="text-[9px] bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded-full font-bold">FIPE Oficial</span>
+                    <Tag className="w-5 h-5 text-cyan-400 group-hover:scale-110 transition-transform" />
+                    <span className="text-[10px] bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded-full font-bold">FIPE Oficial</span>
                   </div>
                   <div>
-                    <h4 className="text-xs sm:text-sm font-bold text-white leading-tight">Preço FIPE</h4>
-                    <p className="text-[10px] text-slate-400 mt-0.5 line-clamp-1">Referência oficial</p>
-                  </div>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => toggleAccordion('dossie')}
-                  className={`p-3 rounded-2xl border text-left transition-all flex flex-col justify-between group cursor-pointer ${
-                    activeAccordion === 'dossie'
-                      ? 'bg-indigo-950/80 border-indigo-500 shadow-lg shadow-indigo-900/30 scale-[1.01]'
-                      : 'bg-indigo-950/40 hover:bg-indigo-900/50 border-indigo-800/50'
-                  }`}
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <FileText className="w-4.5 h-4.5 text-indigo-400 group-hover:scale-110 transition-transform" />
-                    <span className="text-[9px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full font-bold">Oficial PDF</span>
-                  </div>
-                  <div>
-                    <h4 className="text-xs sm:text-sm font-bold text-white leading-tight">Dossiê Oficial</h4>
-                    <p className="text-[10px] text-slate-400 mt-0.5 line-clamp-1">Laudo consolidado</p>
+                    <h4 className="text-sm font-bold text-white">Preço FIPE</h4>
+                    <p className="text-[11px] text-slate-400">Referência oficial de mercado</p>
                   </div>
                 </button>
               </div>
 
-              {/* Resultado: Dossiê Oficial com AccordionPanel */}
-              <AccordionPanel isOpen={activeAccordion === 'dossie'}>
-                <div className="p-5 rounded-3xl bg-slate-950 border border-indigo-900/50 shadow-2xl space-y-4">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
-                    <div className="flex items-center gap-2.5">
-                      <div className="w-9 h-9 rounded-xl bg-indigo-600/20 border border-indigo-500/30 text-indigo-400 flex items-center justify-center shrink-0">
-                        <FileText className="w-4.5 h-4.5" />
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-sm text-white">Dossiê Oficial de Transparência Automatch™</h4>
-                        <p className="text-[11px] text-slate-400">Documento unificado com dados periciais, FIPE e autenticidade eletrônica</p>
-                      </div>
-                    </div>
-                    <span className="text-[11px] bg-indigo-500/20 text-indigo-300 font-mono font-bold px-3 py-1 rounded-full border border-indigo-500/30 w-fit">
-                      Protocolo: ATM-{car.id || '2026'}-OFICIAL
-                    </span>
+              {/* Barra de Ação Oficial: Download do Laudo Certificado com QR Code */}
+              <div className="p-4 rounded-2xl bg-gradient-to-r from-blue-950/60 via-slate-900/80 to-cyan-950/60 border border-blue-800/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-lg">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-600/20 border border-blue-500/30 text-blue-400 flex items-center justify-center shrink-0">
+                    <FileText className="w-5 h-5" />
                   </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                    <div className="bg-slate-900/90 p-3.5 rounded-xl border border-slate-800 space-y-1">
-                      <span className="text-slate-400 block font-semibold text-[11px]">Procedência & Histórico:</span>
-                      <span className="text-emerald-400 font-bold block flex items-center gap-1">
-                        <CheckCircle2 className="w-3.5 h-3.5" /> 100% Auditada e Aprovada
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-white">Dossiê Oficial Automatch™</span>
+                      <span className="text-[10px] bg-cyan-500/20 text-cyan-300 font-bold px-2 py-0.5 rounded-full border border-cyan-500/30">
+                        PDF com QR Code
                       </span>
-                      <span className="text-slate-400 text-[10px] block">Sem leilão, sem sinistros graves registrados</span>
                     </div>
-
-                    <div className="bg-slate-900/90 p-3.5 rounded-xl border border-slate-800 space-y-1">
-                      <span className="text-slate-400 block font-semibold text-[11px]">Integridade da Lataria:</span>
-                      <span className="text-white font-bold block">
-                        Estrutura Original de Fábrica
-                      </span>
-                      <span className="text-slate-400 text-[10px] block">Longarinas e micragem de tinta em conformidade</span>
-                    </div>
-
-                    <div className="bg-slate-900/90 p-3.5 rounded-xl border border-slate-800 space-y-1">
-                      <span className="text-slate-400 block font-semibold text-[11px]">Formato do Arquivo:</span>
-                      <span className="text-indigo-300 font-bold block">PDF A4 com QR Code Autenticado</span>
-                      <span className="text-slate-400 text-[10px] block">Certidão pericial com validade para transferência</span>
-                    </div>
-                  </div>
-
-                  <div className="pt-3 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <p className="text-[11px] text-slate-400">
-                      Gere o relatório completo em formato PDF padrão A4 com QR Code de verificação pública:
+                    <p className="text-[11px] text-slate-400 mt-0.5">
+                      Documento padronizado em A4 com dados FIPE, certidão DETRAN e autenticidade eletrônica.
                     </p>
-                    <button
-                      type="button"
-                      onClick={handleDownloadOfficialPdf}
-                      disabled={isDownloadingPdf}
-                      className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold shadow-md shadow-indigo-500/25 transition-all disabled:opacity-50 shrink-0 cursor-pointer"
-                    >
-                      {isDownloadingPdf ? (
-                        <>
-                          <RotateCw className="w-4 h-4 animate-spin" /> Gerando PDF...
-                        </>
-                      ) : (
-                        <>
-                          <FileDown className="w-4 h-4" /> Baixar Dossiê Oficial (PDF)
-                        </>
-                      )}
-                    </button>
                   </div>
                 </div>
-              </AccordionPanel>
+
+                <button
+                  type="button"
+                  onClick={handleDownloadOfficialPdf}
+                  disabled={isDownloadingPdf}
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white text-xs font-bold shadow-md shadow-blue-500/25 transition-all disabled:opacity-50 shrink-0 cursor-pointer"
+                >
+                  {isDownloadingPdf ? (
+                    <>
+                      <RotateCw className="w-4 h-4 animate-spin" /> Gerando PDF...
+                    </>
+                  ) : (
+                    <>
+                      <FileDown className="w-4 h-4" /> Baixar Dossiê Oficial
+                    </>
+                  )}
+                </button>
+              </div>
 
               {/* Resultado: Laudo Cautelar com AccordionPanel */}
               <AccordionPanel isOpen={activeAccordion === 'laudo' && !!laudoData}>
@@ -1355,23 +1305,6 @@ export default function ShowcaseVehicleDetails() {
                   ))}
                 </div>
               </div>
-
-              {/* Destaques e Equipamentos do Veículo */}
-              {car.tags && car.tags.length > 0 && (
-                <div className="pt-3 border-t border-slate-800">
-                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-2.5">
-                    Diferenciais e Itens de Série
-                  </span>
-                  <div className="flex flex-wrap gap-2">
-                    {car.tags.map((tag, idx) => (
-                      <span key={idx} className="text-xs font-bold text-blue-300 bg-blue-500/10 border border-blue-500/20 px-3 py-1.5 rounded-xl flex items-center gap-1.5">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-blue-400" />
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Calculadora Interativa de Custo Total de Posse (TCO) — No lugar da descrição antiga */}
@@ -1440,9 +1373,22 @@ export default function ShowcaseVehicleDetails() {
                 </p>
               </div>
 
-              {/* Actions */}
-              {isAuthenticated && (
-                <div className="pt-3">
+              {/* Main CTAs */}
+              <div className="space-y-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveChat('seller');
+                    const chatEl = document.getElementById('chat-section');
+                    if (chatEl) chatEl.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="w-full py-4 bg-gradient-to-r from-emerald-500 via-teal-600 to-emerald-600 hover:opacity-95 text-white rounded-2xl font-black text-sm uppercase tracking-wider transition-all shadow-xl shadow-emerald-950/50 flex items-center justify-center gap-2.5 transform active:scale-95"
+                >
+                  <MessageCircle className="w-5 h-5 text-emerald-200" />
+                  <span>Falar com Vendedor</span>
+                </button>
+
+                {isAuthenticated && (
                   <button
                     type="button"
                     onClick={() => navigate('/meus-anuncios')}
@@ -1450,8 +1396,8 @@ export default function ShowcaseVehicleDetails() {
                   >
                     <span>Gerenciar meus anúncios</span>
                   </button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
 
             {/* Simulador Inteligente: Financiamento Multi-Bancos + Troca com Troco */}

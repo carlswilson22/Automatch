@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import StoreIdentifier from '../components/ui/StoreIdentifier';
+import MarketPriceIndicator from '../components/vehicle/MarketPriceIndicator';
 import PriceDropBadge from '../components/vehicle/PriceDropBadge';
 import { stores } from '../data/inventoryData';
 import { useAuth } from '../contexts/AuthContext';
@@ -156,6 +157,9 @@ const CarCard = React.memo(({ car, index, viewMode }) => {
               <p className="text-2xl font-black text-brand-blue whitespace-nowrap">{formatPrice(car.price)}</p>
             </div>
           </div>
+          <div className="my-2">
+            <MarketPriceIndicator price={car.price} fipePrice={car.fipePrice} variant="badge" />
+          </div>
           <div className="flex gap-4 my-3 text-xs text-slate-500 font-medium flex-wrap">
             <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {car.year}</span>
             <span className="flex items-center gap-1"><Gauge className="w-3.5 h-3.5" /> {formatMileage(car.mileage)}</span>
@@ -224,16 +228,23 @@ const CarCard = React.memo(({ car, index, viewMode }) => {
             </div>
           ))}
         </div>
+        <div className="my-2">
+          <MarketPriceIndicator price={car.price} fipePrice={car.fipePrice} variant="badge" />
+        </div>
         <p className="text-sm text-slate-600 leading-relaxed mb-3 line-clamp-2">{car.description}</p>
         <div className="flex flex-wrap gap-1.5 mt-auto mb-3">
           {car.tags.map(t => <span key={t} className="text-[10px] font-bold text-brand-blue bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full uppercase tracking-wider">{t}</span>)}
         </div>
-        <div className="flex justify-end items-center text-[11px] text-slate-400 font-medium mb-3 border-t border-slate-100 pt-2">
+        <div className="flex justify-between items-center text-[11px] text-slate-400 font-medium mb-3 border-t border-slate-100 pt-2">
+          <span>{car.seller}</span>
           <span className="flex items-center gap-0.5"><MapPin className="w-3 h-3" /> {car.location}</span>
         </div>
-        <div>
-          <button onClick={(e) => { e.stopPropagation(); navigate(`/encontrar/${car.id}`); }} className="w-full py-2.5 bg-brand-blue text-white rounded-xl font-semibold text-sm hover:bg-blue-700 transition-colors flex items-center justify-center gap-1.5 shadow-sm active:scale-95">
+        <div className="flex gap-2">
+          <button onClick={(e) => { e.stopPropagation(); navigate(`/encontrar/${car.id}`); }} className="flex-1 py-2.5 bg-brand-blue text-white rounded-xl font-semibold text-sm hover:bg-blue-700 transition-colors flex items-center justify-center gap-1.5">
             <Eye className="w-4 h-4" /> Ver Detalhes
+          </button>
+          <button aria-label="Ver localização" className="py-2.5 px-3 bg-slate-100 text-slate-600 rounded-xl text-sm hover:bg-slate-200 transition-colors" onClick={e => e.stopPropagation()}>
+            <MapPin className="w-4 h-4" />
           </button>
         </div>
       </div>
@@ -476,55 +487,17 @@ const ShowcaseCatalog = () => {
   const results = useMemo(() => {
     let cars = allCars;
 
-    // 1. Busca textual inteligente reativa (nome, marca, modelo, cor, descrição, tags e carroceria)
-    const q = (searchQuery || '').trim().toLowerCase();
-    if (q) {
-      cars = cars.filter(c => 
-        (c.name && c.name.toLowerCase().includes(q)) ||
-        (c.brand && c.brand.toLowerCase().includes(q)) ||
-        (c.model && c.model.toLowerCase().includes(q)) ||
-        (c.color && c.color.toLowerCase().includes(q)) ||
-        (c.bodyType && c.bodyType.toLowerCase().includes(q)) ||
-        (c.description && c.description.toLowerCase().includes(q)) ||
-        (c.tags && c.tags.some(t => t.toLowerCase().includes(q)))
-      );
-    }
-
-    // 2. Filtro de Loja
+    // Safety net: client-side store filter for local/static fallback items
     if (filterStore !== 'Todas') {
       cars = cars.filter(c => c.storeId === filterStore);
     }
 
-    // 3. Filtro de Marca (se não houver veículos cadastrados, exibe o estado vazio)
-    if (filterBrand !== 'Todas') {
-      cars = cars.filter(c => c.brand && c.brand.toLowerCase() === filterBrand.toLowerCase());
-    }
-
-    // 4. Filtro de Ano
-    if (filterYear !== 'Todos') {
-      cars = cars.filter(c => String(c.year) === String(filterYear));
-    }
-
-    // 5. Filtro de Faixa de Preço
-    if (filterPrice !== 'Qualquer') {
-      const pr = PRICE_RANGES.find(r => r.label === filterPrice);
-      if (pr) {
-        cars = cars.filter(c => c.price >= pr.min && c.price <= pr.max);
-      }
-    }
-
-    // 6. Filtro de Tipo / Carroceria
-    if (filterType !== 'Todos') {
-      cars = cars.filter(c => c.bodyType && c.bodyType.toLowerCase() === filterType.toLowerCase());
-    }
-
-    // 7. Filtro de Quilometragem
+    // Client-side complementary filters
+    if (filterType !== 'Todos') cars = cars.filter(c => c.bodyType === filterType);
     const kmRange = KM_RANGES.find(r => r.label === filterKm);
-    if (kmRange && kmRange.max < Infinity) {
-      cars = cars.filter(c => Number(c.mileage || 0) <= kmRange.max);
-    }
+    if (kmRange && kmRange.max < Infinity) cars = cars.filter(c => c.mileage <= kmRange.max);
 
-    // 8. Ordenação
+    // Sort
     return [...cars].sort((a, b) => {
       if (sortBy === 'price-asc') return a.price - b.price;
       if (sortBy === 'price-desc') return b.price - a.price;
@@ -532,7 +505,7 @@ const ShowcaseCatalog = () => {
       if (sortBy === 'km') return a.mileage - b.mileage;
       return (b.featured ? 1 : 0) - (a.featured ? 1 : 0);
     });
-  }, [allCars, searchQuery, filterStore, filterBrand, filterYear, filterPrice, filterType, filterKm, sortBy]);
+  }, [allCars, filterStore, filterType, filterKm, sortBy]);
 
   // Page change handler with smooth scroll to top of catalog
   const handlePageChange = (newPage) => {
@@ -587,24 +560,15 @@ const ShowcaseCatalog = () => {
             <ShieldCheck className="w-7 h-7 text-brand-blue" />
             <span className="text-lg font-black tracking-tight text-brand-navy hidden sm:block">AUTOMATCH</span>
           </div>
-          <div className="flex-1 max-w-lg mx-2 sm:mx-auto">
+          <div className="flex-1 max-w-lg mx-auto hidden md:block">
             <div className="relative">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
-              <input 
-                id="catalog-search-input"
-                type="text" 
-                value={searchQuery} 
-                onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Buscar por marca, modelo, cor ou tag..."
-                className="w-full bg-slate-50 border border-slate-200 rounded-full pl-10 pr-10 py-2 sm:py-2.5 text-xs sm:text-sm focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue focus:bg-white focus:outline-none transition-all" 
-              />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
+                placeholder="Buscar por nome, tipo ou cor..."
+                className="w-full bg-slate-50 border border-slate-200 rounded-full pl-10 pr-10 py-2.5 text-sm focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue focus:outline-none transition-all" />
               {searchQuery && (
-                <button 
-                  onClick={() => setSearchQuery('')} 
-                  aria-label="Limpar campo de busca" 
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
-                >
-                  <X className="w-4 h-4" />
+                <button onClick={() => setSearchQuery('')} aria-label="Limpar campo de busca" className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <X className="w-4 h-4 text-slate-400 hover:text-slate-600" />
                 </button>
               )}
             </div>
@@ -765,6 +729,7 @@ const ShowcaseCatalog = () => {
               {filterYear !== 'Todos' && <FilterChip label={`Ano: ${filterYear}`} onRemove={() => setFilterYear('Todos')} />}
               {filterPrice !== 'Qualquer' && <FilterChip label={filterPrice} onRemove={() => setFilterPrice('Qualquer')} />}
               {filterKm !== 'Qualquer' && <FilterChip label={filterKm} onRemove={() => setFilterKm('Qualquer')} />}
+              <button onClick={resetFilters} className="text-xs text-red-500 font-medium hover:underline ml-1">Limpar todos</button>
             </div>
           )}
 

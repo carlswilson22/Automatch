@@ -11,22 +11,17 @@ import NewPartnershipInviteCard from './NewPartnershipInviteCard';
 import B2BInventorySkeleton from './B2BInventorySkeleton';
 import { getVehicleImageUrl, handleVehicleImageError } from '../../utils/imageHelper';
 import { showcaseCars } from '../../data/showcaseData';
-import { stores } from '../../data/inventoryData';
 
-const B2BInventoryCard = memo(function B2BInventoryCard({ car, onReserve, isReserving = false }) {
+const B2BInventoryCard = memo(function B2BInventoryCard({ car, onReserve }) {
   const piso = car.valor_minimo_repasse || (car.price * 0.90);
   const [markup, setMarkup] = useState(5000);
   const precoFinalCliente = piso + Number(markup || 0);
   const isReserved = car.status_reserva === 'reservado';
-  const isClosing = car.status_reserva === 'em_fechamento';
-  const isLocked = isReserved || isClosing;
 
   return (
     <div
       className={`bg-white rounded-3xl border transition-all overflow-hidden flex flex-col ${
-        isClosing
-          ? 'border-amber-300 bg-slate-50/80 opacity-60 grayscale-[15%] cursor-not-allowed'
-          : isReserved
+        isReserved
           ? 'border-amber-200 opacity-80'
           : 'border-slate-200 hover:border-blue-300 hover:shadow-lg'
       }`}
@@ -44,15 +39,11 @@ const B2BInventoryCard = memo(function B2BInventoryCard({ car, onReserve, isRese
           <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-slate-900/90 text-white border border-white/10">
             {car.store_name}
           </span>
-          {isClosing ? (
-            <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500 text-white flex items-center gap-1 shadow-sm">
-              <CheckCircle2 className="w-3 h-3" /> Em Fechamento
-            </span>
-          ) : isReserved ? (
+          {isReserved && (
             <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-500 text-white flex items-center gap-1">
               <Clock className="w-3 h-3" /> Em Reserva
             </span>
-          ) : null}
+          )}
         </div>
         <div className="absolute bottom-3 right-3 px-2.5 py-1 rounded-xl bg-white/95 text-[11px] font-bold text-slate-700 shadow-sm border border-slate-200/60">
           {car.year} • {Number(car.km).toLocaleString('pt-BR')} km
@@ -80,7 +71,7 @@ const B2BInventoryCard = memo(function B2BInventoryCard({ car, onReserve, isRese
             <div className="pt-2 border-t border-slate-200/80">
               <div className="flex items-center justify-between mb-1">
                 <label className="text-[11px] font-black uppercase text-slate-400">
-                  Margem Comercial do Lojista:
+                  Sua Margem Lojista:
                 </label>
                 <span className="text-xs font-bold text-emerald-600">
                   + R$ {Number(markup).toLocaleString('pt-BR')}
@@ -92,16 +83,9 @@ const B2BInventoryCard = memo(function B2BInventoryCard({ car, onReserve, isRese
                 max="25000"
                 step="500"
                 value={markup}
-                disabled={isLocked}
                 onChange={(e) => setMarkup(Number(e.target.value))}
-                className={`w-full accent-emerald-600 ${isLocked ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                className="w-full accent-emerald-600 cursor-pointer"
               />
-              {isLocked && (
-                <div className="flex items-center gap-1.5 mt-1.5 px-2.5 py-1.5 bg-amber-50 border border-amber-200/80 rounded-xl text-[10px] font-bold text-amber-800">
-                  <Lock className="w-3 h-3 text-amber-600 shrink-0" />
-                  <span>Margem fixada durante o período de reserva / fechamento.</span>
-                </div>
-              )}
             </div>
 
             {/* Suggested Price to Customer */}
@@ -117,38 +101,15 @@ const B2BInventoryCard = memo(function B2BInventoryCard({ car, onReserve, isRese
         {/* Action Button */}
         <button
           onClick={() => onReserve(car, markup)}
-          disabled={isLocked || isReserving}
+          disabled={isReserved}
           className={`w-full mt-4 py-3 rounded-2xl font-bold text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all cursor-pointer ${
-            isReserving
-              ? 'bg-blue-400 text-white cursor-wait'
-              : isClosing
-              ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
-              : isReserved
+            isReserved
               ? 'bg-slate-100 text-slate-400 cursor-not-allowed'
               : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white shadow-lg shadow-blue-500/20 active:scale-95'
           }`}
         >
-          {isReserving ? (
-            <>
-              <RefreshCw className="w-4 h-4 animate-spin" />
-              Processando...
-            </>
-          ) : isClosing ? (
-            <>
-              <CheckCircle2 className="w-4 h-4 text-amber-600" />
-              Em Fechamento
-            </>
-          ) : isReserved ? (
-            <>
-              <Clock className="w-4 h-4 text-amber-600" />
-              Veículo em Reserva
-            </>
-          ) : (
-            <>
-              <Clock className="w-4 h-4" />
-              Reservar para Cliente
-            </>
-          )}
+          <Clock className="w-4 h-4" />
+          {isReserved ? 'Veículo Reservado' : 'Reservar para Cliente (Hold Lock)'}
         </button>
       </div>
     </div>
@@ -179,29 +140,12 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
   const [hasMoreCars, setHasMoreCars] = useState(false);
   const [currentOffset, setCurrentOffset] = useState(0);
   const [actionLoading, setActionLoading] = useState(false);
-  const [reservingCardId, setReservingCardId] = useState(null);
   const [feedbackMsg, setFeedbackMsg] = useState({ type: '', text: '' });
 
   // Refs para controle de concorrência e cache local de estoque (TTL 60s)
   const sharedCarsCacheRef = useRef({});
   const isFetchingRef = useRef(false);
   const searchDebounceRef = useRef(null);
-
-  // Sincroniza status do estoque compartilhado com as reservas ativas
-  const reconcileWithReservations = useCallback((cars, reservationsList = myReservations) => {
-    const resMap = new Map();
-    (reservationsList || []).forEach(r => {
-      if (r.status === 'em_fechamento' || r.closing_requested === 1) {
-        resMap.set(String(r.car_id), 'em_fechamento');
-      } else if (r.status === 'ativa' && (!r.expires_at || r.expires_at > Math.floor(Date.now() / 1000))) {
-        resMap.set(String(r.car_id), 'reservado');
-      }
-    });
-    return (cars || []).map(c => {
-      const status = resMap.get(String(c.id));
-      return status ? { ...c, status_reserva: status } : c;
-    });
-  }, [myReservations]);
 
   // Filters
   const [searchCar, setSearchCar] = useState('');
@@ -242,7 +186,7 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
     if (!isAppend && sharedCarsCacheRef.current[cacheKey]) {
       const cached = sharedCarsCacheRef.current[cacheKey];
       if (now - cached.timestamp < 60000) {
-        setSharedCars(reconcileWithReservations(cached.items));
+        setSharedCars(cached.items);
         setHasMoreCars(cached.hasMore);
         setCurrentOffset(offset);
         return;
@@ -271,11 +215,9 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
         setHasMoreCars(hasMore);
         setCurrentOffset(offset);
 
-        const reconciled = reconcileWithReservations(Array.isArray(data) ? data : []);
-
         if (isAppend) {
           setSharedCars(prev => {
-            const combined = [...prev, ...reconciled];
+            const combined = [...prev, ...(Array.isArray(data) ? data : [])];
             const seen = new Set();
             return combined.filter(c => {
               if (seen.has(c.id)) return false;
@@ -284,9 +226,9 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
             });
           });
         } else {
-          setSharedCars(reconciled);
+          setSharedCars(Array.isArray(data) ? data : []);
           sharedCarsCacheRef.current[cacheKey] = {
-            items: reconciled,
+            items: Array.isArray(data) ? data : [],
             hasMore,
             timestamp: now
           };
@@ -296,24 +238,20 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
       }
     } catch (e) {
       if (!isAppend && sharedCars.length === 0) {
-        const fallbackItems = (showcaseCars || []).slice(0, 9).map((c, i) => {
-          const assignedStore = stores[i % stores.length];
-          return {
-            id: c.id || `partner-car-${i}`,
-            brand: c.brand,
-            model: c.model,
-            year: c.year,
-            km: c.mileage || 0,
-            price: c.price,
-            valor_minimo_repasse: Math.round((c.price || 100000) * 0.90),
-            image: c.image,
-            store_name: assignedStore?.name || 'AutoMatch Premium',
-            store_id: assignedStore?.id || 'store-1',
-            status_reserva: i === 2 ? 'reservado' : 'disponivel',
-            location: c.location || 'São Paulo, SP'
-          };
-        });
-        setSharedCars(reconcileWithReservations(fallbackItems));
+        const fallbackItems = (showcaseCars || []).slice(0, 9).map((c, i) => ({
+          id: c.id || `partner-car-${i}`,
+          brand: c.brand,
+          model: c.model,
+          year: c.year,
+          km: c.mileage || 0,
+          price: c.price,
+          valor_minimo_repasse: Math.round((c.price || 100000) * 0.90),
+          image: c.image,
+          store_name: i % 2 === 0 ? 'AutoShop Prime' : 'Motors Campinas',
+          status_reserva: i === 2 ? 'reservado' : 'disponivel',
+          location: c.location || 'São Paulo, SP'
+        }));
+        setSharedCars(fallbackItems);
         setHasMoreCars(false);
       }
     } finally {
@@ -330,65 +268,16 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
   };
 
   const loadPartnerships = async () => {
-    let remotePartnerships = [];
     try {
       const [pRes, sRes] = await Promise.all([
         fetch('/api/partnerships/my', { headers: getAuthHeaders(), signal: AbortSignal.timeout(1500) }),
         fetch('/api/partnerships/stores-available', { headers: getAuthHeaders(), signal: AbortSignal.timeout(1500) })
       ]);
-      if (pRes.ok) remotePartnerships = await pRes.json();
-      if (sRes.ok) {
-        const remoteStores = await sRes.json();
-        if (Array.isArray(remoteStores) && remoteStores.length > 0) {
-          setAvailableStores(remoteStores);
-        } else {
-          setAvailableStores(stores.map(s => ({
-            id: s.id,
-            name: s.name,
-            city: 'São Paulo',
-            uf: 'SP',
-            rating: 4.9,
-            cars_count: 14
-          })));
-        }
-      } else {
-        setAvailableStores(stores.map(s => ({
-          id: s.id,
-          name: s.name,
-          city: 'São Paulo',
-          uf: 'SP',
-          rating: 4.9,
-          cars_count: 14
-        })));
-      }
+      if (pRes.ok) setPartnerships(await pRes.json());
+      if (sRes.ok) setAvailableStores(await sRes.json());
     } catch (e) {
-      setAvailableStores(stores.map(s => ({
-        id: s.id,
-        name: s.name,
-        city: 'São Paulo',
-        uf: 'SP',
-        rating: 4.9,
-        cars_count: 14
-      })));
+      // Ignora erro de rede em background
     }
-
-    // Unifica com solicitações salvas localmente
-    const localInvites = JSON.parse(localStorage.getItem('automatch_b2b_partnerships') || '[]');
-    const combinedPartnerships = Array.isArray(remotePartnerships) ? [...remotePartnerships] : [];
-    localInvites.forEach(inv => {
-      if (!combinedPartnerships.some(p => p.id === inv.id || p.receiver_store_id === inv.partner_store_id)) {
-        combinedPartnerships.unshift({
-          id: inv.id,
-          receiver_store_name: inv.partner_store_name,
-          receiver_store_id: inv.partner_store_id,
-          commission_rate: inv.commission_rate || 3.0,
-          status: inv.status || 'pendente',
-          is_incoming: false,
-          created_at: inv.created_at || new Date().toISOString()
-        });
-      }
-    });
-    setPartnerships(combinedPartnerships);
   };
 
   const loadReservations = async () => {
@@ -558,7 +447,7 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
 
   const handleConfirmReservation = async (e) => {
     e.preventDefault();
-    if (!reservingCar || actionLoading) return;
+    if (!reservingCar) return;
 
     const piso = reservingCar.valor_minimo_repasse || (reservingCar.price * 0.90);
     if (reservationForm.proposed_price < piso) {
@@ -569,8 +458,6 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
       return;
     }
 
-    const currentCar = reservingCar;
-    setReservingCardId(currentCar.id);
     setActionLoading(true);
     let reservationSuccess = false;
 
@@ -580,7 +467,7 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
         headers: getAuthHeaders(),
         signal: AbortSignal.timeout(1500),
         body: JSON.stringify({
-          car_id: currentCar.id,
+          car_id: reservingCar.id,
           proposed_price: Number(reservationForm.proposed_price),
           client_markup: Number(reservationForm.client_markup),
           client_name: reservationForm.client_name,
@@ -595,18 +482,18 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
       // Backend offline / ECONNREFUSED / timeout: assume fallback local imediato sem travar a interface
     }
 
-    // Cria/garante registro da reserva com Bloqueio Temporário ativo
+    // Cria/garante registro da reserva com Hold Lock ativo
     const durationMins = Number(reservationForm.duration_minutes) || 120;
     const nowSec = Math.floor(Date.now() / 1000);
     const expiresAt = nowSec + (durationMins * 60);
 
     const newRes = {
       id: `res_b2b_${Date.now()}`,
-      car_id: currentCar.id,
-      car_title: `${currentCar.brand} ${currentCar.model}`,
-      car_image: currentCar.image,
+      car_id: reservingCar.id,
+      car_title: `${reservingCar.brand} ${reservingCar.model}`,
+      car_image: reservingCar.image,
       requesting_store_name: 'Minha Concessionária',
-      owner_store_name: currentCar.store_name || 'Loja Parceira',
+      owner_store_name: reservingCar.store_name || 'Loja Parceira',
       proposed_price: Number(reservationForm.proposed_price),
       client_markup: Number(reservationForm.client_markup),
       client_name: reservationForm.client_name || 'Cliente em Loja',
@@ -620,7 +507,7 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
     };
 
     setMyReservations(prev => {
-      const updated = [newRes, ...prev.filter(r => r.car_id !== currentCar.id)];
+      const updated = [newRes, ...prev.filter(r => r.car_id !== reservingCar.id)];
       try {
         localStorage.setItem('automatch_b2b_reservations', JSON.stringify(updated));
       } catch (storageErr) {
@@ -629,80 +516,38 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
       return updated;
     });
 
-    // Atualiza status do veículo imediatamente no estoque compartilhado e invalida cache local
-    setSharedCars(prev => prev.map(c => 
-      (c.id === currentCar.id || String(c.id) === String(currentCar.id)) 
-        ? { ...c, status_reserva: 'reservado' } 
-        : c
-    ));
-    sharedCarsCacheRef.current = {};
+    // Atualiza status do veículo imediatamente no estoque compartilhado
+    setSharedCars(prev => prev.map(c => c.id === reservingCar.id ? { ...c, status_reserva: 'reservado' } : c));
 
     setFeedbackMsg({
       type: 'success',
       text: reservationSuccess 
-        ? 'Reserva com Bloqueio Temporário confirmada com sucesso!' 
-        : 'Reserva com Bloqueio Temporário criada com sucesso no catálogo B2B!'
+        ? 'Reserva (Hold Lock) confirmada com sucesso!' 
+        : 'Reserva (Hold Lock) criada com sucesso no catálogo B2B!'
     });
 
     setReservingCar(null);
-    setReservingCardId(null);
     setActionLoading(false);
     setActiveTab('reservations');
   };
 
   const handleRequestClosing = async (reservationId) => {
     setActionLoading(true);
-    let targetCarId = null;
-
-    // 1. Atualização imediata do estado local e persistência para feedback instantâneo
-    setMyReservations(prev => {
-      const next = prev.map(res => {
-        if (res.id === reservationId) {
-          targetCarId = res.car_id;
-          return {
-            ...res,
-            closing_requested: 1,
-            status: 'em_fechamento'
-          };
-        }
-        return res;
-      });
-      try {
-        localStorage.setItem('automatch_b2b_reservations', JSON.stringify(next));
-      } catch (err) {
-        console.error(err);
-      }
-      return next;
-    });
-
-    // 2. Atualiza estoque compartilhado para 'em_fechamento' (estilo translúcido sincronizado entre abas)
-    if (targetCarId) {
-      setSharedCars(prev => prev.map(c => 
-        (c.id === targetCarId || String(c.id) === String(targetCarId)) 
-          ? { ...c, status_reserva: 'em_fechamento' } 
-          : c
-      ));
-      sharedCarsCacheRef.current = {};
-    }
-
-    // 3. Feedback visual imediato de confirmação
-    setFeedbackMsg({ 
-      type: 'success', 
-      text: 'Solicitação de fechamento enviada com sucesso! O veículo entrou em processo de formalização.' 
-    });
-
-    // 4. Notifica backend de forma resiliente
     try {
       const res = await fetch(`/api/partnerships/reservations/${reservationId}/request-closing`, {
         method: 'POST',
         headers: getAuthHeaders(),
         signal: AbortSignal.timeout(1500)
       });
+      const data = await res.json();
       if (res.ok) {
+        setFeedbackMsg({ type: 'success', text: data.message });
         await loadReservations();
+      } else {
+        setFeedbackMsg({ type: 'error', text: data.detail || 'Erro ao solicitar fechamento.' });
       }
     } catch {
-      // Silencioso em fallback offline
+      setFeedbackMsg({ type: 'success', text: 'Solicitação de fechamento registrada.' });
     } finally {
       setActionLoading(false);
     }
@@ -753,16 +598,11 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
           localStorage.setItem('automatch_b2b_reservations', JSON.stringify(next));
         } catch {}
         if (target) {
-          setSharedCars(cars => cars.map(c => 
-            (c.id === target.car_id || String(c.id) === String(target.car_id)) 
-              ? { ...c, status_reserva: 'disponivel' } 
-              : c
-          ));
-          sharedCarsCacheRef.current = {};
+          setSharedCars(cars => cars.map(c => c.id === target.car_id ? { ...c, status_reserva: 'disponivel' } : c));
         }
         return next;
       });
-      setFeedbackMsg({ type: 'info', text: 'Reserva cancelada e veículo liberado no catálogo.' });
+      setFeedbackMsg({ type: 'info', text: 'Reserva cancelada com sucesso.' });
       setActionLoading(false);
     }
   };
@@ -950,7 +790,6 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
                         key={car.id}
                         car={car}
                         onReserve={openReservationModal}
-                        isReserving={reservingCardId === car.id}
                       />
                     ))}
                   </div>
@@ -1066,17 +905,17 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
             </div>
           )}
 
-          {/* TAB 3: MINHAS RESERVAS ATIVAS */}
+          {/* TAB 3: MINHAS RESERVAS (HOLD LOCK) */}
           {activeTab === 'reservations' && (
             <div className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-lg font-black text-slate-800 flex items-center gap-2">
                     <Clock className="w-5 h-5 text-indigo-600" />
-                    Reservas Ativas & Bloqueio Temporário
+                    Reservas Ativas & Hold Lock Temporizado
                   </h3>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    O Bloqueio Temporário reserva o veículo com exclusividade para você enquanto atende seu cliente.
+                    O Hold Lock bloqueia o veículo para outros lojistas enquanto você atende o cliente.
                   </p>
                 </div>
               </div>
@@ -1086,20 +925,19 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
                   <Clock className="w-12 h-12 text-slate-300 mb-3" />
                   <h3 className="text-lg font-bold text-slate-700">Nenhuma reserva ativa no momento</h3>
                   <p className="text-sm text-slate-400 max-w-md mt-1">
-                    Ao reservar um veículo na vitrine compartilhada, o status do bloqueio e os controles de fechamento aparecerão aqui.
+                    Ao reservar um veículo na vitrine compartilhada, a contagem regressiva e os controles de fechamento aparecerão aqui.
                   </p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {myReservations.map((res) => {
                     const isOwner = res.is_owner;
-                    const isClosing = res.status === 'em_fechamento' || res.closing_requested === 1;
                     const remainingSecs = res.expires_at 
                       ? Math.max(0, res.expires_at - currentTimeSec) 
                       : (res.time_remaining_seconds || 0);
                     const minsRemaining = Math.floor(remainingSecs / 60);
                     const secsRemaining = remainingSecs % 60;
-                    const isExpired = remainingSecs <= 0 && res.status === 'ativa' && !isClosing;
+                    const isExpired = remainingSecs <= 0 && res.status === 'ativa';
                     const timerText = isExpired 
                       ? 'Expirado' 
                       : `${String(minsRemaining).padStart(2, '0')}:${String(secsRemaining).padStart(2, '0')}`;
@@ -1107,34 +945,28 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
                     return (
                       <div
                         key={res.id}
-                        className={`rounded-3xl p-6 border shadow-sm grid grid-cols-1 lg:grid-cols-12 items-center gap-5 transition-all ${
-                          isClosing
-                            ? 'bg-amber-50/40 border-amber-300 opacity-70 grayscale-[15%]'
-                            : 'bg-white border-slate-200'
-                        }`}
+                        className="bg-white rounded-3xl p-6 border border-slate-200 shadow-sm flex flex-col lg:flex-row lg:items-center justify-between gap-6"
                       >
-                        {/* 1. Vehicle & Store info (Col 1-5) */}
-                        <div className="lg:col-span-5 flex items-center gap-4 min-w-0">
+                        {/* Vehicle & Store info */}
+                        <div className="flex items-center gap-4">
                           {res.car_image ? (
                             <img
                               src={getVehicleImageUrl(res.car_image)}
                               alt={res.car_title}
                               onError={handleVehicleImageError}
-                              className="w-20 h-16 object-cover rounded-2xl border border-slate-200 shrink-0"
+                              className="w-20 h-16 object-cover rounded-2xl border border-slate-200"
                             />
                           ) : (
-                            <div className="w-20 h-16 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400 shrink-0">
+                            <div className="w-20 h-16 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400">
                               <Car className="w-6 h-6" />
                             </div>
                           )}
-                          <div className="min-w-0 flex-1">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <h4 className="font-bold text-base text-slate-800 truncate">{res.car_title}</h4>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-bold text-base text-slate-800">{res.car_title}</h4>
                               <span
-                                className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full shrink-0 ${
-                                  isClosing
-                                    ? 'bg-amber-100 text-amber-800 border border-amber-200'
-                                    : res.status === 'ativa'
+                                className={`text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full ${
+                                  res.status === 'ativa'
                                     ? isExpired
                                       ? 'bg-rose-100 text-rose-700'
                                       : 'bg-blue-100 text-blue-700'
@@ -1143,10 +975,10 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
                                     : 'bg-slate-100 text-slate-600'
                                 }`}
                               >
-                                {isClosing ? 'em fechamento' : isExpired ? 'expirada' : res.status}
+                                {isExpired ? 'expirada' : res.status}
                               </span>
                             </div>
-                            <p className="text-xs text-slate-400 mt-1 truncate">
+                            <p className="text-xs text-slate-400 mt-1">
                               {isOwner ? (
                                 <>Solicitado por: <span className="font-bold text-slate-700">{res.requesting_store_name}</span></>
                               ) : (
@@ -1157,66 +989,57 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
                           </div>
                         </div>
 
-                        {/* 2. Proposal Price (Col 6-7) */}
-                        <div className="lg:col-span-2 text-left lg:text-right">
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Proposta</span>
-                          <span className="text-base sm:text-lg font-black text-slate-900 whitespace-nowrap">
-                            R$ {Number(res.proposed_price).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                          </span>
-                        </div>
+                        {/* Price & Countdown Timer */}
+                        <div className="flex items-center gap-6">
+                          <div className="text-right">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Proposta</span>
+                            <span className="text-lg font-black text-slate-900">
+                              R$ {Number(res.proposed_price).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                            </span>
+                          </div>
 
-                        {/* 3. Countdown Timer / Status (Col 8-9) */}
-                        <div className="lg:col-span-2 flex justify-start lg:justify-center">
-                          {isClosing ? (
-                            <div className="px-3.5 py-2 border border-amber-300 bg-amber-50 rounded-2xl text-center w-full max-w-[170px]">
-                              <span className="text-[10px] font-black uppercase tracking-wider block text-amber-700">Status</span>
-                              <span className="text-xs font-bold text-amber-900 flex items-center justify-center gap-1 mt-0.5">
-                                <CheckCircle2 className="w-3.5 h-3.5 text-amber-600 shrink-0" /> Fechamento
-                              </span>
-                            </div>
-                          ) : res.status === 'ativa' ? (
-                            <div className={`px-3.5 py-2 border rounded-2xl text-center w-full max-w-[170px] ${
+                          {res.status === 'ativa' && (
+                            <div className={`px-4 py-2 border rounded-2xl text-center ${
                               isExpired ? 'bg-rose-50 border-rose-200' : 'bg-purple-50 border-purple-200'
                             }`}>
                               <span className={`text-[10px] font-black uppercase tracking-wider block ${
                                 isExpired ? 'text-rose-700' : 'text-purple-700'
-                              }`}>Bloqueio Temporário</span>
+                              }`}>Hold Lock</span>
                               <span className={`text-base font-mono font-black ${
                                 isExpired ? 'text-rose-900' : 'text-purple-900'
                               }`}>{timerText}</span>
                             </div>
-                          ) : null}
+                          )}
                         </div>
 
-                        {/* 4. Actions (Col 10-12) */}
-                        <div className="lg:col-span-3 flex items-center justify-start lg:justify-end gap-2 flex-wrap">
+                        {/* Actions */}
+                        <div className="flex flex-wrap items-center gap-2">
                           <button
                             onClick={() => setActiveChatReservation(res)}
-                            className="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap"
+                            className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all"
                           >
-                            <MessageSquare className="w-4 h-4 text-indigo-600 shrink-0" /> Chat B2B
+                            <MessageSquare className="w-4 h-4 text-indigo-600" /> Chat B2B
                           </button>
 
                           {/* Se for loja solicitante */}
-                          {!isOwner && (res.status === 'ativa' || isClosing) && (
+                          {!isOwner && res.status === 'ativa' && (
                             <>
-                              {isClosing ? (
-                                <span className="text-xs font-bold text-amber-800 bg-amber-100/80 px-3 py-2 rounded-xl border border-amber-300 flex items-center gap-1.5 shadow-sm text-center">
-                                  <CheckCircle2 className="w-3.5 h-3.5 text-amber-600 shrink-0" />
-                                  Aguardando Lojista
+                              {res.closing_requested ? (
+                                <span className="text-xs font-bold text-amber-600 bg-amber-50 px-3 py-2 rounded-xl border border-amber-200">
+                                  Aguardando Consentimento...
                                 </span>
                               ) : (
                                 <button
                                   onClick={() => handleRequestClosing(res.id)}
                                   disabled={actionLoading}
-                                  className="px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-500/20 active:scale-95 transition-all cursor-pointer whitespace-nowrap"
+                                  className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-500/20 active:scale-95 transition-all"
                                 >
                                   Solicitar Fechamento
                                 </button>
                               )}
                               <button
                                 onClick={() => handleCancelReservation(res.id)}
-                                className="p-2.5 hover:bg-red-50 hover:text-red-600 text-slate-400 rounded-xl text-xs transition-all cursor-pointer shrink-0"
+                                className="p-2.5 hover:bg-red-50 hover:text-red-600 text-slate-400 rounded-xl text-xs transition-all"
                                 title="Cancelar Reserva"
                               >
                                 <XCircle className="w-4 h-4" />
@@ -1225,19 +1048,19 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
                           )}
 
                           {/* Se for loja dona do carro */}
-                          {isOwner && (res.status === 'ativa' || isClosing) && isClosing && (
+                          {isOwner && res.status === 'ativa' && res.closing_requested === 1 && (
                             <div className="flex gap-2">
                               <button
                                 onClick={() => handleConsentDecision(res.id, true)}
                                 disabled={actionLoading}
-                                className="px-3.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-500/20 active:scale-95 transition-all cursor-pointer"
+                                className="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md shadow-emerald-500/20 active:scale-95 transition-all"
                               >
                                 Aprovar Venda
                               </button>
                               <button
                                 onClick={() => handleConsentDecision(res.id, false, 'Proposta recusada')}
                                 disabled={actionLoading}
-                                className="px-3 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                                className="px-3 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-bold transition-all"
                               >
                                 Recusar
                               </button>
@@ -1325,7 +1148,7 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
           )}
         </div>
 
-        {/* SUB-MODAL: RESERVA / BLOQUEIO TEMPORÁRIO */}
+        {/* SUB-MODAL: RESERVA / HOLD LOCK */}
         <AnimatePresence>
           {reservingCar && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
@@ -1337,9 +1160,9 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
               >
                 <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-4 flex items-center justify-between">
                   <h3 className="font-black text-base flex items-center gap-2">
-                    <Clock className="w-5 h-5" /> Bloqueio Temporário de Reserva
+                    <Clock className="w-5 h-5" /> Reserva com Hold Lock Temporário
                   </h3>
-                  <button onClick={() => setReservingCar(null)} className="text-white/80 hover:text-white cursor-pointer">
+                  <button onClick={() => setReservingCar(null)} className="text-white/80 hover:text-white">
                     <X className="w-5 h-5" />
                   </button>
                 </div>
@@ -1347,7 +1170,7 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
                 <form onSubmit={handleConfirmReservation} className="p-6 space-y-4">
                   <div>
                     <h4 className="font-bold text-slate-800 text-sm">{reservingCar.brand} {reservingCar.model}</h4>
-                    <p className="text-xs text-slate-400">{reservingCar.store_name} • Piso Mínimo de Repasse: R$ {Number(reservingCar.valor_minimo_repasse || (reservingCar.price * 0.90)).toLocaleString('pt-BR')}</p>
+                    <p className="text-xs text-slate-400">{reservingCar.store_name} • Piso Mínimo: R$ {Number(reservingCar.valor_minimo_repasse || (reservingCar.price * 0.90)).toLocaleString('pt-BR')}</p>
                   </div>
 
                   <div className="space-y-1">
@@ -1370,7 +1193,7 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
 
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
-                      Margem Comercial do Lojista (R$)
+                      Sua Margem para o Cliente Final (R$)
                     </label>
                     <input
                       type="number"
@@ -1396,7 +1219,7 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
 
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-slate-600 uppercase tracking-wider">
-                      Duração do Bloqueio de Reserva
+                      Duração do Hold Lock
                     </label>
                     <select
                       value={reservationForm.duration_minutes}
@@ -1413,23 +1236,16 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
                     <button
                       type="button"
                       onClick={() => setReservingCar(null)}
-                      className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-bold text-xs uppercase tracking-wider transition-all cursor-pointer"
+                      className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl font-bold text-xs uppercase tracking-wider transition-all"
                     >
                       Cancelar
                     </button>
                     <button
                       type="submit"
                       disabled={actionLoading}
-                      className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-bold text-xs uppercase tracking-wider shadow-lg shadow-blue-500/20 active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+                      className="flex-1 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-bold text-xs uppercase tracking-wider shadow-lg shadow-blue-500/20 active:scale-95 transition-all"
                     >
-                      {actionLoading ? (
-                        <>
-                          <RefreshCw className="w-4 h-4 animate-spin" />
-                          Processando Reserva...
-                        </>
-                      ) : (
-                        'Confirmar Reserva'
-                      )}
+                      Confirmar Reserva
                     </button>
                   </div>
                 </form>
