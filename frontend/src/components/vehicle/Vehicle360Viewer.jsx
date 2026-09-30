@@ -15,37 +15,10 @@ const ANGLES = [
 ];
 
 /**
- * Mapeamento padrão de fotos genéricas 360 disponíveis no projeto.
- * Cada ângulo mapeia para uma foto distinta e fidedigna da perspectiva correspondente:
- *   0°   (Frente)            → carro_360_frente.jpg
- *   45°  (Diagonal Diant.)   → carro_360_diagonal.jpg
- *   90°  (Lateral Direita)   → carro_360_lateral.jpg
- *   135° (Diagonal Tras.)    → carro_360_diagonal.jpg (espelhada)
- *   180° (Traseira)          → carro_360_traseira.jpg
- *   225° (Diag. Tras. Esq.)  → carro_360_diagonal.jpg (espelhada)
- *   270° (Lateral Esquerda)  → carro_360_lateral.jpg (espelhada)
- *   315° (Diag. Diant. Esq.) → carro_360_diagonal.jpg (espelhada)
- */
-const DEFAULT_360_IMAGES = {
-  0:   '/images/carro_360_frente.jpg',
-  45:  '/images/carro_360_diagonal.jpg',
-  90:  '/images/carro_360_lateral.jpg',
-  135: '/images/carro_360_diagonal.jpg',
-  180: '/images/carro_360_traseira.jpg',
-  225: '/images/carro_360_diagonal.jpg',
-  270: '/images/carro_360_lateral.jpg',
-  315: '/images/carro_360_diagonal.jpg',
-};
-
-/**
  * Vehicle360Viewer — Visualizador Orbital Fotográfico 360°
- * Dedicado exclusivamente à exibição das fotos da carroceria do veículo em 8 ângulos contínuos.
- * Garante consistência absoluta: exibe SEMPRE o veículo correto, sem substituição por carros aleatórios.
- * 
- * Mapeamento de fotos por ângulo (prioridade):
- * 1. photos360 explícito do veículo (prop ou car.photos360)
- * 2. Galeria do veículo (car.gallery) mapeada por posição semântica
- * 3. Imagens genéricas 360° do projeto (DEFAULT_360_IMAGES)
+ * Dedicado exclusivamente à exibição das fotos da carroceria do próprio veículo em 8 ângulos contínuos.
+ * Garante consistência absoluta: exibe SEMPRE e EXCLUSIVAMENTE o veículo anunciado,
+ * sem substituição por carros aleatórios de terceiros.
  */
 const Vehicle360Viewer = ({
   car = null,
@@ -111,44 +84,40 @@ const Vehicle360Viewer = ({
     const p360 = photos360 || car?.photos360 || null;
 
     ANGLES.forEach(({ angle }) => {
-      // Prioridade 1: fotos explícitas 360 do veículo
+      // Prioridade 1: fotos explícitas 360 do próprio veículo
       if (p360 && p360[angle]) {
         map[angle] = getVehicleImageUrl(p360[angle]);
         return;
       }
 
-      // Prioridade 2: galeria do veículo mapeada por posição semântica
-      // Mapeamento semântico: gal[0]=frente, gal[1]=diagonal dianteira, gal[2]=lateral, 
-      // gal[3]=diagonal traseira, gal[4]=traseira
-      if (gal) {
+      // Prioridade 2: galeria do próprio veículo mapeada por posição semântica
+      if (gal && gal.length > 0) {
         const galLen = gal.length;
         if (angle === 0 && galLen > 0) { map[angle] = getVehicleImageUrl(gal[0]); return; }
         if (angle === 45 && galLen > 1) { map[angle] = getVehicleImageUrl(gal[1]); return; }
         if (angle === 90 && galLen > 2) { map[angle] = getVehicleImageUrl(gal[2]); return; }
         if (angle === 135 && galLen > 3) { map[angle] = getVehicleImageUrl(gal[3]); return; }
         if (angle === 180 && galLen > 4) { map[angle] = getVehicleImageUrl(gal[4]); return; }
-        // Para ângulos espelhados (esquerda), reusar as imagens dos equivalentes à direita
-        if (angle === 315 && galLen > 1) { map[angle] = getVehicleImageUrl(gal[1]); return; }
-        if (angle === 270 && galLen > 2) { map[angle] = getVehicleImageUrl(gal[2]); return; }
-        if (angle === 225 && galLen > 3) { map[angle] = getVehicleImageUrl(gal[3]); return; }
-        // Se a galeria tem poucas fotos, usa a imagem base do veículo para o ângulo frontal
-        // e as imagens genéricas 360 para os outros ângulos
-        if (angle === 0 && baseImg) { map[angle] = getVehicleImageUrl(baseImg); return; }
-      }
-
-      // Prioridade 3: imagem principal do veículo para frente (0°)
-      if (angle === 0 && baseImg) {
-        map[angle] = getVehicleImageUrl(baseImg);
+        if (angle === 225) {
+          const src = galLen > 5 ? gal[5] : (galLen > 3 ? gal[3] : gal[0]);
+          map[angle] = getVehicleImageUrl(src);
+          return;
+        }
+        if (angle === 270) {
+          const src = galLen > 6 ? gal[6] : (galLen > 2 ? gal[2] : gal[0]);
+          map[angle] = getVehicleImageUrl(src);
+          return;
+        }
+        if (angle === 315) {
+          const src = galLen > 7 ? gal[7] : (galLen > 1 ? gal[1] : gal[0]);
+          map[angle] = getVehicleImageUrl(src);
+          return;
+        }
+        map[angle] = getVehicleImageUrl(gal[0] || baseImg || 'FotoGolfGTI.jpeg');
         return;
       }
 
-      // Prioridade 4: imagens genéricas 360° do projeto com ângulos distintos
-      if (DEFAULT_360_IMAGES[angle]) {
-        map[angle] = getVehicleImageUrl(DEFAULT_360_IMAGES[angle]);
-        return;
-      }
-
-      // Fallback final
+      // Prioridade 3: Imagem principal do próprio veículo (SEM fotos de outros veículos)
       map[angle] = getVehicleImageUrl(baseImg || 'FotoGolfGTI.jpeg');
     });
 
@@ -157,11 +126,31 @@ const Vehicle360Viewer = ({
 
   const activeImage = imageMap[currentAngle] || imageMap[0];
 
-  // Conta quantas fotos distintas estão disponíveis
+  // Conta quantas fotos distintas do próprio veículo estão disponíveis
   const uniquePhotoCount = useMemo(() => {
     const unique = new Set(Object.values(imageMap));
     return unique.size;
   }, [imageMap]);
+
+  // Identifica se o ângulo atual é projetado via perspectiva 3D ou possui foto dedicada
+  const isAngleProjected = useMemo(() => {
+    const p360 = photos360 || car?.photos360 || null;
+    if (p360 && p360[currentAngle]) return false;
+    const gal = (car?.gallery && Array.isArray(car.gallery) && car.gallery.length > 0) 
+      ? car.gallery 
+      : (Array.isArray(gallery) && gallery.length > 0 ? gallery : null);
+    if (!gal || gal.length <= 1) return currentAngle !== 0;
+    const galLen = gal.length;
+    if (currentAngle === 0) return false;
+    if (currentAngle === 45 && galLen > 1) return false;
+    if (currentAngle === 90 && galLen > 2) return false;
+    if (currentAngle === 135 && galLen > 3) return false;
+    if (currentAngle === 180 && galLen > 4) return false;
+    if (currentAngle === 225 && galLen > 5) return false;
+    if (currentAngle === 270 && galLen > 6) return false;
+    if (currentAngle === 315 && galLen > 7) return false;
+    return true;
+  }, [currentAngle, photos360, car?.photos360, car?.gallery, gallery]);
 
   const getAngleLabel = (angle) => {
     const match = ANGLES.find((a) => a.angle === angle);
@@ -185,13 +174,20 @@ const Vehicle360Viewer = ({
               <span className="text-[10px] bg-cyan-500/15 text-cyan-300 border border-cyan-500/30 px-2.5 py-0.5 rounded-full font-black">
                 {currentAngle}° • {getAngleLabel(currentAngle)}
               </span>
-              <span className="text-[10px] bg-slate-800 text-slate-400 border border-slate-700 px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
-                <Camera className="w-3 h-3" />
-                {uniquePhotoCount} fotos
+              <span className="text-[10px] bg-slate-800 text-slate-300 border border-slate-700 px-2 py-0.5 rounded-full font-bold flex items-center gap-1">
+                <Camera className="w-3 h-3 text-cyan-400" />
+                {uniquePhotoCount} {uniquePhotoCount > 1 ? 'fotos do veículo' : 'foto do veículo'}
               </span>
+              {isAngleProjected && (
+                <span className="text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded-full font-bold">
+                  Perspectiva 3D
+                </span>
+              )}
             </div>
             <p className="text-[11px] text-slate-400 mt-0.5">
-              Arraste para rotacionar ou selecione os quadrantes angulares da carroceria
+              {uniquePhotoCount >= 8
+                ? 'Varredura orbital completa com todas as fotos reais da carroceria.'
+                : 'Varredura com fotos exclusivas deste veículo. Ângulos sem foto dedicada são gerados via perspectiva orbital 3D.'}
             </p>
           </div>
         </div>
@@ -259,8 +255,8 @@ const Vehicle360Viewer = ({
 
           {/* Badge Orbital 360 (Otimizado para GPU) */}
           <div className="absolute bottom-4 right-4 bg-slate-950/90 border border-slate-800 px-3 py-1.5 rounded-xl text-[10px] font-mono text-cyan-400 pointer-events-none flex items-center gap-1.5 shadow-lg">
-            <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
-            <span>360° FOTOGRÁFICO REAL</span>
+            <span className={`w-2 h-2 rounded-full ${isAngleProjected ? 'bg-indigo-400' : 'bg-cyan-400 animate-ping'}`} />
+            <span>{isAngleProjected ? 'PERSPECTIVA ORBITAL 3D (FOTO DO VEÍCULO)' : '360° FOTOGRÁFICO REAL'}</span>
           </div>
         </motion.div>
       </div>
