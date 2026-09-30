@@ -996,6 +996,83 @@ export default function ShowcaseVehicleDetails() {
             </div>
             )}
 
+            {/* Sobre o Veículo — Nome, Metadados, Descrição e Ficha Técnica Consolidados */}
+            <div className="bg-slate-900/80 rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-xl space-y-6">
+              {/* Badges de Procedência */}
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 uppercase tracking-wider">
+                  <ShieldCheck className="w-3.5 h-3.5" /> Laudo 100% Aprovado
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-500/15 text-blue-400 border border-blue-500/30 uppercase tracking-wider">
+                  <CheckCircle2 className="w-3.5 h-3.5" /> Sem Passagem por Leilão
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-800 text-slate-300 border border-slate-700 uppercase tracking-wider">
+                  IPVA 2026 Quitado
+                </span>
+              </div>
+
+              {/* Nome do Veículo */}
+              <div>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight">
+                    {car.name}
+                  </h2>
+                  {car.featured && (
+                    <span title="Destaque" aria-label="Veículo em Destaque" className="inline-flex items-center">
+                      <Star className="w-6 h-6 text-amber-400 fill-amber-400 shrink-0" />
+                    </span>
+                  )}
+                </div>
+                {/* Informações Básicas (Ano, Km, Câmbio, Cor, Localização) */}
+                <div className="flex flex-wrap items-center gap-x-5 gap-y-2.5 mt-3 text-xs sm:text-sm text-slate-300 font-medium">
+                  <span className="flex items-center gap-1.5 bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800">
+                    <Calendar className="w-4 h-4 text-blue-400" /> Ano: <strong className="text-white font-bold ml-1">{car.year}</strong>
+                  </span>
+                  <span className="flex items-center gap-1.5 bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800">
+                    <Gauge className="w-4 h-4 text-blue-400" /> Km: <strong className="text-white font-bold ml-1">{formatMileage(car.mileage)}</strong>
+                  </span>
+                  <span className="flex items-center gap-1.5 bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800">
+                    <Settings className="w-4 h-4 text-blue-400" /> Câmbio: <strong className="text-white font-bold ml-1">{car.specs?.cambio || 'Automático'}</strong>
+                  </span>
+                  <span className="flex items-center gap-1.5 bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800">
+                    <Palette className="w-4 h-4 text-blue-400" /> Cor: <strong className="text-white font-bold ml-1">{car.color || 'Prata'}</strong>
+                  </span>
+                  {car.location && (
+                    <span className="flex items-center gap-1.5 bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800">
+                      <MapPin className="w-4 h-4 text-blue-400" /> <strong className="text-white font-bold ml-1">{car.location}</strong>
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Descrição Concisa do Veículo */}
+              <div className="bg-slate-950/70 p-4 sm:p-5 rounded-2xl border border-slate-800">
+                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
+                  Descrição do Veículo
+                </span>
+                <p className="text-slate-200 text-sm leading-relaxed">
+                  {(car.fullDescription || car.description || car.descricao || 'Veículo inspecionado e auditado com laudo cautelar 100% aprovado pela plataforma Automatch.').slice(0, 240)}
+                  {(car.fullDescription || car.description || '').length > 240 ? '...' : ''}
+                </p>
+              </div>
+
+              {/* Ficha Técnica & Equipamentos */}
+              <div className="pt-2">
+                <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-3.5 flex items-center gap-2">
+                  <Settings className="w-4 h-4 text-blue-400" /> Ficha Técnica & Equipamentos
+                </h4>
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                  {specItems.map((s, i) => (
+                    <div key={i} className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 text-center hover:border-slate-700 transition-colors">
+                      <s.icon className="w-4 h-4 text-blue-400 mx-auto mb-1.5" />
+                      <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold mb-0.5">{s.label}</p>
+                      <p className="text-xs font-black text-white break-words">{s.value}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
             {/* Dossiê de Transparência Automatch */}
             <div className="bg-slate-900/80 rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-xl space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-800">
@@ -1241,83 +1318,6 @@ export default function ShowcaseVehicleDetails() {
                   </div>
                 </div>
               </AccordionPanel>
-            </div>
-
-            {/* Sobre o Veículo — Nome, Metadados, Descrição e Ficha Técnica Consolidados */}
-            <div className="bg-slate-900/80 rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-xl space-y-6">
-              {/* Badges de Procedência */}
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 uppercase tracking-wider">
-                  <ShieldCheck className="w-3.5 h-3.5" /> Laudo 100% Aprovado
-                </span>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-500/15 text-blue-400 border border-blue-500/30 uppercase tracking-wider">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Sem Passagem por Leilão
-                </span>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-800 text-slate-300 border border-slate-700 uppercase tracking-wider">
-                  IPVA 2026 Quitado
-                </span>
-              </div>
-
-              {/* Nome do Veículo */}
-              <div>
-                <div className="flex items-center gap-3 flex-wrap">
-                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight">
-                    {car.name}
-                  </h2>
-                  {car.featured && (
-                    <span title="Destaque" aria-label="Veículo em Destaque" className="inline-flex items-center">
-                      <Star className="w-6 h-6 text-amber-400 fill-amber-400 shrink-0" />
-                    </span>
-                  )}
-                </div>
-                {/* Informações Básicas (Ano, Km, Câmbio, Cor, Localização) */}
-                <div className="flex flex-wrap items-center gap-x-5 gap-y-2.5 mt-3 text-xs sm:text-sm text-slate-300 font-medium">
-                  <span className="flex items-center gap-1.5 bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800">
-                    <Calendar className="w-4 h-4 text-blue-400" /> Ano: <strong className="text-white font-bold ml-1">{car.year}</strong>
-                  </span>
-                  <span className="flex items-center gap-1.5 bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800">
-                    <Gauge className="w-4 h-4 text-blue-400" /> Km: <strong className="text-white font-bold ml-1">{formatMileage(car.mileage)}</strong>
-                  </span>
-                  <span className="flex items-center gap-1.5 bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800">
-                    <Settings className="w-4 h-4 text-blue-400" /> Câmbio: <strong className="text-white font-bold ml-1">{car.specs?.cambio || 'Automático'}</strong>
-                  </span>
-                  <span className="flex items-center gap-1.5 bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800">
-                    <Palette className="w-4 h-4 text-blue-400" /> Cor: <strong className="text-white font-bold ml-1">{car.color || 'Prata'}</strong>
-                  </span>
-                  {car.location && (
-                    <span className="flex items-center gap-1.5 bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800">
-                      <MapPin className="w-4 h-4 text-blue-400" /> <strong className="text-white font-bold ml-1">{car.location}</strong>
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Descrição Concisa do Veículo */}
-              <div className="bg-slate-950/70 p-4 sm:p-5 rounded-2xl border border-slate-800">
-                <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
-                  Descrição do Veículo
-                </span>
-                <p className="text-slate-200 text-sm leading-relaxed">
-                  {(car.fullDescription || car.description || car.descricao || 'Veículo inspecionado e auditado com laudo cautelar 100% aprovado pela plataforma Automatch.').slice(0, 240)}
-                  {(car.fullDescription || car.description || '').length > 240 ? '...' : ''}
-                </p>
-              </div>
-
-              {/* Ficha Técnica & Equipamentos */}
-              <div className="pt-2">
-                <h4 className="text-sm font-bold text-white uppercase tracking-wider mb-3.5 flex items-center gap-2">
-                  <Settings className="w-4 h-4 text-blue-400" /> Ficha Técnica & Equipamentos
-                </h4>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  {specItems.map((s, i) => (
-                    <div key={i} className="bg-slate-950 p-3.5 rounded-2xl border border-slate-800 text-center hover:border-slate-700 transition-colors">
-                      <s.icon className="w-4 h-4 text-blue-400 mx-auto mb-1.5" />
-                      <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold mb-0.5">{s.label}</p>
-                      <p className="text-xs font-black text-white break-words">{s.value}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
 
             {/* Calculadora Interativa de Custo Total de Posse (TCO) — No lugar da descrição antiga */}
