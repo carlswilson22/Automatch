@@ -22,6 +22,7 @@ globalThis.localStorage = {
 const inventoryModule = await import('../src/data/inventoryData.js');
 const aiCoreModule = await import('../src/utils/aiConsultantCore.js');
 const scrollLockCoreModule = await import('../src/utils/scrollLockCore.js');
+const howItWorksDataModule = await import('../src/data/howItWorksData.js');
 
 describe('BATERIA DE TESTES 1: Remoção de "Diferenciais e Itens de Série"', () => {
   const showcasePath = path.join(rootDir, 'src/pages/ShowcaseVehicleDetails.jsx');
@@ -1294,5 +1295,86 @@ describe('BATERIA DE TESTES 31: Gestão de Ativos - Restauração Garantida de R
     }
   });
 });
+
+describe('BATERIA DE TESTES 32: Tarefa 1 (Remoção do Selo Destaque sobre Fotos na Home) & Tarefa 2 (Como Funciona com Guia Real e B2B Condicional)', () => {
+  const { howItWorksSections, b2bSectionNotice, generalFaqList, b2bFaqList } = howItWorksDataModule;
+
+  const homePath = path.join(rootDir, 'src/pages/Home.jsx');
+  const catalogPath = path.join(rootDir, 'src/pages/ShowcaseCatalog.jsx');
+  const detailsPath = path.join(rootDir, 'src/pages/ShowcaseVehicleDetails.jsx');
+  const howItWorksPagePath = path.join(rootDir, 'src/pages/HowItWorksPage.jsx');
+  const howItWorksDataPath = path.join(rootDir, 'src/data/howItWorksData.js');
+
+  const homeContent = fs.readFileSync(homePath, 'utf-8');
+  const catalogContent = fs.readFileSync(catalogPath, 'utf-8');
+  const detailsContent = fs.readFileSync(detailsPath, 'utf-8');
+  const howItWorksPageContent = fs.readFileSync(howItWorksPagePath, 'utf-8');
+  const howItWorksDataContent = fs.readFileSync(howItWorksDataPath, 'utf-8');
+
+  test('32.1: Home.jsx não exibe selo textual "⭐ Destaque" sobre a foto do veículo', () => {
+    assert.ok(!homeContent.includes('⭐ Destaque'), 'Selo textual ⭐ Destaque sobreposto à foto deve ser removido da Home');
+  });
+
+  test('32.2: Home.jsx preserva o ícone de estrela ao lado do nome do veículo', () => {
+    assert.ok(homeContent.includes('car.featured &&') && homeContent.includes('<Star'), 'Home deve manter ícone de estrela de destaque ao lado do nome');
+  });
+
+  test('32.3: Demais telas (ShowcaseCatalog e ShowcaseVehicleDetails) permanecem inalteradas sem selo sobre a foto', () => {
+    assert.ok(!catalogContent.includes('⭐ Destaque'), 'ShowcaseCatalog não deve conter selo sobre a foto');
+    assert.ok(catalogContent.includes('car.featured &&') && catalogContent.includes('<Star'), 'ShowcaseCatalog mantém estrela ao lado do nome');
+    assert.ok(detailsContent.includes('car.featured &&') && detailsContent.includes('<Star'), 'ShowcaseVehicleDetails mantém estrela ao lado do título');
+  });
+
+  test('32.4: howItWorksData.js estrutura todas as 7 funcionalidades reais do projeto com passos e dicas', () => {
+    assert.ok(Array.isArray(howItWorksSections) && howItWorksSections.length === 7, 'Deve conter exatamente as 7 seções mapeadas');
+    
+    const ids = howItWorksSections.map(s => s.id);
+    assert.ok(ids.includes('navegacao-vitrine'), 'Deve cobrir Vitrine Digital');
+    assert.ok(ids.includes('filtros-busca'), 'Deve cobrir Filtros e Limpar Filtros');
+    assert.ok(ids.includes('leitura-anuncios'), 'Deve cobrir Preço BRL e Selos');
+    assert.ok(ids.includes('detalhes-veiculo'), 'Deve cobrir Varredura 360 e Dossiê');
+    assert.ok(ids.includes('tco-simuladores'), 'Deve cobrir TCO e Financiamento');
+    assert.ok(ids.includes('consultor-ia'), 'Deve cobrir Consultor IA e Ausência Honesta');
+    assert.ok(ids.includes('anunciar-gerenciar'), 'Deve cobrir Meus Anúncios');
+
+    for (const sec of howItWorksSections) {
+      assert.ok(sec.title && sec.summary && sec.whatIsIt, `Seção ${sec.id} deve conter título, resumo e o que é`);
+      assert.ok(Array.isArray(sec.steps) && sec.steps.length > 0, `Seção ${sec.id} deve conter passos`);
+      assert.ok(Array.isArray(sec.tips) && sec.tips.length > 0, `Seção ${sec.id} deve conter dicas práticas`);
+    }
+  });
+
+  test('32.5: howItWorksData.js segrega perguntas gerais e perguntas exclusivas B2B', () => {
+    assert.ok(Array.isArray(generalFaqList) && generalFaqList.length >= 5, 'Deve conter lista de FAQ geral');
+    assert.ok(Array.isArray(b2bFaqList) && b2bFaqList.length >= 2, 'Deve conter lista de FAQ B2B segregada');
+    assert.ok(b2bSectionNotice && b2bSectionNotice.title, 'Deve conter objeto de aviso B2B');
+  });
+
+  test('32.6: HowItWorksPage.jsx utiliza useAuth e condiciona recursos B2B estritamente a isB2BAuthorized', () => {
+    assert.ok(howItWorksPageContent.includes("import { useAuth } from '../contexts/AuthContext'"), 'Deve importar useAuth');
+    assert.ok(howItWorksPageContent.includes('isB2BAuthorized'), 'Deve calcular isB2BAuthorized');
+    assert.ok(howItWorksPageContent.includes('{isB2BAuthorized &&'), 'Nota B2B e FAQ B2B devem ser renderizados apenas quando autorizado');
+    assert.ok(howItWorksPageContent.includes('aria-expanded'), 'Acordeão deve possuir acessibilidade com aria-expanded');
+  });
+
+  test('32.7: Balanceamento sintático de chaves e parênteses em HowItWorksPage.jsx e howItWorksData.js', () => {
+    for (const [name, content] of [['HowItWorksPage', howItWorksPageContent], ['howItWorksData', howItWorksDataContent]]) {
+      let braces = 0, parens = 0, brackets = 0;
+      for (let i = 0; i < content.length; i++) {
+        const ch = content[i];
+        if (ch === '{') braces++;
+        else if (ch === '}') braces--;
+        else if (ch === '(') parens++;
+        else if (ch === ')') parens--;
+        else if (ch === '[') brackets++;
+        else if (ch === ']') brackets--;
+      }
+      assert.strictEqual(braces, 0, `Chaves desbalanceadas em ${name}`);
+      assert.strictEqual(parens, 0, `Parênteses desbalanceados em ${name}`);
+      assert.strictEqual(brackets, 0, `Colchetes desbalanceados em ${name}`);
+    }
+  });
+});
+
 
 

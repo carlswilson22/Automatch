@@ -138,17 +138,8 @@ const CarCard = ({ car, index }) => {
 
         {/* Badges - Organizados para não sobrepor */}
         <div className="absolute top-3 left-3 right-3 flex justify-between items-start z-20">
-          <div className="flex flex-col gap-2">
-            {/* Identificador da Loja */}
-            <StoreIdentifier storeId={car.storeId} variant="badge" />
-
-            {/* Featured Badge - Posicionado abaixo da loja se ambos existirem */}
-            {car.featured && (
-              <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md shadow-lg w-fit">
-                ⭐ Destaque
-              </div>
-            )}
-          </div>
+          {/* Identificador da Loja */}
+          <StoreIdentifier storeId={car.storeId} variant="badge" />
 
           {/* Wishlist */}
           <button
