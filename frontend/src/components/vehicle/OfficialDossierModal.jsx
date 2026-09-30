@@ -16,7 +16,7 @@ import {
 
 export default function OfficialDossierModal({ isOpen, onClose, car }) {
   const modalRef = useRef(null);
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [pdfError, setPdfError] = useState('');
 
   // Fechar com tecla ESC e bloquear scroll do fundo
@@ -129,62 +129,8 @@ export default function OfficialDossierModal({ isOpen, onClose, car }) {
 
   const allApproved = inspectionItems.every(i => i.approved);
 
-  // Geração do PDF Consolidado (Servidor com Fallback Cliente via Janela de Impressão)
-  const handleGeneratePdf = async () => {
-    setIsGeneratingPdf(true);
-    setPdfError('');
-
-    const cleanCarName = `${brand}_${model}`.replace(/\s+/g, '_');
-
-    try {
-      // 1. Tenta API do backend (ReportLab vetorial)
-      const res = await fetch(`/api/v1/laudos/${car.id}/pdf`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          brand,
-          model,
-          year: Number(year) || 2024,
-          km: Number(String(rawKm).replace(/\D/g, '') || 0),
-          price: typeof rawPrice === 'number' ? rawPrice : Number(String(rawPrice).replace(/\D/g, '')) || 0,
-          color,
-          fipe_price: typeof rawFipe === 'number' ? rawFipe : null,
-          fipe_code: car.fipeCode || car.fipe_code || 'ATM-FIPE',
-          fuel,
-          plate,
-          debt_status: hasDebt ? 'Com débitos' : 'Sem débitos',
-          auction_history: hasAuction ? 'Sim' : 'Não'
-        })
-      });
-
-      if (res.ok) {
-        const blob = await res.blob();
-        const blobUrl = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = blobUrl;
-        a.download = `Dossie_Oficial_Automatch_${cleanCarName}_${protocol}.pdf`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
-        return;
-      }
-      throw new Error('Falha no serviço de PDF do servidor.');
-    } catch (err) {
-      console.warn('Backend PDF offline. Gerando versão para impressão formatada A4 no navegador:', err);
-      // 2. Fallback Cliente de Alta Fidelidade (HTML Blob otimizado para Impressão A4)
-      try {
-        generateClientPrintableDossier();
-      } catch (clientErr) {
-        setPdfError('Não foi possível gerar o PDF. Verifique a conexão e tente novamente.');
-      }
-    } finally {
-      setIsGeneratingPdf(false);
-    }
-  };
-
-  const generateClientPrintableDossier = () => {
-    const printableHtml = `<!DOCTYPE html>
+  // Construtor HTML do Dossiê para Impressão e Fallback de Arquivo
+  const buildDossierHtml = () => `<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
@@ -291,23 +237,85 @@ export default function OfficialDossierModal({ isOpen, onClose, car }) {
 </body>
 </html>`;
 
-    const blob = new Blob([printableHtml], { type: 'text/html;charset=utf-8' });
-    const blobUrl = URL.createObjectURL(blob);
-    const win = window.open(blobUrl, '_blank');
-    if (win) {
-      setTimeout(() => {
-        try { win.print(); } catch (e) {}
-      }, 500);
-    } else {
-      const a = document.createElement('a');
-      a.href = blobUrl;
-      const cleanCarName = `${brand}_${model}`.replace(/\s+/g, '_');
-      a.download = `Dossie_Oficial_${cleanCarName}_${protocol}.html`;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
+  // Responsabilidade Única 1: Download do PDF
+  const handleDownloadPdf = async () => {
+    setIsDownloadingPdf(true);
+    setPdfError('');
+
+    const cleanCarName = `${brand}_${model}`.replace(/\s+/g, '_');
+
+    try {
+      // 1. Tenta API do backend (ReportLab vetorial)
+      const res = await fetch(`/api/v1/laudos/${car.id}/pdf`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          brand,
+          model,
+          year: Number(year) || 2024,
+          km: Number(String(rawKm).replace(/\D/g, '') || 0),
+          price: typeof rawPrice === 'number' ? rawPrice : Number(String(rawPrice).replace(/\D/g, '')) || 0,
+          color,
+          fipe_price: typeof rawFipe === 'number' ? rawFipe : null,
+          fipe_code: car.fipeCode || car.fipe_code || 'ATM-FIPE',
+          fuel,
+          plate,
+          debt_status: hasDebt ? 'Com débitos' : 'Sem débitos',
+          auction_history: hasAuction ? 'Sim' : 'Não'
+        })
+      });
+
+      if (res.ok) {
+        const blob = await res.blob();
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = `Dossie_Oficial_Automatch_${cleanCarName}_${protocol}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+        return;
+      }
+      throw new Error('Falha no serviço de PDF do servidor.');
+    } catch (err) {
+      console.warn('Backend PDF offline. Gerando download de arquivo consolidado:', err);
+      try {
+        const printableHtml = buildDossierHtml();
+        const blob = new Blob([printableHtml], { type: 'text/html;charset=utf-8' });
+        const blobUrl = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = `Dossie_Oficial_Automatch_${cleanCarName}_${protocol}.html`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+      } catch (clientErr) {
+        setPdfError('Não foi possível realizar o download. Verifique a conexão e tente novamente.');
+      }
+    } finally {
+      setIsDownloadingPdf(false);
     }
-    setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+  };
+
+  // Responsabilidade Única 2: Impressão direta do Dossiê
+  const handlePrintPdf = () => {
+    try {
+      const printableHtml = buildDossierHtml();
+      const blob = new Blob([printableHtml], { type: 'text/html;charset=utf-8' });
+      const blobUrl = URL.createObjectURL(blob);
+      const win = window.open(blobUrl, '_blank');
+      if (win) {
+        setTimeout(() => {
+          try { win.print(); } catch (e) {}
+        }, 500);
+      }
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
+    } catch (e) {
+      console.error('Erro ao acionar impressão:', e);
+      setPdfError('Não foi possível abrir a janela de impressão.');
+    }
   };
 
   return (
@@ -346,15 +354,27 @@ export default function OfficialDossierModal({ isOpen, onClose, car }) {
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={handleGeneratePdf}
-                disabled={isGeneratingPdf}
-                className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer"
-                title="Baixar ou Imprimir o Dossiê em PDF"
+                onClick={handlePrintPdf}
+                className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-white border border-slate-700 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer"
+                title="Imprimir o Dossiê"
+                aria-label="Imprimir o Dossiê"
               >
-                {isGeneratingPdf ? (
+                <Printer className="w-3.5 h-3.5 text-blue-400" />
+                <span>Imprimir</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleDownloadPdf}
+                disabled={isDownloadingPdf}
+                className="px-3.5 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm active:scale-95 cursor-pointer"
+                title="Baixar o Dossiê em PDF"
+                aria-label="Baixar o Dossiê em PDF"
+              >
+                {isDownloadingPdf ? (
                   <>
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span>Gerando PDF...</span>
+                    <span>Baixando...</span>
                   </>
                 ) : (
                   <>
@@ -513,27 +533,9 @@ export default function OfficialDossierModal({ isOpen, onClose, car }) {
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 sm:flex-initial px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-bold transition-all cursor-pointer"
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-bold transition-all cursor-pointer"
               >
                 Fechar
-              </button>
-              <button
-                type="button"
-                onClick={handleGeneratePdf}
-                disabled={isGeneratingPdf}
-                className="flex-1 sm:flex-initial px-5 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-2 shadow-md shadow-blue-500/20 active:scale-95 transition-all cursor-pointer"
-              >
-                {isGeneratingPdf ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    <span>Preparando Dossiê...</span>
-                  </>
-                ) : (
-                  <>
-                    <Printer className="w-4 h-4" />
-                    <span>Imprimir / Salvar PDF</span>
-                  </>
-                )}
               </button>
             </div>
           </div>
