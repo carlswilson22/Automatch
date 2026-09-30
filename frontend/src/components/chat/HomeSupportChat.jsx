@@ -2,6 +2,9 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, X, Send } from 'lucide-react';
 
+import { generateGeneralSupportAnswer } from '../../utils/aiConsultantCore';
+import { showcaseCars } from '../../data/showcaseData';
+
 export default function HomeSupportChat({ isOpen, onClose }) {
   const [chatTab, setChatTab] = useState('system');
   const [chatMessage, setChatMessage] = useState('');
@@ -30,26 +33,7 @@ export default function HomeSupportChat({ isOpen, onClose }) {
   }, [isOpen, onClose]);
 
   const generateAssistantResponse = (text) => {
-    const q = (text || '').toLowerCase();
-    if (q.includes('laudo') || q.includes('cautelar') || q.includes('vistoria') || q.includes('pericia') || q.includes('procedencia')) {
-      return "Todos os veículos na Automatch possuem Laudo Cautelar 100% Aprovado e Dossiê de Transparência auditado, cobrindo integridade estrutural, pintura, histórico de leilão e documentação no DETRAN.";
-    }
-    if (q.includes('financiamento') || q.includes('parcela') || q.includes('entrada') || q.includes('banco') || q.includes('taxa') || q.includes('juros')) {
-      return "Trabalhamos com os principais bancos parceiros (Santander, Itaú, Bradesco, BV) com taxas competitivas a partir de 1,29% ao mês. Você pode simular parcelas diretamente na página de detalhes de qualquer veículo.";
-    }
-    if (q.includes('como funciona') || q.includes('funciona') || q.includes('comprar') || q.includes('vender') || q.includes('passo')) {
-      return "Na Automatch você escolhe seu carro com laudo pericial transparente, simula financiamento online, fala direto com o vendedor e baixa o Dossiê Oficial com QR Code de autenticidade sem burocracia.";
-    }
-    if (q.includes('troca') || q.includes('usado') || q.includes('avaliar') || q.includes('troco')) {
-      return "Aceitamos veículos usados na troca com avaliação rápida baseada na Tabela FIPE e estado de conservação. Experimente também nosso Simulador de Troca com Troco na página do veículo!";
-    }
-    if (q.includes('fipe') || q.includes('preço') || q.includes('preco') || q.includes('desconto') || q.includes('valor')) {
-      return "Nossos anúncios contam com comparativo oficial em relação à Tabela FIPE atualizada. A maioria dos nossos carros está anunciada com preços na média ou abaixo da FIPE.";
-    }
-    if (q.includes('garantia') || q.includes('seguro') || q.includes('devolução') || q.includes('revisado')) {
-      return "Todos os carros anunciados por concessionárias parceiras contam com garantia de procedência, 90 dias de cobertura mecânica e certificação pericial Automatch.";
-    }
-    return "Olá! Sou o assistente virtual Automatch. Posso esclarecer dúvidas sobre Laudo Cautelar, simulação de financiamento, Tabela FIPE ou ajudá-lo a encontrar o modelo ideal na nossa Vitrine Digital!";
+    return generateGeneralSupportAnswer(text, showcaseCars);
   };
 
   const handleSendMessage = async (e, directText = null) => {

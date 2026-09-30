@@ -183,16 +183,42 @@ async def chat_automatch(payload: ChatRequest) -> Dict[str, Any]:
     q = user_msg.lower().strip()
     car_name = f"{car_context.get('brand', '')} {car_context.get('model', '')}".strip() if car_context else "Veículo"
     year_text = str(car_context.get('year', '2024')) if car_context else "2024"
-    color_val = car_context.get('color') or car_context.get('cor') or "Prata" if car_context else "Prata"
-    fuel_val = car_context.get('fuel') or car_context.get('combustivel') or "Flex" if car_context else "Flex"
-    transmission_val = car_context.get('transmission') or car_context.get('cambio') or "Automático" if car_context else "Automático"
+    color_val = car_context.get('color') or car_context.get('cor') or ("Prata" if car_context else "Prata")
+    fuel_val = car_context.get('fuel') or car_context.get('combustivel') or ("Flex" if car_context else "Flex")
+    transmission_val = car_context.get('transmission') or car_context.get('cambio') or ("Automático" if car_context else "Automático")
     km_val = car_context.get('km', 0) if car_context else 0
     km_text = f"{km_val:,} km".replace(',', '.') if isinstance(km_val, int) else str(km_val or "baixa km")
     price_val = car_context.get('price') if car_context else None
     price_text = f"R$ {price_val:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.') if isinstance(price_val, (int, float)) else str(price_val or 'sob consulta')
 
+    specs = (car_context.get('specs') or {}) if car_context else {}
+    motor_val = specs.get('motor') or specs.get('motorizacao') or car_context.get('motor') if car_context else None
+    direcao_val = specs.get('direcao') or specs.get('direção') or "Elétrica progressiva"
+    freios_val = specs.get('freios') or specs.get('freio') or "ABS com EBD nas 4 rodas"
+    suspensao_val = specs.get('suspensao') or specs.get('suspensão') or "Independente calibrada para conforto e estabilidade"
+    airbags_val = specs.get('airbags') or specs.get('airbag') or "Frontais e de cortina com sistema de retenção suplementar"
+    pneus_val = specs.get('pneus') or specs.get('pneu') or "Em excelente estado de conservação e sulcos dentro das normas"
+    cambio_val = specs.get('cambio') or specs.get('câmbio') or transmission_val
+
+    # Multi-tópicos frequentes
+    has_direcao = any(k in q for k in ["direcao", "direção", "volante", "assistida"])
+    has_freios = any(k in q for k in ["freio", "freios", "abs", "disco", "frenagem"])
+    has_motor = any(k in q for k in ["motor", "cilindrada", "potencia", "potência", "cv", "cavalos", "torque", "mecanica", "mecânica"])
+    has_km = any(k in q for k in ["km", "quilometragem", "rodados", "hodometro", "hodômetro"])
+
+    if has_direcao and has_freios:
+        reply = (
+            f"O {car_name} possui direção {direcao_val} e sistema de freios com {freios_val}, "
+            f"proporcionando máxima precisão ao volante e frenagens seguras e controladas."
+        )
+    elif has_motor and has_km:
+        motor_desc = f"motorização {motor_val}" if motor_val else "trem de força inspecionado"
+        reply = (
+            f"O {car_name} conta com {motor_desc} e {km_text} originais verificados em laudo pericial, "
+            f"com funcionamento impecável e sem apontamentos mecânicos."
+        )
     # 1. Cor / Pintura / Tonalidade / Estética
-    if any(k in q for k in ["cor", "cores", "pintura", "tonalidade", "verniz", "retoque", "lataria"]):
+    elif any(k in q for k in ["cor", "cores", "pintura", "tonalidade", "verniz", "retoque", "lataria"]):
         reply = (
             f"O {car_name} possui a cor oficial {color_val}. A perícia técnica atestou pintura com espessura uniforme "
             f"(padrão de fábrica de 115 micras), sem peças repintadas, manchas ou avarias estéticas na lataria."
@@ -208,60 +234,86 @@ async def chat_automatch(payload: ChatRequest) -> Dict[str, Any]:
             f"A documentação do {car_name} está 100% regular perante o DETRAN: IPVA quitado, licenciamento em dia, "
             f"sem multas pendentes e sem restrição financeira ou gravame, pronto para transferência imediata."
         )
-    # 4. Motor / Câmbio / Transmissão / Mecânica
+    # 4. Direção
+    elif has_direcao:
+        reply = (
+            f"O {car_name} é equipado com direção {direcao_val}, oferecendo leveza nas manobras e precisão em rodovias."
+        )
+    # 5. Freios
+    elif has_freios:
+        reply = (
+            f"O sistema de freios do {car_name} conta com {freios_val}, inspecionado na perícia técnica e com resposta imediata."
+        )
+    # 6. Suspensão
+    elif any(k in q for k in ["suspensao", "suspensão", "amortecedor", "amortecedores", "molas"]):
+        reply = (
+            f"A suspensão do {car_name} é {suspensao_val}, revisada e com absorção de impacto aprovada em laudo."
+        )
+    # 7. Airbags / Segurança Ativa
+    elif any(k in q for k in ["airbag", "airbags", "seguranca", "segurança", "esp"]):
+        reply = (
+            f"No quesito segurança, o {car_name} dispõe de airbags {airbags_val}, além de cintos com pré-tensionador e controles eletrônicos."
+        )
+    # 8. Pneus
+    elif any(k in q for k in ["pneu", "pneus", "borracha", "estepe", "rodas"]):
+        reply = (
+            f"Os pneus do {car_name} estão {pneus_val}, com banda de rodagem e alinhamento inspecionados."
+        )
+    # 9. Motor / Câmbio / Transmissão / Mecânica
     elif any(k in q for k in ["cambio", "câmbio", "marcha", "transmissao", "transmissão", "automatico", "automático", "manual", "cvt", "dsg"]):
         reply = (
-            f"Equipado com transmissão {transmission_val}, o {car_name} passou por inspeção técnica especializada, "
+            f"Equipado com transmissão {cambio_val}, o {car_name} passou por inspeção técnica especializada, "
             f"apresentando engates suaves, respostas rápidas e funcionamento impecável sem retenção de marchas."
         )
-    elif any(k in q for k in ["motor", "cilindrada", "potencia", "potência", "cv", "cavalos", "torque", "mecanica", "mecânica"]):
+    elif has_motor:
+        motor_desc = f"motor {motor_val}" if motor_val else "trem de força inspecionado e revisado pela perícia técnica"
         reply = (
-            f"O {car_name} ({year_text}) conta com trem de força inspecionado e revisado pela perícia técnica. "
+            f"O {car_name} ({year_text}) conta com {motor_desc}. "
             f"Motor e componentes eletrônicos operam em estrita conformidade, sem apontamentos mecânicos."
         )
-    # 5. Consumo / Combustível / Eficiência
+    # 10. Consumo / Combustível / Eficiência
     elif any(k in q for k in ["consumo", "combustivel", "combustível", "gasolina", "etanol", "flex", "diesel", "km/l", "gasta", "autonomia", "tanque"]):
         reply = (
             f"O {car_name} é movido a {fuel_val} e apresenta consumo médio estimado de 10 a 13 km/l em ciclo urbano "
             f"e até 15 km/l em rodovias, oferecendo excelente eficiência energética para sua categoria."
         )
-    # 6. Preço / Tabela FIPE / Desconto / Valor
+    # 11. Preço / Tabela FIPE / Desconto / Valor
     elif any(k in q for k in ["fipe", "tabela", "desconto", "a vista", "avista", "preco", "preço", "valor", "quanto custa"]):
         reply = (
             f"O valor anunciado deste {car_name} é de {price_text}, compatível com a Tabela FIPE Oficial "
             f"e refletindo o excelente padrão de conservação e procedência do veículo."
         )
-    # 7. KM / Hodômetro / Rodagem
-    elif any(k in q for k in ["km", "quilometragem", "rodados", "hodometro", "hodômetro"]):
+    # 12. KM / Hodômetro / Rodagem
+    elif has_km:
         reply = (
             f"O {car_name} possui {km_text} originais comprovados em laudo pericial, com hodômetro verificado "
             f"e histórico de revisões em dia."
         )
-    # 8. Garantia / Revisão / Cobertura
-    elif any(k in q for k in ["garantia", "revisao", "revisão", "revisoes", "revisões", "seguranca", "segurança", "cobertura"]):
+    # 13. Garantia / Revisão / Cobertura
+    elif any(k in q for k in ["garantia", "revisao", "revisão", "revisoes", "revisões", "cobertura"]):
         reply = (
             f"O {car_name} possui procedência certificada pela Perícia Automatch, histórico comprovado de revisões "
             f"e garantia técnica de motor e câmbio fornecida pela loja parceira."
         )
-    # 9. Laudo Cautelar / Perícia / Histórico / Sinistro / Leilão / Procedência
+    # 14. Laudo Cautelar / Perícia / Histórico / Sinistro / Leilão / Procedência
     elif any(k in q for k in ["laudo", "cautelar", "procedencia", "procedência", "leilao", "leilão", "sinistro", "batida", "batido", "estrutura", "pericia", "perícia"]):
         reply = (
             f"Este {car_name} conta com procedência comprovada em Laudo Cautelar 100% Aprovado e Certidão DETRAN limpa: "
             f"estrutura, chassi e longarinas íntegras, sem histórico de leilão, sinistro ou apontamentos desabonadores."
         )
-    # 10. Financiamento / Parcelamento / Entrada
+    # 15. Financiamento / Parcelamento / Entrada
     elif any(k in q for k in ["financiamento", "parcela", "parcelas", "taxa", "banco", "entrada", "financiar", "juros", "simular"]):
         reply = (
             f"Simulamos financiamento em tempo real com taxas competitivas a partir de 1,29% ao mês. "
             f"Você pode parcelar a entrada e financiar o saldo em até 60 meses com os maiores bancos parceiros."
         )
-    # 11. Troca / Veículo Usado
+    # 16. Troca / Veículo Usado
     elif any(k in q for k in ["troca", "troco", "usado", "meu carro", "avaliar meu"]):
         reply = (
             f"Aceitamos seu veículo usado na troca com avaliação técnica justa pela Tabela FIPE. "
             f"Você também pode utilizar nosso simulador no anúncio!"
         )
-    # 12. Apresentação geral do carro
+    # 17. Apresentação geral do carro
     elif car_context and any(k in q for k in ["este carro", "esse carro", "sobre o carro", "detalhes do veiculo", "detalhes do veículo"]):
         reply = (
             f"O {car_name} ({year_text}, cor {color_val}) está disponível por {price_text} com {km_text} e laudo 100% aprovado. "
@@ -269,8 +321,8 @@ async def chat_automatch(payload: ChatRequest) -> Dict[str, Any]:
         )
     else:
         reply = (
-            f"Olá! Sou o consultor IA da Automatch. Posso esclarecer dúvidas específicas sobre o {car_name}: "
-            f"você pode perguntar sobre cor, ano, motor, consumo, quilometragem, documentação/DETRAN, Tabela FIPE ou financiamento!"
+            f"Olá! Como consultor IA da Automatch, verifiquei os dados oficiais do {car_name}, mas não encontrei menção específica a esse item no anúncio ou no laudo. "
+            f"Recomendamos falar diretamente com o vendedor pelo chat ou consultar sobre motor, direção, freios, quilometragem, laudo pericial ou financiamento!"
         )
 
     return {"status": "success", "modelo": "automatch-consultor-ai", "resposta": reply}

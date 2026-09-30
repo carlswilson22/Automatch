@@ -512,7 +512,7 @@ export default function ShowcaseVehicleDetails() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans pb-20">
       {/* Navigation Header */}
-      <nav className="w-full px-6 py-4 bg-slate-900/98 border-b border-slate-800 sticky top-0 z-50 shadow-md">
+      <nav className="w-full px-6 py-4 bg-slate-900/98 sticky top-0 z-50 shadow-md">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
             <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-800 rounded-full text-slate-400 hover:text-white transition-colors">

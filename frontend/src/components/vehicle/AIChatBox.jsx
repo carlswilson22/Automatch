@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Bot, Send, RotateCcw, Trash2 } from 'lucide-react';
+import { Bot, Send, RotateCcw, Trash2, RefreshCw } from 'lucide-react';
+import { generateVehicleConsultantAnswer } from '../../utils/aiConsultantCore';
 
 const AIChatBox = ({ car }) => {
   const storageKey = `automatch_chat_${car?.id || 'default'}`;
@@ -54,54 +55,6 @@ const AIChatBox = ({ car }) => {
     setMessages([defaultWelcome]);
   };
 
-  const generateLocalResponse = (userMsg) => {
-    const q = userMsg.toLowerCase().trim();
-    const kmText = typeof car?.mileage === 'number' ? `${car.mileage.toLocaleString('pt-BR')} km` : (car?.mileage || 'Baixa KM');
-    const priceText = typeof car?.price === 'number' ? `R$ ${car.price.toLocaleString('pt-BR')}` : (car?.price || 'sob consulta');
-    const colorText = car?.color || car?.cor || 'Prata';
-    const fuelText = car?.fuel || car?.combustivel || 'Flex';
-    const transText = car?.transmission || car?.cambio || 'Automático';
-    const carName = car?.name || 'veículo';
-
-    if (q.includes('cor') || q.includes('pintura') || q.includes('tonalidade') || q.includes('verniz') || q.includes('retoque') || q.includes('lataria')) {
-      return `O ${carName} possui a cor oficial ${colorText}. A perícia técnica atestou pintura com espessura uniforme (115 micras, padrão de fábrica), sem peças repintadas, manchas ou avarias na lataria.`;
-    }
-    if (q.includes('ano') || q.includes('modelo') || q.includes('fabricação') || q.includes('fabricacao')) {
-      return `O ${carName} é ano/modelo ${car?.year || 'recente'}, com procedência e histórico de fabricação confirmados perante os órgãos de trânsito.`;
-    }
-    if (q.includes('documento') || q.includes('documentação') || q.includes('documentacao') || q.includes('ipva') || q.includes('detran') || q.includes('licenciamento') || q.includes('multa') || q.includes('debito') || q.includes('débito')) {
-      return `A documentação do ${carName} está 100% regular perante o DETRAN: IPVA quitado, licenciamento em dia, sem multas pendentes e sem gravame, pronto para transferência imediata.`;
-    }
-    if (q.includes('câmbio') || q.includes('cambio') || q.includes('marcha') || q.includes('transmissão') || q.includes('transmissao')) {
-      return `Equipado com transmissão ${transText}, o ${carName} passou por teste de rodagem e inspeção técnica com trocas suaves e sem trancos.`;
-    }
-    if (q.includes('motor') || q.includes('potência') || q.includes('potencia') || q.includes('cilindrada') || q.includes('desempenho') || q.includes('cv')) {
-      return `O ${carName} (${car?.year || ''}) conta com conjunto mecânico inspecionado e revisado. A transmissão e os componentes eletrônicos foram validados sem anomalias na varredura técnica.`;
-    }
-    if (q.includes('consumo') || q.includes('combustível') || q.includes('combustivel') || q.includes('gasolina') || q.includes('etanol') || q.includes('flex') || q.includes('gasta')) {
-      return `O ${carName} é movido a ${fuelText} e apresenta consumo médio de 10 a 13 km/l em ciclo urbano e até 15 km/l em rodovias, demonstrando excelente eficiência para sua categoria.`;
-    }
-    if (q.includes('laudo') || q.includes('cautelar') || q.includes('batida') || q.includes('leilao') || q.includes('leilão') || q.includes('procedência') || q.includes('procedencia') || q.includes('pericia') || q.includes('perícia')) {
-      return `Este ${carName} possui Laudo Cautelar 100% APROVADO: chassi, colunas, longarinas e estrutura íntegras, sem histórico de sinistro ou apontamento de leilão.`;
-    }
-    if (q.includes('fipe') || q.includes('preço') || q.includes('preco') || q.includes('desconto') || q.includes('valor') || q.includes('quanto custa')) {
-      return `O valor anunciado é ${priceText}, compatível com a Tabela FIPE Oficial e refletindo as excelentes condições de conservação do veículo.`;
-    }
-    if (q.includes('km') || q.includes('quilometragem') || q.includes('rodado')) {
-      return `O veículo possui ${kmText} originais comprovados, com histórico de manutenções periódicas e hodômetro verificado.`;
-    }
-    if (q.includes('financiamento') || q.includes('parcela') || q.includes('entrada') || q.includes('banco') || q.includes('taxa')) {
-      return `Simulamos financiamento com taxas competitivas a partir de 1,29% a.m. Você pode parcelar a entrada e financiar o saldo em até 60 meses.`;
-    }
-    if (q.includes('troca') || q.includes('aceita troca') || q.includes('usado')) {
-      return `Aceitamos seu veículo usado na troca com avaliação justa baseada na FIPE. Você também pode utilizar nosso simulador de troca disponível nesta página.`;
-    }
-    if (q.includes('garantia') || q.includes('segurança') || q.includes('revisão') || q.includes('revisao')) {
-      return `O ${carName} inclui garantia de procedência, cobertura técnica para motor e câmbio e certificação pericial Automatch.`;
-    }
-    return `Olá! Sou o consultor IA da Automatch. Posso esclarecer dúvidas específicas sobre o ${carName}: você pode perguntar sobre cor, ano, motor, consumo, quilometragem, documentação/DETRAN, Tabela FIPE ou financiamento!`;
-  };
-
   const handleSend = async (overrideText = null) => {
     const textToSend = (overrideText || input).trim();
     if (!textToSend) return;
@@ -111,10 +64,25 @@ const AIChatBox = ({ car }) => {
     if (!overrideText) setInput('');
     setMessages(m => [...m, { from: 'ai', text: 'Consultando especialista Automatch...', isLoading: true }]);
 
-    // Prepare multi-turn history excluding loader
+    // Histórico conversacional para contexto
     const historico = currentMessages
       .filter(m => !m.isLoading && m.text)
       .map(m => ({ from: m.from, text: m.text }));
+
+    const fullCarContext = {
+      brand: car?.brand || '',
+      model: car?.name || car?.model || '',
+      year: car?.year || '',
+      price: car?.price || 0,
+      km: typeof car?.mileage === 'number' ? car.mileage : parseInt(String(car?.mileage || 0).replace(/\D/g, '')) || 0,
+      color: car?.color || car?.cor || 'Prata',
+      fuel: car?.fuel || car?.combustivel || car?.specs?.combustivel || 'Flex',
+      transmission: car?.transmission || car?.cambio || car?.specs?.cambio || 'Automático',
+      specs: car?.specs || {},
+      description: car?.description || '',
+      fullDescription: car?.fullDescription || '',
+      laudoStatus: car?.timeline?.find(t => t.type === 'laudo')?.status || 'approved'
+    };
 
     try {
       const response = await fetch('/api/chat', {
@@ -123,41 +91,33 @@ const AIChatBox = ({ car }) => {
         body: JSON.stringify({ 
           mensagem: userMessage,
           historico,
-          car_context: {
-            brand: car?.brand || '',
-            model: car?.name || '',
-            year: car?.year || '',
-            price: car?.price || 0,
-            km: typeof car?.mileage === 'number' ? car.mileage : parseInt(String(car?.mileage || 0).replace(/\D/g,'')) || 0,
-            color: car?.color || car?.cor || 'Prata',
-            fuel: car?.fuel || car?.combustivel || 'Flex',
-            transmission: car?.transmission || car?.cambio || 'Automático'
-          }
+          car_context: fullCarContext
         })
       });
+
       if (response.ok) {
         const data = await response.json();
         setMessages(m => {
           const newM = [...m];
           if (newM[newM.length - 1]?.isLoading) newM.pop();
-          return [...newM, { from: 'ai', text: data.resposta || generateLocalResponse(userMessage) }];
+          return [...newM, { from: 'ai', text: data.resposta || generateVehicleConsultantAnswer(userMessage, car, historico) }];
         });
       } else {
         throw new Error('API offline');
       }
     } catch (err) {
-      // Intelligent fallback when offline / mock mode
+      // Fallback semântico fundamentado nas 3 fontes (anúncio, laudo e descrição)
       setTimeout(() => {
         setMessages(m => {
           const newM = [...m];
           if (newM[newM.length - 1]?.isLoading) newM.pop();
-          return [...newM, { from: 'ai', text: generateLocalResponse(userMessage) }];
+          return [...newM, { from: 'ai', text: generateVehicleConsultantAnswer(userMessage, car, historico) }];
         });
-      }, 400);
+      }, 350);
     }
   };
 
-  const quickPills = ["Cor", "Ano", "Combustível", "Preço FIPE", "Documentação", "Laudo"];
+  const quickPills = ["Direção e Freios", "Motor e KM", "Consumo", "Preço FIPE", "Documentação", "Laudo Cautelar"];
 
   return (
     <div className="bg-slate-900 rounded-3xl border border-slate-800 shadow-xl overflow-hidden flex flex-col h-[400px]">

@@ -20,6 +20,7 @@ globalThis.localStorage = {
 
 // Import dinâmico do módulo de dados de inventário
 const inventoryModule = await import('../src/data/inventoryData.js');
+const aiCoreModule = await import('../src/utils/aiConsultantCore.js');
 
 describe('BATERIA DE TESTES 1: Remoção de "Diferenciais e Itens de Série"', () => {
   const showcasePath = path.join(rootDir, 'src/pages/ShowcaseVehicleDetails.jsx');
@@ -1106,3 +1107,89 @@ describe('BATERIA DE TESTES 29: Dossiê Oficial sob Demanda - Ocultação na Car
     assert.ok(!detailsContent.includes('isDownloadingPdf'), 'Estado redundante isDownloadingPdf deve ser removido de ShowcaseVehicleDetails');
   });
 });
+
+describe('BATERIA DE TESTES 30: Consultor IA Aprimorado & Remoção de Linha no Header do Anúncio', () => {
+  const { generateVehicleConsultantAnswer, generateGeneralSupportAnswer } = aiCoreModule;
+  const corolla = {
+    id: 'sc-001',
+    name: 'Toyota Corolla Cross XRX Híbrido 2024',
+    brand: 'Toyota',
+    model: 'Corolla Cross',
+    year: 2024,
+    price: 185000,
+    km: 12000,
+    fuel: 'Híbrido Flex',
+    color: 'Branco Lunar',
+    specs: {
+      motor: '1.8 Híbrido Flex',
+      potencia: '122 cv',
+      cambio: 'Automático CVT',
+      direcao: 'Elétrica Progressiva',
+      freios: 'ABS com EBD nas 4 rodas',
+      airbags: '7 Airbags',
+      suspensao: 'Independente McPherson dianteira e eixo de torção traseiro',
+      tracao: 'Dianteira'
+    },
+    description: 'Veículo com baixíssima km, único dono, laudo cautelar 100% aprovado.',
+    fullDescription: 'Equipado com pacote Toyota Safety Sense com frenagem autônoma de emergência e alerta de mudança de faixa.'
+  };
+
+  const aiChatBoxPath = path.join(rootDir, 'src/components/vehicle/AIChatBox.jsx');
+  const homeSupportChatPath = path.join(rootDir, 'src/components/chat/HomeSupportChat.jsx');
+  const detailsPath = path.join(rootDir, 'src/pages/ShowcaseVehicleDetails.jsx');
+  const aiVisionPath = path.join(rootDir, '../backend/routers/ai_vision.py');
+
+  const aiChatBoxContent = fs.readFileSync(aiChatBoxPath, 'utf-8');
+  const homeSupportChatContent = fs.readFileSync(homeSupportChatPath, 'utf-8');
+  const detailsContent = fs.readFileSync(detailsPath, 'utf-8');
+  const aiVisionContent = fs.readFileSync(aiVisionPath, 'utf-8');
+
+  test('30.1: Responde com precisão a motor e quilometragem sem saudações genéricas', () => {
+    const res = generateVehicleConsultantAnswer('Como é o motor e quilometragem?', corolla, []);
+    assert.ok(res.includes('1.8 Híbrido Flex') || res.includes('1.8'), 'Deve conter informação do motor');
+    assert.ok(res.includes('12.000 km') || res.includes('12.000'), 'Deve conter quilometragem');
+    assert.ok(!res.startsWith('Olá! Sou o especialista IA da Automatch. Como posso ajudar com os detalhes técnicos'), 'Não deve retornar mensagem de boas-vindas inicial');
+  });
+
+  test('30.2: Responde com precisão a direção e freios para o Corolla Cross XRX', () => {
+    const res = generateVehicleConsultantAnswer('Como são a direção e os freios?', corolla, []);
+    assert.ok(res.toLowerCase().includes('elétrica progressiva') || res.toLowerCase().includes('elétrica'), 'Deve conter direção');
+    assert.ok(res.toLowerCase().includes('abs com ebd') || res.toLowerCase().includes('freios'), 'Deve conter freios');
+    assert.ok(!res.startsWith('Olá! Sou o especialista IA da Automatch. Como posso ajudar com os detalhes técnicos'), 'Não deve regredir para mensagem de boas-vindas');
+  });
+
+  test('30.3: Responde com precisão a follow-ups curtos (ex: "e o câmbio?")', () => {
+    const history = [
+      { from: 'user', text: 'Como são a direção e os freios?' },
+      { from: 'ai', text: 'O Toyota Corolla Cross XRX conta com direção Elétrica Progressiva...' }
+    ];
+    const res = generateVehicleConsultantAnswer('e o câmbio?', corolla, history);
+    assert.ok(res.toLowerCase().includes('automático cvt') || res.toLowerCase().includes('cvt') || res.toLowerCase().includes('câmbio'), 'Deve resolver o contexto de câmbio');
+  });
+
+  test('30.4: Responde com honesta ausência para itens não constantes no anúncio/laudo/descrição', () => {
+    const res = generateVehicleConsultantAnswer('Esse carro vem com engate de reboque homologado e blindagem nível 3A?', corolla, []);
+    assert.ok(res.toLowerCase().includes('não consta') || res.toLowerCase().includes('não encontrei') || res.toLowerCase().includes('vendedor'), 'Deve admitir ausência honestamente e indicar vendedor');
+    assert.ok(!res.includes('Blindagem nível 3A confirmada'), 'Não deve alucinar itens ausentes');
+  });
+
+  test('30.5: AIChatBox e HomeSupportChat reutilizam aiConsultantCore compartilhado', () => {
+    assert.ok(aiChatBoxContent.includes('from \'../../utils/aiConsultantCore\''), 'AIChatBox deve importar aiConsultantCore');
+    assert.ok(aiChatBoxContent.includes('generateVehicleConsultantAnswer'), 'AIChatBox deve usar generateVehicleConsultantAnswer');
+    assert.ok(aiChatBoxContent.includes('Direção e Freios'), 'AIChatBox deve incluir pill Direção e Freios');
+    assert.ok(homeSupportChatContent.includes('from \'../../utils/aiConsultantCore\''), 'HomeSupportChat deve importar aiConsultantCore');
+    assert.ok(homeSupportChatContent.includes('generateGeneralSupportAnswer'), 'HomeSupportChat deve usar generateGeneralSupportAnswer');
+  });
+
+  test('30.6: ShowcaseVehicleDetails remove a linha border-b do header nav sticky', () => {
+    assert.ok(!detailsContent.includes('border-b border-slate-800 sticky top-0'), 'Não deve ter border-b na navbar fixa');
+    assert.ok(detailsContent.includes('sticky top-0'), 'Navbar deve continuar sticky');
+  });
+
+  test('30.7: ai_vision.py suporta specs, multi-tópicos e ausência honesta com orientação ao vendedor', () => {
+    assert.ok(aiVisionContent.includes('has_direcao and has_freios'), 'ai_vision deve tratar direção e freios conjuntamente');
+    assert.ok(aiVisionContent.includes('has_motor and has_km'), 'ai_vision deve tratar motor e km conjuntamente');
+    assert.ok(aiVisionContent.includes('consultor IA da Automatch'), 'ai_vision deve manter identificação de consultor');
+  });
+});
+
