@@ -300,5 +300,22 @@ class TestAuditFullBattery(unittest.TestCase):
         self.assertLess(elapsed_ms, 300, f"Tempo de resposta do catálogo excedeu limite: {elapsed_ms:.1f}ms")
         print(f"✓ Cenário 9 (Performance SLA): Catálogo respondeu em {elapsed_ms:.1f}ms (< 300ms)")
 
+    @classmethod
+    def tearDownClass(cls):
+        db = SessionLocal()
+        try:
+            # Limpa resíduos criados durante a bateria de testes de auditoria
+            if hasattr(cls, 'test_car_id') and cls.test_car_id:
+                reservations = db.query(models.CarReservation).filter(models.CarReservation.car_id == cls.test_car_id).all()
+                for r in reservations:
+                    db.query(models.PartnerMessage).filter(models.PartnerMessage.reservation_id == r.id).delete()
+                    db.delete(r)
+                db.query(models.Car).filter(models.Car.id == cls.test_car_id).delete()
+                db.commit()
+        except Exception:
+            db.rollback()
+        finally:
+            db.close()
+
 if __name__ == "__main__":
     unittest.main()

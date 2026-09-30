@@ -127,6 +127,13 @@ async def lifespan(app: FastAPI):
     finally:
         db.close()
 
+    # Auto-seed stores e 5 carros oficiais se ainda não existirem
+    try:
+        from seed import seed_db
+        seed_db()
+    except Exception as e:
+        logger.warning("Aviso no seed inicial de lojas e carros: %s", e)
+
     # Inicializa tarefas agendadas
     tasks.start_scheduler()
 
