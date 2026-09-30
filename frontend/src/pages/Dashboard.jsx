@@ -15,7 +15,9 @@ import {
   ChevronLeft,
   ChevronRight,
   Sliders,
-  CheckCircle2
+  CheckCircle2,
+  AlertCircle,
+  X
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -33,6 +35,39 @@ import { getVehicleImageUrl, handleVehicleImageError } from '../utils/imageHelpe
 // Code-Splitting: PartnershipHubModal carregado sob demanda (economiza 50.5 kB na montagem inicial)
 const PartnershipHubModal = React.lazy(() => import('../components/partners/PartnershipHubModal'));
 
+class DashboardErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, errorInfo) {
+    console.error('Erro capturado no Dashboard:', error, errorInfo);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="py-16 px-6 text-center bg-white rounded-3xl border border-red-200 my-8 shadow-sm">
+          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-3" />
+          <h3 className="text-lg font-black text-slate-800">Ocorreu uma falha ao exibir a grade de ativos</h3>
+          <p className="text-sm text-slate-500 mt-1 max-w-md mx-auto">
+            Seus dados estão preservados no inventário. Tente recarregar a visualização.
+          </p>
+          <button
+            onClick={() => this.setState({ hasError: false, error: null })}
+            className="mt-4 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md cursor-pointer"
+          >
+            Recarregar Gestão de Ativos
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const [inventoryList, setInventoryList] = useState(() => getStoredInventory());
@@ -47,10 +82,16 @@ export default function Dashboard() {
   const itemsPerPage = 12;
 
   const filteredInventory = inventoryList.filter(item => {
+    if (!item) return false;
     const matchesStore = !selectedStoreId || item.storeId === selectedStoreId;
-    const matchesSearch = item.model.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                         item.brand.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         item.plate.toLowerCase().includes(searchQuery.toLowerCase());
+    const query = (searchQuery || '').toLowerCase().trim();
+    if (!query) return matchesStore;
+    const modelStr = String(item.model || '').toLowerCase();
+    const brandStr = String(item.brand || '').toLowerCase();
+    const plateStr = String(item.plate || '').toLowerCase();
+    const matchesSearch = modelStr.includes(query) || 
+                          brandStr.includes(query) ||
+                          plateStr.includes(query);
     return matchesStore && matchesSearch;
   });
 
@@ -91,24 +132,55 @@ export default function Dashboard() {
   };
 
   const handleSaveAsset = (updatedAsset) => {
-    const newList = updateInventoryAsset(updatedAsset);
-    setInventoryList(newList);
-    setFeedbackToast({
-      type: 'success',
-      message: `Ativo "${updatedAsset.brand} ${updatedAsset.model}" (${updatedAsset.plate}) configurado com sucesso!`
-    });
-    setTimeout(() => setFeedbackToast(null), 4000);
+    try {
+      if (!updatedAsset || !updatedAsset.id) {
+        throw new Error('Identificador do ativo ausente.');
+      }
+      const safeAsset = {
+        ...updatedAsset,
+        brand: String(updatedAsset.brand || 'Veículo').trim(),
+        model: String(updatedAsset.model || 'Sem Modelo').trim(),
+        plate: String(updatedAsset.plate || 'SEM-PLACA').trim(),
+        sale_value: Number(updatedAsset.sale_value) || 0,
+        floor_price: Number(updatedAsset.floor_price) || 0,
+        mileage: Number(updatedAsset.mileage) || 0,
+        storeId: String(updatedAsset.storeId || 'store-1')
+      };
+      const newList = updateInventoryAsset(safeAsset);
+      setInventoryList(newList);
+      setFeedbackToast({
+        type: 'success',
+        message: `Ativo "${safeAsset.brand} ${safeAsset.model}" (${safeAsset.plate}) configurado com sucesso!`
+      });
+      setTimeout(() => setFeedbackToast(null), 4000);
+    } catch (err) {
+      console.error('Falha ao processar salvamento do ativo:', err);
+      setFeedbackToast({
+        type: 'error',
+        message: 'Erro ao salvar configuração do ativo. Os dados foram preservados.'
+      });
+      setTimeout(() => setFeedbackToast(null), 5000);
+    }
   };
 
   const handleDeleteAsset = (assetId) => {
-    const deletedItem = inventoryList.find(i => String(i.id) === String(assetId));
-    const newList = deleteInventoryAsset(assetId);
-    setInventoryList(newList);
-    setFeedbackToast({
-      type: 'info',
-      message: `Ativo "${deletedItem ? `${deletedItem.brand} ${deletedItem.model}` : 'Veículo'}" removido com sucesso.`
-    });
-    setTimeout(() => setFeedbackToast(null), 4000);
+    try {
+      const deletedItem = inventoryList.find(i => String(i.id) === String(assetId));
+      const newList = deleteInventoryAsset(assetId);
+      setInventoryList(newList);
+      setFeedbackToast({
+        type: 'info',
+        message: `Ativo "${deletedItem ? `${deletedItem.brand} ${deletedItem.model}` : 'Veículo'}" removido com sucesso.`
+      });
+      setTimeout(() => setFeedbackToast(null), 4000);
+    } catch (err) {
+      console.error('Falha ao remover ativo:', err);
+      setFeedbackToast({
+        type: 'error',
+        message: 'Não foi possível remover o ativo.'
+      });
+      setTimeout(() => setFeedbackToast(null), 4000);
+    }
   };
 
   return (
@@ -230,6 +302,7 @@ export default function Dashboard() {
         </div>
 
         {/* Inventory View */}
+        <DashboardErrorBoundary>
         <AnimatePresence mode="wait">
           {viewMode === 'grid' ? (
             <motion.div 
@@ -431,6 +504,7 @@ export default function Dashboard() {
             </div>
           </div>
         )}
+        </DashboardErrorBoundary>
 
         {filteredInventory.length === 0 && (
           <div className="py-20 flex flex-col items-center justify-center text-slate-400">
@@ -462,6 +536,37 @@ export default function Dashboard() {
           />
         )}
       </React.Suspense>
+      {/* Toast de Feedback */}
+      <AnimatePresence>
+        {feedbackToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 20, scale: 0.9 }}
+            className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3.5 rounded-2xl shadow-2xl border text-sm font-bold ${
+              feedbackToast.type === 'error'
+                ? 'bg-red-600 text-white border-red-500 shadow-red-500/20'
+                : feedbackToast.type === 'info'
+                ? 'bg-slate-800 text-white border-slate-700 shadow-slate-900/30'
+                : 'bg-emerald-600 text-white border-emerald-500 shadow-emerald-500/20'
+            }`}
+          >
+            {feedbackToast.type === 'error' ? (
+              <AlertCircle className="w-5 h-5 shrink-0" />
+            ) : (
+              <CheckCircle2 className="w-5 h-5 shrink-0" />
+            )}
+            <span>{feedbackToast.message}</span>
+            <button
+              onClick={() => setFeedbackToast(null)}
+              className="ml-2 text-white/80 hover:text-white cursor-pointer"
+              aria-label="Fechar notificação"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

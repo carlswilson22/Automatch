@@ -33,6 +33,7 @@ export default function AssetConfigurationModal({
   const [activeTab, setActiveTab] = useState('pricing'); // 'pricing' | 'details' | 'visibility'
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [hasSaved, setHasSaved] = useState(false);
+  const [validationError, setValidationError] = useState('');
 
   // Bloqueio estrito de rolagem da tela de fundo ao abrir o modal
   useEffect(() => {
@@ -75,6 +76,7 @@ export default function AssetConfigurationModal({
       });
       setIsConfirmingDelete(false);
       setHasSaved(false);
+      setValidationError('');
       setActiveTab('pricing');
     }
   }, [asset]);
@@ -86,18 +88,63 @@ export default function AssetConfigurationModal({
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    setHasSaved(true);
-    if (onSave) {
-      onSave({
-        ...formData,
-        sale_value: Number(formData.sale_value) || 0,
-        floor_price: Number(formData.floor_price) || 0,
-        mileage: Number(formData.mileage) || 0
-      });
+    setValidationError('');
+
+    const saleVal = Number(formData.sale_value);
+    const floorVal = Number(formData.floor_price);
+    const kmVal = Number(formData.mileage);
+
+    if (isNaN(saleVal) || saleVal <= 0) {
+      setValidationError('O valor de venda deve ser maior que zero (R$ 0).');
+      setActiveTab('pricing');
+      return;
     }
-    setTimeout(() => {
-      onClose();
-    }, 400);
+
+    if (isNaN(floorVal) || floorVal < 0) {
+      setValidationError('O piso mínimo de repasse não pode ser negativo.');
+      setActiveTab('pricing');
+      return;
+    }
+
+    if (floorVal > saleVal) {
+      setValidationError(`O piso mínimo de repasse (R$ ${floorVal.toLocaleString('pt-BR')}) não pode ser maior que o valor de venda (R$ ${saleVal.toLocaleString('pt-BR')}).`);
+      setActiveTab('pricing');
+      return;
+    }
+
+    if (!String(formData.brand || '').trim()) {
+      setValidationError('Informe a marca do veículo.');
+      setActiveTab('details');
+      return;
+    }
+
+    if (!String(formData.model || '').trim()) {
+      setValidationError('Informe o modelo do veículo.');
+      setActiveTab('details');
+      return;
+    }
+
+    try {
+      setHasSaved(true);
+      if (onSave) {
+        onSave({
+          ...formData,
+          brand: String(formData.brand).trim(),
+          model: String(formData.model).trim(),
+          plate: String(formData.plate || '').trim(),
+          sale_value: saleVal,
+          floor_price: floorVal,
+          mileage: isNaN(kmVal) || kmVal < 0 ? 0 : kmVal
+        });
+      }
+      setTimeout(() => {
+        onClose();
+      }, 400);
+    } catch (err) {
+      console.error('Falha ao salvar configuração do ativo:', err);
+      setHasSaved(false);
+      setValidationError('Erro inesperado ao salvar. Verifique os dados e tente novamente.');
+    }
   };
 
   const handleDelete = () => {
@@ -197,6 +244,23 @@ export default function AssetConfigurationModal({
 
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 sm:p-7 space-y-6 flex-1 overflow-y-auto overscroll-contain max-h-[65vh]">
+          {validationError && (
+            <div className="p-4 bg-red-50 border border-red-200 rounded-2xl flex items-start gap-3 text-red-700 text-xs font-semibold">
+              <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="font-bold text-red-800">Atenção ao salvar:</p>
+                <p>{validationError}</p>
+              </div>
+              <button 
+                type="button" 
+                onClick={() => setValidationError('')} 
+                className="text-red-400 hover:text-red-600 transition-colors"
+                aria-label="Fechar alerta de erro"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          )}
           {/* TAB 1: PREÇO & FINANCEIRO */}
           {activeTab === 'pricing' && (
             <motion.div
