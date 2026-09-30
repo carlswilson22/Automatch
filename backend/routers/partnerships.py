@@ -37,8 +37,8 @@ def get_current_b2b_user(
 
     token = authorization.removeprefix("Bearer ").strip()
 
-    # Suporte a tokens demo/contingência
-    if token == "demo-admin-token" or token.startswith("demo-"):
+    # Suporte a tokens demo/contingência B2B
+    if token in ["demo-admin-token", "demo-lojista-token"]:
         admin_user = db.query(models.User).filter(models.User.email == "admin@automatch.com").first()
         if admin_user:
             return admin_user

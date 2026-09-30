@@ -161,6 +161,12 @@ const ReservationTimerBadge = memo(function ReservationTimerBadge({ expiresAt, f
 
 export default function PartnershipHubModal({ isOpen, onClose }) {
   const { user } = useAuth();
+  const isB2BAuthorized = Boolean(
+    user?.role === 'lojista' || 
+    user?.role === 'admin' || 
+    user?.accountType === 'store' ||
+    user?.storeId
+  );
   const [activeTab, setActiveTab] = useState('inventory'); // 'inventory' | 'partnerships' | 'reservations' | 'transactions'
 
   // Data states
@@ -186,6 +192,7 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
       partnership_status: 'nenhuma'
     }));
   });
+  const [partnerships, setPartnerships] = useState([]);
   const [storesLoading, setStoresLoading] = useState(false);
   const [myReservations, setMyReservations] = useState(() => {
     try {
@@ -427,7 +434,7 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
 
   // Carregamento sob demanda unificado e com debounce (zero duplicidade de chamadas)
   useEffect(() => {
-    if (!isOpen) return;
+    if (!isOpen || !isB2BAuthorized) return;
 
     if (activeTab === 'inventory') {
       if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
@@ -442,16 +449,16 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
     } else if (activeTab === 'transactions') {
       loadTransactions();
     }
-  }, [isOpen, activeTab, searchCar]);
+  }, [isOpen, isB2BAuthorized, activeTab, searchCar]);
 
 
 
   // Polling leve apenas se a aba estiver aberta e a cada 15 segundos
   useEffect(() => {
-    if (!isOpen || activeTab !== 'reservations') return;
+    if (!isOpen || !isB2BAuthorized || activeTab !== 'reservations') return;
     const interval = setInterval(loadReservations, 15000);
     return () => clearInterval(interval);
-  }, [isOpen, activeTab]);
+  }, [isOpen, isB2BAuthorized, activeTab]);
 
 
   // Ações de Parceria
@@ -792,11 +799,30 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
           </div>
         )}
 
-        {/* Navigation Tabs */}
-        <div className="bg-slate-100/80 border-b border-slate-200 px-6 sm:px-8 py-2.5 flex items-center gap-2 overflow-x-auto shrink-0">
-          {[
-            { id: 'inventory', label: 'Estoque Compartilhado', icon: Car, count: sharedCars.length },
-            { id: 'partnerships', label: 'Minhas Parcerias', icon: Users, count: partnerships.filter(p => p.status === 'ativa').length },
+        {/* Navigation Tabs ou Tela de Acesso Restrito */}
+        {!isB2BAuthorized ? (
+          <div className="flex-1 flex flex-col items-center justify-center p-8 sm:p-12 text-center bg-slate-50/50">
+            <div className="w-16 h-16 rounded-3xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center mb-4">
+              <Lock className="w-8 h-8" />
+            </div>
+            <h3 className="text-xl font-black text-slate-800 mb-2">Acesso Exclusivo B2B</h3>
+            <p className="text-sm text-slate-500 leading-relaxed max-w-md mb-6">
+              A Rede de Parceiros B2B é exclusiva para lojistas parceiros, concessionárias e administradores credenciados. Caso você seja lojista, acesse sua conta profissional para usufruir da rede.
+            </p>
+            <button
+              onClick={onClose}
+              className="px-6 py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-bold text-xs uppercase tracking-wider transition-all shadow-md active:scale-95 cursor-pointer"
+            >
+              Fechar
+            </button>
+          </div>
+        ) : (
+          <>
+            {/* Navigation Tabs */}
+            <div className="bg-slate-100/80 border-b border-slate-200 px-6 sm:px-8 py-2.5 flex items-center gap-2 overflow-x-auto shrink-0">
+              {[
+                { id: 'inventory', label: 'Estoque Compartilhado', icon: Car, count: sharedCars.length },
+                { id: 'partnerships', label: 'Minhas Parcerias', icon: Users, count: partnerships.filter(p => p.status === 'ativa').length },
             { id: 'reservations', label: 'Minhas Reservas', icon: Clock, count: myReservations.filter(r => r.status === 'ativa').length },
             { id: 'transactions', label: 'Repasses Concluídos', icon: FileText, count: transactions.length }
           ].map((tab) => {
@@ -1443,6 +1469,8 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
             </div>
           )}
         </AnimatePresence>
+          </>
+        )}
 
         {/* SUB-MODAL: CHAT DE NEGOCIAÇÃO */}
         {activeChatReservation && (
