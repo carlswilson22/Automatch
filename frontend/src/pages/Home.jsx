@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import {
   ShieldCheck, Search, ChevronRight, CheckCircle2,
   Zap, LogIn, UserPlus, Heart, Calendar,
-  Gauge, Palette, Eye, MapPin, MessageSquare, X, Send, TrendingDown
+  Gauge, Palette, Eye, MapPin, MessageSquare, X, Send, TrendingDown, Star
 } from 'lucide-react';
 
 // CONTEXTOS E DADOS
@@ -14,6 +14,12 @@ import StoreIdentifier from '../components/ui/StoreIdentifier';
 import { getNewCars } from '../data/newCarsManager';
 import { toggleFavorite, isFavorite } from '../data/favoritesManager';
 import { getVehicleImageUrl, handleVehicleImageError } from '../utils/imageHelper';
+
+export const formatPrice = (val) => {
+  if (val === undefined || val === null || val === '') return '';
+  const num = typeof val === 'number' ? val : Number(String(val).replace(/[^0-9.-]+/g, ''));
+  return isNaN(num) || num <= 0 ? '' : `R$ ${num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
 
 
 // SE O CARCARD ESTIVER EM OUTRO ARQUIVO, DESCOMENTE A LINHA ABAIXO:
@@ -156,20 +162,31 @@ const CarCard = ({ car, index }) => {
           </button>
         </div>
 
-        {/* Price Overlay */}
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 pt-12">
-          <p className="text-2xl font-black text-white drop-shadow-md">
-            R$ {Number(car.price).toLocaleString('pt-BR')}
-          </p>
-        </div>
       </div>
 
       {/* Content */}
       <div className="p-4 flex-1 flex flex-col">
         <div className="mb-2">
-          <h3 className="text-lg font-bold text-slate-800 leading-tight group-hover:text-blue-600 transition-colors">
-            {car.name}
-          </h3>
+          <div className="flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap">
+            <div className="flex items-center gap-1.5 min-w-0 flex-1">
+              <h3 
+                className="text-lg font-bold text-slate-800 leading-tight group-hover:text-blue-600 transition-colors truncate"
+                title={car.name}
+              >
+                {car.name}
+              </h3>
+              {car.featured && (
+                <span title="Destaque" aria-label="Veículo em Destaque" className="inline-flex items-center shrink-0">
+                  <Star className="w-4 h-4 text-amber-500 fill-amber-500 shrink-0" />
+                </span>
+              )}
+            </div>
+            {formatPrice(car.price) && (
+              <span className="text-lg font-black text-brand-blue whitespace-nowrap shrink-0">
+                {formatPrice(car.price)}
+              </span>
+            )}
+          </div>
           <p className="text-xs text-slate-500 font-medium mt-1 uppercase tracking-wider">
             {car.bodyType}
           </p>

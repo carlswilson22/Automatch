@@ -27,9 +27,9 @@ export const formatMileage = (val) => {
 };
 
 export const formatPrice = (val) => {
-  if (val === undefined || val === null) return 'R$ 0';
+  if (val === undefined || val === null || val === '') return '';
   const num = typeof val === 'number' ? val : Number(String(val).replace(/[^0-9.-]+/g, ''));
-  return isNaN(num) ? `R$ ${val}` : `R$ ${num.toLocaleString('pt-BR')}`;
+  return isNaN(num) || num <= 0 ? '' : `R$ ${num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
 // ─── DATA ────────────────────────────────────────────────────────────────────
@@ -143,20 +143,31 @@ const CarCard = React.memo(({ car, index, viewMode }) => {
         </div>
         <div className="flex-1 p-5 flex flex-col">
           <div className="flex justify-between items-start mb-1 gap-2">
-            <div>
-              <div className="flex items-center gap-2">
-                <h3 className="text-xl font-bold text-slate-800">{car.name}</h3>
-                {car.featured && (
-                  <span title="Destaque" aria-label="Veículo em Destaque" className="inline-flex items-center">
-                    <Star className="w-4 h-4 text-amber-500 fill-amber-500 shrink-0" />
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                <div className="flex items-center gap-1.5 min-w-0">
+                  <h3 
+                    className="text-xl font-bold text-slate-800 truncate"
+                    title={car.name}
+                  >
+                    {car.name}
+                  </h3>
+                  {car.featured && (
+                    <span title="Destaque" aria-label="Veículo em Destaque" className="inline-flex items-center shrink-0">
+                      <Star className="w-4 h-4 text-amber-500 fill-amber-500 shrink-0" />
+                    </span>
+                  )}
+                </div>
+                {formatPrice(car.price) && (
+                  <span className="text-xl font-black text-brand-blue whitespace-nowrap shrink-0">
+                    {formatPrice(car.price)}
                   </span>
                 )}
               </div>
               <p className="text-xs text-slate-500 font-medium flex items-center gap-1 mt-0.5"><car.icon className="w-3.5 h-3.5" /> {car.bodyType}</p>
             </div>
             <div className="text-right shrink-0">
-              <PriceDropBadge originalPrice={car.originalPrice} currentPrice={car.price} variant="badge" isFeatured={car.featured} className="mb-1" />
-              <p className="text-2xl font-black text-brand-blue whitespace-nowrap">{formatPrice(car.price)}</p>
+              <PriceDropBadge originalPrice={car.originalPrice} currentPrice={car.price} variant="badge" isFeatured={car.featured} />
             </div>
           </div>
           <div className="flex gap-4 my-3 text-xs text-slate-500 font-medium flex-wrap">
@@ -191,8 +202,7 @@ const CarCard = React.memo(({ car, index, viewMode }) => {
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
         />
 
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 pt-10 flex items-end justify-between gap-2">
-          <p className="text-2xl font-black text-white drop-shadow-md">{formatPrice(car.price)}</p>
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-3 pt-8 flex items-end justify-end">
           <PriceDropBadge originalPrice={car.originalPrice} currentPrice={car.price} variant="badge" isFeatured={car.featured} />
         </div>
         <button onClick={handleLike}
@@ -208,15 +218,27 @@ const CarCard = React.memo(({ car, index, viewMode }) => {
         </div>
       </div>
       <div className="p-4 flex-1 flex flex-col">
-        <div className="flex items-center gap-2">
-          <h3 className="text-lg font-bold text-slate-800 leading-tight">{car.name}</h3>
-          {car.featured && (
-            <span title="Destaque" aria-label="Veículo em Destaque" className="inline-flex items-center">
-              <Star className="w-4 h-4 text-amber-500 fill-amber-500 shrink-0" />
+        <div className="flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap mb-1">
+          <div className="flex items-center gap-1.5 min-w-0 flex-1">
+            <h3 
+              className="text-lg font-bold text-slate-800 leading-tight truncate"
+              title={car.name}
+            >
+              {car.name}
+            </h3>
+            {car.featured && (
+              <span title="Destaque" aria-label="Veículo em Destaque" className="inline-flex items-center shrink-0">
+                <Star className="w-4 h-4 text-amber-500 fill-amber-500 shrink-0" />
+              </span>
+            )}
+          </div>
+          {formatPrice(car.price) && (
+            <span className="text-lg font-black text-brand-blue whitespace-nowrap shrink-0">
+              {formatPrice(car.price)}
             </span>
           )}
         </div>
-        <p className="text-xs text-slate-500 font-medium mt-0.5 flex items-center gap-1 mb-3"><car.icon className="w-3.5 h-3.5" /> {car.bodyType}</p>
+        <p className="text-xs text-slate-500 font-medium flex items-center gap-1 mb-3"><car.icon className="w-3.5 h-3.5" /> {car.bodyType}</p>
         <div className="grid grid-cols-3 gap-2 mb-3">
           {[
             { icon: Calendar, val: car.year },
