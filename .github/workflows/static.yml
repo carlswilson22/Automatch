@@ -38,8 +38,6 @@ jobs:
         id: pages
         if: github.repository == 'carlswilson22/Automatch' || github.repository == 'CAMPUSCEUB/ADS-AUTOMATCH'
         uses: actions/configure-pages@v5
-        with:
-          enablement: true
 
       - name: Build frontend
         working-directory: ./frontend
