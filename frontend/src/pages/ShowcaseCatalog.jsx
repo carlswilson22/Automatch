@@ -2,7 +2,6 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import StoreIdentifier from '../components/ui/StoreIdentifier';
-import MarketPriceIndicator from '../components/vehicle/MarketPriceIndicator';
 import PriceDropBadge from '../components/vehicle/PriceDropBadge';
 import { stores } from '../data/inventoryData';
 import { useAuth } from '../contexts/AuthContext';
@@ -40,7 +39,7 @@ const showcaseCars = [
     price: 185000, fipePrice: 192000, originalPrice: 194000, color: 'Branco Pérola', mileage: 12000, storeId: 'store-1',
     image: '/images/FotoCorollaCross.jpg',
     bodyType: 'SUV',
-    icon: Car, featured: true, seller: 'Automatch Oficial', location: 'São Paulo, SP',
+    icon: Car, featured: true, seller: 'AutoShop Prime', location: 'São Paulo, SP',
     description: 'SUV híbrido flex, pacote de segurança completo e teto solar.',
     tags: ['Híbrido Flex', 'Teto Solar', 'Safety Sense'],
   },
@@ -48,7 +47,7 @@ const showcaseCars = [
     id: 'sc-002', name: 'Volkswagen Polo TSI', brand: 'Volkswagen', year: 2023,
     price: 98000, fipePrice: 104000, originalPrice: 103000, color: 'Vermelho', mileage: 18500, storeId: 'store-2',
     image: '/images/FotoPoloTSI.jpg', bodyType: 'Hatch',
-    icon: Car, featured: false, seller: 'João Carlos', location: 'Campinas, SP',
+    icon: Car, featured: false, seller: 'Motors Campinas', location: 'Campinas, SP',
     description: 'Hatch potente e econômico com painel digital.',
     tags: ['1.0 Turbo', 'Painel Digital', 'VW Play'],
   },
@@ -56,7 +55,7 @@ const showcaseCars = [
     id: 'sc-003', name: 'Hyundai HB20 Platinum', brand: 'Hyundai', year: 2024,
     price: 105000, color: 'Prata', mileage: 5000, storeId: 'store-3',
     image: '/images/FotoHyundaiHB20.jpg', bodyType: 'Hatch',
-    icon: Car, featured: true, seller: 'Maria Souza', location: 'Rio de Janeiro, RJ',
+    icon: Car, featured: true, seller: 'Concessionária Alpha', location: 'Curitiba, PR',
     description: 'Design renovado, excelente acabamento e conectividade avançada.',
     tags: ['SmartSense', 'Câmera de Ré', 'Único Dono'],
   },
@@ -64,7 +63,7 @@ const showcaseCars = [
     id: 'sc-004', name: 'Chevrolet Tracker Premier', brand: 'Chevrolet', year: 2024,
     price: 152000, color: 'Azul Escuro', mileage: 8500, storeId: 'store-1',
     image: '/images/FotoChevroletTracker.jpg', bodyType: 'SUV',
-    icon: Car, featured: true, seller: 'Automatch Oficial', location: 'Curitiba, PR',
+    icon: Car, featured: true, seller: 'AutoShop Prime', location: 'São Paulo, SP',
     description: 'SUV urbano mais completo da categoria com teto solar panorâmico.',
     tags: ['1.2 Turbo', 'Teto Panorâmico', 'Wi-Fi'],
   },
@@ -72,7 +71,7 @@ const showcaseCars = [
     id: 'sc-005', name: 'Fiat Pulse Abarth', brand: 'Fiat', year: 2024,
     price: 145000, color: 'Vermelho', mileage: 3200, storeId: 'store-2',
     image: '/images/FotoFiatPulse.jpg', bodyType: 'SUV',
-    icon: Car, featured: true, seller: 'Beto Motors', location: 'Belo Horizonte, MG',
+    icon: Car, featured: true, seller: 'Motors Campinas', location: 'Campinas, SP',
     description: 'O primeiro SUV Abarth do mundo, performance esportiva e design exclusivo.',
     tags: ['Abarth', 'Turbo 270', 'Esportivo'],
   }
@@ -157,14 +156,10 @@ const CarCard = React.memo(({ car, index, viewMode }) => {
               <p className="text-2xl font-black text-brand-blue whitespace-nowrap">{formatPrice(car.price)}</p>
             </div>
           </div>
-          <div className="my-2">
-            <MarketPriceIndicator price={car.price} fipePrice={car.fipePrice} variant="badge" />
-          </div>
           <div className="flex gap-4 my-3 text-xs text-slate-500 font-medium flex-wrap">
             <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {car.year}</span>
             <span className="flex items-center gap-1"><Gauge className="w-3.5 h-3.5" /> {formatMileage(car.mileage)}</span>
             <span className="flex items-center gap-1"><Palette className="w-3.5 h-3.5" /> {car.color}</span>
-            <span className="flex items-center gap-1"><MapPin className="w-3.5 h-3.5" /> {car.location}</span>
           </div>
           <p className="text-sm text-slate-600 leading-relaxed mb-3">{car.description}</p>
           <div className="flex flex-wrap gap-1.5 mt-auto">
@@ -228,25 +223,13 @@ const CarCard = React.memo(({ car, index, viewMode }) => {
             </div>
           ))}
         </div>
-        <div className="my-2">
-          <MarketPriceIndicator price={car.price} fipePrice={car.fipePrice} variant="badge" />
-        </div>
         <p className="text-sm text-slate-600 leading-relaxed mb-3 line-clamp-2">{car.description}</p>
-        <div className="flex flex-wrap gap-1.5 mt-auto mb-3">
+        <div className="flex flex-wrap gap-1.5 mt-auto mb-4">
           {car.tags.map(t => <span key={t} className="text-[10px] font-bold text-brand-blue bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full uppercase tracking-wider">{t}</span>)}
         </div>
-        <div className="flex justify-between items-center text-[11px] text-slate-400 font-medium mb-3 border-t border-slate-100 pt-2">
-          <span>{car.seller}</span>
-          <span className="flex items-center gap-0.5"><MapPin className="w-3 h-3" /> {car.location}</span>
-        </div>
-        <div className="flex gap-2">
-          <button onClick={(e) => { e.stopPropagation(); navigate(`/encontrar/${car.id}`); }} className="flex-1 py-2.5 bg-brand-blue text-white rounded-xl font-semibold text-sm hover:bg-blue-700 transition-colors flex items-center justify-center gap-1.5">
-            <Eye className="w-4 h-4" /> Ver Detalhes
-          </button>
-          <button aria-label="Ver localização" className="py-2.5 px-3 bg-slate-100 text-slate-600 rounded-xl text-sm hover:bg-slate-200 transition-colors" onClick={e => e.stopPropagation()}>
-            <MapPin className="w-4 h-4" />
-          </button>
-        </div>
+        <button onClick={(e) => { e.stopPropagation(); navigate(`/encontrar/${car.id}`); }} className="w-full py-2.5 bg-brand-blue text-white rounded-xl font-semibold text-sm hover:bg-blue-700 transition-colors flex items-center justify-center gap-1.5">
+          <Eye className="w-4 h-4" /> Ver Detalhes
+        </button>
       </div>
     </motion.div>
   );
@@ -729,7 +712,6 @@ const ShowcaseCatalog = () => {
               {filterYear !== 'Todos' && <FilterChip label={`Ano: ${filterYear}`} onRemove={() => setFilterYear('Todos')} />}
               {filterPrice !== 'Qualquer' && <FilterChip label={filterPrice} onRemove={() => setFilterPrice('Qualquer')} />}
               {filterKm !== 'Qualquer' && <FilterChip label={filterKm} onRemove={() => setFilterKm('Qualquer')} />}
-              <button onClick={resetFilters} className="text-xs text-red-500 font-medium hover:underline ml-1">Limpar todos</button>
             </div>
           )}
 
