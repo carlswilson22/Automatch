@@ -15,7 +15,9 @@ const serveRootImagesPlugin = () => ({
 });
 
 export default defineConfig({
-  base: '/Automatch/',
+  base: process.env.VITE_BASE_PATH
+    ? (process.env.VITE_BASE_PATH.endsWith('/') ? process.env.VITE_BASE_PATH : `${process.env.VITE_BASE_PATH}/`)
+    : (process.env.GITHUB_REPOSITORY ? `/${process.env.GITHUB_REPOSITORY.split('/')[1]}/` : '/Automatch/'),
   plugins: [react(), serveRootImagesPlugin()],
   server: {
     host: '0.0.0.0',

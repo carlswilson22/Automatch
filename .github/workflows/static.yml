@@ -17,7 +17,7 @@ concurrency:
 jobs:
   build:
     name: Build Frontend
-    if: github.repository == 'carlswilson22/Automatch'
+    if: github.repository == 'carlswilson22/Automatch' || github.repository == 'CAMPUSCEUB/ADS-AUTOMATCH'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -34,25 +34,30 @@ jobs:
         working-directory: ./frontend
         run: npm ci || npm install
 
+      - name: Setup Pages
+        id: pages
+        if: github.repository == 'carlswilson22/Automatch' || github.repository == 'CAMPUSCEUB/ADS-AUTOMATCH'
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
       - name: Build frontend
         working-directory: ./frontend
+        env:
+          VITE_BASE_PATH: ${{ steps.pages.outputs.base_path }}/
         run: |
           npm run build
           cp -n dist/index.html dist/404.html || true
 
-      - name: Setup Pages
-        if: github.repository == 'carlswilson22/Automatch'
-        uses: actions/configure-pages@v5
-
       - name: Upload Pages Artifact
-        if: github.repository == 'carlswilson22/Automatch'
+        if: github.repository == 'carlswilson22/Automatch' || github.repository == 'CAMPUSCEUB/ADS-AUTOMATCH'
         uses: actions/upload-pages-artifact@v3
         with:
           path: './frontend/dist'
 
   deploy:
     name: Deploy to GitHub Pages
-    if: github.repository == 'carlswilson22/Automatch'
+    if: github.repository == 'carlswilson22/Automatch' || github.repository == 'CAMPUSCEUB/ADS-AUTOMATCH'
     needs: build
     environment:
       name: github-pages
