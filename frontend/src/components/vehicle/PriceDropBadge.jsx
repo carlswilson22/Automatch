@@ -8,6 +8,7 @@ export default function PriceDropBadge({
   priceHistory = [],
   variant = 'badge', // 'badge' | 'detailed'
   isFeatured = false,
+  showStar = true,
   className = ''
 }) {
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
@@ -43,7 +44,7 @@ export default function PriceDropBadge({
       >
         <Flame className="w-3.5 h-3.5 text-orange-400 fill-orange-400/30 animate-pulse" />
         <span>Preço Baixou R$ {Math.round(dropAmount).toLocaleString('pt-BR')}</span>
-        {isFeatured && (
+        {isFeatured && showStar && (
           <span title="Destaque" aria-label="Veículo em Destaque" className="inline-flex items-center ml-0.5">
             <Star className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
           </span>
@@ -67,7 +68,7 @@ export default function PriceDropBadge({
               <span className="text-xs font-black uppercase tracking-wider text-orange-400">
                 Preço Baixou
               </span>
-              {isFeatured && (
+              {isFeatured && showStar && (
                 <span title="Destaque" aria-label="Veículo em Destaque" className="inline-flex items-center gap-1 bg-amber-500/20 border border-amber-500/30 text-amber-300 text-[10px] font-bold px-1.5 py-0.5 rounded">
                   <Star className="w-3 h-3 fill-amber-300" /> Destaque
                 </span>
