@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, ArrowLeft, Save, CheckCircle, AlertCircle, Loader2, UploadCloud, X, FileText, Copy, ExternalLink, PlusCircle, Bot, Scan, CheckCircle2, AlertTriangle, Car, Sparkles, Search, Lock, Users } from 'lucide-react';
+import { ShieldCheck, ArrowLeft, Save, CheckCircle, AlertCircle, Loader2, UploadCloud, X, FileText, Copy, ExternalLink, PlusCircle, Bot, Scan, CheckCircle2, AlertTriangle, Car, Sparkles, Search, Lock, Users, Video, Film, Trash2, Image as ImageIcon, Play, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { stores as defaultStores } from '../data/inventoryData';
 import { addNewCar } from '../data/newCarsManager';
@@ -57,6 +57,7 @@ const NewCarAdForm = () => {
     transmissao: 'Automático',
     descricao: '',
     imagem: '',
+    video_url: '',
     localizacao: '',
     laudo: 'Aprovado',
     debitos: 'Sem débitos',
@@ -150,6 +151,142 @@ const NewCarAdForm = () => {
   const [photoAiScanStatus, setPhotoAiScanStatus] = useState('idle'); // 'idle' | 'scanning' | 'done' | 'error'
   const [photoAiResult, setPhotoAiResult] = useState(null);
 
+  // ── ESTADOS DE UPLOAD DE VÍDEO PERICIAL (TAREFA 1) ───────────────────────
+  const [videoFile, setVideoFile] = useState(null);
+  const [videoPreviewUrl, setVideoPreviewUrl] = useState(null);
+  const [videoUploadStatus, setVideoUploadStatus] = useState('idle'); // 'idle' | 'uploading' | 'uploaded' | 'error'
+  const [videoUploadError, setVideoUploadError] = useState('');
+  const [videoUploadedUrl, setVideoUploadedUrl] = useState(null);
+  const [isDraggingVideo, setIsDraggingVideo] = useState(false);
+
+  // ── ESTADOS DE UPLOAD DE MÚLTIPLAS FOTOS / GALERIA (TAREFA 1) ─────────────
+  const [galleryPhotos, setGalleryPhotos] = useState([]);
+  const [isDraggingGallery, setIsDraggingGallery] = useState(false);
+  const [galleryUploadStatus, setGalleryUploadStatus] = useState('idle'); // 'idle' | 'processing' | 'error'
+  const [galleryUploadError, setGalleryUploadError] = useState('');
+
+  const uploadVideoFile = async (file) => {
+    setVideoUploadStatus('uploading');
+    setVideoUploadError('');
+    try {
+      const token = user?.token || JSON.parse(localStorage.getItem('automatch_user') || '{}')?.token;
+      const headers = {};
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      const formDataUpload = new FormData();
+      formDataUpload.append('file', file);
+
+      const response = await fetch('/api/v1/pericia/video/upload', {
+        method: 'POST',
+        headers,
+        body: formDataUpload,
+      });
+
+      if (!response.ok) {
+        const errData = await response.json().catch(() => ({}));
+        throw new Error(errData.detail || `Erro ${response.status} ao enviar o vídeo pericial.`);
+      }
+
+      const data = await response.json();
+      setVideoUploadedUrl(data.video_url);
+      setFormData(prev => ({ ...prev, video_url: data.video_url }));
+      setVideoUploadStatus('uploaded');
+    } catch (err) {
+      console.warn('Upload de vídeo em contingência local:', err);
+      setVideoUploadError(err.message || 'Erro ao enviar o vídeo ao servidor.');
+      setVideoUploadStatus('error');
+    }
+  };
+
+  const handleProcessVideoFile = (file) => {
+    if (!file) return;
+    const allowedVideoTypes = ['video/mp4', 'video/webm', 'video/quicktime', 'video/x-m4v'];
+    const ext = file.name.split('.').pop()?.toLowerCase();
+    const isAllowedExt = ['mp4', 'webm', 'mov', 'm4v'].includes(ext);
+
+    if (!allowedVideoTypes.includes(file.type) && !isAllowedExt) {
+      setVideoUploadError('Formato inválido. Aceitos: MP4, WebM ou MOV.');
+      setVideoUploadStatus('error');
+      return;
+    }
+
+    if (file.size > 40 * 1024 * 1024) {
+      setVideoUploadError('O arquivo de vídeo excede o tamanho máximo permitido de 40 MB.');
+      setVideoUploadStatus('error');
+      return;
+    }
+
+    setVideoFile(file);
+    const localUrl = URL.createObjectURL(file);
+    setVideoPreviewUrl(localUrl);
+    setVideoUploadError('');
+    uploadVideoFile(file);
+  };
+
+  const handleClearVideo = () => {
+    if (videoPreviewUrl && videoPreviewUrl.startsWith('blob:')) {
+      try { URL.revokeObjectURL(videoPreviewUrl); } catch (e) {}
+    }
+    setVideoFile(null);
+    setVideoPreviewUrl(null);
+    setVideoUploadedUrl(null);
+    setVideoUploadStatus('idle');
+    setVideoUploadError('');
+    setFormData(prev => ({ ...prev, video_url: '' }));
+  };
+
+  const handleProcessGalleryFiles = async (fileList) => {
+    if (!fileList || fileList.length === 0) return;
+    setGalleryUploadStatus('processing');
+    setGalleryUploadError('');
+
+    const newPhotos = [];
+    for (let i = 0; i < fileList.length; i++) {
+      const file = fileList[i];
+      if (!['image/jpeg', 'image/jpg', 'image/png', 'image/webp'].includes(file.type)) {
+        setGalleryUploadError(`O arquivo "${file.name}" não é uma imagem aceita (.jpg, .png, .webp).`);
+        continue;
+      }
+      if (file.size > 15 * 1024 * 1024) {
+        setGalleryUploadError(`O arquivo "${file.name}" excede o tamanho máximo de 15 MB.`);
+        continue;
+      }
+
+      try {
+        const compressed = await compressImageToJpeg(file, 1200, 0.82);
+        if (compressed) {
+          newPhotos.push({
+            id: `${Date.now()}-${i}-${Math.random().toString(36).substring(2, 7)}`,
+            name: file.name,
+            url: compressed
+          });
+        }
+      } catch (err) {
+        console.warn('Erro ao processar imagem:', err);
+      }
+    }
+
+    if (newPhotos.length > 0) {
+      setGalleryPhotos(prev => {
+        const updated = [...prev, ...newPhotos];
+        if (!formData.imagem && updated.length > 0) {
+          setFormData(f => ({ ...f, imagem: updated[0].url }));
+        }
+        return updated;
+      });
+    }
+    setGalleryUploadStatus('idle');
+  };
+
+  const handleRemoveGalleryPhoto = (indexToRemove) => {
+    setGalleryPhotos(prev => prev.filter((_, idx) => idx !== indexToRemove));
+  };
+
+  const handleSetCoverPhoto = (url) => {
+    setFormData(prev => ({ ...prev, imagem: url }));
+  };
+
   const scanCarPhotoAi = async (imageSrc) => {
     const targetImage = imageSrc || formData.imagem;
     if (!targetImage) return;
@@ -198,13 +335,16 @@ const NewCarAdForm = () => {
   const handleNewCar = () => {
     setFormData({
       marca: '', modelo: '', ano: '', preco: '', km: '', cor: '',
-      transmissao: '', descricao: '', imagem: '', localizacao: '',
+      transmissao: '', descricao: '', imagem: '', video_url: '', localizacao: '',
       laudo: '', debitos: '', leilao: '', store_id: ''
     });
     setCreatedCar(null);
     setCopied(false);
     setStatus('idle');
     setLaudoPdf(null);
+    handleClearVideo();
+    setGalleryPhotos([]);
+    setGalleryUploadError('');
   };
 
   const processFile = async (file) => {
@@ -361,7 +501,9 @@ const NewCarAdForm = () => {
       cor: formData.cor,
       transmissao: formData.transmissao,
       descricao: formData.descricao,
-      imagem: formData.imagem || '',
+      imagem: formData.imagem || (galleryPhotos[0]?.url || ''),
+      video_url: videoUploadedUrl || videoPreviewUrl || formData.video_url || null,
+      gallery: galleryPhotos.map(p => p.url),
       localizacao: formData.localizacao,
       laudo: formData.laudo,
       debitos: formData.debitos,
@@ -380,7 +522,9 @@ const NewCarAdForm = () => {
       year: Number(formData.ano),
       km: formData.km ? Number(formData.km) : 0,
       price: numericPrice,
-      image: formData.imagem || '',
+      image: formData.imagem || (galleryPhotos[0]?.url || ''),
+      video_url: videoUploadedUrl || formData.video_url || null,
+      tags: galleryPhotos.length > 0 ? JSON.stringify(galleryPhotos.map(p => p.url)) : null,
       store_id: storeNumericId,
       color: formData.cor,
       transmission: formData.transmissao,
@@ -972,24 +1116,7 @@ const NewCarAdForm = () => {
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-4 px-2">
-                    <div className="flex-1 h-px bg-slate-200"></div>
-                    <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">OU</span>
-                    <div className="flex-1 h-px bg-slate-200"></div>
-                  </div>
 
-                  <div className="space-y-2 pb-2">
-                    <label className="text-sm font-bold text-slate-700">Ou cole o link da imagem (URL)</label>
-                    <input 
-                      type="url" 
-                      name="imagem" 
-                      value={formData.imagem} 
-                      onChange={handleChange} 
-                      className={`w-full bg-slate-50 border ${formData.imagem && !isValidImageExt ? 'border-amber-400 focus:ring-amber-500' : 'border-slate-200 focus:ring-blue-500'} rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:bg-white transition-all shadow-sm text-slate-700`} 
-                      placeholder="https://exemplo.com/fotocarro.jpg" 
-                    />
-                    {formData.imagem && !isValidImageExt && <p className="text-xs text-amber-600 mt-1">Atenção: A URL informada parece não terminar com extensão aceita (.jpg, .png)</p>}
-                  </div>
                 </div>
               ) : (
                 <div className="mt-4 space-y-3">
@@ -1068,6 +1195,241 @@ const NewCarAdForm = () => {
                       </motion.div>
                     )}
                   </AnimatePresence>
+                </div>
+              )}
+            </div>
+
+            {/* ── COMPONENTE DE UPLOAD DE MÚLTIPLAS FOTOS (TAREFA 1 - ITEM B) ── */}
+            <div className="space-y-3 pt-6 border-t border-slate-100">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div>
+                  <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                    <ImageIcon className="w-4 h-4 text-blue-600" />
+                    Galeria de Fotos do Veículo (Múltiplas Imagens)
+                  </label>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Adicione fotos de diferentes ângulos (dianteira, traseira, laterais e interior) para a visualização na varredura 360°.
+                  </p>
+                </div>
+                {galleryPhotos.length > 0 && (
+                  <span className="text-xs font-bold bg-blue-50 text-blue-700 px-3 py-1 rounded-full border border-blue-200">
+                    {galleryPhotos.length} foto{galleryPhotos.length > 1 ? 's' : ''} na galeria
+                  </span>
+                )}
+              </div>
+
+              {galleryUploadError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
+                    <span>{galleryUploadError}</span>
+                  </div>
+                  <button type="button" onClick={() => setGalleryUploadError('')} className="text-red-500 hover:text-red-700">
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+
+              {/* Área de Seleção / Dropzone para Múltiplas Fotos */}
+              <div 
+                className={`relative flex flex-col items-center justify-center w-full py-8 px-4 rounded-xl border-2 border-dashed transition-all cursor-pointer overflow-hidden ${
+                  isDraggingGallery ? 'border-blue-500 bg-blue-50/80' : 'border-slate-300 bg-slate-50/70 hover:bg-slate-100/80'
+                }`}
+                onDragOver={(e) => { e.preventDefault(); setIsDraggingGallery(true); }}
+                onDragLeave={() => setIsDraggingGallery(false)}
+                onDrop={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setIsDraggingGallery(false);
+                  if (e.dataTransfer?.files) {
+                    handleProcessGalleryFiles(e.dataTransfer.files);
+                  }
+                }}
+              >
+                <input 
+                  type="file" 
+                  multiple
+                  accept=".jpg,.jpeg,.png,.webp"
+                  onChange={(e) => {
+                    if (e.target.files) {
+                      handleProcessGalleryFiles(e.target.files);
+                      e.target.value = '';
+                    }
+                  }}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                />
+                <div className="flex flex-col items-center justify-center text-slate-500 pointer-events-none text-center">
+                  <div className="w-10 h-10 rounded-xl bg-white shadow-sm border border-slate-200 flex items-center justify-center text-blue-600 mb-2">
+                    <UploadCloud className="w-5 h-5" />
+                  </div>
+                  <p className="text-sm font-semibold text-slate-700">
+                    Arraste fotos ou <span className="text-blue-600">clique para selecionar várias imagens</span>
+                  </p>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Formatos aceitos: JPG, PNG ou WebP (máx. 15 MB cada foto)
+                  </p>
+                </div>
+              </div>
+
+              {/* Grid de Pré-visualização das Fotos da Galeria */}
+              {galleryPhotos.length > 0 && (
+                <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-3 pt-2">
+                  {galleryPhotos.map((photo, idx) => {
+                    const isCover = formData.imagem === photo.url;
+                    return (
+                      <div 
+                        key={photo.id || idx}
+                        className={`group relative rounded-xl overflow-hidden border-2 aspect-[4/3] bg-slate-100 transition-all ${
+                          isCover ? 'border-blue-600 shadow-md shadow-blue-500/20' : 'border-slate-200 hover:border-slate-300'
+                        }`}
+                      >
+                        <img 
+                          src={photo.url} 
+                          alt={`Foto ${idx + 1}`} 
+                          className="w-full h-full object-cover"
+                        />
+                        {isCover && (
+                          <span className="absolute top-1.5 left-1.5 bg-blue-600 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded-full shadow-sm flex items-center gap-1">
+                            <Check className="w-2.5 h-2.5" /> Capa
+                          </span>
+                        )}
+                        <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 p-2">
+                          {!isCover && (
+                            <button
+                              type="button"
+                              onClick={() => handleSetCoverPhoto(photo.url)}
+                              className="w-full py-1 px-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded text-[10px] font-bold transition-colors"
+                            >
+                              Usar como Capa
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveGalleryPhoto(idx)}
+                            className="w-full py-1 px-1.5 bg-red-600 hover:bg-red-700 text-white rounded text-[10px] font-bold flex items-center justify-center gap-1 transition-colors"
+                          >
+                            <Trash2 className="w-3 h-3" /> Remover
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* ── COMPONENTE DE UPLOAD DE VÍDEO PERICIAL (TAREFA 1 - ITEM A) ──── */}
+            <div className="space-y-3 pt-6 border-t border-slate-100">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div>
+                  <label className="text-sm font-bold text-slate-700 flex items-center gap-2">
+                    <Film className="w-4 h-4 text-purple-600" />
+                    Vídeo Pericial de Vistoria (Upload de Vídeo)
+                  </label>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Envie um vídeo demonstrando o funcionamento do motor, interior e lataria para a aba pericial do anúncio.
+                  </p>
+                </div>
+                {videoUploadStatus === 'uploaded' && (
+                  <span className="text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1 rounded-full flex items-center gap-1">
+                    <CheckCircle className="w-3.5 h-3.5 text-emerald-600" /> Vídeo Anexado
+                  </span>
+                )}
+              </div>
+
+              {videoUploadError && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-700 flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <AlertCircle className="w-4 h-4 text-red-500 shrink-0" />
+                    <span>{videoUploadError}</span>
+                  </div>
+                  <button type="button" onClick={() => setVideoUploadError('')} className="text-red-500 hover:text-red-700">
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+
+              {/* Se nenhum vídeo foi selecionado: Dropzone de Upload */}
+              {!videoPreviewUrl ? (
+                <div 
+                  className={`relative flex flex-col items-center justify-center w-full py-8 px-4 rounded-xl border-2 border-dashed transition-all cursor-pointer overflow-hidden ${
+                    isDraggingVideo ? 'border-purple-500 bg-purple-50/80' : 'border-slate-300 bg-slate-50/70 hover:bg-slate-100/80'
+                  }`}
+                  onDragOver={(e) => { e.preventDefault(); setIsDraggingVideo(true); }}
+                  onDragLeave={() => setIsDraggingVideo(false)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setIsDraggingVideo(false);
+                    const file = e.dataTransfer?.files?.[0];
+                    if (file) handleProcessVideoFile(file);
+                  }}
+                >
+                  <input 
+                    type="file" 
+                    accept="video/mp4,video/webm,video/quicktime,video/x-m4v"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleProcessVideoFile(file);
+                    }}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  />
+                  <div className="flex flex-col items-center justify-center text-slate-500 pointer-events-none text-center">
+                    <div className="w-10 h-10 rounded-xl bg-white shadow-sm border border-slate-200 flex items-center justify-center text-purple-600 mb-2">
+                      <Video className="w-5 h-5" />
+                    </div>
+                    <p className="mb-1 text-sm font-semibold text-slate-700">
+                      Arraste o vídeo pericial ou <span className="text-purple-600">clique para selecionar</span>
+                    </p>
+                    <p className="text-xs text-slate-400">Formatos aceitos: MP4, WebM ou MOV (máximo de 40 MB)</p>
+                  </div>
+                </div>
+              ) : (
+                /* Pré-visualização do Vídeo com Player HTML5 e Remoção */
+                <div className="space-y-3">
+                  <div className="rounded-2xl overflow-hidden border border-slate-200 bg-slate-950 aspect-video max-w-full relative shadow-md">
+                    <video 
+                      src={videoPreviewUrl} 
+                      controls 
+                      className="w-full h-full object-contain"
+                      playsInline
+                    />
+                  </div>
+
+                  <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between gap-3 flex-wrap">
+                    <div className="flex items-center gap-3 overflow-hidden">
+                      {videoUploadStatus === 'uploading' ? (
+                        <Loader2 className="w-5 h-5 text-amber-500 animate-spin shrink-0" />
+                      ) : videoUploadStatus === 'uploaded' ? (
+                        <CheckCircle className="w-5 h-5 text-emerald-500 shrink-0" />
+                      ) : videoUploadStatus === 'error' ? (
+                        <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
+                      ) : (
+                        <Film className="w-5 h-5 text-purple-500 shrink-0" />
+                      )}
+                      <div className="min-w-0">
+                        <span className="text-xs font-bold text-slate-800 truncate block">
+                          {videoFile?.name || 'Vídeo Pericial Selecionado'}
+                        </span>
+                        <span className="text-[11px] text-slate-500">
+                          {videoUploadStatus === 'uploading' && 'Enviando ao servidor (máx 40 MB)...'}
+                          {videoUploadStatus === 'uploaded' && '✓ Vídeo armazenado e vinculado ao anúncio'}
+                          {videoUploadStatus === 'error' && (videoUploadError || 'Erro no upload')}
+                          {videoUploadStatus === 'idle' && `${Math.round((videoFile?.size || 0) / (1024 * 1024))} MB`}
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleClearVideo}
+                      disabled={videoUploadStatus === 'uploading'}
+                      className="px-3 py-1.5 bg-white hover:bg-red-50 text-red-600 border border-red-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm shrink-0 cursor-pointer disabled:opacity-50"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Remover Vídeo</span>
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

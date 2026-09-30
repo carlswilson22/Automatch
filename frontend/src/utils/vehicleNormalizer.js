@@ -59,6 +59,11 @@ export function normalizeVehicle(rawCar) {
     transmission: rawCar.transmission || rawCar.cambio || 'Automático',
     bodyType: rawCar.bodyType || rawCar.body_type || 'SUV',
     image: rawCar.image || rawCar.imagem || 'FotoGolfGTI.jpeg',
+    gallery: Array.isArray(rawCar.gallery) && rawCar.gallery.length > 0 
+      ? rawCar.gallery 
+      : (typeof rawCar.tags === 'string' && rawCar.tags.startsWith('[') 
+          ? (() => { try { const p = JSON.parse(rawCar.tags); return Array.isArray(p) ? p : []; } catch { return []; } })() 
+          : (rawCar.image ? [rawCar.image] : [])),
     videoUrl: rawCar.videoUrl || rawCar.video_url || null,
     storeId: Number(rawCar.storeId || rawCar.store_id || 1),
     tags,
