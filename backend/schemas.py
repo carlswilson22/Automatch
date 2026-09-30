@@ -8,7 +8,7 @@ class CarBase(BaseModel):
     year: int
     km: int
     price: float
-    image: Optional[str] = "FotoGolfGTI.jpeg"
+    image: Optional[str] = "placeholder-carro.jpg"
     store_id: int
     
     color: Optional[str] = None

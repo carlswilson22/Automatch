@@ -143,7 +143,7 @@ export const getStoredInventory = () => {
         const defaultMatch = inventory.find(i => i.id === item.id || (i.brand === item.brand && i.model === item.model));
         return {
           ...item,
-          image: defaultMatch ? defaultMatch.image : '/images/FotoGolfGTI.jpeg'
+          image: defaultMatch ? defaultMatch.image : '/images/placeholder-carro.jpg'
         };
       }
       return {
@@ -178,7 +178,7 @@ export const getStoredInventory = () => {
                 visible_showcase: true,
                 visible_b2b: true,
                 notes: car.descricao || car.description || '',
-                image: car.imagem || car.image || '/images/FotoGolfGTI.jpeg'
+                image: car.imagem || car.image || '/images/placeholder-carro.jpg'
               });
             }
           });

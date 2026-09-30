@@ -122,7 +122,7 @@ const CarCard = ({ car, index }) => {
       {/* Image Container */}
       <div className="relative aspect-[16/10] overflow-hidden bg-slate-900">
         <img
-          src={getVehicleImageUrl(car.image || 'FotoGolfGTI.jpeg')}
+          src={getVehicleImageUrl(car.image || 'placeholder-carro.jpg')}
           alt={car.name}
           onError={handleVehicleImageError}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"

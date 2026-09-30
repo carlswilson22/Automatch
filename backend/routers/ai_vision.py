@@ -116,8 +116,8 @@ async def analisar_avarias_veiculo(payload: AnaliseVisualRequest) -> Dict[str, A
     # Se nenhuma imagem foi fornecida ou encontrada, tenta placeholder padrão
     if not image_bytes:
         default_paths = [
-            "/app/public_images/FotoGolfGTI.jpeg",
-            os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "public", "images", "FotoGolfGTI.jpeg")
+            "/app/public_images/placeholder-carro.jpg",
+            os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "public", "images", "placeholder-carro.jpg")
         ]
         for dpath in default_paths:
             if os.path.exists(dpath):

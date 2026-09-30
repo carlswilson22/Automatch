@@ -41,7 +41,7 @@ def run_tests():
                 year=2023,
                 km=15000,
                 price=140000.0,
-                image="/images/FotoToyotaCorolla.jpeg",
+                image="/images/FotoCorollaCross.jpg",
                 store_id=1,
                 user_id="user-1"
             )
@@ -61,11 +61,11 @@ def run_tests():
     # -------------------------------------------------------------------------
     print("\n[TESTE 1] Perícia Visual IA com Foto Local do Anúncio...")
     resp = client.post("/api/analise-visual", json={
-        "imageUrl": "/images/FotoGolfGTI.jpeg",
+        "imageUrl": "/images/FotoCorollaCross.jpg",
         "car_context": {
-            "brand": "Volkswagen",
-            "model": "Golf GTI",
-            "year": 2022,
+            "brand": "Toyota",
+            "model": "Corolla Cross",
+            "year": 2024,
             "color": "Branco"
         }
     })
@@ -147,7 +147,7 @@ def run_tests():
         "year": 2024,
         "km": 1500,
         "price": 450000.0,
-        "image": "/images/FotoGolfGTI.jpeg",
+        "image": "/images/FotoCorollaCross.jpg",
         "color": "Azul",
         "store_id": 1,
         "transmission": "Automático",

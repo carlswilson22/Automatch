@@ -71,7 +71,7 @@ export default function AssetConfigurationModal({
         visible_showcase: asset.visible_showcase !== false,
         visible_b2b: asset.visible_b2b !== false,
         notes: asset.notes || '',
-        image: asset.image || asset.imagem || '/images/FotoGolfGTI.jpeg'
+        image: asset.image || asset.imagem || '/images/placeholder-carro.jpg'
       });
       setIsConfirmingDelete(false);
       setHasSaved(false);
@@ -128,7 +128,7 @@ export default function AssetConfigurationModal({
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-2xl overflow-hidden border border-white/20 shrink-0 bg-slate-800 shadow-md">
               <img
-                src={getVehicleImageUrl(formData.image || formData.imagem || 'FotoGolfGTI.jpeg')}
+                src={getVehicleImageUrl(formData.image || formData.imagem || 'placeholder-carro.jpg')}
                 alt={`${formData.brand} ${formData.model}`}
                 onError={handleVehicleImageError}
                 className="w-full h-full object-cover"

@@ -58,7 +58,7 @@ export function normalizeVehicle(rawCar) {
     fuel: rawCar.fuel || rawCar.combustivel || 'Flex',
     transmission: rawCar.transmission || rawCar.cambio || 'Automático',
     bodyType: rawCar.bodyType || rawCar.body_type || 'SUV',
-    image: rawCar.image || rawCar.imagem || 'FotoGolfGTI.jpeg',
+    image: rawCar.image || rawCar.imagem || 'placeholder-carro.jpg',
     gallery: Array.isArray(rawCar.gallery) && rawCar.gallery.length > 0 
       ? rawCar.gallery 
       : (typeof rawCar.tags === 'string' && rawCar.tags.startsWith('[') 

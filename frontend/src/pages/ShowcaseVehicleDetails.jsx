@@ -128,7 +128,7 @@ export default function ShowcaseVehicleDetails() {
           autoPrice: mock.price * 0.98,
           color: 'Prata',
           mileage: mock.mileage,
-          image: mock.images?.[0] || '/images/FotoHondaCivic.jpeg',
+          image: mock.images?.[0] || '/images/placeholder-carro.jpg',
           bodyType: mock.metadata?.bodyType || 'Sedã',
           storeId: mock.storeId || 'store-1',
           damagePoints: mock.damagePoints || [],
@@ -172,7 +172,7 @@ export default function ShowcaseVehicleDetails() {
             autoPrice: local.preco * 0.99,
             color: local.cor || 'Preto',
             mileage: local.km || 0,
-            image: local.imagem || '/images/FotoHondaCivic.jpeg',
+            image: local.imagem || '/images/placeholder-carro.jpg',
             gallery: Array.isArray(local.gallery) && local.gallery.length > 0 ? local.gallery : (local.imagem ? [local.imagem] : []),
             bodyType: 'Particular',
             storeId: local.storeId || 'store-1',
@@ -237,10 +237,10 @@ export default function ShowcaseVehicleDetails() {
             autoPrice: dbCar.auto_price || (found?.autoPrice || null),
             color: dbCar.color || 'Prata',
             mileage: dbCar.km || 0,
-            image: dbCar.image || '/images/FotoHondaCivic.jpeg',
+            image: dbCar.image || '/images/placeholder-carro.jpg',
             gallery: (typeof dbCar.tags === 'string' && dbCar.tags.startsWith(String.fromCharCode(91))) 
-              ? (() => { try { return JSON.parse(dbCar.tags); } catch { return [dbCar.image || '/images/FotoHondaCivic.jpeg']; } })()
-              : (Array.isArray(dbCar.gallery) ? dbCar.gallery : [dbCar.image || '/images/FotoHondaCivic.jpeg']),
+              ? (() => { try { return JSON.parse(dbCar.tags); } catch { return [dbCar.image || '/images/placeholder-carro.jpg']; } })()
+              : (Array.isArray(dbCar.gallery) ? dbCar.gallery : [dbCar.image || '/images/placeholder-carro.jpg']),
             bodyType: dbCar.body_type || 'Particular',
             storeId: dbCar.store_id ? `store-${dbCar.store_id}` : 'store-1',
             plate: dbCar.plate || 'ABC1234',
@@ -889,7 +889,7 @@ export default function ShowcaseVehicleDetails() {
               {/* Photo Canvas with Integrated Scanner & Hotspots */}
               <div className="relative aspect-[16/10] bg-slate-950 overflow-hidden select-none">
                 <img 
-                  src={getVehicleImageUrl(inspectionImage || car.image || car.imagem || 'FotoGolfGTI.jpeg')} 
+                  src={getVehicleImageUrl(inspectionImage || car.image || car.imagem || 'placeholder-carro.jpg')} 
                   alt={car.name} 
                   onError={handleVehicleImageError}
                   className="w-full h-full object-cover" 

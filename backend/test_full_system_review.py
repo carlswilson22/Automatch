@@ -270,7 +270,7 @@ def run_full_system_review():
         "km": 12000,
         "price": 89000.0,
         "color": "Cinza",
-        "image": "/images/FotoToyotaCorolla.jpg",
+        "image": "/images/FotoCorollaCross.jpg",
         "store_id": 1,
         "transmission": "Automático"
     }, headers=auth_headers)

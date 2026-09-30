@@ -50,7 +50,7 @@ const SAMPLE_SCENARIOS = [
     id: 'clean',
     name: 'Lataria 100% Íntegra',
     desc: 'Pintura original sem avarias',
-    image: '/images/FotoToyotaCorolla.jpg',
+    image: '/images/FotoCorollaCross.jpg',
     points: []
   }
 ];
@@ -58,7 +58,7 @@ const SAMPLE_SCENARIOS = [
 const AutomatchScan = ({ vehicleImage, damagePoints = [], onDamagesChange }) => {
   const [isScanning, setIsScanning] = useState(false);
   const [scanComplete, setScanComplete] = useState(false);
-  const [uploadedImage, setUploadedImage] = useState(vehicleImage || '/images/FotoToyotaCorolla.jpg');
+  const [uploadedImage, setUploadedImage] = useState(vehicleImage || '/images/FotoCorollaCross.jpg');
   const [currentPoints, setCurrentPoints] = useState(damagePoints);
   const [activeDamage, setActiveDamage] = useState(null);
   const [selectedScenarioId, setSelectedScenarioId] = useState('dent');

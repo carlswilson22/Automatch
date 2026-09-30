@@ -391,19 +391,19 @@ class TestSprint07Battery(unittest.TestCase):
         # 1. Verifica existência dos assets fotográficos essenciais
         backend_dir = Path(__file__).resolve().parent
         candidate_rear_paths = [
-            backend_dir / "public_images" / "carro_360_traseira.jpg",
-            backend_dir.parent / "frontend" / "public" / "images" / "carro_360_traseira.jpg",
-            Path("/app/public_images/carro_360_traseira.jpg"),
+            backend_dir / "public_images" / "cars" / "sc-001" / "180.jpg",
+            backend_dir.parent / "frontend" / "public" / "images" / "cars" / "sc-001" / "180.jpg",
+            Path("/app/public_images/cars/sc-001/180.jpg"),
         ]
         img_rear = next((p for p in candidate_rear_paths if p.exists()), None)
-        self.assertIsNotNone(img_rear, "Asset carro_360_traseira.jpg deve existir nos diretórios de imagens")
+        self.assertIsNotNone(img_rear, "Asset cars/sc-001/180.jpg deve existir nos diretórios de imagens")
         self.assertGreater(img_rear.stat().st_size, 0, "Imagem de traseira não pode estar vazia")
 
         # 2. Valida que a imagem de traseira é distinta da imagem frontal
         candidate_front_paths = [
-            backend_dir / "public_images" / "carro_360_frente.jpg",
-            backend_dir.parent / "frontend" / "public" / "images" / "carro_360_frente.jpg",
-            Path("/app/public_images/carro_360_frente.jpg"),
+            backend_dir / "public_images" / "cars" / "sc-001" / "0.jpg",
+            backend_dir.parent / "frontend" / "public" / "images" / "cars" / "sc-001" / "0.jpg",
+            Path("/app/public_images/cars/sc-001/0.jpg"),
         ]
         img_front = next((p for p in candidate_front_paths if p.exists()), None)
         if img_front:
@@ -418,8 +418,8 @@ class TestSprint07Battery(unittest.TestCase):
         showcase_path = next((p for p in candidate_showcase_paths if p.exists()), None)
         if showcase_path:
             content = showcase_path.read_text(encoding="utf-8")
-            self.assertIn("180: '/images/carro_360_traseira.jpg'", content,
-                          "O quadrante 180° deve apontar fidedignamente para a foto de traseira")
+            self.assertIn("180: '/images/cars/sc-001/180.jpg'", content,
+                          "O quadrante 180° deve apontar fidedignamente para a foto de traseira dedicada")
             for angle in [0, 45, 90, 135, 180, 225, 270, 315]:
                 self.assertTrue(re.search(rf"\b{angle}\s*:", content), f"Ângulo {angle}° deve estar mapeado")
 

@@ -165,7 +165,7 @@ export default function MyAdsPage() {
           <div className="space-y-4">
             {ads.map((car) => {
               const carName = `${car.marca || ''} ${car.modelo || ''}`.trim() || 'Veículo Anunciado';
-              const carImg = car.imagem || '/images/FotoHondaCivic.jpeg';
+              const carImg = car.imagem || '/images/placeholder-carro.jpg';
               return (
                 <motion.div
                   key={car.id}

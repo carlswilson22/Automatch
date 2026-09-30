@@ -12,21 +12,21 @@ export const showcaseCars = [
     color: 'Branco Pérola',
     mileage: 12000, image: '/images/FotoCorollaCross.jpg',
     gallery: [
-      '/images/FotoCorollaCross.jpg',
-      '/images/carro_360_diagonal.jpg',
-      '/images/carro_360_lateral.jpg',
-      '/images/carro_360_diagonal.jpg',
-      '/images/carro_360_traseira.jpg'
+      '/images/cars/sc-001/0.jpg',
+      '/images/cars/sc-001/45.jpg',
+      '/images/cars/sc-001/90.jpg',
+      '/images/cars/sc-001/135.jpg',
+      '/images/cars/sc-001/180.jpg'
     ],
     photos360: {
-      0: '/images/FotoCorollaCross.jpg',
-      45: '/images/carro_360_diagonal.jpg',
-      90: '/images/carro_360_lateral.jpg',
-      135: '/images/carro_360_diagonal.jpg',
-      180: '/images/carro_360_traseira.jpg',
-      225: '/images/carro_360_diagonal.jpg',
-      270: '/images/carro_360_lateral.jpg',
-      315: '/images/carro_360_diagonal.jpg'
+      0: '/images/cars/sc-001/0.jpg',
+      45: '/images/cars/sc-001/45.jpg',
+      90: '/images/cars/sc-001/90.jpg',
+      135: '/images/cars/sc-001/135.jpg',
+      180: '/images/cars/sc-001/180.jpg',
+      225: '/images/cars/sc-001/225.jpg',
+      270: '/images/cars/sc-001/270.jpg',
+      315: '/images/cars/sc-001/315.jpg'
     },
     bodyType: 'SUV',
     icon: Car, featured: true, location: 'São Paulo, SP', storeId: 'store-1',
@@ -52,21 +52,21 @@ Laudo cautelar 100% aprovado, sem qualquer retoque de funilaria ou histórico de
     color: 'Vermelho',
     mileage: 18500, image: '/images/FotoPoloTSI.jpg',
     gallery: [
-      '/images/FotoPoloTSI.jpg',
-      '/images/carro_360_diagonal.jpg',
-      '/images/carro_360_lateral.jpg',
-      '/images/carro_360_diagonal.jpg',
-      '/images/carro_360_traseira.jpg'
+      '/images/cars/sc-002/0.jpg',
+      '/images/cars/sc-002/45.jpg',
+      '/images/cars/sc-002/90.jpg',
+      '/images/cars/sc-002/135.jpg',
+      '/images/cars/sc-002/180.jpg'
     ],
     photos360: {
-      0: '/images/FotoPoloTSI.jpg',
-      45: '/images/carro_360_diagonal.jpg',
-      90: '/images/carro_360_lateral.jpg',
-      135: '/images/carro_360_diagonal.jpg',
-      180: '/images/carro_360_traseira.jpg',
-      225: '/images/carro_360_diagonal.jpg',
-      270: '/images/carro_360_lateral.jpg',
-      315: '/images/carro_360_diagonal.jpg'
+      0: '/images/cars/sc-002/0.jpg',
+      45: '/images/cars/sc-002/45.jpg',
+      90: '/images/cars/sc-002/90.jpg',
+      135: '/images/cars/sc-002/135.jpg',
+      180: '/images/cars/sc-002/180.jpg',
+      225: '/images/cars/sc-002/225.jpg',
+      270: '/images/cars/sc-002/270.jpg',
+      315: '/images/cars/sc-002/315.jpg'
     },
     bodyType: 'Hatch',
     icon: Car, featured: false, location: 'Campinas, SP', storeId: 'store-2',
@@ -87,21 +87,21 @@ Acompanha laudo pericial cautelar sem apontamentos, manual do proprietário com 
     year: 2024, price: 105000, fipePrice: 110000, color: 'Prata',
     mileage: 5000, image: '/images/FotoHyundaiHB20.jpg',
     gallery: [
-      '/images/FotoHyundaiHB20.jpg',
-      '/images/carro_360_diagonal.jpg',
-      '/images/carro_360_lateral.jpg',
-      '/images/carro_360_diagonal.jpg',
-      '/images/carro_360_traseira.jpg'
+      '/images/cars/sc-003/0.jpg',
+      '/images/cars/sc-003/45.jpg',
+      '/images/cars/sc-003/90.jpg',
+      '/images/cars/sc-003/135.jpg',
+      '/images/cars/sc-003/180.jpg'
     ],
     photos360: {
-      0: '/images/FotoHyundaiHB20.jpg',
-      45: '/images/carro_360_diagonal.jpg',
-      90: '/images/carro_360_lateral.jpg',
-      135: '/images/carro_360_diagonal.jpg',
-      180: '/images/carro_360_traseira.jpg',
-      225: '/images/carro_360_diagonal.jpg',
-      270: '/images/carro_360_lateral.jpg',
-      315: '/images/carro_360_diagonal.jpg'
+      0: '/images/cars/sc-003/0.jpg',
+      45: '/images/cars/sc-003/45.jpg',
+      90: '/images/cars/sc-003/90.jpg',
+      135: '/images/cars/sc-003/135.jpg',
+      180: '/images/cars/sc-003/180.jpg',
+      225: '/images/cars/sc-003/225.jpg',
+      270: '/images/cars/sc-003/270.jpg',
+      315: '/images/cars/sc-003/315.jpg'
     },
     bodyType: 'Hatch',
     icon: Car, featured: true, location: 'Curitiba, PR', storeId: 'store-3',
@@ -127,21 +127,21 @@ Veículo com procedência certificada de único dono, selo de vistoria cautelar 
     color: 'Azul Escuro',
     mileage: 8500, image: '/images/FotoChevroletTracker.jpg',
     gallery: [
-      '/images/FotoChevroletTracker.jpg',
-      '/images/carro_360_diagonal.jpg',
-      '/images/carro_360_lateral.jpg',
-      '/images/carro_360_diagonal.jpg',
-      '/images/carro_360_traseira.jpg'
+      '/images/cars/sc-004/0.jpg',
+      '/images/cars/sc-004/45.jpg',
+      '/images/cars/sc-004/90.jpg',
+      '/images/cars/sc-004/135.jpg',
+      '/images/cars/sc-004/180.jpg'
     ],
     photos360: {
-      0: '/images/FotoChevroletTracker.jpg',
-      45: '/images/carro_360_diagonal.jpg',
-      90: '/images/carro_360_lateral.jpg',
-      135: '/images/carro_360_diagonal.jpg',
-      180: '/images/carro_360_traseira.jpg',
-      225: '/images/carro_360_diagonal.jpg',
-      270: '/images/carro_360_lateral.jpg',
-      315: '/images/carro_360_diagonal.jpg'
+      0: '/images/cars/sc-004/0.jpg',
+      45: '/images/cars/sc-004/45.jpg',
+      90: '/images/cars/sc-004/90.jpg',
+      135: '/images/cars/sc-004/135.jpg',
+      180: '/images/cars/sc-004/180.jpg',
+      225: '/images/cars/sc-004/225.jpg',
+      270: '/images/cars/sc-004/270.jpg',
+      315: '/images/cars/sc-004/315.jpg'
     },
     bodyType: 'SUV',
     icon: Car, featured: true, location: 'São Paulo, SP', storeId: 'store-1',
@@ -162,21 +162,21 @@ Carro de único proprietário, revisado em concessionária, sem qualquer avaria 
     year: 2024, price: 145000, fipePrice: 149900, color: 'Vermelho',
     mileage: 3200, image: '/images/FotoFiatPulse.jpg',
     gallery: [
-      '/images/FotoFiatPulse.jpg',
-      '/images/carro_360_diagonal.jpg',
-      '/images/carro_360_lateral.jpg',
-      '/images/carro_360_diagonal.jpg',
-      '/images/carro_360_traseira.jpg'
+      '/images/cars/sc-005/0.jpg',
+      '/images/cars/sc-005/45.jpg',
+      '/images/cars/sc-005/90.jpg',
+      '/images/cars/sc-005/135.jpg',
+      '/images/cars/sc-005/180.jpg'
     ],
     photos360: {
-      0: '/images/FotoFiatPulse.jpg',
-      45: '/images/carro_360_diagonal.jpg',
-      90: '/images/carro_360_lateral.jpg',
-      135: '/images/carro_360_diagonal.jpg',
-      180: '/images/carro_360_traseira.jpg',
-      225: '/images/carro_360_diagonal.jpg',
-      270: '/images/carro_360_lateral.jpg',
-      315: '/images/carro_360_diagonal.jpg'
+      0: '/images/cars/sc-005/0.jpg',
+      45: '/images/cars/sc-005/45.jpg',
+      90: '/images/cars/sc-005/90.jpg',
+      135: '/images/cars/sc-005/135.jpg',
+      180: '/images/cars/sc-005/180.jpg',
+      225: '/images/cars/sc-005/225.jpg',
+      270: '/images/cars/sc-005/270.jpg',
+      315: '/images/cars/sc-005/315.jpg'
     },
     bodyType: 'SUV',
     icon: Car, featured: true, location: 'Campinas, SP', storeId: 'store-2',

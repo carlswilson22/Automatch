@@ -113,12 +113,12 @@ const Vehicle360Viewer = ({
           map[angle] = getVehicleImageUrl(src);
           return;
         }
-        map[angle] = getVehicleImageUrl(gal[0] || baseImg || 'FotoGolfGTI.jpeg');
+        map[angle] = getVehicleImageUrl(gal[0] || baseImg || 'placeholder-carro.jpg');
         return;
       }
 
       // Prioridade 3: Imagem principal do próprio veículo (SEM fotos de outros veículos)
-      map[angle] = getVehicleImageUrl(baseImg || 'FotoGolfGTI.jpeg');
+      map[angle] = getVehicleImageUrl(baseImg || 'placeholder-carro.jpg');
     });
 
     return map;

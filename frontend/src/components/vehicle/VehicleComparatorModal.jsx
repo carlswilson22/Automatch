@@ -16,7 +16,7 @@ const normalizeCar = (car) => {
   const name = car.name || `${car.brand || ''} ${car.model || 'Veículo'}`.trim();
   const price = Number(car.price) || 0;
   const mileage = Number(car.mileage || car.km) || 0;
-  const image = car.image || car.imagem || '/images/FotoHondaCivic.jpeg';
+  const image = car.image || car.imagem || '/images/placeholder-carro.jpg';
   const year = Number(car.year) || CURRENT_YEAR;
   return { ...car, name, price, mileage, image, year };
 };

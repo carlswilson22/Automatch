@@ -258,7 +258,7 @@ export default function Dashboard() {
                     <div>
                       <div className="aspect-[16/9] overflow-hidden bg-slate-100 relative">
                         <img 
-                          src={getVehicleImageUrl(item.image || item.imagem || 'FotoGolfGTI.jpeg')} 
+                          src={getVehicleImageUrl(item.image || item.imagem || 'placeholder-carro.jpg')} 
                           alt={`${item.brand} ${item.model}`}
                           loading="lazy"
                           onError={handleVehicleImageError}
@@ -347,7 +347,7 @@ export default function Dashboard() {
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-slate-200 bg-slate-100">
                                 <img 
-                                  src={getVehicleImageUrl(item.image || item.imagem || 'FotoGolfGTI.jpeg')} 
+                                  src={getVehicleImageUrl(item.image || item.imagem || 'placeholder-carro.jpg')} 
                                   alt="" 
                                   loading="lazy"
                                   onError={handleVehicleImageError}

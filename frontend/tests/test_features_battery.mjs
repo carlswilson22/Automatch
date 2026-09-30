@@ -383,10 +383,10 @@ describe('BATERIA DE TESTES 6: Varredura 360° Fidedigna e Quadrante 180° Trase
     }
   });
 
-  test('6.2: Ângulo 180° deve apontar fidedignamente para imagem de traseira (/images/carro_360_traseira.jpg)', () => {
+  test('6.2: Ângulo 180° deve apontar fidedignamente para imagem de traseira dedicada (/images/cars/sc-001/180.jpg)', () => {
     assert.ok(
-      showcaseDataContent.includes("180: '/images/carro_360_traseira.jpg'"),
-      'O ângulo 180° deve apontar para /images/carro_360_traseira.jpg'
+      showcaseDataContent.includes("180: '/images/cars/sc-001/180.jpg'"),
+      'O ângulo 180° deve apontar para /images/cars/sc-001/180.jpg'
     );
   });
 

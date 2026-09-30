@@ -33,7 +33,7 @@ export const addNewCar = (carData) => {
     // Mantém apenas os anúncios mais recentes e normaliza dados pesados
     const trimmed = cars.slice(-10).map(c => {
       if (c.image && c.image.length > 400000) {
-        return { ...c, image: '/images/FotoToyotaCorolla.jpg' };
+        return { ...c, image: '/images/FotoCorollaCross.jpg' };
       }
       return c;
     });

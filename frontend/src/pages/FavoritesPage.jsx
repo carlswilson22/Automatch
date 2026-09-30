@@ -111,7 +111,7 @@ export default function FavoritesPage() {
       year: dbCar.year,
       price: typeof dbCar.price === 'number' ? dbCar.price : (parseFloat(dbCar.price) || 0),
       mileage: dbCar.km || 0,
-      image: dbCar.image || '/images/FotoHondaCivic.jpeg',
+      image: dbCar.image || '/images/placeholder-carro.jpg',
       bodyType: dbCar.body_type || 'Particular',
       fuel: dbCar.fuel || 'Flex',
       transmission: dbCar.transmission || 'Automático',

@@ -43,7 +43,7 @@ const CarCard = ({ data, index = 0 }) => {
       {/* Image Section (16:9) */}
       <div className="relative aspect-[16/9] overflow-hidden bg-slate-100">
         <img
-          src={getVehicleImageUrl(image || 'FotoGolfGTI.jpeg')}
+          src={getVehicleImageUrl(image || 'placeholder-carro.jpg')}
           alt={`${brand} ${model}`}
           loading="lazy"
           decoding="async"

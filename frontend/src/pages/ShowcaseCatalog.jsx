@@ -121,7 +121,7 @@ const CarCard = React.memo(({ car, index, viewMode }) => {
       >
         <div className="relative w-full md:w-80 aspect-[16/10] md:aspect-auto shrink-0 overflow-hidden bg-slate-900">
           <img 
-            src={getVehicleImageUrl(car.image || 'FotoGolfGTI.jpeg')} 
+            src={getVehicleImageUrl(car.image || 'placeholder-carro.jpg')} 
             alt={car.name} 
             loading="lazy"
             decoding="async"
@@ -180,7 +180,7 @@ const CarCard = React.memo(({ car, index, viewMode }) => {
     >
       <div className="relative aspect-[16/10] overflow-hidden bg-slate-900">
         <img 
-          src={getVehicleImageUrl(car.image || 'FotoGolfGTI.jpeg')} 
+          src={getVehicleImageUrl(car.image || 'placeholder-carro.jpg')} 
           alt={car.name} 
           loading="lazy"
           decoding="async"
@@ -361,7 +361,7 @@ const ShowcaseCatalog = () => {
           price: typeof c.price === 'number' ? c.price : (parseFloat(c.price) || 0),
           color: c.color || 'Prata',
           mileage: c.km ? Number(c.km) : 0,
-          image: c.image || '/images/FotoHondaCivic.jpeg',
+          image: c.image || '/images/placeholder-carro.jpg',
           bodyType: c.body_type || 'Particular',
           icon: Car,
           featured: true,
@@ -384,7 +384,7 @@ const ShowcaseCatalog = () => {
             price: numPrice,
             color: c.cor || 'Prata',
             mileage: c.km ? Number(c.km) : 0,
-            image: c.imagem || '/images/FotoHondaCivic.jpeg',
+            image: c.imagem || '/images/placeholder-carro.jpg',
             bodyType: 'Particular',
             icon: Car,
             featured: true,
@@ -427,7 +427,7 @@ const ShowcaseCatalog = () => {
             price: numPrice,
             color: c.cor || 'Prata',
             mileage: c.km ? Number(c.km) : 0,
-            image: c.imagem || '/images/FotoHondaCivic.jpeg',
+            image: c.imagem || '/images/placeholder-carro.jpg',
             bodyType: 'Particular',
             icon: Car,
             featured: true,
