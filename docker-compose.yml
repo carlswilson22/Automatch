@@ -11,8 +11,8 @@ services:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
     ports:
-      # Restrito ao localhost para impedir exposicao em redes externas
-      - "127.0.0.1:5432:5432"
+      # Restrito ao localhost (porta 5433 externa para evitar conflito com PostgreSQL local)
+      - "127.0.0.1:5433:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
