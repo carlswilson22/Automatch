@@ -310,6 +310,7 @@ class TestAuditFullBattery(unittest.TestCase):
                 for r in reservations:
                     db.query(models.PartnerMessage).filter(models.PartnerMessage.reservation_id == r.id).delete()
                     db.delete(r)
+                db.commit()
                 db.query(models.Car).filter(models.Car.id == cls.test_car_id).delete()
                 db.commit()
         except Exception:

@@ -902,4 +902,179 @@ describe('BATERIA DE TESTES 22: Selo Preço Baixou - Ausência de Porcentagem e 
   });
 });
 
+describe('BATERIA DE TESTES 23: Sprint 09 Tarefa 1 - Meus Anúncios (Botão Criar Anúncio Central)', () => {
+  const myAdsPath = path.join(rootDir, 'src/pages/MyAdsPage.jsx');
+  const myAdsContent = fs.readFileSync(myAdsPath, 'utf-8');
+
+  test('23.1: MyAdsPage.jsx não deve conter botão "Anunciar Novo Veículo" no cabeçalho superior', () => {
+    const topHeader = myAdsContent.split('{/* Top Header */}')[1]?.split('{/* Main Container */}')[0];
+    assert.ok(topHeader, 'Top header deve existir');
+    assert.ok(!topHeader.includes('Anunciar Novo Veículo'), 'Cabeçalho superior não deve conter botão Anunciar Novo Veículo');
+    assert.ok(topHeader.includes('Voltar ao Perfil'), 'Cabeçalho superior deve conter apenas o botão de retorno');
+  });
+
+  test('23.2: MyAdsPage.jsx deve conter botão principal de anúncio centralizado em lista populada e lista vazia', () => {
+    assert.ok(myAdsContent.includes('Criar Meu Primeiro Anúncio'), 'Lista vazia deve conter botão central');
+    assert.ok(myAdsContent.includes('flex justify-center') && myAdsContent.includes('Anunciar Novo Veículo'), 'Lista preenchida deve conter botão centralizado no meio');
+  });
+
+  test('23.3: Sintaxe e fechamento de blocos no MyAdsPage.jsx devem ser válidos', () => {
+    let braces = 0, parens = 0, brackets = 0;
+    for (let i = 0; i < myAdsContent.length; i++) {
+      const ch = myAdsContent[i];
+      if (ch === '{') braces++;
+      else if (ch === '}') braces--;
+      else if (ch === '(') parens++;
+      else if (ch === ')') parens--;
+      else if (ch === '[') brackets++;
+      else if (ch === ']') brackets--;
+    }
+    assert.strictEqual(braces, 0);
+    assert.strictEqual(parens, 0);
+    assert.strictEqual(brackets, 0);
+  });
+});
+
+describe('BATERIA DE TESTES 24: Sprint 09 Tarefa 2 - Preço Junto ao Nome em Padrão BRL com Truncamento e Estrela', () => {
+  const homePath = path.join(rootDir, 'src/pages/Home.jsx');
+  const catalogPath = path.join(rootDir, 'src/pages/ShowcaseCatalog.jsx');
+  const homeContent = fs.readFileSync(homePath, 'utf-8');
+  const catalogContent = fs.readFileSync(catalogPath, 'utf-8');
+
+  test('24.1: Home.jsx e ShowcaseCatalog.jsx devem formatar preço no padrão brasileiro (R$ 185.000,00)', () => {
+    assert.ok(homeContent.includes("minimumFractionDigits: 2"), 'Home deve formatar com 2 casas decimais no padrão brasileiro');
+    assert.ok(catalogContent.includes("minimumFractionDigits: 2"), 'ShowcaseCatalog deve formatar com 2 casas decimais no padrão brasileiro');
+  });
+
+  test('24.2: Home.jsx deve exibir o preço ao lado do nome do carro na mesma linha com estrela e truncamento', () => {
+    assert.ok(homeContent.includes('title={car.name}'), 'Home deve possuir tooltip com nome completo');
+    assert.ok(homeContent.includes('truncate'), 'Home deve truncar nomes longos');
+    assert.ok(homeContent.includes('car.featured &&') && homeContent.includes('<Star'), 'Home deve exibir estrela de destaque');
+  });
+
+  test('24.3: ShowcaseCatalog.jsx deve exibir o preço ao lado do nome do carro na mesma linha no Grid e List view', () => {
+    assert.ok(catalogContent.includes('title={car.name}'), 'ShowcaseCatalog deve possuir tooltip no nome');
+    assert.ok(catalogContent.includes('text-xl font-black text-brand-blue') || catalogContent.includes('formatPrice(car.price)'), 'Preço deve constar na linha do nome');
+  });
+});
+
+describe('BATERIA DE TESTES 25: Sprint 09 Tarefa 3 - Selo Preço Baixou sem Estrela nos Detalhes do Anúncio', () => {
+  const badgePath = path.join(rootDir, 'src/components/vehicle/PriceDropBadge.jsx');
+  const detailsPath = path.join(rootDir, 'src/pages/ShowcaseVehicleDetails.jsx');
+  const catalogPath = path.join(rootDir, 'src/pages/ShowcaseCatalog.jsx');
+  const badgeContent = fs.readFileSync(badgePath, 'utf-8');
+  const detailsContent = fs.readFileSync(detailsPath, 'utf-8');
+  const catalogContent = fs.readFileSync(catalogPath, 'utf-8');
+
+  test('25.1: PriceDropBadge.jsx deve suportar prop showStar com default true', () => {
+    assert.ok(badgeContent.includes('showStar = true'), 'PriceDropBadge deve aceitar showStar');
+    assert.ok(badgeContent.includes('isFeatured && showStar'), 'Só exibe estrela quando showStar for true');
+  });
+
+  test('25.2: ShowcaseVehicleDetails.jsx deve suprimir a estrela do PriceDropBadge com showStar={false}', () => {
+    assert.ok(detailsContent.includes('showStar={false}'), 'ShowcaseVehicleDetails deve passar showStar={false} para o selo');
+  });
+
+  test('25.3: ShowcaseCatalog.jsx e ShowcaseVehicleDetails.jsx mantêm a estrela de destaque ao lado do nome', () => {
+    assert.ok(catalogContent.includes('car.featured &&') && catalogContent.includes('<Star'), 'Estrela no nome mantida no catálogo');
+    assert.ok(detailsContent.includes('car.featured &&') && detailsContent.includes('<Star'), 'Estrela no título mantida nos detalhes');
+  });
+});
+
+describe('BATERIA DE TESTES 26: Sprint 09 Tarefa 4 - Rede B2B sem Instabilidade Temporária e Acesso Restrito', () => {
+  const b2bPath = path.join(rootDir, 'src/components/partners/PartnershipHubModal.jsx');
+  const b2bContent = fs.readFileSync(b2bPath, 'utf-8');
+
+  test('26.1: PartnershipHubModal.jsx deve declarar estado partnerships e callback refreshAll', () => {
+    assert.ok(b2bContent.includes('const [partnerships, setPartnerships] = useState'), 'partnerships deve ser declarado no estado');
+    assert.ok(b2bContent.includes('const refreshAll ='), 'refreshAll deve ser definido como função');
+  });
+
+  test('26.2: PartnershipHubModal.jsx deve implementar verificação graciosa isB2BAuthorized para compradores/visitantes', () => {
+    assert.ok(b2bContent.includes('isB2BAuthorized'), 'isB2BAuthorized deve ser verificado');
+    assert.ok(b2bContent.includes('Acesso Exclusivo B2B'), 'Deve renderizar tela pedagógica de acesso restrito');
+  });
+
+  test('26.3: Sintaxe e fechamento de blocos no PartnershipHubModal.jsx devem ser válidos', () => {
+    let braces = 0, parens = 0, brackets = 0;
+    for (let i = 0; i < b2bContent.length; i++) {
+      const ch = b2bContent[i];
+      if (ch === '{') braces++;
+      else if (ch === '}') braces--;
+      else if (ch === '(') parens++;
+      else if (ch === ')') parens--;
+      else if (ch === '[') brackets++;
+      else if (ch === ']') brackets--;
+    }
+    assert.strictEqual(braces, 0, 'Chaves desbalanceadas no PartnershipHubModal');
+    assert.strictEqual(parens, 0, 'Parênteses desbalanceados no PartnershipHubModal');
+    assert.strictEqual(brackets, 0, 'Colchetes desbalanceados no PartnershipHubModal');
+  });
+});
+
+describe('BATERIA DE TESTES 27: Sprint 09 Tarefa 5 - Vitrine Digital Docker (Consistência dos 5 Carros)', () => {
+  const seedPath = path.join(rootDir, '../backend/seed.py');
+  const mainPath = path.join(rootDir, '../backend/main.py');
+  const testBatteryPath = path.join(rootDir, '../backend/test_audit_full_battery.py');
+  const seedContent = fs.readFileSync(seedPath, 'utf-8');
+  const mainContent = fs.readFileSync(mainPath, 'utf-8');
+  const testBatteryContent = fs.readFileSync(testBatteryPath, 'utf-8');
+
+  test('27.1: seed.py deve conter exatamente os 5 carros oficiais cadastrados da Vitrine', () => {
+    assert.ok(seedContent.includes('sc-001') && seedContent.includes('Corolla Cross XRX Híbrido'));
+    assert.ok(seedContent.includes('sc-002') && seedContent.includes('Polo TSI Comfortline'));
+    assert.ok(seedContent.includes('sc-003') && seedContent.includes('HB20 Platinum Plus'));
+    assert.ok(seedContent.includes('sc-004') && seedContent.includes('Tracker Premier 1.2 Turbo'));
+    assert.ok(seedContent.includes('sc-005') && seedContent.includes('Pulse Abarth 1.3 Turbo'));
+  });
+
+  test('27.2: main.py deve invocar seed_db no lifespan startup para garantir catálogo pré-carregado', () => {
+    assert.ok(mainContent.includes('seed_db()'), 'main.py deve chamar seed_db() no startup');
+  });
+
+  test('27.3: test_audit_full_battery.py deve possuir tearDownClass para limpar veículos temporários de teste', () => {
+    assert.ok(testBatteryContent.includes('def tearDownClass'), 'tearDownClass deve existir para evitar resíduos no banco');
+  });
+});
+
+describe('BATERIA DE TESTES 28: Sprint 09 Tarefa 6 - Detalhes do Anúncio (Sobre o Veículo acima do Dossiê Oficial)', () => {
+  const detailsPath = path.join(rootDir, 'src/pages/ShowcaseVehicleDetails.jsx');
+  const detailsContent = fs.readFileSync(detailsPath, 'utf-8');
+
+  test('28.1: Bloco "Sobre o Veículo" deve anteceder o "Dossiê de Transparência"', () => {
+    const idxSobre = detailsContent.indexOf('{/* Sobre o Veículo — Nome, Metadados, Descrição e Ficha Técnica Consolidados */}');
+    const idxDossie = detailsContent.indexOf('{/* Dossiê de Transparência Automatch */}');
+    const idxTco = detailsContent.indexOf('{/* Calculadora Interativa de Custo Total de Posse (TCO)');
+
+    assert.ok(idxSobre > 0, 'Bloco Sobre o Veículo deve existir');
+    assert.ok(idxDossie > 0, 'Bloco Dossiê de Transparência deve existir');
+    assert.ok(idxTco > 0, 'Bloco TCO deve existir');
+    assert.ok(idxSobre < idxDossie, 'Sobre o Veículo deve vir ANTES do Dossiê de Transparência');
+    assert.ok(idxDossie < idxTco, 'Dossiê de Transparência deve vir ANTES do TCO (TCO na sua posição original)');
+  });
+
+  test('28.2: Ficha Técnica & Equipamentos, especs e modais permanecem preservados', () => {
+    assert.ok(detailsContent.includes('Ficha Técnica & Equipamentos'), 'Ficha técnica deve permanecer');
+    assert.ok(detailsContent.includes('Dossiê Oficial Automatch'), 'Ação do dossiê deve permanecer');
+    assert.ok(detailsContent.includes('isDossierModalOpen'), 'Modal do dossiê deve permanecer funcional');
+  });
+
+  test('28.3: Sintaxe e fechamento de blocos no ShowcaseVehicleDetails.jsx devem ser válidos', () => {
+    let braces = 0, parens = 0, brackets = 0;
+    for (let i = 0; i < detailsContent.length; i++) {
+      const ch = detailsContent[i];
+      if (ch === '{') braces++;
+      else if (ch === '}') braces--;
+      else if (ch === '(') parens++;
+      else if (ch === ')') parens--;
+      else if (ch === '[') brackets++;
+      else if (ch === ']') brackets--;
+    }
+    assert.strictEqual(braces, 0, 'Chaves desbalanceadas no ShowcaseVehicleDetails');
+    assert.strictEqual(parens, 0, 'Parênteses desbalanceados no ShowcaseVehicleDetails');
+    assert.strictEqual(brackets, 0, 'Colchetes desbalanceados no ShowcaseVehicleDetails');
+  });
+});
+
+
 
