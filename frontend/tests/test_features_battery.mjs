@@ -367,3 +367,195 @@ describe('BATERIA DE TESTES 5: Não-Regressão e Integridade dos Módulos Import
     assert.ok(appContent.includes('path="/encontrar/:id"'), 'Rota /encontrar/:id não encontrada no App.jsx');
   });
 });
+
+describe('BATERIA DE TESTES 6: Varredura 360° Fidedigna e Quadrante 180° Traseira', () => {
+  const viewerPath = path.join(rootDir, 'src/components/vehicle/Vehicle360Viewer.jsx');
+  const viewerContent = fs.readFileSync(viewerPath, 'utf-8');
+  const showcaseDataPath = path.join(rootDir, 'src/data/showcaseData.js');
+  const showcaseDataContent = fs.readFileSync(showcaseDataPath, 'utf-8');
+
+  test('6.1: showcaseData.js deve mapear os 8 quadrantes angulares no photos360', () => {
+    for (const angle of [0, 45, 90, 135, 180, 225, 270, 315]) {
+      assert.ok(
+        new RegExp(`\\b${angle}\\s*:`).test(showcaseDataContent),
+        `Ângulo ${angle}° deve estar mapeado no photos360`
+      );
+    }
+  });
+
+  test('6.2: Ângulo 180° deve apontar fidedignamente para imagem de traseira (/images/carro_360_traseira.jpg)', () => {
+    assert.ok(
+      showcaseDataContent.includes("180: '/images/carro_360_traseira.jpg'"),
+      'O ângulo 180° deve apontar para /images/carro_360_traseira.jpg'
+    );
+  });
+
+  test('6.3: Vehicle360Viewer.jsx deve conter miniaturas navegáveis e perspectiva 3D orbital', () => {
+    assert.ok(
+      viewerContent.includes('perspective') || viewerContent.includes('rotateY'),
+      'Perspectiva 3D orbital deve estar implementada'
+    );
+    assert.ok(
+      viewerContent.includes('currentAngle') || viewerContent.includes('setAngle'),
+      'Controle angular de rotação 360 deve estar presente'
+    );
+  });
+
+  test('6.4: Sintaxe e fechamento de blocos no Vehicle360Viewer.jsx devem ser válidos', () => {
+    let braces = 0, parens = 0, brackets = 0;
+    for (let i = 0; i < viewerContent.length; i++) {
+      const ch = viewerContent[i];
+      if (ch === '{') braces++;
+      else if (ch === '}') braces--;
+      else if (ch === '(') parens++;
+      else if (ch === ')') parens--;
+      else if (ch === '[') brackets++;
+      else if (ch === ']') brackets--;
+      assert.ok(braces >= 0, `Chaves desbalanceadas no caractere ${i}`);
+      assert.ok(parens >= 0, `Parênteses desbalanceados no caractere ${i}`);
+      assert.ok(brackets >= 0, `Colchetes desbalanceados no caractere ${i}`);
+    }
+    assert.strictEqual(braces, 0, 'Chaves finais não balanceadas');
+    assert.strictEqual(parens, 0, 'Parênteses finais não balanceados');
+    assert.strictEqual(brackets, 0, 'Colchetes finais não balanceados');
+  });
+});
+
+describe('BATERIA DE TESTES 7: Remoção de Botões Duplicados de Contato no Detalhe do Veículo', () => {
+  const showcasePath = path.join(rootDir, 'src/pages/ShowcaseVehicleDetails.jsx');
+  const showcaseContent = fs.readFileSync(showcasePath, 'utf-8');
+
+  test('7.1: Botões redundantes "Falar com Vendedor" foram removidos da navegação e sidebar', () => {
+    assert.strictEqual(
+      showcaseContent.includes('Falar com Vendedor'),
+      false,
+      'Os botões duplicados "Falar com Vendedor" não devem existir no ShowcaseVehicleDetails.jsx'
+    );
+  });
+
+  test('7.2: Componente possui sintaxe íntegra após a limpeza dos botões redundantes', () => {
+    let braces = 0, parens = 0, brackets = 0;
+    for (let i = 0; i < showcaseContent.length; i++) {
+      const ch = showcaseContent[i];
+      if (ch === '{') braces++;
+      else if (ch === '}') braces--;
+      else if (ch === '(') parens++;
+      else if (ch === ')') parens--;
+      else if (ch === '[') brackets++;
+      else if (ch === ']') brackets--;
+      assert.ok(braces >= 0, `Chaves desbalanceadas no caractere ${i}`);
+      assert.ok(parens >= 0, `Parênteses desbalanceados no caractere ${i}`);
+      assert.ok(brackets >= 0, `Colchetes desbalanceados no caractere ${i}`);
+    }
+    assert.strictEqual(braces, 0, 'Chaves finais não balanceadas');
+    assert.strictEqual(parens, 0, 'Parênteses finais não balanceados');
+    assert.strictEqual(brackets, 0, 'Colchetes finais não balanceados');
+  });
+});
+
+describe('BATERIA DE TESTES 8: Rede de Conexão B2B, Desempenho e Tradução do Hold Lock', () => {
+  const modalPath = path.join(rootDir, 'src/components/partners/PartnershipHubModal.jsx');
+  const modalContent = fs.readFileSync(modalPath, 'utf-8');
+
+  test('8.1: PartnershipHubModal.jsx deve isolar timer com componente memoizado ReservationTimerBadge', () => {
+    assert.ok(
+      modalContent.includes('ReservationTimerBadge'),
+      'O componente memoizado ReservationTimerBadge deve estar presente para evitar re-renders globais a 1s'
+    );
+  });
+
+  test('8.2: O modal deve conter a tradução pedagógica "Trava de Reserva Exclusiva (Hold Lock)"', () => {
+    assert.ok(
+      modalContent.includes('Trava de Reserva Exclusiva (Hold Lock)') || modalContent.includes('Trava Exclusiva (Hold Lock)'),
+      'A tradução pedagógica do Hold Lock deve estar presente'
+    );
+    assert.ok(
+      modalContent.includes('Como funciona a Trava de Reserva Exclusiva (Hold Lock)?'),
+      'Banner educativo do Hold Lock deve estar presente'
+    );
+  });
+
+  test('8.3: Ação de solicitar fechamento retira o Hold Lock e exibe status afirmativo', () => {
+    assert.ok(
+      modalContent.includes('isClosing') || modalContent.includes('closing_requested'),
+      'Suporte a estado de fechamento solicitado deve existir'
+    );
+    assert.ok(
+      modalContent.includes('Fechamento Solicitado'),
+      'Badge afirmativo "Fechamento Solicitado" deve substituir o timer do Hold Lock'
+    );
+  });
+
+  test('8.4: Sintaxe e fechamento de blocos no PartnershipHubModal.jsx devem ser válidos', () => {
+    let braces = 0, parens = 0, brackets = 0;
+    for (let i = 0; i < modalContent.length; i++) {
+      const ch = modalContent[i];
+      if (ch === '{') braces++;
+      else if (ch === '}') braces--;
+      else if (ch === '(') parens++;
+      else if (ch === ')') parens--;
+      else if (ch === '[') brackets++;
+      else if (ch === ']') brackets--;
+      assert.ok(braces >= 0, `Chaves desbalanceadas no caractere ${i}`);
+      assert.ok(parens >= 0, `Parênteses desbalanceados no caractere ${i}`);
+      assert.ok(brackets >= 0, `Colchetes desbalanceados no caractere ${i}`);
+    }
+    assert.strictEqual(braces, 0, 'Chaves finais não balanceadas');
+    assert.strictEqual(parens, 0, 'Parênteses finais não balanceados');
+    assert.strictEqual(brackets, 0, 'Colchetes finais não balanceados');
+  });
+});
+
+describe('BATERIA DE TESTES 9: Unificação de Lojas da Vitrine e da Rede B2B', () => {
+  test('9.1: inventoryData.js deve conter as 3 lojas padronizadas (AutoShop Prime, Motors Campinas, Concessionária Alpha)', () => {
+    const { stores } = inventoryModule;
+    const storeNames = stores.map(s => s.name);
+    assert.ok(storeNames.includes('AutoShop Prime'), 'AutoShop Prime deve constar nas lojas');
+    assert.ok(storeNames.includes('Motors Campinas'), 'Motors Campinas deve constar nas lojas');
+    assert.ok(storeNames.includes('Concessionária Alpha'), 'Concessionária Alpha deve constar nas lojas');
+  });
+
+  test('9.2: showcaseData.js deve utilizar as mesmas lojas padronizadas nos dados dos veículos', () => {
+    const showcasePath = path.join(rootDir, 'src/data/showcaseData.js');
+    const showcaseContent = fs.readFileSync(showcasePath, 'utf-8');
+    assert.ok(showcaseContent.includes('AutoShop Prime'), 'AutoShop Prime deve constar nos vendedores do showcase');
+    assert.ok(showcaseContent.includes('Motors Campinas'), 'Motors Campinas deve constar nos vendedores do showcase');
+    assert.ok(showcaseContent.includes('Concessionária Alpha'), 'Concessionária Alpha deve constar nos vendedores do showcase');
+  });
+});
+
+describe('BATERIA DE TESTES 10: Contadores Dinâmicos de Veículos no Perfil do Usuário (ProfilePage.jsx)', () => {
+  const profilePath = path.join(rootDir, 'src/pages/ProfilePage.jsx');
+  const profileContent = fs.readFileSync(profilePath, 'utf-8');
+
+  test('10.1: ProfilePage.jsx deve integrar contadores em tempo real para "Meus Carros", "Carros Favoritos" e "Estoque Vitrine"', () => {
+    assert.ok(profileContent.includes('Meus Carros'), 'Card "Meus Carros" deve existir no perfil');
+    assert.ok(profileContent.includes('Carros Favoritos'), 'Card "Carros Favoritos" deve existir no perfil');
+    assert.ok(profileContent.includes('Estoque Vitrine'), 'Card "Estoque Vitrine" deve existir no perfil');
+  });
+
+  test('10.2: ProfilePage.jsx deve importar e assinar managers de dados em tempo real', () => {
+    assert.ok(profileContent.includes('subscribeFavorites'), 'subscribeFavorites deve ser importado para reatividade');
+    assert.ok(profileContent.includes('getNewCars'), 'getNewCars deve ser importado para contagem dos anúncios');
+  });
+
+  test('10.3: Sintaxe e fechamento de blocos no ProfilePage.jsx devem ser válidos', () => {
+    let braces = 0, parens = 0, brackets = 0;
+    for (let i = 0; i < profileContent.length; i++) {
+      const ch = profileContent[i];
+      if (ch === '{') braces++;
+      else if (ch === '}') braces--;
+      else if (ch === '(') parens++;
+      else if (ch === ')') parens--;
+      else if (ch === '[') brackets++;
+      else if (ch === ']') brackets--;
+      assert.ok(braces >= 0, `Chaves desbalanceadas no caractere ${i}`);
+      assert.ok(parens >= 0, `Parênteses desbalanceados no caractere ${i}`);
+      assert.ok(brackets >= 0, `Colchetes desbalanceados no caractere ${i}`);
+    }
+    assert.strictEqual(braces, 0, 'Chaves finais não balanceadas');
+    assert.strictEqual(parens, 0, 'Parênteses finais não balanceados');
+    assert.strictEqual(brackets, 0, 'Colchetes finais não balanceados');
+  });
+});
+
