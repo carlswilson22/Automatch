@@ -21,6 +21,7 @@ import SellerChat from '../components/vehicle/SellerChat';
 import TradeInSimulator from '../components/vehicle/TradeInSimulator';
 import Vehicle360Viewer from '../components/vehicle/Vehicle360Viewer';
 import PericialVideoViewer from '../components/vehicle/PericialVideoViewer';
+import OfficialDossierModal from '../components/vehicle/OfficialDossierModal';
 
 // Code-Splitting: Carregamento sob demanda para modais secundários (reduz bundle inicial em ~40 kB)
 const PriceAlertModal = React.lazy(() => import('../components/vehicle/PriceAlertModal'));
@@ -73,6 +74,7 @@ export default function ShowcaseVehicleDetails() {
   const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
   const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
+  const [isDossierModalOpen, setIsDossierModalOpen] = useState(false);
   const [inspectionImage, setInspectionImage] = useState(null);
   const [isTcoOpen, setIsTcoOpen] = useState(false);
 
@@ -171,6 +173,7 @@ export default function ShowcaseVehicleDetails() {
             color: local.cor || 'Preto',
             mileage: local.km || 0,
             image: local.imagem || '/images/FotoHondaCivic.jpeg',
+            gallery: Array.isArray(local.gallery) && local.gallery.length > 0 ? local.gallery : (local.imagem ? [local.imagem] : []),
             bodyType: 'Particular',
             storeId: local.storeId || 'store-1',
             laudoUrl: local.laudo_url || null,
@@ -235,6 +238,9 @@ export default function ShowcaseVehicleDetails() {
             color: dbCar.color || 'Prata',
             mileage: dbCar.km || 0,
             image: dbCar.image || '/images/FotoHondaCivic.jpeg',
+            gallery: (typeof dbCar.tags === 'string' && dbCar.tags.startsWith(String.fromCharCode(91))) 
+              ? (() => { try { return JSON.parse(dbCar.tags); } catch { return [dbCar.image || '/images/FotoHondaCivic.jpeg']; } })()
+              : (Array.isArray(dbCar.gallery) ? dbCar.gallery : [dbCar.image || '/images/FotoHondaCivic.jpeg']),
             bodyType: dbCar.body_type || 'Particular',
             storeId: dbCar.store_id ? `store-${dbCar.store_id}` : 'store-1',
             plate: dbCar.plate || 'ABC1234',
@@ -1007,7 +1013,7 @@ export default function ShowcaseVehicleDetails() {
               </div>
 
               {/* Botões de Ação das APIs Oficiais */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                 <button
                   type="button"
                   onClick={() => toggleAccordion('laudo')}
@@ -1066,6 +1072,25 @@ export default function ShowcaseVehicleDetails() {
                     <p className="text-[11px] text-slate-400">Referência oficial de mercado</p>
                   </div>
                 </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsDossierModalOpen(true)}
+                  className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between group cursor-pointer ${
+                    isDossierModalOpen
+                      ? 'bg-blue-950/80 border-blue-500 shadow-lg shadow-blue-900/30 scale-[1.01]'
+                      : 'bg-indigo-950/50 hover:bg-indigo-900/60 border-indigo-800/50 hover:border-indigo-500'
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <FileText className="w-5 h-5 text-indigo-400 group-hover:scale-110 transition-transform" />
+                    <span className="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded-full font-bold">Oficial</span>
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-white">Dossiê Oficial Automatch</h4>
+                    <p className="text-[11px] text-slate-400">Resumo consolidado e laudo</p>
+                  </div>
+                </button>
               </div>
 
               {/* Barra de Ação Oficial: Download do Laudo Certificado com QR Code */}
@@ -1089,19 +1114,10 @@ export default function ShowcaseVehicleDetails() {
 
                 <button
                   type="button"
-                  onClick={handleDownloadOfficialPdf}
-                  disabled={isDownloadingPdf}
-                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white text-xs font-bold shadow-md shadow-blue-500/25 transition-all disabled:opacity-50 shrink-0 cursor-pointer"
+                  onClick={() => setIsDossierModalOpen(true)}
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white text-xs font-bold shadow-md shadow-blue-500/25 transition-all shrink-0 cursor-pointer active:scale-95"
                 >
-                  {isDownloadingPdf ? (
-                    <>
-                      <RotateCw className="w-4 h-4 animate-spin" /> Gerando PDF...
-                    </>
-                  ) : (
-                    <>
-                      <FileDown className="w-4 h-4" /> Baixar Dossiê Oficial
-                    </>
-                  )}
+                  <FileDown className="w-4 h-4" /> Visualizar e Baixar Dossiê
                 </button>
               </div>
 
@@ -1448,6 +1464,13 @@ export default function ShowcaseVehicleDetails() {
           </ErrorBoundary>
         )}
       </React.Suspense>
+
+      {/* Modal Oficial Consolidado do Dossiê Automatch */}
+      <OfficialDossierModal
+        isOpen={isDossierModalOpen}
+        onClose={() => setIsDossierModalOpen(false)}
+        car={car}
+      />
     </div>
   );
 }
