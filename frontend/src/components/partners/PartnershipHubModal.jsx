@@ -11,6 +11,7 @@ import NewPartnershipInviteCard from './NewPartnershipInviteCard';
 import B2BInventorySkeleton from './B2BInventorySkeleton';
 import { getVehicleImageUrl, handleVehicleImageError } from '../../utils/imageHelper';
 import { showcaseCars } from '../../data/showcaseData';
+import { stores as officialProjectStores } from '../../data/inventoryData';
 
 const B2BInventoryCard = memo(function B2BInventoryCard({ car, onReserve }) {
   const piso = car.valor_minimo_repasse || (car.price * 0.90);
@@ -164,8 +165,28 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
 
   // Data states
   const [sharedCars, setSharedCars] = useState([]);
-  const [partnerships, setPartnerships] = useState([]);
-  const [availableStores, setAvailableStores] = useState([]);
+  const getOfficialFallbackStores = useCallback(() => {
+    return (officialProjectStores || []).map((s, idx) => ({
+      id: s.id || idx + 1,
+      name: s.name,
+      slug: s.name.toLowerCase().replace(/\s+/g, '-'),
+      description: `${s.location} - Concessionária Oficial`,
+      location: s.location,
+      partnership_status: 'nenhuma'
+    }));
+  }, []);
+
+  const [availableStores, setAvailableStores] = useState(() => {
+    return (officialProjectStores || []).map((s, idx) => ({
+      id: s.id || idx + 1,
+      name: s.name,
+      slug: s.name.toLowerCase().replace(/\s+/g, '-'),
+      description: `${s.location} - Concessionária Oficial`,
+      location: s.location,
+      partnership_status: 'nenhuma'
+    }));
+  });
+  const [storesLoading, setStoresLoading] = useState(false);
   const [myReservations, setMyReservations] = useState(() => {
     try {
       const saved = localStorage.getItem('automatch_b2b_reservations');
@@ -309,15 +330,41 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
   };
 
   const loadPartnerships = async () => {
+    setStoresLoading(true);
     try {
       const [pRes, sRes] = await Promise.all([
         fetch('/api/partnerships/my', { headers: getAuthHeaders(), signal: AbortSignal.timeout(1500) }),
         fetch('/api/partnerships/stores-available', { headers: getAuthHeaders(), signal: AbortSignal.timeout(1500) })
       ]);
       if (pRes.ok) setPartnerships(await pRes.json());
-      if (sRes.ok) setAvailableStores(await sRes.json());
+      if (sRes.ok) {
+        const remoteStores = await sRes.json();
+        if (Array.isArray(remoteStores) && remoteStores.length > 0) {
+          const seen = new Set();
+          const cleanStores = [];
+          for (const st of remoteStores) {
+            if (!st || !st.name) continue;
+            const normName = st.name.trim();
+            const key = normName.toLowerCase();
+            if (!seen.has(key)) {
+              seen.add(key);
+              cleanStores.push({
+                ...st,
+                name: normName
+              });
+            }
+          }
+          setAvailableStores(cleanStores.length > 0 ? cleanStores : getOfficialFallbackStores());
+        } else {
+          setAvailableStores(getOfficialFallbackStores());
+        }
+      } else {
+        setAvailableStores(getOfficialFallbackStores());
+      }
     } catch (e) {
-      // Ignora erro de rede em background
+      setAvailableStores(getOfficialFallbackStores());
+    } finally {
+      setStoresLoading(false);
     }
   };
 
@@ -872,6 +919,7 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
               {/* Módulo Proeminente para Enviar Pedido de Parceria */}
               <NewPartnershipInviteCard
                 availableStores={availableStores}
+                isLoading={storesLoading}
                 onInviteSuccess={loadPartnerships}
                 getAuthHeaders={getAuthHeaders}
               />

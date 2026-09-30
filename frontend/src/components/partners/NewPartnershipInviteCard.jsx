@@ -14,6 +14,7 @@ import {
 
 export default function NewPartnershipInviteCard({ 
   availableStores = [], 
+  isLoading = false,
   onInviteSuccess, 
   getAuthHeaders 
 }) {
@@ -24,9 +25,16 @@ export default function NewPartnershipInviteCard({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState(null);
 
-  // Filtra apenas lojas sem parceria ativa ou pendente para novas conexões
+  // Filtra apenas lojas sem parceria ativa ou pendente para novas conexões, eliminando duplicidades
   const unpartneredStores = useMemo(() => {
-    return availableStores.filter(s => s.partnership_status === 'nenhuma' || !s.partnership_status);
+    const seen = new Set();
+    return availableStores.filter(s => {
+      if (!s || !s.name) return false;
+      const key = s.name.trim().toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return s.partnership_status === 'nenhuma' || !s.partnership_status;
+    });
   }, [availableStores]);
 
   const filteredStores = useMemo(() => {
@@ -169,7 +177,12 @@ export default function NewPartnershipInviteCard({
             </div>
 
             {/* Grid de lojas disponíveis */}
-            {filteredStores.length > 0 ? (
+            {isLoading ? (
+              <div className="p-6 rounded-xl bg-slate-950/40 border border-slate-800 text-center text-xs text-slate-400 flex flex-col items-center justify-center gap-2">
+                <div className="w-5 h-5 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
+                <span>Carregando lojas da rede B2B...</span>
+              </div>
+            ) : filteredStores.length > 0 ? (
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 max-h-48 overflow-y-auto pr-1">
                 {filteredStores.map(store => (
                   <button
