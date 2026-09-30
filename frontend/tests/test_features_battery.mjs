@@ -559,3 +559,163 @@ describe('BATERIA DE TESTES 10: Contadores Dinâmicos de Veículos no Perfil do 
   });
 });
 
+describe('BATERIA DE TESTES 11: Tarefa 1 - Componentes de Upload no Formulário "Anunciar meu carro"', () => {
+  const formPath = path.join(rootDir, 'src/pages/NewCarAdForm.jsx');
+  const formContent = fs.readFileSync(formPath, 'utf-8');
+
+  test('11.1: NewCarAdForm.jsx deve conter componente de upload de vídeo com validação e preview', () => {
+    assert.ok(formContent.includes('video/mp4') || formContent.includes('video/*') || formContent.includes('accept="video/mp4'), 'Deve aceitar vídeos MP4/WebM');
+    assert.ok(formContent.includes('40 * 1024 * 1024') || formContent.includes('40MB') || formContent.includes('40 MB'), 'Deve validar limite de tamanho de 40 MB');
+    assert.ok(formContent.includes('<video') || formContent.includes('videoPreview'), 'Deve renderizar preview do vídeo');
+    assert.ok(formContent.includes('remover vídeo') || formContent.includes('Remover Vídeo') || formContent.includes('handleRemoveVideo'), 'Deve fornecer botão para remover vídeo');
+  });
+
+  test('11.2: NewCarAdForm.jsx deve conter componente de galeria multi-fotos com preview e botão de capa', () => {
+    assert.ok(formContent.includes('multiple'), 'Input de galeria deve permitir seleção múltipla');
+    assert.ok(formContent.includes('handleProcessGalleryFiles') || formContent.includes('handlePhotoUpload'), 'Deve possuir handler para fotos');
+    assert.ok(formContent.includes('Usar como Capa') || formContent.includes('Definir como Capa'), 'Deve possuir ação para definir foto de capa');
+    assert.ok(formContent.includes('galleryPhotos') || formContent.includes('gallery'), 'Deve gerenciar estado de galeria');
+  });
+
+  test('11.3: NewCarAdForm.jsx deve associar video_url e gallery ao salvar e enviar anúncio', () => {
+    assert.ok(formContent.includes('video_url'), 'Deve associar video_url ao registro do veículo');
+    assert.ok(formContent.includes('gallery'), 'Deve associar gallery ao registro do veículo');
+  });
+});
+
+describe('BATERIA DE TESTES 12: Tarefa 2 - Varredura 360° no Detalhe do Anúncio', () => {
+  const viewerPath = path.join(rootDir, 'src/components/vehicle/Vehicle360Viewer.jsx');
+  const viewerContent = fs.readFileSync(viewerPath, 'utf-8');
+
+  test('12.1: Vehicle360Viewer.jsx não deve conter DEFAULT_360_IMAGES genéricas de outro carro', () => {
+    assert.strictEqual(
+      viewerContent.includes('DEFAULT_360_IMAGES'),
+      false,
+      'DEFAULT_360_IMAGES com fotos de outro carro não deve existir no visualizador!'
+    );
+  });
+
+  test('12.2: Vehicle360Viewer.jsx deve usar exclusivamente fotos do próprio veículo ou perspectiva 3D explícita', () => {
+    assert.ok(
+      viewerContent.includes('photos360') || viewerContent.includes('gallery') || viewerContent.includes('imageMap'),
+      'Deve priorizar fotos reais do próprio veículo'
+    );
+    assert.ok(
+      viewerContent.includes('Perspectiva 3D') || viewerContent.includes('PERSPECTIVA ORBITAL 3D'),
+      'Deve indicar explicitamente perspectiva 3D quando apenas 1 foto for fornecida'
+    );
+    assert.ok(
+      viewerContent.includes('360° FOTOGRÁFICO REAL') || viewerContent.includes('fotos do veículo'),
+      'Deve identificar claramente quando fotos reais 360° estiverem disponíveis'
+    );
+  });
+});
+
+describe('BATERIA DE TESTES 13: Tarefa 3 - Botão e Modal "Dossiê Oficial Automatch"', () => {
+  const modalPath = path.join(rootDir, 'src/components/vehicle/OfficialDossierModal.jsx');
+  const detailsPath = path.join(rootDir, 'src/pages/ShowcaseVehicleDetails.jsx');
+
+  test('13.1: OfficialDossierModal.jsx deve existir e conter estrutura completa', () => {
+    assert.ok(fs.existsSync(modalPath), 'Arquivo OfficialDossierModal.jsx deve existir');
+    const modalContent = fs.readFileSync(modalPath, 'utf-8');
+    assert.ok(modalContent.includes('DOSSIÊ OFICIAL AUTOMATCH') || modalContent.includes('Dossiê Oficial Automatch'), 'Deve ter cabeçalho oficial');
+    assert.ok(modalContent.includes('ATM-2026-') || modalContent.includes('protocol'), 'Deve conter protocolo oficial determinístico');
+    assert.ok(modalContent.includes('Estrutura e Longarinas') || modalContent.includes('Estrutura e Chassi'), 'Deve conter tabela de inspeção estrutural');
+    assert.ok(modalContent.includes('Termo de Conformidade') || modalContent.includes('TERMO DE CONFORMIDADE'), 'Deve conter termo de conformidade oficial');
+    assert.ok(modalContent.includes('handlePrint') || modalContent.includes('window.print') || modalContent.includes('handleGeneratePdf'), 'Deve conter opção de impressão / exportação A4');
+  });
+
+  test('13.2: ShowcaseVehicleDetails.jsx deve conter botão "Dossiê Oficial Automatch" no grid de 4 colunas', () => {
+    const detailsContent = fs.readFileSync(detailsPath, 'utf-8');
+    assert.ok(detailsContent.includes('OfficialDossierModal'), 'ShowcaseVehicleDetails deve importar OfficialDossierModal');
+    assert.ok(detailsContent.includes('Dossiê Oficial Automatch'), 'Deve exibir botão "Dossiê Oficial Automatch"');
+    assert.ok(detailsContent.includes('isDossierModalOpen') || detailsContent.includes('setIsDossierModalOpen'), 'Deve controlar abertura do modal');
+  });
+});
+
+describe('BATERIA DE TESTES 14: Tarefa 4 - Vitrine Digital: Remoção do Botão Redundante de Filtros', () => {
+  const catalogPath = path.join(rootDir, 'src/pages/ShowcaseCatalog.jsx');
+  const catalogContent = fs.readFileSync(catalogPath, 'utf-8');
+
+  test('14.1: O botão redundante "Limpar todos" nos chips ativos deve ser removido', () => {
+    assert.strictEqual(
+      catalogContent.includes('Limpar todos</button>') || catalogContent.includes('Limpar todos\n'),
+      false,
+      'O botão de chip redundante "Limpar todos" deve ser removido'
+    );
+  });
+
+  test('14.2: O botão principal "Limpar Filtros" no painel de filtros e em zero resultados deve ser mantido', () => {
+    assert.ok(
+      catalogContent.includes('Limpar Filtros') || catalogContent.includes('Limpar filtros'),
+      'O botão principal "Limpar Filtros" deve ser preservado'
+    );
+  });
+});
+
+describe('BATERIA DE TESTES 15: Tarefa 5 - Vitrine Digital: Higienização dos Cards', () => {
+  const catalogPath = path.join(rootDir, 'src/pages/ShowcaseCatalog.jsx');
+  const catalogContent = fs.readFileSync(catalogPath, 'utf-8');
+
+  test('15.1: O card da vitrine não deve exibir lojas fakes como "Beto Motors"', () => {
+    assert.strictEqual(
+      catalogContent.includes('Beto Motors'),
+      false,
+      'Nome fictício "Beto Motors" não deve estar presente no catálogo'
+    );
+  });
+
+  test('15.2: O card da vitrine não deve conter botão inativo de localização nem "Preço Justo Fipe"', () => {
+    assert.strictEqual(
+      catalogContent.includes('aria-label="Ver localização"'),
+      false,
+      'Botão inativo de localização com MapPin deve ser removido dos cards'
+    );
+    assert.strictEqual(
+      catalogContent.includes('MarketPriceIndicator'),
+      false,
+      'Badge Preço Justo Fipe (MarketPriceIndicator) deve ser removido dos cards'
+    );
+  });
+
+  test('15.3: O botão "Ver Detalhes" no grid deve ocupar largura total (w-full)', () => {
+    assert.ok(
+      catalogContent.includes('w-full py-2.5 bg-brand-blue') || catalogContent.includes('w-full py-2.5'),
+      'O botão "Ver Detalhes" deve ocupar largura total'
+    );
+  });
+});
+
+describe('BATERIA DE TESTES 16: Tarefa 6 - Rede B2B Conectada com Lojas Oficiais', () => {
+  const hubPath = path.join(rootDir, 'src/components/partners/PartnershipHubModal.jsx');
+  const invitePath = path.join(rootDir, 'src/components/partners/NewPartnershipInviteCard.jsx');
+  const hubContent = fs.readFileSync(hubPath, 'utf-8');
+  const inviteContent = fs.readFileSync(invitePath, 'utf-8');
+
+  test('16.1: PartnershipHubModal.jsx deve carregar e sincronizar lojas oficiais do projeto', () => {
+    assert.ok(
+      hubContent.includes('officialProjectStores') || hubContent.includes('getOfficialFallbackStores'),
+      'Deve importar e sincronizar com as lojas oficiais'
+    );
+    assert.ok(
+      hubContent.includes('storesLoading'),
+      'Deve gerenciar estado de carregamento storesLoading'
+    );
+  });
+
+  test('16.2: NewPartnershipInviteCard.jsx deve tratar estado de carregamento e eliminar duplicidades', () => {
+    assert.ok(
+      inviteContent.includes('isLoading'),
+      'Deve aceitar prop isLoading'
+    );
+    assert.ok(
+      inviteContent.includes('Carregando lojas da rede B2B...') || inviteContent.includes('animate-spin'),
+      'Deve exibir spinner de carregamento'
+    );
+    assert.ok(
+      inviteContent.includes('seen.has(key)') || inviteContent.includes('seen'),
+      'Deve deduplicar lojas para não fabricar nem duplicar lojistas'
+    );
+  });
+});
+
