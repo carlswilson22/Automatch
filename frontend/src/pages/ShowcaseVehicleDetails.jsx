@@ -1295,23 +1295,6 @@ export default function ShowcaseVehicleDetails() {
                   ))}
                 </div>
               </div>
-
-              {/* Destaques e Equipamentos do Veículo */}
-              {car.tags && car.tags.length > 0 && (
-                <div className="pt-3 border-t border-slate-800">
-                  <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-2.5">
-                    Diferenciais e Itens de Série
-                  </span>
-                  <div className="flex flex-wrap gap-2">
-                    {car.tags.map((tag, idx) => (
-                      <span key={idx} className="text-xs font-bold text-blue-300 bg-blue-500/10 border border-blue-500/20 px-3 py-1.5 rounded-xl flex items-center gap-1.5">
-                        <CheckCircle2 className="w-3.5 h-3.5 text-blue-400" />
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              )}
             </div>
 
             {/* Calculadora Interativa de Custo Total de Posse (TCO) — No lugar da descrição antiga */}
