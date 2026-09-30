@@ -76,15 +76,9 @@ export default function MyAdsPage() {
           <div className="flex items-center justify-between gap-4 mb-6">
             <button
               onClick={() => navigate('/perfil')}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-slate-200 hover:text-white text-xs font-bold transition-all border border-white/10"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-slate-200 hover:text-white text-xs font-bold transition-all border border-white/10 cursor-pointer"
             >
               <ArrowLeft className="w-4 h-4" /> Voltar ao Perfil
-            </button>
-            <button
-              onClick={() => navigate('/novo-anuncio')}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-xs font-black uppercase tracking-wider transition-all shadow-lg shadow-blue-900/40 active:scale-95"
-            >
-              <PlusCircle className="w-4 h-4" /> Anunciar Novo Veículo
             </button>
           </div>
 
@@ -156,13 +150,22 @@ export default function MyAdsPage() {
             </p>
             <button
               onClick={() => navigate('/novo-anuncio')}
-              className="inline-flex items-center gap-2 px-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold text-sm transition-all shadow-lg shadow-blue-200 active:scale-95"
+              className="inline-flex items-center gap-2 px-6 py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold text-sm transition-all shadow-lg shadow-blue-200 active:scale-95 cursor-pointer"
             >
               <PlusCircle className="w-5 h-5" /> Criar Meu Primeiro Anúncio
             </button>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-6">
+            {/* Botão Principal Centralizado no Meio da Página */}
+            <div className="flex justify-center pb-2">
+              <button
+                onClick={() => navigate('/novo-anuncio')}
+                className="inline-flex items-center gap-2.5 px-7 py-3.5 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold text-sm transition-all shadow-lg shadow-blue-500/25 active:scale-95 cursor-pointer"
+              >
+                <PlusCircle className="w-5 h-5" /> Anunciar Novo Veículo
+              </button>
+            </div>
             {ads.map((car) => {
               const carName = `${car.marca || ''} ${car.modelo || ''}`.trim() || 'Veículo Anunciado';
               const carImg = car.imagem || '/images/placeholder-carro.jpg';
