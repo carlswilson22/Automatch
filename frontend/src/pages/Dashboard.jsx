@@ -28,6 +28,7 @@ import {
 import StoreSelector from '../components/layout/StoreSelector';
 import StoreIdentifier from '../components/ui/StoreIdentifier';
 import AssetConfigurationModal from '../components/inventory/AssetConfigurationModal';
+import { getVehicleImageUrl, handleVehicleImageError } from '../utils/imageHelper';
 
 // Code-Splitting: PartnershipHubModal carregado sob demanda (economiza 50.5 kB na montagem inicial)
 const PartnershipHubModal = React.lazy(() => import('../components/partners/PartnershipHubModal'));
@@ -56,6 +57,17 @@ export default function Dashboard() {
   useEffect(() => {
     setCurrentPage(1);
   }, [selectedStoreId, searchQuery]);
+
+  // Bloqueio de rolagem da tela principal ao abrir modal de Gestão de Ativos ou Hub B2B
+  useEffect(() => {
+    if (isConfigModalOpen || isB2BModalOpen) {
+      const originalOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = originalOverflow;
+      };
+    }
+  }, [isConfigModalOpen, isB2BModalOpen]);
 
   const totalPages = Math.ceil(filteredInventory.length / itemsPerPage) || 1;
   const paginatedInventory = useMemo(() => {
@@ -246,8 +258,10 @@ export default function Dashboard() {
                     <div>
                       <div className="aspect-[16/9] overflow-hidden bg-slate-100 relative">
                         <img 
-                          src={item.image || '/images/FotoGolfGTI.jpeg'} 
-                          alt={item.model} 
+                          src={getVehicleImageUrl(item.image || item.imagem || 'FotoGolfGTI.jpeg')} 
+                          alt={`${item.brand} ${item.model}`}
+                          loading="lazy"
+                          onError={handleVehicleImageError}
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
                         />
                         
@@ -331,10 +345,12 @@ export default function Dashboard() {
                         <tr key={item.id} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
                           <td className="px-6 py-4">
                             <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-slate-200">
+                              <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-slate-200 bg-slate-100">
                                 <img 
-                                  src={item.image || '/images/FotoGolfGTI.jpeg'} 
+                                  src={getVehicleImageUrl(item.image || item.imagem || 'FotoGolfGTI.jpeg')} 
                                   alt="" 
+                                  loading="lazy"
+                                  onError={handleVehicleImageError}
                                   className="w-full h-full object-cover" 
                                 />
                               </div>

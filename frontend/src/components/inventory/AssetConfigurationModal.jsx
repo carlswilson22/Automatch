@@ -19,6 +19,7 @@ import {
   Calendar,
   Sparkles
 } from 'lucide-react';
+import { getVehicleImageUrl, handleVehicleImageError } from '../../utils/imageHelper';
 
 export default function AssetConfigurationModal({
   isOpen,
@@ -32,6 +33,24 @@ export default function AssetConfigurationModal({
   const [activeTab, setActiveTab] = useState('pricing'); // 'pricing' | 'details' | 'visibility'
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [hasSaved, setHasSaved] = useState(false);
+
+  // Bloqueio estrito de rolagem da tela de fundo ao abrir o modal
+  useEffect(() => {
+    if (isOpen) {
+      const originalOverflow = document.body.style.overflow;
+      const originalPaddingRight = document.body.style.paddingRight;
+      const scrollBarWidth = window.innerWidth - document.documentElement.clientWidth;
+      if (scrollBarWidth > 0) {
+        document.body.style.paddingRight = `${scrollBarWidth}px`;
+      }
+      document.body.style.overflow = 'hidden';
+
+      return () => {
+        document.body.style.overflow = originalOverflow;
+        document.body.style.paddingRight = originalPaddingRight;
+      };
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (asset) {
@@ -52,7 +71,7 @@ export default function AssetConfigurationModal({
         visible_showcase: asset.visible_showcase !== false,
         visible_b2b: asset.visible_b2b !== false,
         notes: asset.notes || '',
-        image: asset.image || '/images/FotoGolfGTI.jpeg'
+        image: asset.image || asset.imagem || '/images/FotoGolfGTI.jpeg'
       });
       setIsConfirmingDelete(false);
       setHasSaved(false);
@@ -89,13 +108,13 @@ export default function AssetConfigurationModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm overflow-y-auto overscroll-contain">
       <motion.div
         initial={{ opacity: 0, scale: 0.95, y: 15 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.95, y: 15 }}
         transition={{ duration: 0.2 }}
-        className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-2xl w-full overflow-hidden flex flex-col my-8"
+        className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-2xl w-full overflow-hidden flex flex-col my-8 max-h-[90vh]"
       >
         {/* Modal Header */}
         <div className="relative bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 text-white p-6 sm:p-7">
@@ -106,26 +125,37 @@ export default function AssetConfigurationModal({
             <X className="w-5 h-5" />
           </button>
 
-          <div className="flex items-center gap-3 mb-2">
-            <span 
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider text-white shadow-sm"
-              style={{ backgroundColor: currentStore?.color_theme || '#2563eb' }}
-            >
-              <Store className="w-3.5 h-3.5" />
-              {currentStore?.name || 'Unidade Automatch'}
-            </span>
-            <span className="text-xs font-mono font-bold bg-white/10 text-slate-200 px-2.5 py-1 rounded-full border border-white/10">
-              {formData.plate}
-            </span>
-          </div>
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 rounded-2xl overflow-hidden border border-white/20 shrink-0 bg-slate-800 shadow-md">
+              <img
+                src={getVehicleImageUrl(formData.image || formData.imagem || 'FotoGolfGTI.jpeg')}
+                alt={`${formData.brand} ${formData.model}`}
+                onError={handleVehicleImageError}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            <div className="flex-1 min-w-0 pr-8">
+              <div className="flex items-center gap-2 mb-1.5 flex-wrap">
+                <span 
+                  className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider text-white shadow-sm"
+                  style={{ backgroundColor: currentStore?.color_theme || '#2563eb' }}
+                >
+                  <Store className="w-3.5 h-3.5" />
+                  {currentStore?.name || 'Unidade Automatch'}
+                </span>
+                <span className="text-xs font-mono font-bold bg-white/10 text-slate-200 px-2.5 py-0.5 rounded-full border border-white/10">
+                  {formData.plate}
+                </span>
+              </div>
 
-          <h2 className="text-2xl font-black text-white flex items-center gap-2.5">
-            <Sliders className="w-6 h-6 text-blue-400" />
-            Configuração do Ativo
-          </h2>
-          <p className="text-xs sm:text-sm text-slate-300 mt-1">
-            Gerencie precificação comercial, status financeiro, unidade alocada e visibilidade na vitrine.
-          </p>
+              <h2 className="text-xl sm:text-2xl font-black text-white truncate">
+                {formData.brand} {formData.model}
+              </h2>
+              <p className="text-xs text-slate-300 mt-0.5">
+                Configuração Comercial & Gestão de Estoque
+              </p>
+            </div>
+          </div>
 
           {/* Navigation Tabs */}
           <div className="flex items-center gap-2 mt-6 border-b border-white/10 -mb-2 pb-2 overflow-x-auto">
@@ -166,7 +196,7 @@ export default function AssetConfigurationModal({
         </div>
 
         {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 sm:p-7 space-y-6 flex-1 overflow-y-auto max-h-[65vh]">
+        <form onSubmit={handleSubmit} className="p-6 sm:p-7 space-y-6 flex-1 overflow-y-auto overscroll-contain max-h-[65vh]">
           {/* TAB 1: PREÇO & FINANCEIRO */}
           {activeTab === 'pricing' && (
             <motion.div

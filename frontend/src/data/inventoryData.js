@@ -123,16 +123,67 @@ export const getStoredInventory = () => {
   if (typeof window === 'undefined') return inventory;
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) {
+    let items = inventory;
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed) && parsed.length > 0) {
+        items = parsed;
+      }
+    } else {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(inventory));
-      return inventory;
     }
-    const parsed = JSON.parse(raw);
-    if (Array.isArray(parsed) && parsed.length > 0) {
-      return parsed;
-    }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(inventory));
-    return inventory;
+
+    // Auto-heal de imagens faltantes em itens padrão
+    const validated = items.map(item => {
+      const img = item.image || item.imagem;
+      if (!img) {
+        const defaultMatch = inventory.find(i => i.id === item.id || (i.brand === item.brand && i.model === item.model));
+        return {
+          ...item,
+          image: defaultMatch ? defaultMatch.image : '/images/FotoGolfGTI.jpeg'
+        };
+      }
+      return {
+        ...item,
+        image: img
+      };
+    });
+
+    // Sincroniza anúncios criados pelo usuário (se houver no localStorage)
+    try {
+      const newCarsRaw = localStorage.getItem('@automatch:newCars');
+      if (newCarsRaw) {
+        const newCars = JSON.parse(newCarsRaw);
+        if (Array.isArray(newCars) && newCars.length > 0) {
+          newCars.forEach(car => {
+            const alreadyExists = validated.some(i => String(i.id) === String(car.id) || (car.plate && i.plate === car.plate));
+            if (!alreadyExists) {
+              validated.push({
+                id: String(car.id),
+                storeId: car.storeId || 'store-1',
+                model: car.modelo || car.model || 'Veículo',
+                brand: car.marca || car.brand || 'Marca',
+                plate: car.plate || 'ABC-1234',
+                sale_value: Number(car.preco || car.price) || 0,
+                floor_price: Math.round((Number(car.preco || car.price) || 0) * 0.92),
+                financial_status: 'paid',
+                operational_status: 'available',
+                year: String(car.ano || car.year || '2024'),
+                mileage: Number(car.km || car.mileage) || 0,
+                color: car.cor || car.color || 'Prata',
+                fuel: car.combustivel || car.fuel || 'Flex',
+                visible_showcase: true,
+                visible_b2b: true,
+                notes: car.descricao || car.description || '',
+                image: car.imagem || car.image || '/images/FotoGolfGTI.jpeg'
+              });
+            }
+          });
+        }
+      }
+    } catch (_) {}
+
+    return validated;
   } catch (e) {
     console.warn('Erro ao ler inventário do localStorage, usando dados padrão:', e);
     return inventory;
