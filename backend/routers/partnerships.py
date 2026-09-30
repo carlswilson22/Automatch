@@ -42,9 +42,9 @@ def get_current_b2b_user(
         admin_user = db.query(models.User).filter(models.User.email == "admin@automatch.com").first()
         if admin_user:
             return admin_user
-        first_user = db.query(models.User).first()
-        if first_user:
-            return first_user
+        first_b2b_user = db.query(models.User).filter(models.User.role.in_(['lojista', 'admin'])).first()
+        if first_b2b_user:
+            return first_b2b_user
 
     payload = security.verify_token(token)
     if not payload:
@@ -55,6 +55,11 @@ def get_current_b2b_user(
     if not user:
         raise HTTPException(status_code=404, detail="Usuário não encontrado.")
 
+    # Validação de papel (Estritamente Lojista ou Admin)
+    role = getattr(user, 'role', None)
+    if role not in ['lojista', 'admin']:
+        raise HTTPException(status_code=403, detail="Acesso restrito a lojistas parceiros e administradores.")
+
     # Atribui loja padrão caso ainda não definida
     if not user.store_id:
         user.store_id = 1
@@ -62,11 +67,6 @@ def get_current_b2b_user(
             db.commit()
         except Exception:
             db.rollback()
-
-    # Validação de papel (Lojista ou Admin)
-    role = getattr(user, 'role', 'lojista') or 'lojista'
-    if role not in ['lojista', 'admin']:
-        raise HTTPException(status_code=403, detail="Acesso restrito a lojistas parceiros e administradores.")
 
     return user
 

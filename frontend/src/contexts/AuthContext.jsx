@@ -34,12 +34,14 @@ export const AuthProvider = ({ children }) => {
       }
 
       const userData = await response.json();
-      setUser(userData);
-      localStorage.setItem('automatch_user', JSON.stringify(userData));
-      if (userData.token) {
-        localStorage.setItem('automatch_token', userData.token);
+      const reconciledRole = userData.role || (userData.accountType === 'store' ? 'lojista' : 'comprador');
+      const resolvedUser = { ...userData, role: reconciledRole };
+      setUser(resolvedUser);
+      localStorage.setItem('automatch_user', JSON.stringify(resolvedUser));
+      if (resolvedUser.token) {
+        localStorage.setItem('automatch_token', resolvedUser.token);
       }
-      return userData;
+      return resolvedUser;
     } catch (error) {
       // 1. Fallback para as credenciais oficiais de demonstração (README)
       if (cleanEmail === 'admin@automatch.com' && password === 'admin123') {
@@ -100,9 +102,11 @@ export const AuthProvider = ({ children }) => {
         throw new Error(errData.detail || 'Erro ao realizar cadastro.');
       }
 
+      const effectiveRole = extraData.accountType === 'store' ? 'lojista' : (userData.role === 'admin' ? 'admin' : 'comprador');
       const fullUser = {
         ...userData,
-        accountType: extraData.accountType || 'buyer',
+        role: effectiveRole,
+        accountType: extraData.accountType || (effectiveRole === 'lojista' ? 'store' : 'buyer'),
         phone: extraData.phone || '',
         city: extraData.city || '',
         storeName: extraData.storeName || '',
@@ -128,12 +132,14 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       // Fallback local resiliente: permite cadastrar qualquer tipo de perfil mesmo com backend offline
       console.warn('Modo cadastro local resiliente:', error.message);
+      const fallbackRole = extraData.accountType === 'store' ? 'lojista' : 'comprador';
       const fallbackUser = {
         id: 'user-' + Date.now(),
         name: name.trim(),
         email: cleanEmail,
         memberSince: 'Setembro 2026',
         photo: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name.trim())}`,
+        role: fallbackRole,
         accountType: extraData.accountType || 'buyer',
         phone: extraData.phone || '',
         city: extraData.city || '',

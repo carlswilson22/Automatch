@@ -69,6 +69,8 @@ const ProfilePage = () => {
 
   if (!user) return null;
 
+  const isB2BUser = Boolean(user?.role === 'lojista' || user?.role === 'admin' || user?.accountType === 'store');
+
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col pt-20 pb-16 px-6 font-sans">
       <div className="max-w-4xl mx-auto w-full">
@@ -270,7 +272,7 @@ const ProfilePage = () => {
               ))}
             </div>
             {/* Quick Actions / Ecosystem Links */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div className={`grid grid-cols-1 ${isB2BUser ? 'sm:grid-cols-3' : 'sm:grid-cols-2'} gap-4`}>
               <button 
                 onClick={() => navigate('/meus-anuncios')}
                 className="p-5 bg-gradient-to-br from-blue-600 to-indigo-700 text-white rounded-3xl shadow-lg shadow-blue-500/20 text-left hover:scale-[1.02] active:scale-[0.98] transition-all flex flex-col justify-between group cursor-pointer"
@@ -287,25 +289,27 @@ const ProfilePage = () => {
                 </div>
               </button>
 
-              <button 
-                onClick={() => navigate('/dashboard')}
-                className="p-5 bg-white border border-slate-200 text-slate-800 rounded-3xl shadow-sm text-left hover:border-brand-blue hover:shadow-md transition-all flex flex-col justify-between group"
-              >
-                <div className="flex items-center justify-between mb-4">
-                  <div className="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center text-brand-blue">
-                    <LayoutDashboard className="w-5 h-5" />
+              {isB2BUser && (
+                <button 
+                  onClick={() => navigate('/dashboard')}
+                  className="p-5 bg-white border border-slate-200 text-slate-800 rounded-3xl shadow-sm text-left hover:border-brand-blue hover:shadow-md transition-all flex flex-col justify-between group cursor-pointer"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center text-brand-blue">
+                      <LayoutDashboard className="w-5 h-5" />
+                    </div>
+                    <ChevronRight className="w-5 h-5 text-slate-400 group-hover:translate-x-1 transition-transform" />
                   </div>
-                  <ChevronRight className="w-5 h-5 text-slate-400 group-hover:translate-x-1 transition-transform" />
-                </div>
-                <div>
-                  <h4 className="font-bold text-base">Painel B2B</h4>
-                  <p className="text-xs text-slate-400 mt-0.5">Gestão de Ativos & Estoque</p>
-                </div>
-              </button>
+                  <div>
+                    <h4 className="font-bold text-base">Painel B2B</h4>
+                    <p className="text-xs text-slate-400 mt-0.5">Gestão de Ativos & Estoque</p>
+                  </div>
+                </button>
+              )}
 
               <button 
                 onClick={() => navigate('/novo-anuncio')}
-                className="p-5 bg-white border border-slate-200 text-slate-800 rounded-3xl shadow-sm text-left hover:border-emerald-500 hover:shadow-md transition-all flex flex-col justify-between group"
+                className="p-5 bg-white border border-slate-200 text-slate-800 rounded-3xl shadow-sm text-left hover:border-emerald-500 hover:shadow-md transition-all flex flex-col justify-between group cursor-pointer"
               >
                 <div className="flex items-center justify-between mb-4">
                   <div className="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center text-brand-emerald">
@@ -321,7 +325,7 @@ const ProfilePage = () => {
             </div>
 
             {/* B2B Partnership Network Banner */}
-            {(user?.role === 'lojista' || user?.role === 'admin' || !user?.role) && (
+            {isB2BUser && (
               <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-900 rounded-3xl p-6 text-white shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4 border border-indigo-800/40">
                 <div className="flex items-center gap-4">
                   <div className="w-12 h-12 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-blue-300 shrink-0">
@@ -353,7 +357,7 @@ const ProfilePage = () => {
 
       {/* Hub B2B Modal (Lazy Loaded) */}
       <React.Suspense fallback={null}>
-        {isB2BModalOpen && (
+        {isB2BUser && isB2BModalOpen && (
           <PartnershipHubModal
             isOpen={isB2BModalOpen}
             onClose={() => setIsB2BModalOpen(false)}

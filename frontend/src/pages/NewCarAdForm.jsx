@@ -47,6 +47,7 @@ const compressImageToJpeg = (file, maxDimension = 1200, quality = 0.82) => {
 const NewCarAdForm = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const isB2BUser = Boolean(user?.role === 'lojista' || user?.role === 'admin' || user?.accountType === 'store');
   const [formData, setFormData] = useState({
     marca: '',
     modelo: '',
@@ -1441,111 +1442,113 @@ const NewCarAdForm = () => {
             </div>
 
             {/* ── REDE B2B DE ESTOQUE COMPARTILHADO ────────────────────────── */}
-            <div className="p-6 bg-gradient-to-r from-slate-50 via-indigo-50/30 to-blue-50/40 border border-indigo-100 rounded-2xl space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-sm">
-                    <Users className="w-5 h-5" />
+            {isB2BUser && (
+              <div className="p-6 bg-gradient-to-r from-slate-50 via-indigo-50/30 to-blue-50/40 border border-indigo-100 rounded-2xl space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-sm">
+                      <Users className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">
+                        Compartilhamento de Estoque B2B
+                      </h3>
+                      <p className="text-xs text-slate-500">
+                        Disponibilize este veículo para lojistas parceiros consultarem e oferecerem aos seus clientes.
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-sm font-black text-slate-800 uppercase tracking-wider">
-                      Compartilhamento de Estoque B2B
-                    </h3>
-                    <p className="text-xs text-slate-500">
-                      Disponibilize este veículo para lojistas parceiros consultarem e oferecerem aos seus clientes.
-                    </p>
-                  </div>
+
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={formData.compartilhavel}
+                      onChange={(e) => setFormData({ ...formData, compartilhavel: e.target.checked })}
+                      className="sr-only peer"
+                    />
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                  </label>
                 </div>
 
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.compartilhavel}
-                    onChange={(e) => setFormData({ ...formData, compartilhavel: e.target.checked })}
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                </label>
-              </div>
+                <AnimatePresence>
+                  {formData.compartilhavel && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="pt-4 border-t border-indigo-100 space-y-4 overflow-hidden"
+                    >
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                            <Lock className="w-3.5 h-3.5 text-amber-600" />
+                            Valor Mínimo de Repasse (Piso Inviolável) *
+                          </label>
+                          <input
+                            type="text"
+                            name="valor_minimo_repasse"
+                            value={formData.valor_minimo_repasse}
+                            onChange={(e) => {
+                              let value = e.target.value.replace(/\D/g, "");
+                              if (value === "") {
+                                setFormData(p => ({ ...p, valor_minimo_repasse: "" }));
+                                return;
+                              }
+                              const formatted = (Number(value) / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                              setFormData(p => ({ ...p, valor_minimo_repasse: formatted }));
+                            }}
+                            placeholder="R$ 0,00"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-amber-800 focus:ring-2 focus:ring-indigo-500 outline-none"
+                          />
+                          <span className="text-[10px] text-slate-400">
+                            Nenhum lojista parceiro poderá reservar este veículo abaixo deste valor.
+                          </span>
+                        </div>
 
-              <AnimatePresence>
-                {formData.compartilhavel && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="pt-4 border-t border-indigo-100 space-y-4 overflow-hidden"
-                  >
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-                          <Lock className="w-3.5 h-3.5 text-amber-600" />
-                          Valor Mínimo de Repasse (Piso Inviolável) *
-                        </label>
-                        <input
-                          type="text"
-                          name="valor_minimo_repasse"
-                          value={formData.valor_minimo_repasse}
-                          onChange={(e) => {
-                            let value = e.target.value.replace(/\D/g, "");
-                            if (value === "") {
-                              setFormData(p => ({ ...p, valor_minimo_repasse: "" }));
-                              return;
-                            }
-                            const formatted = (Number(value) / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-                            setFormData(p => ({ ...p, valor_minimo_repasse: formatted }));
-                          }}
-                          placeholder="R$ 0,00"
-                          className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-amber-800 focus:ring-2 focus:ring-indigo-500 outline-none"
-                        />
-                        <span className="text-[10px] text-slate-400">
-                          Nenhum lojista parceiro poderá reservar este veículo abaixo deste valor.
-                        </span>
+                        <div className="space-y-1.5">
+                          <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                            Comissão Fixa de Parceria (%)
+                          </label>
+                          <input
+                            type="number"
+                            step="0.1"
+                            name="comissao_fixa"
+                            value={formData.comissao_fixa}
+                            onChange={handleChange}
+                            placeholder="3.0"
+                            className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none"
+                          />
+                          <span className="text-[10px] text-slate-400">
+                            Percentual acordado repassado à loja parceira na conclusão da venda.
+                          </span>
+                        </div>
                       </div>
 
                       <div className="space-y-1.5">
                         <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                          Comissão Fixa de Parceria (%)
+                          Observações de Repasse para Lojas Parceiras
                         </label>
                         <input
-                          type="number"
-                          step="0.1"
-                          name="comissao_fixa"
-                          value={formData.comissao_fixa}
+                          type="text"
+                          name="observacoes_repasse"
+                          value={formData.observacoes_repasse}
                           onChange={handleChange}
-                          placeholder="3.0"
-                          className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 outline-none"
+                          placeholder="Ex: Veículo revisado em concessionária com chave reserva e manual. Aceita contraproposta à vista."
+                          className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none"
                         />
-                        <span className="text-[10px] text-slate-400">
-                          Percentual acordado repassado à loja parceira na conclusão da venda.
+                      </div>
+
+                      <div className="p-3 bg-amber-50/80 border border-amber-200/80 rounded-xl text-xs text-amber-900 flex items-center gap-2">
+                        <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0" />
+                        <span>
+                          <strong>Confidencialidade Garantida:</strong> O valor mínimo de repasse e a margem de parceria nunca serão exibidos aos clientes finais na vitrine pública.
                         </span>
                       </div>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                        Observações de Repasse para Lojas Parceiras
-                      </label>
-                      <input
-                        type="text"
-                        name="observacoes_repasse"
-                        value={formData.observacoes_repasse}
-                        onChange={handleChange}
-                        placeholder="Ex: Veículo revisado em concessionária com chave reserva e manual. Aceita contraproposta à vista."
-                        className="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm font-medium text-slate-700 focus:ring-2 focus:ring-indigo-500 outline-none"
-                      />
-                    </div>
-
-                    <div className="p-3 bg-amber-50/80 border border-amber-200/80 rounded-xl text-xs text-amber-900 flex items-center gap-2">
-                      <ShieldCheck className="w-4 h-4 text-amber-600 shrink-0" />
-                      <span>
-                        <strong>Confidencialidade Garantida:</strong> O valor mínimo de repasse e a margem de parceria nunca serão exibidos aos clientes finais na vitrine pública.
-                      </span>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            )}
 
             {/* Botoes */}
             <div className="pt-8 flex flex-col sm:flex-row gap-4">
