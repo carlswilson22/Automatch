@@ -128,11 +128,7 @@ const CarCard = React.memo(({ car, index, viewMode }) => {
             onError={handleVehicleImageError}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
           />
-          {car.featured && (
-            <div className="absolute top-3 left-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md shadow-lg flex items-center gap-1">
-              <Star className="w-3 h-3 fill-white" /> Destaque
-            </div>
-          )}
+
           <button onClick={handleLike}
             aria-label={liked ? "Remover dos favoritos" : "Curtir veículo"}
             title={liked ? "Remover dos favoritos" : "Curtir veículo"}
@@ -148,7 +144,14 @@ const CarCard = React.memo(({ car, index, viewMode }) => {
         <div className="flex-1 p-5 flex flex-col">
           <div className="flex justify-between items-start mb-1 gap-2">
             <div>
-              <h3 className="text-xl font-bold text-slate-800">{car.name}</h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-xl font-bold text-slate-800">{car.name}</h3>
+                {car.featured && (
+                  <span title="Destaque" aria-label="Veículo em Destaque" className="inline-flex items-center">
+                    <Star className="w-4 h-4 text-amber-500 fill-amber-500 shrink-0" />
+                  </span>
+                )}
+              </div>
               <p className="text-xs text-slate-500 font-medium flex items-center gap-1 mt-0.5"><car.icon className="w-3.5 h-3.5" /> {car.bodyType}</p>
             </div>
             <div className="text-right shrink-0">
@@ -187,11 +190,7 @@ const CarCard = React.memo(({ car, index, viewMode }) => {
           onError={handleVehicleImageError}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
         />
-        {car.featured && (
-          <div className="absolute top-3 left-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md shadow-lg flex items-center gap-1">
-            <Star className="w-3 h-3 fill-white" /> Destaque
-          </div>
-        )}
+
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 pt-10 flex items-end justify-between gap-2">
           <p className="text-2xl font-black text-white drop-shadow-md">{formatPrice(car.price)}</p>
           <PriceDropBadge originalPrice={car.originalPrice} currentPrice={car.price} variant="badge" />
@@ -209,7 +208,14 @@ const CarCard = React.memo(({ car, index, viewMode }) => {
         </div>
       </div>
       <div className="p-4 flex-1 flex flex-col">
-        <h3 className="text-lg font-bold text-slate-800 leading-tight">{car.name}</h3>
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-bold text-slate-800 leading-tight">{car.name}</h3>
+          {car.featured && (
+            <span title="Destaque" aria-label="Veículo em Destaque" className="inline-flex items-center">
+              <Star className="w-4 h-4 text-amber-500 fill-amber-500 shrink-0" />
+            </span>
+          )}
+        </div>
         <p className="text-xs text-slate-500 font-medium mt-0.5 flex items-center gap-1 mb-3"><car.icon className="w-3.5 h-3.5" /> {car.bodyType}</p>
         <div className="grid grid-cols-3 gap-2 mb-3">
           {[

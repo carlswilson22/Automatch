@@ -1260,9 +1260,16 @@ export default function ShowcaseVehicleDetails() {
 
               {/* Nome do Veículo */}
               <div>
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight">
-                  {car.name}
-                </h2>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <h2 className="text-2xl sm:text-3xl md:text-4xl font-black text-white tracking-tight">
+                    {car.name}
+                  </h2>
+                  {car.featured && (
+                    <span title="Destaque" aria-label="Veículo em Destaque" className="inline-flex items-center">
+                      <Star className="w-6 h-6 text-amber-400 fill-amber-400 shrink-0" />
+                    </span>
+                  )}
+                </div>
                 {/* Informações Básicas (Ano, Km, Câmbio, Cor, Localização) */}
                 <div className="flex flex-wrap items-center gap-x-5 gap-y-2.5 mt-3 text-xs sm:text-sm text-slate-300 font-medium">
                   <span className="flex items-center gap-1.5 bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800">
