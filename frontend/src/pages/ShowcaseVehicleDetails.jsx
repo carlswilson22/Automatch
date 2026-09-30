@@ -1379,6 +1379,7 @@ export default function ShowcaseVehicleDetails() {
                     originalPrice={car.originalPrice}
                     currentPrice={car.price}
                     variant="badge"
+                    isFeatured={car.featured}
                   />
                 </div>
                 <p className="text-4xl sm:text-5xl font-black text-white tracking-tight">

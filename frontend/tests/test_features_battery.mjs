@@ -719,3 +719,187 @@ describe('BATERIA DE TESTES 16: Tarefa 6 - Rede B2B Conectada com Lojas Oficiais
   });
 });
 
+describe('BATERIA DE TESTES 17: Controle de Acesso B2B em Duas Camadas (Rotas, UI e Contexto)', () => {
+  const protectedRoutePath = path.join(rootDir, 'src/components/ProtectedRoute.jsx');
+  const appPath = path.join(rootDir, 'src/App.jsx');
+  const profilePath = path.join(rootDir, 'src/pages/ProfilePage.jsx');
+  const newAdPath = path.join(rootDir, 'src/pages/NewCarAdForm.jsx');
+
+  test('17.1: ProtectedRoute.jsx deve validar allowedRoles e proteger rotas restritas', () => {
+    const content = fs.readFileSync(protectedRoutePath, 'utf-8');
+    assert.ok(content.includes('allowedRoles'), 'Deve aceitar prop allowedRoles');
+    assert.ok(content.includes('allowedRoles.includes(effectiveRole)'), 'Deve validar a role do usuário contra allowedRoles');
+  });
+
+  test('17.2: App.jsx deve proteger a rota /dashboard para admin e lojista', () => {
+    const content = fs.readFileSync(appPath, 'utf-8');
+    assert.ok(
+      content.includes("allowedRoles={['admin', 'lojista']}"),
+      'A rota /dashboard deve estar envolvida em ProtectedRoute com allowedRoles restrito'
+    );
+  });
+
+  test('17.3: ProfilePage.jsx deve ocultar Painel B2B e Rede de Parceiros para compradores e visitantes', () => {
+    const content = fs.readFileSync(profilePath, 'utf-8');
+    assert.ok(content.includes('isB2BUser'), 'Deve calcular flag isB2BUser');
+    assert.ok(content.includes('{isB2BUser && ('), 'Deve condicionar o card do Painel B2B à flag isB2BUser');
+  });
+
+  test('17.4: NewCarAdForm.jsx deve condicionar a seção de Compartilhamento B2B estritamente para isB2BUser', () => {
+    const content = fs.readFileSync(newAdPath, 'utf-8');
+    assert.ok(content.includes('isB2BUser'), 'Deve conter verificação isB2BUser no formulário de anúncio');
+    assert.ok(content.includes('{isB2BUser && ('), 'Deve condicionar os campos de repasse B2B a isB2BUser');
+  });
+});
+
+describe('BATERIA DE TESTES 18: Varredura 360° com Imagens Dedicadas e Exclusão de Não Cadastrados', () => {
+  const angles = [0, 45, 90, 135, 180, 225, 270, 315];
+  const registeredCars = ['sc-001', 'sc-002', 'sc-003', 'sc-004', 'sc-005'];
+
+  test('18.1: Cada carro cadastrado da vitrine deve possuir pasta com os 8 ângulos no frontend', () => {
+    for (const carId of registeredCars) {
+      const carDir = path.join(rootDir, 'public/images/cars', carId);
+      assert.ok(fs.existsSync(carDir), `Diretório do carro ${carId} deve existir em public/images/cars`);
+      for (const angle of angles) {
+        const imgFile = path.join(carDir, `${angle}.jpg`);
+        assert.ok(fs.existsSync(imgFile), `Ângulo ${angle}.jpg deve existir para o carro ${carId}`);
+        assert.ok(fs.statSync(imgFile).size > 0, `Arquivo ${angle}.jpg do carro ${carId} não pode estar vazio`);
+      }
+    }
+  });
+
+  test('18.2: Arquivos de carros não cadastrados foram excluídos conforme solicitado', () => {
+    const unregistered = [
+      'FotoGolfGTI.jpeg',
+      'FotoHondaCivic.jpeg',
+      'FotoJeepCompassLimited.jpeg',
+      'FotoNovaHilux.jpeg',
+      'FotoTeslaModel3.jpeg',
+      'FotoToyotaCorolla.jpg'
+    ];
+    for (const file of unregistered) {
+      const filePath = path.join(rootDir, 'public/images', file);
+      assert.ok(!fs.existsSync(filePath), `Arquivo órfão ${file} deve ter sido excluído`);
+    }
+  });
+
+  test('18.3: Salvaguardas essenciais da perícia IA permanecem preservadas', () => {
+    const safeguards = [
+      'carro_lataria_amassada.jpg',
+      'carro_parachoque_danificado.jpg',
+      'placeholder-carro.jpg'
+    ];
+    for (const file of safeguards) {
+      const filePath = path.join(rootDir, 'public/images', file);
+      assert.ok(fs.existsSync(filePath), `Arquivo de salvaguarda ${file} DEVE permanecer preservado`);
+      assert.ok(fs.statSync(filePath).size > 0, `Arquivo ${file} não pode estar corrompido`);
+    }
+  });
+});
+
+describe('BATERIA DE TESTES 19: Dossiê Oficial Automatch - Botões Lado a Lado no Topo e Responsabilidades Únicas', () => {
+  const dossierPath = path.join(rootDir, 'src/components/vehicle/OfficialDossierModal.jsx');
+  const content = fs.readFileSync(dossierPath, 'utf-8');
+
+  test('19.1: Botões Imprimir e Baixar PDF devem estar presentes no cabeçalho', () => {
+    assert.ok(content.includes('onClick={handlePrintPdf}'), 'Botão Imprimir deve acionar handlePrintPdf');
+    assert.ok(content.includes('onClick={handleDownloadPdf}'), 'Botão Baixar PDF deve acionar handleDownloadPdf');
+  });
+
+  test('19.2: Funções de download e impressão devem ter responsabilidades únicas e segregadas', () => {
+    assert.ok(content.includes('const handleDownloadPdf'), 'Deve existir handler dedicado para download');
+    assert.ok(content.includes('const handlePrintPdf'), 'Deve existir handler dedicado para impressão');
+  });
+
+  test('19.3: Botão redundante no rodapé foi removido, mantendo apenas botão Fechar', () => {
+    const footerSection = content.slice(content.lastIndexOf('Barra Inferior'));
+    assert.ok(!footerSection.includes('Imprimir / Salvar PDF'), 'Botão duplicado de impressão não deve existir no rodapé');
+    assert.ok(footerSection.includes('Fechar'), 'Botão Fechar deve estar presente no rodapé');
+  });
+});
+
+describe('BATERIA DE TESTES 20: Gestão de Ativos - Validação de Dados, Blindagem contra Erros e Toast', () => {
+  const modalPath = path.join(rootDir, 'src/components/inventory/AssetConfigurationModal.jsx');
+  const dashboardPath = path.join(rootDir, 'src/pages/Dashboard.jsx');
+  const modalContent = fs.readFileSync(modalPath, 'utf-8');
+  const dashboardContent = fs.readFileSync(dashboardPath, 'utf-8');
+
+  test('20.1: AssetConfigurationModal deve conter validações comerciais (preço > 0, piso <= venda)', () => {
+    assert.ok(modalContent.includes('validationError'), 'Deve conter estado para validação');
+    assert.ok(modalContent.includes('saleVal <= 0'), 'Deve validar que valor de venda é positivo');
+    assert.ok(modalContent.includes('floorVal > saleVal'), 'Deve validar que piso de repasse não excede preço de venda');
+  });
+
+  test('20.2: AssetConfigurationModal deve exibir banner de alerta em caso de dados inválidos', () => {
+    assert.ok(modalContent.includes('Atenção ao salvar:'), 'Deve exibir título pedagógico de atenção ao usuário');
+    assert.ok(modalContent.includes('{validationError}'), 'Deve renderizar a mensagem de erro amigável');
+  });
+
+  test('20.3: Dashboard.jsx deve blindar busca de estoque contra campos indefinidos e conter ErrorBoundary', () => {
+    assert.ok(dashboardContent.includes('DashboardErrorBoundary'), 'Deve implementar ErrorBoundary para blindar a tela');
+    assert.ok(dashboardContent.includes('modelStr') && dashboardContent.includes('String(item.model'), 'Deve normalizar campos para string antes de toLowerCase()');
+  });
+
+  test('20.4: Dashboard.jsx deve renderizar componente visual de toast de feedback', () => {
+    assert.ok(dashboardContent.includes('{feedbackToast && ('), 'Deve renderizar feedbackToast condicionalmente');
+    assert.ok(dashboardContent.includes('feedbackToast.message'), 'Deve exibir mensagem do toast');
+  });
+});
+
+describe('BATERIA DE TESTES 21: Vitrine Digital - Substituição de Selo Sobreposto por Estrela de Destaque', () => {
+  const catalogPath = path.join(rootDir, 'src/pages/ShowcaseCatalog.jsx');
+  const detailsPath = path.join(rootDir, 'src/pages/ShowcaseVehicleDetails.jsx');
+  const catalogContent = fs.readFileSync(catalogPath, 'utf-8');
+  const detailsContent = fs.readFileSync(detailsPath, 'utf-8');
+
+  test('21.1: ShowcaseCatalog.jsx não deve conter selo textual Destaque sobreposto a StoreIdentifier', () => {
+    assert.ok(
+      !catalogContent.includes("absolute top-3 left-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md shadow-lg flex items-center gap-1"),
+      'Selo textual Destaque sobreposto no canto superior esquerdo deve ter sido removido'
+    );
+  });
+
+  test('21.2: ShowcaseCatalog.jsx deve renderizar Star icon acessível ao lado do nome do veículo', () => {
+    assert.ok(
+      catalogContent.includes('title="Destaque"') || catalogContent.includes('aria-label="Veículo em Destaque"'),
+      'Ícone de destaque deve possuir tooltip e aria-label para acessibilidade'
+    );
+    assert.ok(
+      catalogContent.includes('<Star className="w-4 h-4 text-amber-500 fill-amber-500 shrink-0" />'),
+      'Ícone de estrela âmbar deve ser renderizado ao lado do nome do carro'
+    );
+  });
+
+  test('21.3: ShowcaseVehicleDetails.jsx deve renderizar Star icon acessível ao lado do título do veículo', () => {
+    assert.ok(
+      detailsContent.includes('car.featured && (') && detailsContent.includes('title="Destaque"'),
+      'Detalhes do veículo deve exibir estrela de destaque ao lado do nome quando featured for true'
+    );
+  });
+});
+
+describe('BATERIA DE TESTES 22: Selo Preço Baixou - Ausência de Porcentagem e Alinhamento com Destaque', () => {
+  const badgePath = path.join(rootDir, 'src/components/vehicle/PriceDropBadge.jsx');
+  const catalogPath = path.join(rootDir, 'src/pages/ShowcaseCatalog.jsx');
+  const badgeContent = fs.readFileSync(badgePath, 'utf-8');
+  const catalogContent = fs.readFileSync(catalogPath, 'utf-8');
+
+  test('22.1: PriceDropBadge.jsx não deve calcular nem exibir porcentagem de queda', () => {
+    assert.ok(!badgeContent.includes('dropPercent'), 'dropPercent deve ter sido removido');
+    assert.ok(!badgeContent.includes('-{dropPercent}%'), 'A tag de porcentagem não deve constar no JSX');
+  });
+
+  test('22.2: PriceDropBadge.jsx deve aceitar prop isFeatured e renderizar ícone de estrela', () => {
+    assert.ok(badgeContent.includes('isFeatured = false') || badgeContent.includes('isFeatured'), 'Deve aceitar prop isFeatured');
+    assert.ok(badgeContent.includes('<Star'), 'Deve renderizar ícone Star quando isFeatured for verdadeiro');
+  });
+
+  test('22.3: ShowcaseCatalog.jsx deve passar prop isFeatured={car.featured} ao PriceDropBadge', () => {
+    assert.ok(
+      catalogContent.includes('isFeatured={car.featured}'),
+      'Catálogo deve fornecer isFeatured ao PriceDropBadge'
+    );
+  });
+});
+
+

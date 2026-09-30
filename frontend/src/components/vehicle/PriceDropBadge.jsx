@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Flame, TrendingDown, Clock, ChevronDown, CheckCircle2, History, Tag } from 'lucide-react';
+import { Flame, TrendingDown, Clock, ChevronDown, CheckCircle2, History, Tag, Star } from 'lucide-react';
 
 export default function PriceDropBadge({
   originalPrice,
   currentPrice,
   priceHistory = [],
   variant = 'badge', // 'badge' | 'detailed'
+  isFeatured = false,
   className = ''
 }) {
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
@@ -24,7 +25,6 @@ export default function PriceDropBadge({
   }
 
   const dropAmount = numOriginal - numCurrent;
-  const dropPercent = ((dropAmount / numOriginal) * 100).toFixed(1);
 
   // Histórico sintetizado ou recebido
   const historyList = (Array.isArray(priceHistory) && priceHistory.length > 0)
@@ -38,14 +38,16 @@ export default function PriceDropBadge({
   if (variant === 'badge') {
     return (
       <span
-        className={`inline-flex items-center gap-1 bg-gradient-to-r from-rose-500/20 via-orange-500/20 to-amber-500/20 text-orange-400 border border-orange-500/30 px-2.5 py-1 rounded-full text-xs font-black shadow-sm ${className}`}
+        className={`inline-flex items-center gap-1.5 bg-gradient-to-r from-rose-500/20 via-orange-500/20 to-amber-500/20 text-orange-400 border border-orange-500/30 px-2.5 py-1 rounded-full text-xs font-black shadow-sm ${className}`}
         title={`Preço anterior: R$ ${Math.round(numOriginal).toLocaleString('pt-BR')}`}
       >
         <Flame className="w-3.5 h-3.5 text-orange-400 fill-orange-400/30 animate-pulse" />
         <span>Preço Baixou R$ {Math.round(dropAmount).toLocaleString('pt-BR')}</span>
-        <span className="text-[10px] bg-orange-500/30 text-orange-200 px-1 rounded font-bold ml-0.5">
-          -{dropPercent}%
-        </span>
+        {isFeatured && (
+          <span title="Destaque" aria-label="Veículo em Destaque" className="inline-flex items-center ml-0.5">
+            <Star className="w-3.5 h-3.5 text-amber-300 fill-amber-300" />
+          </span>
+        )}
       </span>
     );
   }
@@ -65,9 +67,11 @@ export default function PriceDropBadge({
               <span className="text-xs font-black uppercase tracking-wider text-orange-400">
                 Preço Baixou
               </span>
-              <span className="bg-orange-500/20 text-orange-300 text-[10px] font-bold px-1.5 py-0.2 rounded border border-orange-500/30">
-                -{dropPercent}%
-              </span>
+              {isFeatured && (
+                <span title="Destaque" aria-label="Veículo em Destaque" className="inline-flex items-center gap-1 bg-amber-500/20 border border-amber-500/30 text-amber-300 text-[10px] font-bold px-1.5 py-0.5 rounded">
+                  <Star className="w-3 h-3 fill-amber-300" /> Destaque
+                </span>
+              )}
             </div>
             <p className="text-sm font-bold text-white mt-0.5">
               Economia de R$ {Math.round(dropAmount).toLocaleString('pt-BR')}{' '}

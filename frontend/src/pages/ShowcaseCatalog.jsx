@@ -155,7 +155,7 @@ const CarCard = React.memo(({ car, index, viewMode }) => {
               <p className="text-xs text-slate-500 font-medium flex items-center gap-1 mt-0.5"><car.icon className="w-3.5 h-3.5" /> {car.bodyType}</p>
             </div>
             <div className="text-right shrink-0">
-              <PriceDropBadge originalPrice={car.originalPrice} currentPrice={car.price} variant="badge" className="mb-1" />
+              <PriceDropBadge originalPrice={car.originalPrice} currentPrice={car.price} variant="badge" isFeatured={car.featured} className="mb-1" />
               <p className="text-2xl font-black text-brand-blue whitespace-nowrap">{formatPrice(car.price)}</p>
             </div>
           </div>
@@ -193,7 +193,7 @@ const CarCard = React.memo(({ car, index, viewMode }) => {
 
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 pt-10 flex items-end justify-between gap-2">
           <p className="text-2xl font-black text-white drop-shadow-md">{formatPrice(car.price)}</p>
-          <PriceDropBadge originalPrice={car.originalPrice} currentPrice={car.price} variant="badge" />
+          <PriceDropBadge originalPrice={car.originalPrice} currentPrice={car.price} variant="badge" isFeatured={car.featured} />
         </div>
         <button onClick={handleLike}
           aria-label={liked ? "Remover dos favoritos" : "Curtir veículo"}
