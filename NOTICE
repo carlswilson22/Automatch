@@ -1,0 +1,47 @@
+# NOTICE - ATRIBUIÇÃO DE CÓDIGO E LICENÇAS DE TERCEIROS
+
+Este projeto (Automatch) utiliza e adapta componentes de interface sob licenças permissivas de código aberto, em estrita conformidade com seus termos originais.
+
+---
+
+## 1. MicroKit UI (Microinteractions)
+- **Origem:** [MicroKit UI](https://microkit.co) / [GitHub - henriquegpb/microkit](https://github.com/henriquegpb/microkit)
+- **Autor / Copyright:** Copyright (c) Henrique Barone
+- **Licença:** MIT License (https://opensource.org/licenses/MIT)
+
+### Componentes e Padrões Adaptados:
+1. `Cursor Edge Glow Button` (`/components/cursor-edge-glow-button`) -> Implementado em `src/components/ui/GlowButton.jsx`
+2. `Outline Wipe Button` (`/components/outline-wipe-button`) -> Implementado em `src/components/ui/WipeButton.jsx`
+3. `Focus Field` (`/components/focus-input`) -> Implementado em `src/components/ui/FocusInput.jsx`
+4. `Sliding Underline Tabs & Sliding Content Tabs` (`/components/sliding-underline-tabs`, `/components/sliding-content-tabs`) -> Implementado em `src/components/ui/SlidingTabs.jsx`
+5. `Secure Purchase Button` (`/components/secure-purchase-button`) -> Implementado no fluxo de Checkout
+6. `Spotlight Indicator` (`/components/spotlight-indicator`) -> Implementado em chips e filtros rápidos
+7. `Icon Swap Button / Heart Action` (`/components/icon-swap-button`) -> Implementado em botões de favoritos dos cards
+
+---
+
+## 2. Details.so (Inspo)
+- **Origem:** [Details.so Inspo](https://www.details.so/inspo)
+- **Uso:** Referência conceitual de princípios de ritmo, hierarquia, profundidade de sombras em duas camadas, transições suaves e composição visual editorial (sem cópia de código proprietário ou identidade de sites catalogados).
+
+---
+
+MIT License (MicroKit UI):
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
