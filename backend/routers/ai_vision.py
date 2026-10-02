@@ -5,7 +5,8 @@ from typing import Optional, Dict, Any, List
 
 import httpx
 from pydantic import BaseModel
-from fastapi import APIRouter
+from fastapi import APIRouter, Request, HTTPException
+from security_guard import RateLimiter
 
 from services.ai_service import (
     preprocess_and_compress_image,
@@ -19,6 +20,9 @@ from services.pricing_service import calcular_preco_justo
 
 logger = logging.getLogger("automatch")
 router = APIRouter(tags=["IA & Precificação"])
+
+# Instância de rate limiting para o chat do consultor IA (30 req / min por IP)
+chat_rate_limiter = RateLimiter(max_requests=30, window_seconds=60, block_duration_seconds=60)
 
 
 class AnaliseVisualRequest(BaseModel):
@@ -151,10 +155,19 @@ async def analisar_avarias_veiculo(payload: AnaliseVisualRequest) -> Dict[str, A
 
 
 @router.post("/api/chat")
-async def chat_automatch(payload: ChatRequest) -> Dict[str, Any]:
+async def chat_automatch(payload: ChatRequest, request: Request) -> Dict[str, Any]:
     """
     Chat consultivo assíncrono com Gemini 1.5 Flash e limite de 200 tokens (RAG e histórico habilitados).
     """
+    # Rate Limiting por IP para proteção contra abusos e DoS (OWASP A04)
+    client_ip = request.client.host if request.client else "127.0.0.1"
+    is_allowed, remaining = chat_rate_limiter.is_allowed(client_ip)
+    if not is_allowed:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Muitas perguntas consecutivas. Por favor, aguarde {remaining}s antes de enviar nova mensagem."
+        )
+
     api_key = os.getenv("GEMINI_API_KEY", "").strip()
     user_msg = payload.mensagem.strip()
     historico = payload.historico or []

@@ -206,29 +206,58 @@ async def upload_pericia_video(
             detail=f"Formato '{file_ext}' não suportado para vídeo pericial. Aceitos: {', '.join(ALLOWED_VIDEO_EXTENSIONS)}"
         )
 
-    content = await file.read()
-    if len(content) == 0:
+    # Leitura defensiva de magic bytes (16 bytes) para validar assinatura do container
+    magic_bytes = await file.read(16)
+    if not magic_bytes:
         raise HTTPException(status_code=400, detail="Arquivo de vídeo está vazio.")
 
-    if len(content) > MAX_VIDEO_SIZE_BYTES:
-        raise HTTPException(
-            status_code=400,
-            detail=f"O vídeo excede o tamanho máximo de {MAX_VIDEO_SIZE_BYTES // (1024*1024)}MB."
-        )
+    # Validação de magic bytes para vídeo (MP4/MOV com ftyp/moov ou WebM com cabeçalho EBML)
+    if file_ext in {".mp4", ".mov", ".m4v"}:
+        if b"ftyp" not in magic_bytes and b"moov" not in magic_bytes:
+            raise HTTPException(
+                status_code=400,
+                detail="O arquivo enviado não possui assinatura válida de vídeo MP4/QuickTime."
+            )
+    elif file_ext == ".webm":
+        if not magic_bytes.startswith(b"\x1a\x45\xdf\xa3"):
+            raise HTTPException(
+                status_code=400,
+                detail="O arquivo enviado não possui assinatura válida de contêiner WebM."
+            )
 
     file_id = str(uuid.uuid4())
     safe_filename = f"pericia_{file_id}{file_ext}"
     file_path = UPLOADS_DIR / safe_filename
 
-    async with aiofiles.open(file_path, "wb") as f:
-        await f.write(content)
+    # Escrita via streaming em blocos de 64KB para proteção contra exaustão de memória (DoS)
+    CHUNK_SIZE = 64 * 1024
+    total_size = len(magic_bytes)
+
+    try:
+        async with aiofiles.open(file_path, "wb") as f:
+            await f.write(magic_bytes)
+            while True:
+                chunk = await file.read(CHUNK_SIZE)
+                if not chunk:
+                    break
+                total_size += len(chunk)
+                if total_size > MAX_VIDEO_SIZE_BYTES:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"O vídeo excede o tamanho máximo de {MAX_VIDEO_SIZE_BYTES // (1024*1024)}MB."
+                    )
+                await f.write(chunk)
+    except Exception:
+        if file_path.exists():
+            file_path.unlink()
+        raise
 
     return {
         "status": "success",
         "id": file_id,
         "filename": safe_filename,
         "video_url": f"/api/v1/laudos/files/{safe_filename}",
-        "size_bytes": len(content),
+        "size_bytes": total_size,
         "duracao_estimada_segundos": 15,
         "tipo": "video_pericial_15s",
         "checklist_inspecao": [

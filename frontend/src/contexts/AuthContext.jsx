@@ -2,6 +2,24 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext({});
 
+// Hash seguro unidirecional para credenciais locais (evita exposição de senhas em plaintext no localStorage)
+const hashPasswordLocal = async (plainPassword) => {
+  if (typeof crypto !== 'undefined' && crypto?.subtle) {
+    try {
+      const msgBuffer = new TextEncoder().encode(plainPassword);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    } catch (_) {}
+  }
+  let hash = 0;
+  for (let i = 0; i < plainPassword.length; i++) {
+    hash = ((hash << 5) - hash) + plainPassword.charCodeAt(i);
+    hash |= 0;
+  }
+  return 'sh_' + Math.abs(hash);
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -67,9 +85,13 @@ export const AuthProvider = ({ children }) => {
       // 2. Fallback para usuários registrados localmente no navegador
       try {
         const localAccounts = JSON.parse(localStorage.getItem('@automatch:registered_users') || '[]');
-        const found = localAccounts.find(u => u.email.toLowerCase() === cleanEmail && u.password === password);
+        const inputHash = await hashPasswordLocal(password);
+        const found = localAccounts.find(u =>
+          u.email.toLowerCase() === cleanEmail &&
+          (u.passwordHash === inputHash || u.password === password) // compatibilidade retroativa
+        );
         if (found) {
-          const { password: _p, ...userData } = found;
+          const { password: _p, passwordHash: _ph, ...userData } = found;
           setUser(userData);
           localStorage.setItem('automatch_user', JSON.stringify(userData));
           if (userData.token) {
@@ -120,11 +142,13 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('automatch_token', fullUser.token);
       }
 
-      // Salva cópia local para garantir login offline futuro
+      // Salva cópia local para garantir login offline futuro (sem expor senha em texto claro)
       try {
         const localAccounts = JSON.parse(localStorage.getItem('@automatch:registered_users') || '[]');
         const updated = localAccounts.filter(u => u.email.toLowerCase() !== cleanEmail);
-        updated.push({ ...fullUser, password });
+        const { password: _p, ...safeUser } = fullUser;
+        const passwordHash = await hashPasswordLocal(password);
+        updated.push({ ...safeUser, passwordHash });
         localStorage.setItem('@automatch:registered_users', JSON.stringify(updated));
       } catch (e) {}
 
@@ -149,11 +173,13 @@ export const AuthProvider = ({ children }) => {
         token: 'local-jwt-token-' + Date.now()
       };
 
-      // Persiste nas contas registradas locais
+      // Persiste nas contas registradas locais (sem expor senha em texto claro)
       try {
         const localAccounts = JSON.parse(localStorage.getItem('@automatch:registered_users') || '[]');
         const updated = localAccounts.filter(u => u.email.toLowerCase() !== cleanEmail);
-        updated.push({ ...fallbackUser, password });
+        const { password: _p, ...safeFallbackUser } = fallbackUser;
+        const passwordHash = await hashPasswordLocal(password);
+        updated.push({ ...safeFallbackUser, passwordHash });
         localStorage.setItem('@automatch:registered_users', JSON.stringify(updated));
       } catch (e) {}
 

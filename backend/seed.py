@@ -165,6 +165,11 @@ def seed_db():
                     "status_reserva": "disponivel"
                 }
             ]
+            admin_user = db.query(models.User).filter(models.User.email == "admin@automatch.com").first()
+            admin_id = admin_user.id if admin_user else "user-1"
+            for c in cars_data:
+                c["user_id"] = admin_id
+
             cars_to_add = [models.Car(**c) for c in cars_data]
             db.add_all(cars_to_add)
             db.commit()

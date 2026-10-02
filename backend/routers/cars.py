@@ -143,8 +143,8 @@ def update_car(
     if not car:
         raise HTTPException(status_code=404, detail="Veículo não encontrado.")
 
-    is_admin = (current_user.email == "admin@automatch.com")
-    if car.user_id and car.user_id != current_user.id and not is_admin:
+    is_admin = (current_user.email == "admin@automatch.com" or getattr(current_user, "role", "") == "admin")
+    if not is_admin and (not car.user_id or car.user_id != current_user.id):
         raise HTTPException(
             status_code=403,
             detail="Permissão negada. Você só pode editar veículos da sua própria conta."
@@ -187,8 +187,8 @@ def delete_car(
         # Confirma idempotência caso já excluído
         return {"status": "success", "message": "Anúncio removido ou inexistente no banco de dados.", "deleted_id": car_id}
     
-    is_admin = (current_user.email == "admin@automatch.com")
-    if car.user_id and car.user_id != current_user.id and not is_admin:
+    is_admin = (current_user.email == "admin@automatch.com" or getattr(current_user, "role", "") == "admin")
+    if not is_admin and (not car.user_id or car.user_id != current_user.id):
         raise HTTPException(
             status_code=403,
             detail="Permissão negada. Você só pode excluir anúncios cadastrados pela sua conta."

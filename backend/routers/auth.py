@@ -35,8 +35,9 @@ def get_current_user_from_header(
         raise HTTPException(status_code=401, detail="Token de autenticação obrigatório.")
     token = authorization.removeprefix("Bearer ").strip()
 
-    # Suporte a token demo/contingência
-    if token == "demo-admin-token" or token.startswith("demo-"):
+    # Suporte a tokens demo/contingência estritamente restrito a ambiente de desenvolvimento/testes
+    allow_demo = os.getenv("ALLOW_DEMO_TOKENS", "true").lower() in ["true", "1"] and os.getenv("ENVIRONMENT", "").lower() != "production"
+    if allow_demo and token in ["demo-admin-token", "demo-lojista-token"]:
         admin_user = db.query(models.User).filter(models.User.email == "admin@automatch.com").first()
         if admin_user:
             return admin_user

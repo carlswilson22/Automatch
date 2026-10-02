@@ -1,3 +1,4 @@
+import os
 import time
 import uuid
 import logging
@@ -37,8 +38,9 @@ def get_current_b2b_user(
 
     token = authorization.removeprefix("Bearer ").strip()
 
-    # Suporte a tokens demo/contingência B2B
-    if token in ["demo-admin-token", "demo-lojista-token"]:
+    # Suporte a tokens demo/contingência B2B estritamente restrito a ambiente de desenvolvimento/testes
+    allow_demo = os.getenv("ALLOW_DEMO_TOKENS", "true").lower() in ["true", "1"] and os.getenv("ENVIRONMENT", "").lower() != "production"
+    if allow_demo and token in ["demo-admin-token", "demo-lojista-token"]:
         admin_user = db.query(models.User).filter(models.User.email == "admin@automatch.com").first()
         if admin_user:
             return admin_user
