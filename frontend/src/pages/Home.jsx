@@ -11,6 +11,9 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { stores } from '../data/inventoryData';
 import StoreIdentifier from '../components/ui/StoreIdentifier';
+import AutomatchLogo from '../components/ui/AutomatchLogo';
+import GlowButton from '../components/ui/GlowButton';
+import WipeButton from '../components/ui/WipeButton';
 import { getNewCars } from '../data/newCarsManager';
 import { toggleFavorite, isFavorite } from '../data/favoritesManager';
 import { getVehicleImageUrl, handleVehicleImageError } from '../utils/imageHelper';
@@ -118,11 +121,11 @@ const CarCard = ({ car, index }) => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }}
+      initial={{ opacity: 0, y: 25 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-50px' }}
-      transition={{ duration: 0.4, delay: index * 0.08 }}
-      className="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 group cursor-pointer flex flex-col h-full"
+      viewport={{ once: true, margin: '-40px' }}
+      transition={{ duration: 0.35, delay: index * 0.06, ease: [0.16, 1, 0.3, 1] }}
+      className="bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-card hover:shadow-card-hover hover:-translate-y-1 transition-all duration-300 group cursor-pointer flex flex-col h-full"
       onClick={handleDetails}
     >
       {/* Image Container */}
@@ -142,15 +145,16 @@ const CarCard = ({ car, index }) => {
           <StoreIdentifier storeId={car.storeId} variant="badge" />
 
           {/* Wishlist */}
-          <button
-            className={`w-9 h-9 rounded-full border border-slate-200/50 flex items-center justify-center transition-colors shadow-sm ${
-              fav ? 'bg-red-50 text-red-500' : 'bg-white/95 text-slate-500 hover:bg-white'
+          <motion.button
+            whileTap={{ scale: 0.85 }}
+            className={`w-9 h-9 rounded-full border border-slate-200/60 flex items-center justify-center transition-all shadow-sm ${
+              fav ? 'bg-red-50 text-red-500' : 'bg-white/95 text-slate-500 hover:bg-white hover:text-red-500'
             }`}
             title={fav ? "Remover dos favoritos" : "Curtir veículo"}
             onClick={handleFavorite}
           >
-            <Heart className={`w-4 h-4 transition-all ${fav ? 'fill-red-500 text-red-500 scale-110' : 'hover:text-red-500'}`} />
-          </button>
+            <Heart className={`w-4 h-4 transition-all duration-200 ${fav ? 'fill-red-500 text-red-500 scale-110' : 'hover:scale-110'}`} />
+          </motion.button>
         </div>
 
       </div>
@@ -268,15 +272,10 @@ const Home = () => {
       <nav className="w-full bg-white border-b border-slate-100 sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-6">
-            <div
-              className="flex items-center gap-2 cursor-pointer group"
+            <AutomatchLogo
+              size="md"
               onClick={() => navigate('/')}
-            >
-              <ShieldCheck className="w-8 h-8 text-blue-600 group-hover:scale-110 transition-transform" />
-              <span className="text-xl font-black tracking-tight text-slate-900 uppercase italic">
-                Automatch
-              </span>
-            </div>
+            />
 
             <div className="hidden md:flex items-center gap-3 border-l border-slate-200 pl-6 ml-2">
               <button
@@ -374,21 +373,25 @@ const Home = () => {
                 Esqueça o medo de comprar carro usado. A Automatch utiliza inteligência artificial e transparência radical para garantir que seu próximo carro seja exatamente o que você espera.
               </p>
 
-              <div className="flex flex-col sm:flex-row gap-4">
-                <button
+              <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
+                <GlowButton
                   onClick={() => navigate('/encontrar')}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full font-bold text-lg transition-all flex items-center justify-center gap-2 group shadow-xl shadow-blue-900/40"
+                  size="lg"
+                  icon={Search}
+                  className="shadow-xl shadow-blue-900/40"
                 >
-                  <Search className="w-5 h-5" />
-                  Ver Vitrine Digital
-                  <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-                </button>
-                <button 
+                  <span>Ver Vitrine Digital</span>
+                  <ChevronRight className="w-5 h-5 ml-1" />
+                </GlowButton>
+
+                <WipeButton
                   onClick={() => navigate('/como-funciona')}
-                  className="bg-white/10 hover:bg-white/20 border border-white/20 backdrop-blur-sm text-white px-8 py-4 rounded-full font-semibold text-lg transition-all cursor-pointer hover:border-white/40 active:scale-95"
+                  size="lg"
+                  variant="slate"
+                  className="text-white border-white/20 bg-white/5 hover:border-white/40"
                 >
                   Como funciona?
-                </button>
+                </WipeButton>
               </div>
 
               {/* Partners Section */}

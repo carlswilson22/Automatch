@@ -4,6 +4,9 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import StoreIdentifier from '../components/ui/StoreIdentifier';
 import PriceDropBadge from '../components/vehicle/PriceDropBadge';
 import VehicleComparatorModal from '../components/vehicle/VehicleComparatorModal';
+import AutomatchLogo from '../components/ui/AutomatchLogo';
+import FocusInput from '../components/ui/FocusInput';
+import SlidingTabs from '../components/ui/SlidingTabs';
 import { stores } from '../data/inventoryData';
 import { useAuth } from '../contexts/AuthContext';
 import { getNewCars, isCarDeleted } from '../data/newCarsManager';
@@ -11,7 +14,7 @@ import { toggleFavorite, isFavorite, subscribeFavorites } from '../data/favorite
 import {
   ShieldCheck, Search, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight, Calendar, Gauge, Palette,
   MapPin, Heart, Eye, Zap, Filter, ArrowLeft, SlidersHorizontal, Scale, ArrowRight,
-  Car, ChevronDown, X, Star, RotateCcw, Tag, UserPlus, LogIn, Sparkles, Loader2
+  Car, ChevronDown, X, Star, RotateCcw, Tag, UserPlus, LogIn, Sparkles, Loader2, LayoutGrid, List
 } from 'lucide-react';
 import { getVehicleImageUrl, handleVehicleImageError } from '../utils/imageHelper';
 import VehicleCardSkeleton from '../components/common/VehicleCardSkeleton';
@@ -115,9 +118,9 @@ const CarCard = React.memo(({ car, index, viewMode }) => {
   if (viewMode === 'list') {
     return (
       <motion.div
-        initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.3, delay: index * 0.06 }}
-        className="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-lg transition-all duration-300 group cursor-pointer flex flex-col md:flex-row"
+        initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, delay: index * 0.05, ease: [0.16, 1, 0.3, 1] }}
+        className="bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-card hover:shadow-card-hover hover:-translate-y-0.5 transition-all duration-300 group cursor-pointer flex flex-col md:flex-row"
         onClick={() => navigate(`/encontrar/${car.id}`)}
       >
         <div className="relative w-full md:w-80 aspect-[16/10] md:aspect-auto shrink-0 overflow-hidden bg-slate-900">
@@ -188,9 +191,9 @@ const CarCard = React.memo(({ car, index, viewMode }) => {
   // ── GRID VIEW ──
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.35, delay: index * 0.07 }}
-      className="bg-white rounded-2xl overflow-hidden border border-slate-200 shadow-sm hover:shadow-xl transition-all duration-300 group cursor-pointer flex flex-col"
+      initial={{ opacity: 0, y: 25 }} animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.35, delay: index * 0.06, ease: [0.16, 1, 0.3, 1] }}
+      className="bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-card hover:shadow-card-hover hover:-translate-y-1 transition-all duration-300 group cursor-pointer flex flex-col"
       onClick={() => navigate(`/encontrar/${car.id}`)}
     >
       <div className="relative aspect-[16/10] overflow-hidden bg-slate-900">
@@ -568,22 +571,19 @@ const ShowcaseCatalog = () => {
           <button onClick={() => navigate('/')} aria-label="Voltar para a página inicial" className="p-2 hover:bg-slate-100 rounded-full transition-colors shrink-0">
             <ArrowLeft className="w-5 h-5 text-slate-600" />
           </button>
-          <div className="flex items-center gap-2 cursor-pointer shrink-0" onClick={() => navigate('/')}>
-            <ShieldCheck className="w-7 h-7 text-brand-blue" />
-            <span className="text-lg font-black tracking-tight text-brand-navy hidden sm:block">AUTOMATCH</span>
-          </div>
+          <AutomatchLogo size="md" onClick={() => navigate('/')} />
           <div className="flex-1 max-w-lg mx-auto hidden md:block">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input type="text" value={searchQuery} onChange={e => setSearchQuery(e.target.value)}
-                placeholder="Buscar por nome, tipo ou cor..."
-                className="w-full bg-slate-50 border border-slate-200 rounded-full pl-10 pr-10 py-2.5 text-sm focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue focus:outline-none transition-all" />
-              {searchQuery && (
-                <button onClick={() => setSearchQuery('')} aria-label="Limpar campo de busca" className="absolute right-3 top-1/2 -translate-y-1/2">
-                  <X className="w-4 h-4 text-slate-400 hover:text-slate-600" />
+            <FocusInput
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Buscar por marca, modelo, versão ou cor..."
+              icon={Search}
+              rightElement={searchQuery ? (
+                <button onClick={() => setSearchQuery('')} aria-label="Limpar campo de busca" className="p-1 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-colors">
+                  <X className="w-4 h-4" />
                 </button>
-              )}
-            </div>
+              ) : null}
+            />
           </div>
 
           <div className="hidden md:flex items-center gap-3">
@@ -647,6 +647,21 @@ const ShowcaseCatalog = () => {
         </div>
       </nav>
 
+      {/* ── Mobile Search Bar ── */}
+      <div className="md:hidden px-4 pt-4 pb-1 max-w-7xl mx-auto w-full">
+        <FocusInput
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          placeholder="Buscar por marca, modelo ou versão..."
+          icon={Search}
+          rightElement={searchQuery ? (
+            <button onClick={() => setSearchQuery('')} aria-label="Limpar campo de busca" className="p-1 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-colors">
+              <X className="w-4 h-4" />
+            </button>
+          ) : null}
+        />
+      </div>
+
       {/* ── Body ── */}
       <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 py-8 flex flex-col md:flex-row gap-8">
 
@@ -708,7 +723,7 @@ const ShowcaseCatalog = () => {
             <div className="flex items-center gap-3 shrink-0">
               <div className="relative">
                 <select value={sortBy} onChange={e => setSortBy(e.target.value)}
-                  className="appearance-none bg-white border border-slate-200 rounded-xl px-4 py-2.5 pr-9 text-sm font-medium text-slate-700 focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue focus:outline-none cursor-pointer">
+                  className="appearance-none bg-white border border-slate-200/90 hover:border-slate-300 rounded-xl px-4 py-2 pr-9 text-xs sm:text-sm font-semibold text-slate-700 focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue focus:outline-none cursor-pointer shadow-sm transition-all">
                   <option value="featured">Destaques</option>
                   <option value="price-asc">Menor Preço</option>
                   <option value="price-desc">Maior Preço</option>
@@ -717,18 +732,19 @@ const ShowcaseCatalog = () => {
                 </select>
                 <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               </div>
-              <div className="bg-white border border-slate-200 rounded-xl flex overflow-hidden">
-                <button onClick={() => setViewMode('grid')}
-                  aria-label="Visualização em grade"
-                  className={`px-3 py-2.5 text-sm transition-colors ${viewMode === 'grid' ? 'bg-brand-blue text-white' : 'text-slate-500 hover:bg-slate-50'}`}>
-                  <SlidersHorizontal className="w-4 h-4 rotate-90" />
-                </button>
-                <button onClick={() => setViewMode('list')}
-                  aria-label="Visualização em lista"
-                  className={`px-3 py-2.5 text-sm transition-colors ${viewMode === 'list' ? 'bg-brand-blue text-white' : 'text-slate-500 hover:bg-slate-50'}`}>
-                  <SlidersHorizontal className="w-4 h-4" />
-                </button>
-              </div>
+
+              {/* View Switcher com SlidingTabs */}
+              <SlidingTabs
+                tabs={[
+                  { id: 'grid', label: '', icon: LayoutGrid },
+                  { id: 'list', label: '', icon: List }
+                ]}
+                activeTab={viewMode}
+                onChange={setViewMode}
+                variant="pill"
+                size="sm"
+                layoutId="catalog-viewmode-tabs"
+              />
             </div>
           </div>
 
