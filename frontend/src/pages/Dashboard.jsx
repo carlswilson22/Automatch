@@ -17,8 +17,11 @@ import {
   Sliders,
   CheckCircle2,
   AlertCircle,
-  X
+  X,
+  BarChart3,
+  Sparkles
 } from 'lucide-react';
+import B2BRepassePanel from '../components/inventory/B2BRepassePanel';
 import { useNavigate } from 'react-router-dom';
 import { 
   stores, 
@@ -35,6 +38,7 @@ import useScrollLock from '../utils/useScrollLock';
 
 // Code-Splitting: PartnershipHubModal carregado sob demanda (economiza 50.5 kB na montagem inicial)
 const PartnershipHubModal = React.lazy(() => import('../components/partners/PartnershipHubModal'));
+const AIStudioModal = React.lazy(() => import('../components/inventory/AIStudioModal'));
 
 class DashboardErrorBoundary extends React.Component {
   constructor(props) {
@@ -76,10 +80,12 @@ export default function Dashboard() {
   const [searchQuery, setSearchQuery] = useState('');
   const [viewMode, setViewMode] = useState('grid');
   const [isB2BModalOpen, setIsB2BModalOpen] = useState(false);
+  const [isAIStudioOpen, setIsAIStudioOpen] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [configuringAsset, setConfiguringAsset] = useState(null);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);
   const [feedbackToast, setFeedbackToast] = useState(null);
+  const [dashboardTab, setDashboardTab] = useState('inventory'); // 'inventory' | 'b2b-radar'
   const itemsPerPage = 12;
 
   const filteredInventory = inventoryList.filter(item => {
@@ -216,6 +222,14 @@ export default function Dashboard() {
               <Users className="w-4 h-4" />
               Rede de Parceiros
             </button>
+
+            <button
+              onClick={() => setIsAIStudioOpen(true)}
+              className="px-4 py-2.5 bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-700 hover:to-purple-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-md shadow-violet-500/20 active:scale-95 transition-all whitespace-nowrap cursor-pointer"
+            >
+              <Sparkles className="w-4 h-4" />
+              Estudio IA
+            </button>
           </div>
         </div>
       </header>
@@ -273,28 +287,67 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* Inventory Header */}
+        {/* Dashboard Tab Toggle */}
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-lg font-bold text-slate-800">Inventário Disponível</h2>
-          <div className="bg-white border border-slate-200 rounded-xl flex overflow-hidden">
-            <button 
-              onClick={() => setViewMode('grid')}
-              className={`px-3 py-2 text-sm transition-colors cursor-pointer ${viewMode === 'grid' ? 'bg-brand-blue text-white' : 'text-slate-500 hover:bg-slate-50'}`}
-              title="Visualização em Grade"
+          <div className="bg-white border border-slate-200 rounded-2xl flex overflow-hidden shadow-sm">
+            <button
+              onClick={() => setDashboardTab('inventory')}
+              className={`px-5 py-2.5 text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
+                dashboardTab === 'inventory' ? 'bg-brand-blue text-white' : 'text-slate-500 hover:bg-slate-50'
+              }`}
             >
-              <LayoutGrid className="w-4 h-4" />
+              <Package className="w-3.5 h-3.5" /> Inventario
             </button>
-            <button 
-              onClick={() => setViewMode('list')}
-              className={`px-3 py-2 text-sm transition-colors cursor-pointer ${viewMode === 'list' ? 'bg-brand-blue text-white' : 'text-slate-500 hover:bg-slate-50'}`}
-              title="Visualização em Lista"
+            <button
+              onClick={() => setDashboardTab('b2b-radar')}
+              className={`px-5 py-2.5 text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
+                dashboardTab === 'b2b-radar' ? 'bg-brand-blue text-white' : 'text-slate-500 hover:bg-slate-50'
+              }`}
             >
-              <List className="w-4 h-4" />
+              <BarChart3 className="w-3.5 h-3.5" /> Radar B2B
             </button>
           </div>
+
+          {dashboardTab === 'inventory' && (
+            <div className="bg-white border border-slate-200 rounded-xl flex overflow-hidden">
+              <button 
+                onClick={() => setViewMode('grid')}
+                className={`px-3 py-2 text-sm transition-colors cursor-pointer ${viewMode === 'grid' ? 'bg-brand-blue text-white' : 'text-slate-500 hover:bg-slate-50'}`}
+                title="Visualizacao em Grade"
+              >
+                <LayoutGrid className="w-4 h-4" />
+              </button>
+              <button 
+                onClick={() => setViewMode('list')}
+                className={`px-3 py-2 text-sm transition-colors cursor-pointer ${viewMode === 'list' ? 'bg-brand-blue text-white' : 'text-slate-500 hover:bg-slate-50'}`}
+                title="Visualizacao em Lista"
+              >
+                <List className="w-4 h-4" />
+              </button>
+            </div>
+          )}
         </div>
 
+        {/* B2B Radar Panel */}
+        {dashboardTab === 'b2b-radar' && (
+          <motion.div
+            key="b2b-radar"
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0 }}
+            className="mb-6"
+          >
+            <B2BRepassePanel inventory={filteredInventory} />
+          </motion.div>
+        )}
+
+        {/* Inventory Header (only in inventory tab) */}
+        {dashboardTab === 'inventory' && (
+          <h2 className="text-lg font-bold text-slate-800 mb-4">Inventario Disponivel</h2>
+        )}
+
         {/* Inventory View */}
+        {dashboardTab === 'inventory' && (
         <DashboardErrorBoundary>
         <AnimatePresence mode="wait">
           {viewMode === 'grid' ? (
@@ -498,8 +551,9 @@ export default function Dashboard() {
           </div>
         )}
         </DashboardErrorBoundary>
+        )}
 
-        {filteredInventory.length === 0 && (
+        {dashboardTab === 'inventory' && filteredInventory.length === 0 && (
           <div className="py-20 flex flex-col items-center justify-center text-slate-400">
              <Car className="w-12 h-12 mb-4 opacity-20" />
              <p className="font-medium">Nenhum ativo encontrado para esta unidade.</p>
@@ -520,12 +574,19 @@ export default function Dashboard() {
         stores={stores}
       />
 
-      {/* Hub B2B Modal (Lazy Loaded) */}
+      {/* Hub B2B Modal + AI Studio Modal (Lazy Loaded) */}
       <React.Suspense fallback={null}>
         {isB2BModalOpen && (
           <PartnershipHubModal
             isOpen={isB2BModalOpen}
             onClose={() => setIsB2BModalOpen(false)}
+          />
+        )}
+        {isAIStudioOpen && (
+          <AIStudioModal
+            isOpen={isAIStudioOpen}
+            onClose={() => setIsAIStudioOpen(false)}
+            vehicleName="Veículo Selecionado"
           />
         )}
       </React.Suspense>

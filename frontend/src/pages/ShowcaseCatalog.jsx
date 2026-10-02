@@ -3,13 +3,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import StoreIdentifier from '../components/ui/StoreIdentifier';
 import PriceDropBadge from '../components/vehicle/PriceDropBadge';
+import VehicleComparatorModal from '../components/vehicle/VehicleComparatorModal';
 import { stores } from '../data/inventoryData';
 import { useAuth } from '../contexts/AuthContext';
 import { getNewCars, isCarDeleted } from '../data/newCarsManager';
 import { toggleFavorite, isFavorite, subscribeFavorites } from '../data/favoritesManager';
 import {
   ShieldCheck, Search, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight, Calendar, Gauge, Palette,
-  MapPin, Heart, Eye, Zap, Filter, ArrowLeft, SlidersHorizontal,
+  MapPin, Heart, Eye, Zap, Filter, ArrowLeft, SlidersHorizontal, Scale, ArrowRight,
   Car, ChevronDown, X, Star, RotateCcw, Tag, UserPlus, LogIn, Sparkles, Loader2
 } from 'lucide-react';
 import { getVehicleImageUrl, handleVehicleImageError } from '../utils/imageHelper';

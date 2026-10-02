@@ -150,3 +150,6 @@ backend/uploads/
 
 # Ignorar PDFs de teste
 *.pdf
+
+# Assistente e regras locais de agentes
+.agents/

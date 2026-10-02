@@ -79,6 +79,20 @@ Veículo de uso estritamente particular, com todas as revisões periódicas efet
 
 Acompanha laudo pericial cautelar sem apontamentos, manual do proprietário com carimbos de revisão, chave presencial e documentação 2026 totalmente liberada para transferência imediata.`,
     tags: ['1.0 Turbo TSI', 'Painel Digital', 'VW Play', 'Câmbio Automático 6M', 'Laudo Aprovado'],
+    damagePoints: [
+      {
+        id: 'dp-polo-1',
+        angle: 180,
+        x: 52,
+        y: 78,
+        part: 'Para-choque Traseiro',
+        type: 'Micro Retoque de Verniz',
+        severity: 'Estético Leve (Superficial)',
+        desc: 'Retoque de verniz localizado de 2.5cm no acabamento plástico do para-choque. Estrutura monobloco e sensores 100% íntegros.',
+        inspector: 'Perito Cautelar Automatch',
+        macroImage: '/images/FotoPoloTSI.jpg'
+      }
+    ],
     specs: { motor: '1.0 Turbo TSI Flex', cambio: 'Automático Tiptronic 6 marchas', combustivel: 'Flex', portas: '4 portas', direcao: 'Elétrica', freios: 'Discos ventilados com ABS e ESC', airbags: '4 airbags', tracao: 'Dianteira' },
     seller: { name: 'Motors Campinas', avatar: 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?auto=format&fit=crop&w=100&h=100', rating: 4.8, ads: 19, since: '2021', bio: 'Concessionária e repasse B2B Motors Campinas.' },
   },
@@ -154,6 +168,20 @@ Equipado com o assistente de estacionamento semiautônomo Easy Park (estaciona s
 
 Carro de único proprietário, revisado em concessionária, sem qualquer avaria ou histórico desabonador. Laudo pericial atesta estrutura 100% íntegra.`,
     tags: ['1.2 Turbo', 'Teto Panorâmico', 'Easy Park', 'Wi-Fi Nativo', 'Alerta Ponto Cego'],
+    damagePoints: [
+      {
+        id: 'dp-tracker-1',
+        angle: 90,
+        x: 42,
+        y: 46,
+        part: 'Retrovisor Externo Direito',
+        type: 'Pequeno Risco Superficial',
+        severity: 'Estético Leve (Superficial)',
+        desc: 'Pequeno risco superficial de 1.8cm na carcaça plástica do retrovisor. Mecanismo elétrico de rebatimento e lente sem danos.',
+        inspector: 'Perito Cautelar Automatch',
+        macroImage: '/images/FotoChevroletTracker.jpg'
+      }
+    ],
     specs: { motor: '1.2 Turbo Flex 133cv', cambio: 'Automático de 6 marchas', combustivel: 'Flex', portas: '4 portas', direcao: 'Elétrica', freios: 'Discos dianteiros com ABS/ESC', airbags: '6 airbags', tracao: 'Dianteira' },
     seller: { name: 'AutoShop Prime', avatar: 'https://images.unsplash.com/photo-1543610892-0b1f7e6d8ac1?auto=format&fit=crop&w=100&h=100', rating: 4.9, ads: 28, since: '2020', bio: 'Loja matriz oficial certificada AutoShop Prime.' },
   },
