@@ -11,6 +11,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import StoreIdentifier from '../components/ui/StoreIdentifier';
+import AutomatchLogo from '../components/ui/AutomatchLogo';
 import { showcaseCars } from '../data/showcaseData';
 import { mockCars } from '../data/mockData';
 import { getNewCarById, deleteNewCar, isCarDeleted } from '../data/newCarsManager';
@@ -514,18 +515,13 @@ export default function ShowcaseVehicleDetails() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans pb-20">
       {/* Navigation Header */}
-      <nav className="w-full px-6 py-4 bg-slate-900/98 sticky top-0 z-50 shadow-md">
+      <nav className="w-full px-6 py-4 bg-slate-900/90 backdrop-blur-md sticky top-0 z-50 shadow-md">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-800 rounded-full text-slate-400 hover:text-white transition-colors">
+            <motion.button whileTap={{ scale: 0.9 }} onClick={() => navigate(-1)} className="p-2 hover:bg-slate-800 rounded-full text-slate-400 hover:text-white transition-colors">
               <ArrowLeft className="w-5 h-5" />
-            </button>
-            <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
-              <ShieldCheck className="w-8 h-8 text-blue-500" />
-              <span className="text-xl font-black tracking-tight text-white uppercase italic">
-                Automatch
-              </span>
-            </div>
+            </motion.button>
+            <AutomatchLogo size="md" theme="dark" onClick={() => navigate('/')} />
           </div>
 
           <div className="flex items-center gap-2">
@@ -836,7 +832,7 @@ export default function ShowcaseVehicleDetails() {
             )}
 
             {/* Sobre o Veículo — Nome, Metadados, Descrição e Ficha Técnica Consolidados */}
-            <div className="bg-slate-900/80 rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-xl space-y-6">
+            <div className="bg-slate-900/90 backdrop-blur-md rounded-3xl p-6 sm:p-8 border border-slate-800/80 shadow-card hover:shadow-card-hover transition-all duration-300 space-y-6">
               {/* Badges de Procedência */}
               <div className="flex flex-wrap items-center gap-2">
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 uppercase tracking-wider">
@@ -1196,7 +1192,7 @@ export default function ShowcaseVehicleDetails() {
           <div className="space-y-6">
             
             {/* Price Card & Action Limpo */}
-            <div className="bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-2xl space-y-6">
+            <div className="bg-slate-900/90 backdrop-blur-md rounded-3xl p-6 sm:p-8 border border-slate-800/80 shadow-card hover:shadow-card-hover transition-all duration-300 space-y-6">
               <div>
                 <div className="flex items-center justify-between gap-2 mb-3">
                   <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block">
