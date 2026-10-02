@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ShieldCheck, ArrowLeft, Heart, Trash2, Calendar, Gauge, Palette,
-  MapPin, Eye, ChevronRight, Car, Scale
+  ArrowLeft, Heart, Trash2, Calendar, Gauge, Palette,
+  Eye, ChevronRight, Car, Scale, Search, Sparkles
 } from 'lucide-react';
 import { getFavorites, removeFavorite, subscribeFavorites } from '../data/favoritesManager';
 import { showcaseCars } from '../data/showcaseData';
@@ -11,9 +11,28 @@ import { mockCars } from '../data/mockData';
 import { getNewCars } from '../data/newCarsManager';
 import { getVehicleImageUrl, handleVehicleImageError } from '../utils/imageHelper';
 import ErrorBoundary from '../components/common/ErrorBoundary';
+import AutomatchLogo from '../components/ui/AutomatchLogo';
+import GlowButton from '../components/ui/GlowButton';
 
 // Code-Splitting: Comparador carregado sob demanda
 const VehicleComparatorModal = React.lazy(() => import('../components/vehicle/VehicleComparatorModal'));
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 24 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.16, 1, 0.3, 1] } }
+};
+
+const formatPrice = (val) => {
+  if (val === undefined || val === null || val === '') return '';
+  const num = typeof val === 'number' ? val : Number(String(val).replace(/[^0-9.-]+/g, ''));
+  return isNaN(num) || num <= 0 ? '' : `R$ ${num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+};
+
+const formatMileage = (val) => {
+  if (val === undefined || val === null) return '0 km';
+  if (typeof val === 'number') return `${val.toLocaleString('pt-BR')} km`;
+  return String(val);
+};
 
 export default function FavoritesPage() {
   const navigate = useNavigate();
@@ -53,8 +72,8 @@ export default function FavoritesPage() {
   const favoriteCars = favoriteIds.map(id => {
     // 1. Check showcaseData
     let car = showcaseCars.find(c => String(c.id) === String(id));
-    if (car) return { 
-      ...car, 
+    if (car) return {
+      ...car,
       source: 'showcase',
       fipePrice: car.fipePrice || car.price * 1.05,
       laudoStatus: car.laudoStatus || 'Aprovado 100%',
@@ -64,37 +83,37 @@ export default function FavoritesPage() {
     // 2. Check mockData
     const mock = mockCars.find(c => String(c.id) === String(id));
     if (mock) return {
-      id: mock.id, 
-      name: `${mock.brand} ${mock.model}`, 
+      id: mock.id,
+      name: `${mock.brand} ${mock.model}`,
       brand: mock.brand,
       model: mock.model,
-      year: mock.year, 
-      price: mock.price, 
+      year: mock.year,
+      price: mock.price,
       mileage: mock.mileage,
       image: mock.images?.[0] || '/images/placeholder-carro.jpg',
-      bodyType: mock.metadata?.bodyType || 'Sedã', 
+      bodyType: mock.metadata?.bodyType || 'Seda',
       fuel: mock.metadata?.fuel || 'Flex',
-      transmission: mock.metadata?.transmission || 'Automático',
+      transmission: mock.metadata?.transmission || 'Automatico',
       fipePrice: mock.fipePrice || (mock.price ? mock.price * 1.04 : null),
       laudoStatus: mock.laudoStatus || 'Aprovado 100%',
-      detranStatus: mock.detranStatus || 'Sem Pendências',
+      detranStatus: mock.detranStatus || 'Sem Pendencias',
       source: 'mock'
     };
 
     // 3. Check localStorage (user-created)
     const local = getNewCars().find(c => String(c.id) === String(id));
     if (local) return {
-      id: local.id, 
-      name: `${local.marca} ${local.modelo}`, 
+      id: local.id,
+      name: `${local.marca} ${local.modelo}`,
       brand: local.marca,
       model: local.modelo,
-      year: local.ano, 
-      price: local.preco, 
+      year: local.ano,
+      price: local.preco,
       mileage: local.km || 0,
       image: local.imagem || '/images/placeholder-carro.jpg',
-      bodyType: 'Particular', 
+      bodyType: 'Particular',
       fuel: 'Flex',
-      transmission: 'Automático',
+      transmission: 'Automatico',
       fipePrice: local.preco ? local.preco * 1.03 : null,
       laudoStatus: 'Aprovado 100%',
       detranStatus: 'Regularizado',
@@ -114,10 +133,10 @@ export default function FavoritesPage() {
       image: dbCar.image || '/images/placeholder-carro.jpg',
       bodyType: dbCar.body_type || 'Particular',
       fuel: dbCar.fuel || 'Flex',
-      transmission: dbCar.transmission || 'Automático',
+      transmission: dbCar.transmission || 'Automatico',
       fipePrice: dbCar.price ? dbCar.price * 1.04 : null,
       laudoStatus: 'Aprovado 100%',
-      detranStatus: 'Sem Pendências',
+      detranStatus: 'Sem Pendencias',
       source: 'database'
     };
 
@@ -145,35 +164,30 @@ export default function FavoritesPage() {
   const vehiclesToCompare = favoriteCars.filter(c => selectedForCompare.includes(c.id));
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans">
+    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans">
       {/* Header */}
-      <nav className="w-full px-6 py-4 bg-slate-900/98 border-b border-slate-800 sticky top-0 z-50 shadow-md">
+      <nav className="w-full px-6 py-4 bg-white/90 backdrop-blur-md border-b border-slate-100 sticky top-0 z-50 shadow-sm">
         <div className="max-w-5xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-800 rounded-full text-slate-400 hover:text-white transition-colors">
+            <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-100 rounded-full text-slate-500 hover:text-slate-800 transition-colors" aria-label="Voltar">
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
-              <ShieldCheck className="w-8 h-8 text-blue-500" />
-              <span className="text-xl font-black tracking-tight text-white uppercase italic">
-                Automatch
-              </span>
-            </div>
+            <AutomatchLogo size="md" onClick={() => navigate('/')} />
           </div>
           <div className="flex items-center gap-3">
             {favoriteCars.length >= 2 && (
               <button
                 onClick={() => setIsComparatorOpen(true)}
-                className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-xs shadow-lg shadow-blue-900/30 transition-all"
+                className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-200 transition-all active:scale-95"
               >
                 <Scale className="w-4 h-4" />
-                <span>Comparar Veículos ({selectedForCompare.length > 0 ? selectedForCompare.length : '2'})</span>
+                <span>Comparar Veiculos ({selectedForCompare.length > 0 ? selectedForCompare.length : '2'})</span>
               </button>
             )}
-            <div className="flex items-center gap-2 text-sm text-slate-400">
-              <Heart className="w-5 h-5 text-red-400 fill-red-400" />
-              <span className="font-bold text-white">{favoriteCars.length}</span>
-              <span className="hidden sm:inline">curtido(s)</span>
+            <div className="flex items-center gap-2 text-sm text-slate-500 bg-red-50 border border-red-100 px-3 py-1.5 rounded-full">
+              <Heart className="w-4 h-4 text-red-400 fill-red-400" />
+              <span className="font-bold text-red-600">{favoriteCars.length}</span>
+              <span className="hidden sm:inline text-red-500 text-xs font-medium">curtido(s)</span>
             </div>
           </div>
         </div>
@@ -181,20 +195,27 @@ export default function FavoritesPage() {
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
         {/* Breadcrumbs */}
-        <div className="flex items-center gap-2 text-xs text-slate-500 mb-6 font-medium">
-          <button onClick={() => navigate('/')} className="hover:text-blue-400">Início</button>
+        <div className="flex items-center gap-2 text-xs text-slate-400 mb-6 font-medium">
+          <button onClick={() => navigate('/')} className="hover:text-blue-600 transition-colors">Inicio</button>
           <ChevronRight className="w-3.5 h-3.5" />
-          <span className="text-slate-300 font-bold">Carros Curtidos</span>
+          <span className="text-slate-700 font-bold">Carros Curtidos</span>
         </div>
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8"
+        >
           <div>
-            <h1 className="text-3xl font-black text-white mb-2 flex items-center gap-3">
-              <Heart className="w-8 h-8 text-red-400 fill-red-400" />
+            <h1 className="text-3xl font-black text-slate-800 mb-2 flex items-center gap-3 tracking-tight">
+              <div className="w-10 h-10 rounded-xl bg-red-50 border border-red-100 flex items-center justify-center">
+                <Heart className="w-5 h-5 text-red-500 fill-red-500" />
+              </div>
               Meus Carros Curtidos
             </h1>
-            <p className="text-slate-400 text-sm">
-              Os veículos que você marcou como favoritos aparecem aqui para acompanhamento e comparação técnica.
+            <p className="text-slate-500 text-sm font-light">
+              Os veiculos que voce marcou como favoritos aparecem aqui para acompanhamento e comparacao tecnica.
             </p>
           </div>
 
@@ -203,67 +224,77 @@ export default function FavoritesPage() {
             <div className="sm:hidden">
               <button
                 onClick={() => setIsComparatorOpen(true)}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold text-xs shadow-lg"
+                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-md shadow-blue-200 transition-all active:scale-95"
               >
                 <Scale className="w-4 h-4" />
-                <span>Comparar Veículos Selecionados</span>
+                <span>Comparar Veiculos Selecionados</span>
               </button>
             </div>
           )}
-        </div>
+        </motion.div>
 
-        {/* Barra de Seleção do Comparador (quando há 2 ou mais carros curtidos) */}
+        {/* Barra de Selecao do Comparador */}
         {favoriteCars.length >= 2 && (
-          <div className="mb-6 p-4 rounded-2xl bg-blue-950/30 border border-blue-800/40 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div className="flex items-center gap-3 text-xs text-blue-300">
-              <Scale className="w-5 h-5 text-blue-400 shrink-0" />
-              <span>
-                Selecione de 2 a 3 veículos para confrontar preços FIPE, laudos cautelares, quilometragem anual e dados do DETRAN.
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.1 }}
+            className="mb-6 p-4 rounded-2xl bg-blue-50 border border-blue-200/80 flex flex-col sm:flex-row items-center justify-between gap-3"
+          >
+            <div className="flex items-center gap-3 text-xs text-blue-700">
+              <div className="w-9 h-9 rounded-xl bg-blue-100 border border-blue-200 flex items-center justify-center shrink-0">
+                <Scale className="w-4.5 h-4.5 text-blue-600" />
+              </div>
+              <span className="font-medium">
+                Selecione de 2 a 3 veiculos para confrontar precos FIPE, laudos cautelares, quilometragem anual e dados do DETRAN.
               </span>
             </div>
             <button
               onClick={() => setIsComparatorOpen(true)}
-              className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md transition-all whitespace-nowrap"
+              className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm transition-all whitespace-nowrap active:scale-95"
             >
               Abrir Comparador ({selectedForCompare.length || 2} selecionados)
             </button>
-          </div>
+          </motion.div>
         )}
 
         {favoriteCars.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center">
-            <div className="p-6 bg-slate-900 rounded-full mb-6 border border-slate-800">
-              <Heart className="w-12 h-12 text-slate-600" />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5 }}
+            className="flex flex-col items-center justify-center py-24 text-center"
+          >
+            <div className="p-6 bg-white rounded-3xl mb-6 border border-slate-200 shadow-card">
+              <Heart className="w-14 h-14 text-slate-300" />
             </div>
-            <h2 className="text-xl font-bold text-white mb-2">Nenhum carro curtido ainda</h2>
-            <p className="text-slate-400 text-sm mb-6 max-w-md">
-              Explore nossa vitrine e clique no ícone de coração nos veículos que gostar para salvá-los aqui.
+            <h2 className="text-xl font-bold text-slate-800 mb-2">Nenhum carro curtido ainda</h2>
+            <p className="text-slate-500 text-sm mb-8 max-w-md font-light leading-relaxed">
+              Explore nossa vitrine e clique no icone de coracao nos veiculos que gostar para salva-los aqui.
             </p>
-            <button
-              onClick={() => navigate('/encontrar')}
-              className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl font-bold text-sm transition-all"
-            >
+            <GlowButton onClick={() => navigate('/encontrar')} size="lg" icon={Search}>
               Explorar Vitrine
-            </button>
-          </div>
+            </GlowButton>
+          </motion.div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <AnimatePresence>
-              {favoriteCars.map((car) => {
+              {favoriteCars.map((car, index) => {
                 const isSelected = selectedForCompare.includes(car.id);
                 return (
                   <motion.div
                     key={car.id}
                     layout
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
+                    initial={{ opacity: 0, y: 25 }}
+                    animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, scale: 0.9 }}
-                    className={`bg-slate-900 rounded-2xl border overflow-hidden shadow-xl transition-all group relative ${
-                      isSelected ? 'border-blue-500 ring-1 ring-blue-500/50' : 'border-slate-800 hover:border-slate-700'
+                    transition={{ duration: 0.35, delay: index * 0.06, ease: [0.16, 1, 0.3, 1] }}
+                    className={`bg-white rounded-2xl border overflow-hidden shadow-card hover:shadow-card-hover hover:-translate-y-1 transition-all duration-300 group relative flex flex-col ${
+                      isSelected ? 'border-blue-400 ring-2 ring-blue-200' : 'border-slate-200/80'
                     }`}
                   >
                     {/* Image */}
-                    <div className="relative aspect-[16/10] overflow-hidden bg-slate-900">
+                    <div className="relative aspect-[16/10] overflow-hidden bg-slate-100">
                       <img
                         src={getVehicleImageUrl(car.image)}
                         alt={car.name}
@@ -272,58 +303,66 @@ export default function FavoritesPage() {
                         onError={handleVehicleImageError}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       />
-                      
-                      {/* Botão de Seleção para Comparação */}
+
+                      {/* Botao de Selecao para Comparacao */}
                       {favoriteCars.length >= 2 && (
                         <button
                           onClick={() => toggleSelectForCompare(car.id)}
-                          className={`absolute top-3 left-3 px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-md ${
-                            isSelected 
-                              ? 'bg-blue-600 text-white border border-blue-400' 
-                              : 'bg-slate-950/90 text-slate-300 hover:text-white border border-slate-700'
+                          className={`absolute top-3 left-3 px-2.5 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all shadow-sm ${
+                            isSelected
+                              ? 'bg-blue-600 text-white border border-blue-400'
+                              : 'bg-white/95 text-slate-600 hover:text-blue-600 border border-slate-200/80'
                           }`}
-                          title="Selecionar para comparação"
+                          title="Selecionar para comparacao"
                         >
                           <Scale className="w-3.5 h-3.5" />
                           <span>{isSelected ? 'Comparando' : 'Comparar'}</span>
                         </button>
                       )}
 
-                      {/* Botão de Remover */}
+                      {/* Botao de Remover */}
                       <button
                         onClick={() => handleRemove(car.id)}
-                        className="absolute top-3 right-3 p-2 bg-slate-950/90 rounded-full text-red-400 hover:bg-red-500 hover:text-white transition-all border border-slate-700 shadow-sm"
+                        className="absolute top-3 right-3 p-2 bg-white/95 rounded-full text-slate-400 hover:bg-red-50 hover:text-red-500 transition-all border border-slate-200/60 shadow-sm"
                         title="Remover dos favoritos"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
-
-                      {car.bodyType && !favoriteCars.length && (
-                        <span className="absolute bottom-3 left-3 text-[10px] font-black uppercase bg-blue-600 text-white px-2.5 py-1 rounded-lg shadow-lg">
-                          {car.bodyType}
-                        </span>
-                      )}
                     </div>
 
                     {/* Info */}
-                    <div className="p-4 space-y-3">
+                    <div className="p-4 space-y-3 flex-1 flex flex-col">
                       <div>
-                        <h3 className="font-bold text-white text-sm truncate">{car.name}</h3>
-                        <div className="flex items-center gap-3 text-[11px] text-slate-400 mt-1">
+                        <h3 className="font-bold text-slate-800 text-base truncate group-hover:text-blue-600 transition-colors" title={car.name}>{car.name}</h3>
+                        <div className="flex items-center gap-3 text-[11px] text-slate-500 mt-1 font-medium">
                           <span className="flex items-center gap-1"><Calendar className="w-3 h-3" />{car.year}</span>
-                          <span className="flex items-center gap-1"><Gauge className="w-3 h-3" />{typeof car.mileage === 'number' ? car.mileage.toLocaleString('pt-BR') + ' km' : car.mileage}</span>
+                          <span className="flex items-center gap-1"><Gauge className="w-3 h-3" />{formatMileage(car.mileage)}</span>
                         </div>
                       </div>
-                      <div className="flex items-center justify-between pt-1 border-t border-slate-800/60">
-                        <p className="text-lg font-black text-white">
-                          R$ {typeof car.price === 'number' ? car.price.toLocaleString('pt-BR') : car.price}
-                        </p>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="bg-slate-50 rounded-lg px-2 py-1.5 text-center border border-slate-100">
+                          <p className="text-[10px] text-slate-400 font-medium">Combustivel</p>
+                          <p className="text-[11px] font-bold text-slate-700">{car.fuel || 'Flex'}</p>
+                        </div>
+                        <div className="bg-slate-50 rounded-lg px-2 py-1.5 text-center border border-slate-100">
+                          <p className="text-[10px] text-slate-400 font-medium">Cambio</p>
+                          <p className="text-[11px] font-bold text-slate-700">{car.transmission || 'Automatico'}</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between pt-2 border-t border-slate-100 mt-auto">
+                        {formatPrice(car.price) && (
+                          <p className="text-lg font-black text-blue-600">
+                            {formatPrice(car.price)}
+                          </p>
+                        )}
                         <button
                           onClick={() => navigate(`/encontrar/${car.id}`)}
-                          className="bg-blue-600 hover:bg-blue-500 text-white px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all"
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all active:scale-95 shadow-sm shadow-blue-200"
                         >
                           <Eye className="w-3.5 h-3.5" />
-                          Ver Anúncio
+                          Ver Anuncio
                         </button>
                       </div>
                     </div>
@@ -341,8 +380,8 @@ export default function FavoritesPage() {
           <ErrorBoundary
             isOpen={isComparatorOpen}
             resetKey={isComparatorOpen ? 'open' : 'closed'}
-            title="Comparador Multidimensional Indisponível"
-            description="Não foi possível inicializar o comparador para os veículos curtidos. Tente novamente ou desmarque algum veículo."
+            title="Comparador Multidimensional Indisponivel"
+            description="Nao foi possivel inicializar o comparador para os veiculos curtidos. Tente novamente ou desmarque algum veiculo."
             onClose={() => setIsComparatorOpen(false)}
           >
             <VehicleComparatorModal

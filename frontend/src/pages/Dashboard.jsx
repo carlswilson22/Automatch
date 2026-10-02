@@ -7,7 +7,6 @@ import {
   LayoutGrid, 
   List, 
   ArrowLeft,
-  Filter,
   TrendingUp,
   Package,
   FileText,
@@ -19,7 +18,10 @@ import {
   AlertCircle,
   X,
   BarChart3,
-  Sparkles
+  Sparkles,
+  ExternalLink,
+  ShieldCheck,
+  Building2
 } from 'lucide-react';
 import B2BRepassePanel from '../components/inventory/B2BRepassePanel';
 import { useNavigate } from 'react-router-dom';
@@ -35,8 +37,11 @@ import StoreIdentifier from '../components/ui/StoreIdentifier';
 import AssetConfigurationModal from '../components/inventory/AssetConfigurationModal';
 import { getVehicleImageUrl, handleVehicleImageError } from '../utils/imageHelper';
 import useScrollLock from '../utils/useScrollLock';
+import SpotlightCard from '../components/ui/microkit/SpotlightCard';
+import GlowButton from '../components/ui/microkit/GlowButton';
+import WipeButton from '../components/ui/microkit/WipeButton';
 
-// Code-Splitting: PartnershipHubModal carregado sob demanda (economiza 50.5 kB na montagem inicial)
+// Code-Splitting: PartnershipHubModal e AIStudioModal carregados sob demanda
 const PartnershipHubModal = React.lazy(() => import('../components/partners/PartnershipHubModal'));
 const AIStudioModal = React.lazy(() => import('../components/inventory/AIStudioModal'));
 
@@ -183,73 +188,90 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
+    <div className="min-h-screen bg-slate-50/70 text-slate-800 flex flex-col font-sans pb-16 relative overflow-hidden">
       {/* Top Header */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-40 px-6 py-4">
+      <header className="bg-white/85 backdrop-blur-xl border-b border-slate-200/80 sticky top-0 z-40 px-4 sm:px-6 py-4 shadow-sm">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3.5">
             <button 
               onClick={() => navigate('/')}
-              className="p-2 hover:bg-slate-100 rounded-full transition-colors text-slate-600 cursor-pointer"
+              className="p-2 hover:bg-slate-100 rounded-2xl transition-colors text-slate-600 cursor-pointer active:scale-95 border border-slate-200/60"
+              aria-label="Voltar para o início"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div>
-              <h1 className="text-xl font-black text-slate-800 tracking-tight">Gestão de Ativos</h1>
-              <p className="text-xs text-slate-400 font-medium">B2B Dashboard • {selectedStoreId ? (stores.find(s => s.id === selectedStoreId)?.name || 'Unidade') : 'Visão Geral'}</p>
+              <div className="flex items-center gap-2">
+                <h1 className="text-xl font-black text-slate-900 tracking-tight">Gestão de Ativos</h1>
+                <span className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200/60">
+                  B2B
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 font-medium">
+                {selectedStoreId ? (stores.find(s => s.id === selectedStoreId)?.name || 'Unidade Selecionada') : 'Visão Consolidada Multi-Lojas'}
+              </p>
             </div>
           </div>
           
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full sm:w-auto sm:min-w-[420px]">
-            <div className="flex-1 min-w-[160px]">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 w-full md:w-auto">
+            <div className="min-w-[170px]">
               <StoreSelector selectedStoreId={selectedStoreId} onSelect={setSelectedStoreId} />
             </div>
-            <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+            
+            <div className="relative min-w-[210px] flex-1">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
               <input 
                 type="text" 
-                placeholder="Buscar por modelo ou placa..." 
+                placeholder="Buscar modelo ou placa..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-slate-100 border-none rounded-xl pl-10 pr-4 py-2.5 text-sm focus:ring-2 focus:ring-brand-blue/20 outline-none transition-all font-medium"
+                className="w-full bg-slate-100/90 border border-slate-200/60 rounded-2xl pl-10 pr-4 py-2.5 text-xs sm:text-sm font-medium text-slate-800 placeholder:text-slate-400 focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all"
               />
             </div>
 
-            <button
-              onClick={() => setIsB2BModalOpen(true)}
-              className="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-md shadow-blue-500/20 active:scale-95 transition-all whitespace-nowrap cursor-pointer"
-            >
-              <Users className="w-4 h-4" />
-              Rede de Parceiros
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => setIsB2BModalOpen(true)}
+                className="px-3.5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 text-white rounded-2xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-md shadow-blue-500/20 active:scale-95 transition-all whitespace-nowrap cursor-pointer"
+              >
+                <Users className="w-3.5 h-3.5" />
+                <span>Rede B2B</span>
+              </button>
 
-            <button
-              onClick={() => setIsAIStudioOpen(true)}
-              className="px-4 py-2.5 bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-700 hover:to-purple-800 text-white rounded-xl text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-md shadow-violet-500/20 active:scale-95 transition-all whitespace-nowrap cursor-pointer"
-            >
-              <Sparkles className="w-4 h-4" />
-              Estudio IA
-            </button>
+              <button
+                onClick={() => setIsAIStudioOpen(true)}
+                className="px-3.5 py-2.5 bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-700 hover:to-purple-800 text-white rounded-2xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-md shadow-violet-500/20 active:scale-95 transition-all whitespace-nowrap cursor-pointer"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span>Estúdio IA</span>
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto w-full px-6 py-8">
+      <main className="max-w-7xl mx-auto w-full px-4 sm:px-6 py-8">
         {/* Feedback Alert Toast */}
         <AnimatePresence>
           {feedbackToast && (
             <motion.div
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className={`mb-6 p-4 rounded-2xl border flex items-center justify-between gap-3 text-sm font-bold shadow-md ${
-                feedbackToast.type === 'success' 
-                  ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
-                  : 'bg-blue-50 text-blue-800 border-blue-200'
+              initial={{ opacity: 0, y: -10, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.98 }}
+              className={`mb-6 p-4 rounded-2xl border flex items-center justify-between gap-3 text-sm font-bold shadow-lg backdrop-blur-md ${
+                feedbackToast.type === 'error' 
+                  ? 'bg-red-50 text-red-800 border-red-200' 
+                  : feedbackToast.type === 'info'
+                  ? 'bg-slate-900 text-white border-slate-800'
+                  : 'bg-emerald-50 text-emerald-800 border-emerald-200'
               }`}
             >
               <div className="flex items-center gap-2.5">
-                <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                {feedbackToast.type === 'error' ? (
+                  <AlertCircle className="w-5 h-5 text-red-600 shrink-0" />
+                ) : (
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                )}
                 <span>{feedbackToast.message}</span>
               </div>
               <button 
@@ -262,68 +284,107 @@ export default function Dashboard() {
           )}
         </AnimatePresence>
 
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {/* Quick KPI Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8">
           {[
-            { label: 'Total em Estoque', value: stats.totalAssets, icon: Package, color: 'brand-blue' },
-            { label: 'Valor Adensado', value: `R$ ${stats.totalValue.toLocaleString('pt-BR')}`, icon: Banknote, color: 'emerald' },
-            { label: 'Pendências Financ.', value: stats.pendingFinance, icon: FileText, color: 'amber' },
+            { 
+              label: 'Total em Estoque', 
+              value: `${stats.totalAssets} ${stats.totalAssets === 1 ? 'veículo' : 'veículos'}`, 
+              icon: Package, 
+              color: 'text-blue-600',
+              bg: 'bg-blue-50',
+              border: 'border-blue-100',
+              sub: 'Pátio consolidado'
+            },
+            { 
+              label: 'Valor Adensado', 
+              value: `R$ ${stats.totalValue.toLocaleString('pt-BR')}`, 
+              icon: Banknote, 
+              color: 'text-emerald-600',
+              bg: 'bg-emerald-50',
+              border: 'border-emerald-100',
+              sub: 'Patrimônio em vitrine'
+            },
+            { 
+              label: 'Pendências Financeiras', 
+              value: `${stats.pendingFinance} pendentes`, 
+              icon: FileText, 
+              color: 'text-amber-600',
+              bg: 'bg-amber-50',
+              border: 'border-amber-100',
+              sub: 'Em regularização'
+            },
           ].map((stat, i) => (
-            <motion.div 
+            <SpotlightCard 
               key={i}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-4"
+              className="p-5 sm:p-6 flex items-center gap-4"
             >
-              <div className={`w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center`}>
-                <stat.icon className={`w-6 h-6 text-brand-blue`} />
+              <div className={`w-13 h-13 rounded-2xl ${stat.bg} ${stat.border} border flex items-center justify-center shrink-0 ${stat.color}`}>
+                <stat.icon className="w-6 h-6" />
               </div>
               <div>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{stat.label}</p>
-                <p className="text-xl font-black text-slate-800">{stat.value}</p>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-wider">{stat.label}</p>
+                <p className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight leading-tight mt-0.5">{stat.value}</p>
+                <p className="text-[11px] text-slate-500 font-medium">{stat.sub}</p>
               </div>
-            </motion.div>
+            </SpotlightCard>
           ))}
         </div>
 
-        {/* Dashboard Tab Toggle */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="bg-white border border-slate-200 rounded-2xl flex overflow-hidden shadow-sm">
+        {/* Dashboard Tab Toggle & View Mode */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 mb-6">
+          <div className="bg-white p-1 rounded-2xl border border-slate-200/80 shadow-sm flex">
             <button
               onClick={() => setDashboardTab('inventory')}
-              className={`px-5 py-2.5 text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
-                dashboardTab === 'inventory' ? 'bg-brand-blue text-white' : 'text-slate-500 hover:bg-slate-50'
+              className={`px-5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
+                dashboardTab === 'inventory' 
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' 
+                  : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
               }`}
             >
-              <Package className="w-3.5 h-3.5" /> Inventario
+              <Package className="w-3.5 h-3.5" /> 
+              <span>Inventário Ativo</span>
             </button>
             <button
               onClick={() => setDashboardTab('b2b-radar')}
-              className={`px-5 py-2.5 text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
-                dashboardTab === 'b2b-radar' ? 'bg-brand-blue text-white' : 'text-slate-500 hover:bg-slate-50'
+              className={`px-5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
+                dashboardTab === 'b2b-radar' 
+                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20' 
+                  : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
               }`}
             >
-              <BarChart3 className="w-3.5 h-3.5" /> Radar B2B
+              <BarChart3 className="w-3.5 h-3.5" /> 
+              <span>Radar B2B</span>
             </button>
           </div>
 
           {dashboardTab === 'inventory' && (
-            <div className="bg-white border border-slate-200 rounded-xl flex overflow-hidden">
-              <button 
-                onClick={() => setViewMode('grid')}
-                className={`px-3 py-2 text-sm transition-colors cursor-pointer ${viewMode === 'grid' ? 'bg-brand-blue text-white' : 'text-slate-500 hover:bg-slate-50'}`}
-                title="Visualizacao em Grade"
-              >
-                <LayoutGrid className="w-4 h-4" />
-              </button>
-              <button 
-                onClick={() => setViewMode('list')}
-                className={`px-3 py-2 text-sm transition-colors cursor-pointer ${viewMode === 'list' ? 'bg-brand-blue text-white' : 'text-slate-500 hover:bg-slate-50'}`}
-                title="Visualizacao em Lista"
-              >
-                <List className="w-4 h-4" />
-              </button>
+            <div className="flex items-center gap-2 self-end sm:self-auto">
+              <span className="text-xs text-slate-400 font-medium hidden sm:inline">Exibição:</span>
+              <div className="bg-white p-1 rounded-2xl border border-slate-200/80 shadow-sm flex">
+                <button 
+                  onClick={() => setViewMode('grid')}
+                  className={`p-2 rounded-xl transition-all cursor-pointer ${
+                    viewMode === 'grid' 
+                      ? 'bg-blue-600 text-white shadow-sm' 
+                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
+                  title="Visualização em Grade"
+                >
+                  <LayoutGrid className="w-4 h-4" />
+                </button>
+                <button 
+                  onClick={() => setViewMode('list')}
+                  className={`p-2 rounded-xl transition-all cursor-pointer ${
+                    viewMode === 'list' 
+                      ? 'bg-blue-600 text-white shadow-sm' 
+                      : 'text-slate-500 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
+                  title="Visualização em Lista"
+                >
+                  <List className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           )}
         </div>
@@ -341,222 +402,236 @@ export default function Dashboard() {
           </motion.div>
         )}
 
-        {/* Inventory Header (only in inventory tab) */}
-        {dashboardTab === 'inventory' && (
-          <h2 className="text-lg font-bold text-slate-800 mb-4">Inventario Disponivel</h2>
-        )}
-
         {/* Inventory View */}
         {dashboardTab === 'inventory' && (
-        <DashboardErrorBoundary>
-        <AnimatePresence mode="wait">
-          {viewMode === 'grid' ? (
-            <motion.div 
-              key="grid"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
-            >
-              {paginatedInventory.map((item, idx) => {
-                const store = stores.find(s => s.id === item.storeId);
-                return (
-                  <motion.div
-                    key={item.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.05 }}
-                    className="bg-white rounded-2xl overflow-hidden border border-slate-200 hover:shadow-lg transition-all group relative flex flex-col justify-between"
-                  >
-                    {/* Store Color Accent */}
-                    <div 
-                      className="absolute top-0 left-0 bottom-0 w-1 z-10" 
-                      style={{ backgroundColor: store?.color_theme || '#2563eb' }}
-                    />
-                    
-                    <div>
-                      <div className="aspect-[16/9] overflow-hidden bg-slate-100 relative">
-                        <img 
-                          src={getVehicleImageUrl(item.image || item.imagem || 'placeholder-carro.jpg')} 
-                          alt={`${item.brand} ${item.model}`}
-                          loading="lazy"
-                          onError={handleVehicleImageError}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+          <DashboardErrorBoundary>
+            <AnimatePresence mode="wait">
+              {viewMode === 'grid' ? (
+                <motion.div 
+                  key="grid"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+                >
+                  {paginatedInventory.map((item, idx) => {
+                    const store = stores.find(s => s.id === item.storeId);
+                    return (
+                      <motion.div
+                        key={item.id}
+                        initial={{ opacity: 0, y: 15 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.04 }}
+                        className="bg-white rounded-3xl overflow-hidden border border-slate-200/90 hover:shadow-xl hover:shadow-slate-900/5 transition-all duration-300 group relative flex flex-col justify-between"
+                      >
+                        {/* Store Color Accent */}
+                        <div 
+                          className="absolute top-0 left-0 bottom-0 w-1.5 z-10" 
+                          style={{ backgroundColor: store?.color_theme || '#2563eb' }}
                         />
                         
-                        {/* Floating Badge */}
-                        <div className="absolute top-3 right-3 z-20">
-                          <StoreIdentifier storeId={item.storeId} variant="badge" />
-                        </div>
-                      </div>
-                      
-                      <div className="p-5">
-                        <div className="flex justify-between items-start mb-3">
-                          <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-1 rounded-md uppercase border border-slate-200 font-mono">
-                            {item.plate}
-                          </span>
-                          {item.operational_status && (
-                            <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                              item.operational_status === 'available' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
-                              item.operational_status === 'negotiation' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
-                              item.operational_status === 'reserved' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' :
-                              'bg-slate-100 text-slate-600'
-                            }`}>
-                              {item.operational_status === 'available' ? 'Disponível' :
-                               item.operational_status === 'negotiation' ? 'Negociação' :
-                               item.operational_status === 'reserved' ? 'Reservado' : 'Vendido'}
-                            </span>
-                          )}
-                        </div>
-                        
-                        <h3 className="text-lg font-bold text-slate-800 leading-tight mb-1">{item.brand} {item.model}</h3>
-                        <p className="text-2xl font-black text-brand-blue mb-4">
-                          R$ {Number(item.sale_value).toLocaleString('pt-BR')}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="px-5 pb-5 pt-0">
-                      <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-                        <div className="flex items-center gap-1.5">
-                          <div className={`w-2 h-2 rounded-full ${item.financial_status === 'paid' ? 'bg-emerald-500' : item.financial_status === 'pending' ? 'bg-amber-500' : 'bg-blue-500'}`} />
-                          <span className="text-xs font-bold text-slate-500 uppercase tracking-tight">
-                            {item.financial_status === 'paid' ? 'Quitado' : item.financial_status === 'pending' ? 'Pendente' : 'Financiado'}
-                          </span>
-                        </div>
-                        <button 
-                          onClick={() => handleOpenConfigureAsset(item)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-brand-blue text-brand-blue hover:text-white rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95 cursor-pointer"
-                          title="Gestão de Ativos - Configurar este veículo"
-                        >
-                          <Sliders className="w-3.5 h-3.5" />
-                          Gestão de Ativos
-                        </button>
-                      </div>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </motion.div>
-          ) : (
-            <motion.div 
-              key="list"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm"
-            >
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="bg-slate-50 border-b border-slate-200">
-                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Ativo</th>
-                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Unidade</th>
-                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Placa</th>
-                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Valor Sugerido</th>
-                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Status</th>
-                      <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {paginatedInventory.map((item) => {
-                      return (
-                        <tr key={item.id} className="border-b border-slate-100 hover:bg-slate-50/50 transition-colors">
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-3">
-                              <div className="w-10 h-10 rounded-lg overflow-hidden shrink-0 border border-slate-200 bg-slate-100">
-                                <img 
-                                  src={getVehicleImageUrl(item.image || item.imagem || 'placeholder-carro.jpg')} 
-                                  alt="" 
-                                  loading="lazy"
-                                  onError={handleVehicleImageError}
-                                  className="w-full h-full object-cover" 
-                                />
-                              </div>
-                              <span className="font-bold text-slate-700">{item.brand} {item.model}</span>
+                        <div>
+                          {/* Image Container */}
+                          <div className="aspect-[16/10] overflow-hidden bg-slate-950 relative">
+                            <img 
+                              src={getVehicleImageUrl(item.image || item.imagem || 'placeholder-carro.jpg')} 
+                              alt={`${item.brand} ${item.model}`}
+                              loading="lazy"
+                              onError={handleVehicleImageError}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" 
+                            />
+                            
+                            {/* Floating Store Badge */}
+                            <div className="absolute top-3 right-3 z-20">
+                              <StoreIdentifier storeId={item.storeId} variant="badge" />
                             </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <StoreIdentifier storeId={item.storeId} className="scale-90 origin-left" />
-                          </td>
-                          <td className="px-6 py-4 text-xs font-mono font-bold text-slate-600">{item.plate}</td>
-                          <td className="px-6 py-4 font-black text-slate-800">R$ {Number(item.sale_value).toLocaleString('pt-BR')}</td>
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-1.5">
-                              <div className={`w-2 h-2 rounded-full ${item.financial_status === 'paid' ? 'bg-emerald-500' : item.financial_status === 'pending' ? 'bg-amber-500' : 'bg-blue-500'}`} />
-                              <span className="text-[10px] font-bold text-slate-500 uppercase">
-                                {item.financial_status === 'paid' ? 'Quitado' : item.financial_status === 'pending' ? 'Pendente' : 'Financiado'}
+
+                            <div className="absolute bottom-2 left-4 z-20">
+                              <span className="text-[10px] font-black text-white bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10 font-mono tracking-wider">
+                                {item.plate}
                               </span>
                             </div>
-                          </td>
-                          <td className="px-6 py-4 text-right">
+                          </div>
+                          
+                          <div className="p-5">
+                            <div className="flex justify-between items-center mb-2.5">
+                              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                                {item.brand}
+                              </span>
+
+                              {item.operational_status && (
+                                <span className={`text-[10px] font-bold uppercase tracking-wider px-2.5 py-0.5 rounded-full ${
+                                  item.operational_status === 'available' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' :
+                                  item.operational_status === 'negotiation' ? 'bg-amber-50 text-amber-700 border border-amber-200' :
+                                  item.operational_status === 'reserved' ? 'bg-indigo-50 text-indigo-700 border border-indigo-200' :
+                                  'bg-slate-100 text-slate-600'
+                                }`}>
+                                  {item.operational_status === 'available' ? 'Disponível' :
+                                   item.operational_status === 'negotiation' ? 'Negociação' :
+                                   item.operational_status === 'reserved' ? 'Reservado' : 'Vendido'}
+                                </span>
+                              )}
+                            </div>
+                            
+                            <h3 className="text-lg font-black text-slate-900 leading-snug tracking-tight mb-2 truncate">
+                              {item.model}
+                            </h3>
+
+                            <p className="text-2xl font-black text-blue-600 tracking-tight">
+                              R$ {Number(item.sale_value).toLocaleString('pt-BR')}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="px-5 pb-5 pt-0">
+                          <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                            <div className="flex items-center gap-1.5">
+                              <div className={`w-2 h-2 rounded-full ${
+                                item.financial_status === 'paid' ? 'bg-emerald-500' : 
+                                item.financial_status === 'pending' ? 'bg-amber-500' : 'bg-blue-500'
+                              }`} />
+                              <span className="text-xs font-bold text-slate-500 uppercase tracking-tight">
+                                {item.financial_status === 'paid' ? 'Quitado' : 
+                                 item.financial_status === 'pending' ? 'Pendente' : 'Financiado'}
+                              </span>
+                            </div>
+                            
                             <button 
                               onClick={() => handleOpenConfigureAsset(item)}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 hover:bg-brand-blue text-brand-blue hover:text-white rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95 cursor-pointer"
-                              title="Gestão de Ativos - Configurar este veículo"
+                              className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 hover:bg-blue-600 hover:text-white text-slate-700 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95 cursor-pointer"
+                              title="Configurar ativo e precificação"
                             >
                               <Sliders className="w-3.5 h-3.5" />
-                              Gestão de Ativos
+                              <span>Configurar</span>
                             </button>
-                          </td>
+                          </div>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </motion.div>
+              ) : (
+                <motion.div 
+                  key="list"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="bg-white border border-slate-200/90 rounded-3xl overflow-hidden shadow-sm"
+                >
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="bg-slate-50/80 border-b border-slate-200/80">
+                          <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Ativo</th>
+                          <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Unidade</th>
+                          <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Placa</th>
+                          <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Valor Sugerido</th>
+                          <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400">Status</th>
+                          <th className="px-6 py-4 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Ações</th>
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-        
-        {/* Pagination Bar */}
-        {filteredInventory.length > itemsPerPage && (
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white border border-slate-200 rounded-2xl px-6 py-4 shadow-sm">
-            <p className="text-xs font-medium text-slate-500">
-              Mostrando <span className="font-bold text-slate-700">{(currentPage - 1) * itemsPerPage + 1}</span> a <span className="font-bold text-slate-700">{Math.min(currentPage * itemsPerPage, filteredInventory.length)}</span> de <span className="font-bold text-slate-700">{filteredInventory.length}</span> ativos
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                disabled={currentPage === 1}
-                aria-label="Página anterior"
-                className="p-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <div className="flex items-center gap-1">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
+                      </thead>
+                      <tbody>
+                        {paginatedInventory.map((item) => (
+                          <tr key={item.id} className="border-b border-slate-100 hover:bg-slate-50/70 transition-colors">
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-3">
+                                <div className="w-12 h-9 rounded-xl overflow-hidden shrink-0 border border-slate-200 bg-slate-900">
+                                  <img 
+                                    src={getVehicleImageUrl(item.image || item.imagem || 'placeholder-carro.jpg')} 
+                                    alt="" 
+                                    loading="lazy"
+                                    onError={handleVehicleImageError}
+                                    className="w-full h-full object-cover" 
+                                  />
+                                </div>
+                                <span className="font-bold text-slate-900">{item.brand} {item.model}</span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <StoreIdentifier storeId={item.storeId} className="scale-90 origin-left" />
+                            </td>
+                            <td className="px-6 py-4 text-xs font-mono font-bold text-slate-600">{item.plate}</td>
+                            <td className="px-6 py-4 font-black text-blue-600">R$ {Number(item.sale_value).toLocaleString('pt-BR')}</td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-1.5">
+                                <div className={`w-2 h-2 rounded-full ${
+                                  item.financial_status === 'paid' ? 'bg-emerald-500' : 
+                                  item.financial_status === 'pending' ? 'bg-amber-500' : 'bg-blue-500'
+                                }`} />
+                                <span className="text-[10px] font-bold text-slate-600 uppercase">
+                                  {item.financial_status === 'paid' ? 'Quitado' : 
+                                   item.financial_status === 'pending' ? 'Pendente' : 'Financiado'}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4 text-right">
+                              <button 
+                                onClick={() => handleOpenConfigureAsset(item)}
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-blue-600 hover:text-white text-slate-700 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95 cursor-pointer"
+                                title="Configurar ativo"
+                              >
+                                <Sliders className="w-3.5 h-3.5" />
+                                <span>Configurar</span>
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+            
+            {/* Pagination Bar */}
+            {filteredInventory.length > itemsPerPage && (
+              <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 bg-white border border-slate-200/90 rounded-2xl px-6 py-4 shadow-sm">
+                <p className="text-xs font-medium text-slate-500">
+                  Mostrando <span className="font-bold text-slate-800">{(currentPage - 1) * itemsPerPage + 1}</span> a <span className="font-bold text-slate-800">{Math.min(currentPage * itemsPerPage, filteredInventory.length)}</span> de <span className="font-bold text-slate-800">{filteredInventory.length}</span> ativos
+                </p>
+                <div className="flex items-center gap-2">
                   <button
-                    key={pageNum}
-                    onClick={() => setCurrentPage(pageNum)}
-                    className={`w-8 h-8 rounded-xl text-xs font-bold transition-all ${
-                      currentPage === pageNum
-                        ? 'bg-brand-blue text-white shadow-sm'
-                        : 'text-slate-600 hover:bg-slate-100'
-                    }`}
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                    aria-label="Página anterior"
+                    className="p-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
                   >
-                    {pageNum}
+                    <ChevronLeft className="w-4 h-4" />
                   </button>
-                ))}
+                  <div className="flex items-center gap-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(pageNum => (
+                      <button
+                        key={pageNum}
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`w-8 h-8 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                          currentPage === pageNum
+                            ? 'bg-blue-600 text-white shadow-sm'
+                            : 'text-slate-600 hover:bg-slate-100'
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                    aria-label="Próxima página"
+                    className="p-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all cursor-pointer"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
-              <button
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages}
-                aria-label="Próxima página"
-                className="p-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        )}
-        </DashboardErrorBoundary>
+            )}
+          </DashboardErrorBoundary>
         )}
 
         {dashboardTab === 'inventory' && filteredInventory.length === 0 && (
           <div className="py-20 flex flex-col items-center justify-center text-slate-400">
-             <Car className="w-12 h-12 mb-4 opacity-20" />
-             <p className="font-medium">Nenhum ativo encontrado para esta unidade.</p>
+            <Car className="w-12 h-12 mb-3 opacity-20" />
+            <p className="font-bold text-slate-600">Nenhum ativo localizado com os filtros aplicados.</p>
+            <p className="text-xs text-slate-400 mt-1">Tente alterar a unidade selecionada ou o termo de busca.</p>
           </div>
         )}
       </main>
@@ -590,7 +665,8 @@ export default function Dashboard() {
           />
         )}
       </React.Suspense>
-      {/* Toast de Feedback */}
+      
+      {/* Floating Feedback Toast */}
       <AnimatePresence>
         {feedbackToast && (
           <motion.div
@@ -601,7 +677,7 @@ export default function Dashboard() {
               feedbackToast.type === 'error'
                 ? 'bg-red-600 text-white border-red-500 shadow-red-500/20'
                 : feedbackToast.type === 'info'
-                ? 'bg-slate-800 text-white border-slate-700 shadow-slate-900/30'
+                ? 'bg-slate-900 text-white border-slate-800 shadow-slate-900/30'
                 : 'bg-emerald-600 text-white border-emerald-500 shadow-emerald-500/20'
             }`}
           >

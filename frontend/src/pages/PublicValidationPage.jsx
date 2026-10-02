@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { useParams, Link, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ShieldCheck, 
   CheckCircle2, 
@@ -13,11 +13,19 @@ import {
   ArrowLeft, 
   Loader2, 
   ExternalLink, 
-  Lock 
+  Lock,
+  QrCode,
+  ShieldAlert,
+  Sparkles,
+  Calendar,
+  CheckCheck
 } from 'lucide-react';
+import AutomatchLogo from '../components/ui/microkit/AutomatchLogo';
+import SpotlightCard from '../components/ui/microkit/SpotlightCard';
 
 export default function PublicValidationPage() {
   const { protocolo } = useParams();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState(null);
   const [error, setError] = useState(null);
@@ -82,108 +90,143 @@ export default function PublicValidationPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-hidden selection:bg-cyan-500 selection:text-slate-950">
-      {/* Luz de fundo decorativa */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-gradient-to-b from-cyan-500/15 via-blue-500/5 to-transparent blur-3xl pointer-events-none" />
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-hidden selection:bg-cyan-500 selection:text-slate-950 font-sans">
+      {/* Background Ambient Lighting */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[700px] h-[400px] bg-gradient-to-b from-cyan-500/15 via-blue-600/10 to-transparent blur-3xl pointer-events-none -z-0" />
+      <div className="absolute bottom-0 right-1/4 w-[450px] h-[350px] bg-emerald-500/5 rounded-full blur-3xl pointer-events-none -z-0" />
 
-      {/* Barra superior de navegação */}
+      {/* Top Navigation Bar */}
       <div className="w-full max-w-2xl flex items-center justify-between mb-6 z-10">
         <Link 
           to="/"
-          className="inline-flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors bg-slate-900/80 px-3.5 py-2 rounded-xl border border-slate-800"
+          className="group inline-flex items-center gap-2 text-xs font-bold text-slate-400 hover:text-white transition-colors bg-slate-900/80 px-4 py-2 rounded-2xl border border-slate-800 backdrop-blur-md active:scale-95"
         >
-          <ArrowLeft className="w-4 h-4" /> Voltar ao Início
+          <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-0.5" />
+          <span>Voltar ao Início</span>
         </Link>
-        <span className="text-xs font-bold tracking-widest text-cyan-400 uppercase">
-          Automatch™ Autenticidade
-        </span>
+        
+        <div className="flex items-center gap-2">
+          <AutomatchLogo isDark={true} size="sm" showText={false} />
+          <span className="text-[11px] font-black tracking-widest text-cyan-400 uppercase">
+            Autenticidade Notarial
+          </span>
+        </div>
       </div>
 
-      {/* Conteúdo Principal */}
+      {/* Main Container */}
       <div className="w-full max-w-2xl z-10">
         {loading ? (
-          <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-12 text-center shadow-2xl flex flex-col items-center justify-center">
-            <Loader2 className="w-10 h-10 text-cyan-400 animate-spin mb-4" />
-            <h3 className="text-base font-bold text-white mb-1">Consultando Base Notarial Digital...</h3>
-            <p className="text-xs text-slate-400">Verificando autenticidade do protocolo #{protocolo}</p>
+          <div className="bg-slate-900/90 border border-slate-800 rounded-3xl p-12 text-center shadow-2xl backdrop-blur-xl flex flex-col items-center justify-center">
+            <div className="relative mb-4">
+              <div className="w-14 h-14 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center">
+                <Loader2 className="w-7 h-7 text-cyan-400 animate-spin" />
+              </div>
+            </div>
+            <h3 className="text-base font-black text-white tracking-tight mb-1">
+              Consultando Base Notarial Digital...
+            </h3>
+            <p className="text-xs text-slate-400">
+              Validando assinatura criptográfica e chave do protocolo #{protocolo}
+            </p>
           </div>
         ) : error ? (
-          <div className="bg-slate-900/90 border border-red-500/30 rounded-3xl p-8 text-center shadow-2xl">
+          <div className="bg-slate-900/90 border border-red-500/30 rounded-3xl p-8 sm:p-10 text-center shadow-2xl backdrop-blur-xl">
             <div className="w-14 h-14 rounded-2xl bg-red-500/10 text-red-400 flex items-center justify-center mx-auto mb-4 border border-red-500/20">
-              <AlertCircle className="w-8 h-8" />
+              <ShieldAlert className="w-7 h-7" />
             </div>
-            <h3 className="text-lg font-bold text-white mb-2">Protocolo Não Encontrado</h3>
-            <p className="text-sm text-slate-400 mb-6 max-w-md mx-auto">{error}</p>
+            <h3 className="text-xl font-black text-white uppercase tracking-tight mb-2">
+              Protocolo Não Localizado
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-400 mb-6 max-w-md mx-auto leading-relaxed">
+              {error} Certifique-se de que o código digitado ou escaneado no QR Code está correto.
+            </p>
             <Link
               to="/"
-              className="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white font-semibold text-xs px-5 py-2.5 rounded-xl transition-colors border border-slate-700"
+              className="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs uppercase tracking-wider px-5 py-3 rounded-2xl transition-all border border-slate-700 active:scale-95"
             >
-              Ir para a Página Principal
+              <ArrowLeft className="w-4 h-4" />
+              <span>Ir para a Página Principal</span>
             </Link>
           </div>
         ) : (
           <motion.div
-            initial={{ opacity: 0, scale: 0.96 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.4 }}
+            initial={{ opacity: 0, scale: 0.96, y: 10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.35 }}
             className="bg-slate-900/95 border border-slate-800/90 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl relative overflow-hidden"
           >
-            {/* Faixa decorativa superior */}
-            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-cyan-500 to-blue-600" />
+            {/* Top Multi-tone Gradient Border */}
+            <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-cyan-400 to-blue-600" />
 
-            {/* Cabeçalho do Certificado */}
+            {/* Certificate Header */}
             <div className="text-center pb-6 border-b border-slate-800/80 mb-6">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold tracking-wide uppercase mb-3">
-                <CheckCircle2 className="w-4 h-4" /> Certidão Autêntica Registrada
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold tracking-wide uppercase mb-3 backdrop-blur-sm">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                <span>Certidão Autêntica Registrada</span>
               </div>
+              
               <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
                 Validação de Laudo Cautelar
               </h2>
+              
               <p className="text-xs sm:text-sm text-slate-400 mt-1">
-                Autenticado e assinado digitalmente nos servidores Automatch
+                Documento autenticado e assinado digitalmente nos servidores Automatch
               </p>
 
-              {/* Protocolo em destaque */}
-              <div className="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-2xl bg-slate-950 border border-slate-800 text-sm font-mono text-cyan-400 font-bold">
+              {/* Protocol Highlight Box */}
+              <div className="inline-flex items-center gap-2.5 mt-5 px-4 py-2.5 rounded-2xl bg-slate-950 border border-slate-800/80 text-sm font-mono text-cyan-400 font-bold shadow-inner">
+                <Lock className="w-3.5 h-3.5 text-cyan-400/70" />
                 <span>{data.protocolo}</span>
                 <button
                   onClick={copyProtocol}
-                  className="text-slate-400 hover:text-white transition-colors ml-1 p-1 rounded-md"
+                  className="text-slate-400 hover:text-white transition-colors ml-1 p-1 rounded-lg hover:bg-slate-800 cursor-pointer active:scale-90"
                   title="Copiar Protocolo"
                 >
                   {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
                 </button>
               </div>
-              <div className="text-[11px] text-slate-500 mt-2">
-                Data do Registro: <strong className="text-slate-400 font-medium">{data.data_emissao}</strong>
+
+              <div className="text-[11px] text-slate-500 mt-2.5 font-medium flex items-center justify-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-slate-500" />
+                <span>Data do Registro:</span>
+                <strong className="text-slate-300 font-semibold">{data.data_emissao}</strong>
               </div>
             </div>
 
             {/* 1. Dados do Veículo */}
-            <div className="space-y-4 mb-6">
-              <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                <Car className="w-4 h-4 text-cyan-400" /> Dados Cadastrais do Veículo
+            <div className="space-y-3.5 mb-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                  <Car className="w-4 h-4 text-cyan-400" />
+                  <span>Dados Cadastrais do Veículo</span>
+                </div>
+                <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                  Verificado
+                </span>
               </div>
+
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                <div className="bg-slate-950/70 p-3 rounded-xl border border-slate-800/80">
-                  <span className="text-[11px] text-slate-500 block">Marca / Fabricante</span>
+                <div className="bg-slate-950/70 p-3.5 rounded-2xl border border-slate-800/80">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-0.5">Marca / Fabricante</span>
                   <span className="text-sm font-bold text-white">{data.veiculo?.marca}</span>
                 </div>
-                <div className="bg-slate-950/70 p-3 rounded-xl border border-slate-800/80">
-                  <span className="text-[11px] text-slate-500 block">Modelo</span>
-                  <span className="text-sm font-bold text-white truncate block">{data.veiculo?.modelo}</span>
+                <div className="bg-slate-950/70 p-3.5 rounded-2xl border border-slate-800/80">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-0.5">Modelo</span>
+                  <span className="text-sm font-bold text-white truncate block" title={data.veiculo?.modelo}>
+                    {data.veiculo?.modelo}
+                  </span>
                 </div>
-                <div className="bg-slate-950/70 p-3 rounded-xl border border-slate-800/80">
-                  <span className="text-[11px] text-slate-500 block">Ano de Fabricação</span>
+                <div className="bg-slate-950/70 p-3.5 rounded-2xl border border-slate-800/80">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-0.5">Ano Modelo</span>
                   <span className="text-sm font-bold text-white">{data.veiculo?.ano}</span>
                 </div>
-                <div className="bg-slate-950/70 p-3 rounded-xl border border-slate-800/80">
-                  <span className="text-[11px] text-slate-500 block">Placa Registrada</span>
-                  <span className="text-sm font-bold text-emerald-400">{data.veiculo?.placa}</span>
+                <div className="bg-slate-950/70 p-3.5 rounded-2xl border border-slate-800/80">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-0.5">Placa Registrada</span>
+                  <span className="text-sm font-black text-emerald-400 tracking-wider">{data.veiculo?.placa}</span>
                 </div>
-                <div className="bg-slate-950/70 p-3 rounded-xl border border-slate-800/80 sm:col-span-2">
-                  <span className="text-[11px] text-slate-500 block">Chassi (Protegido por LGPD)</span>
-                  <span className="text-sm font-bold text-slate-300 font-mono">{data.veiculo?.chassi_mascarado}</span>
+                <div className="bg-slate-950/70 p-3.5 rounded-2xl border border-slate-800/80 sm:col-span-2">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-0.5">Chassi (Protegido por LGPD)</span>
+                  <span className="text-sm font-bold text-slate-300 font-mono tracking-wider">{data.veiculo?.chassi_mascarado}</span>
                 </div>
               </div>
             </div>
@@ -191,25 +234,28 @@ export default function PublicValidationPage() {
             {/* 2. Dados FIPE & DETRAN */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
               {/* Box FIPE */}
-              <div className="bg-slate-950/70 p-4 rounded-2xl border border-slate-800/80 space-y-2">
+              <div className="bg-slate-950/70 p-4 rounded-2xl border border-slate-800/80 space-y-1.5">
                 <div className="flex items-center gap-2 text-xs font-bold text-blue-400 uppercase tracking-wider">
-                  <Tag className="w-3.5 h-3.5" /> Referência Oficial FIPE
+                  <Tag className="w-3.5 h-3.5" />
+                  <span>Referência Oficial FIPE</span>
                 </div>
                 <div className="text-xl font-black text-white">
                   {data.dados_fipe?.valor_referencia}
                 </div>
                 <div className="text-[11px] text-slate-400">
-                  Código: <strong className="text-slate-300">{data.dados_fipe?.codigo_fipe}</strong>
+                  Código Tabela: <strong className="text-slate-300">{data.dados_fipe?.codigo_fipe}</strong>
                 </div>
               </div>
 
               {/* Box DETRAN */}
-              <div className="bg-slate-950/70 p-4 rounded-2xl border border-slate-800/80 space-y-2">
+              <div className="bg-slate-950/70 p-4 rounded-2xl border border-slate-800/80 space-y-1.5">
                 <div className="flex items-center gap-2 text-xs font-bold text-emerald-400 uppercase tracking-wider">
-                  <ShieldCheck className="w-3.5 h-3.5" /> Certidão DETRAN
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  <span>Certidão DETRAN</span>
                 </div>
-                <div className="text-sm font-bold text-emerald-400">
-                  {data.dados_detran?.situacao_cadastral}
+                <div className="text-sm font-bold text-emerald-400 flex items-center gap-1.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+                  <span>{data.dados_detran?.situacao_cadastral}</span>
                 </div>
                 <div className="text-[11px] text-slate-400">
                   {data.dados_detran?.debitos} • {data.dados_detran?.gravame}
@@ -217,13 +263,13 @@ export default function PublicValidationPage() {
               </div>
             </div>
 
-            {/* Rodapé de Segurança */}
+            {/* Security Footer */}
             <div className="pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-500">
               <div className="flex items-center gap-2">
                 <Lock className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                <span>Documento com carimbo criptográfico oficial</span>
+                <span>Carimbo notarial com integridade criptográfica SHA-256</span>
               </div>
-              <span className="text-[11px] font-mono text-slate-400">
+              <span className="text-[11px] font-mono text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800/60 self-start sm:self-auto">
                 Hash: {data.protocolo?.replace(/-/g, '').toLowerCase()}...9f2a
               </span>
             </div>

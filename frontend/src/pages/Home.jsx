@@ -1,19 +1,18 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+﻿import React, { useRef, useState, useEffect } from 'react';
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
-  ShieldCheck, Search, ChevronRight, CheckCircle2,
-  Zap, LogIn, UserPlus, Heart, Calendar,
-  Gauge, Palette, Eye, MapPin, MessageSquare, X, Send, TrendingDown, Star
+  Search, ChevronRight, CheckCircle2,
+  Zap, LogIn, Heart, MessageSquare, TrendingDown, Star,
+  ArrowDown, Sparkles, Car, ScanLine
 } from 'lucide-react';
-
-// CONTEXTOS E DADOS
 import { useAuth } from '../contexts/AuthContext';
 import { stores } from '../data/inventoryData';
 import StoreIdentifier from '../components/ui/StoreIdentifier';
 import AutomatchLogo from '../components/ui/AutomatchLogo';
 import GlowButton from '../components/ui/GlowButton';
 import WipeButton from '../components/ui/WipeButton';
+import SpotlightCard from '../components/ui/microkit/SpotlightCard';
 import { getNewCars } from '../data/newCarsManager';
 import { toggleFavorite, isFavorite } from '../data/favoritesManager';
 import { getVehicleImageUrl, handleVehicleImageError } from '../utils/imageHelper';
@@ -24,463 +23,234 @@ export const formatPrice = (val) => {
   return isNaN(num) || num <= 0 ? '' : `R$ ${num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
-
-// SE O CARCARD ESTIVER EM OUTRO ARQUIVO, DESCOMENTE A LINHA ABAIXO:
-// import CarCard from '../components/CarCard';
-
 const HomeSupportChat = React.lazy(() => import('../components/chat/HomeSupportChat'));
 
 const showcaseCars = [
-  {
-    id: 'sc-001',
-    name: 'Toyota Corolla Cross XRX',
-    year: 2024,
-    price: 185000,
-    color: 'Branco Pérola',
-    mileage: '12.000 km',
-    image: '/images/FotoCorollaCross.jpg',
-    bodyType: 'SUV',
-    description: 'SUV híbrido flex, pacote de segurança completo e teto solar.',
-    tags: ['Híbrido Flex', 'Teto Solar', 'Safety Sense'],
-    featured: true,
-    storeId: 'store-1',
-  },
-  {
-    id: 'sc-002',
-    name: 'Volkswagen Polo TSI',
-    year: 2023,
-    price: 98000,
-    color: 'Vermelho',
-    mileage: '18.500 km',
-    image: '/images/FotoPoloTSI.jpg',
-    bodyType: 'Hatch',
-    description: 'Hatch potente e econômico com painel digital.',
-    tags: ['1.0 Turbo', 'Painel Digital', 'VW Play'],
-    featured: false,
-    storeId: 'store-2',
-  },
-  {
-    id: 'sc-003',
-    name: 'Hyundai HB20 Platinum',
-    year: 2024,
-    price: 105000,
-    color: 'Prata',
-    mileage: '5.000 km',
-    image: '/images/FotoHyundaiHB20.jpg',
-    bodyType: 'Hatch',
-    description: 'Design renovado, excelente acabamento e conectividade avançada.',
-    tags: ['SmartSense', 'Câmera de Ré', 'Único Dono'],
-    featured: true,
-    storeId: 'store-3',
-  },
-  {
-    id: 'sc-004',
-    name: 'Chevrolet Tracker Premier',
-    year: 2024,
-    price: 152000,
-    color: 'Azul Escuro',
-    mileage: '8.500 km',
-    image: "/images/FotoChevroletTracker.jpg",
-    bodyType: 'SUV',
-    description: 'SUV urbano mais completo da categoria com teto solar panorâmico.',
-    tags: ['1.2 Turbo', 'Teto Panorâmico', 'Wi-Fi'],
-    featured: false,
-    storeId: 'store-1',
-  },
-  {
-    id: 'sc-005',
-    name: 'Fiat Pulse Abarth',
-    year: 2024,
-    price: 145000,
-    color: 'Vermelho',
-    mileage: '3.200 km',
-    image: '/images/FotoFiatPulse.jpg',
-    bodyType: 'SUV',
-    description: 'O primeiro SUV Abarth do mundo, performance esportiva e design exclusivo.',
-    tags: ['Abarth', 'Turbo 270', 'Esportivo'],
-    featured: true,
-    storeId: 'store-2',
-  },
+  { id: 'sc-001', name: 'Toyota Corolla Cross XRX', year: 2024, price: 185000, color: 'Branco Perola', mileage: '12.000 km', image: '/images/FotoCorollaCross.jpg', bodyType: 'SUV', description: 'SUV hibrido flex, pacote de seguranca completo e teto solar.', tags: ['Hibrido Flex', 'Teto Solar', 'Safety Sense'], featured: true, storeId: 'store-1' },
+  { id: 'sc-002', name: 'Volkswagen Polo TSI', year: 2023, price: 98000, color: 'Vermelho', mileage: '18.500 km', image: '/images/FotoPoloTSI.jpg', bodyType: 'Hatch', description: 'Hatch potente e economico com painel digital.', tags: ['1.0 Turbo', 'Painel Digital', 'VW Play'], featured: false, storeId: 'store-2' },
+  { id: 'sc-003', name: 'Hyundai HB20 Platinum', year: 2024, price: 105000, color: 'Prata', mileage: '5.000 km', image: '/images/FotoHyundaiHB20.jpg', bodyType: 'Hatch', description: 'Design renovado, excelente acabamento e conectividade avancada.', tags: ['SmartSense', 'Camera de Re', 'Unico Dono'], featured: true, storeId: 'store-3' },
+  { id: 'sc-004', name: 'Chevrolet Tracker Premier', year: 2024, price: 152000, color: 'Azul Escuro', mileage: '8.500 km', image: '/images/FotoChevroletTracker.jpg', bodyType: 'SUV', description: 'SUV urbano mais completo da categoria com teto solar panoramico.', tags: ['1.2 Turbo', 'Teto Panoramico', 'Wi-Fi'], featured: false, storeId: 'store-1' },
+  { id: 'sc-005', name: 'Fiat Pulse Abarth', year: 2024, price: 145000, color: 'Vermelho', mileage: '3.200 km', image: '/images/FotoFiatPulse.jpg', bodyType: 'SUV', description: 'O primeiro SUV Abarth do mundo, performance esportiva e design exclusivo.', tags: ['Abarth', 'Turbo 270', 'Esportivo'], featured: true, storeId: 'store-2' },
 ];
 
-const CarCard = ({ car, index }) => {
+const staggerContainer = { hidden: {}, show: { transition: { staggerChildren: 0.08, delayChildren: 0.1 } } };
+const fadeUp = { hidden: { opacity: 0, y: 28 }, show: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } } };
+const fadeIn = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { duration: 0.6, ease: 'easeOut' } } };
+
+const HomeCarCard = ({ car }) => {
   const navigate = useNavigate();
   const [fav, setFav] = useState(() => isFavorite(car.id));
-
-  // Função para navegar evitando repetição de código
-  const handleDetails = (e) => {
-    e?.stopPropagation();
-    navigate(`/encontrar/${car.id}`);
-  };
-
-  const handleFavorite = (e) => {
-    e.stopPropagation();
-    const updated = toggleFavorite(car.id);
-    setFav(updated.includes(car.id));
-  };
-
+  const handleDetails = (e) => { e?.stopPropagation(); navigate(`/encontrar/${car.id}`); };
+  const handleFavorite = (e) => { e.stopPropagation(); const updated = toggleFavorite(car.id); setFav(updated.includes(car.id)); };
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 25 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-40px' }}
-      transition={{ duration: 0.35, delay: index * 0.06, ease: [0.16, 1, 0.3, 1] }}
-      className="bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-card hover:shadow-card-hover hover:-translate-y-1 transition-all duration-300 group cursor-pointer flex flex-col h-full"
-      onClick={handleDetails}
-    >
-      {/* Image Container */}
+    <motion.div variants={fadeUp} className="bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-card hover:shadow-card-hover hover:-translate-y-1 transition-all duration-300 group cursor-pointer flex flex-col h-full" onClick={handleDetails}>
       <div className="relative aspect-[16/10] overflow-hidden bg-slate-900">
-        <img
-          src={getVehicleImageUrl(car.image || 'placeholder-carro.jpg')}
-          alt={car.name}
-          onError={handleVehicleImageError}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-          loading="lazy"
-          decoding="async"
-        />
-
-        {/* Badges - Organizados para não sobrepor */}
+        <img src={getVehicleImageUrl(car.image || 'placeholder-carro.jpg')} alt={car.name} onError={handleVehicleImageError} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" loading="lazy" decoding="async" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
         <div className="absolute top-3 left-3 right-3 flex justify-between items-start z-20">
-          {/* Identificador da Loja */}
           <StoreIdentifier storeId={car.storeId} variant="badge" />
-
-          {/* Wishlist */}
-          <motion.button
-            whileTap={{ scale: 0.85 }}
-            className={`w-9 h-9 rounded-full border border-slate-200/60 flex items-center justify-center transition-all shadow-sm ${
-              fav ? 'bg-red-50 text-red-500' : 'bg-white/95 text-slate-500 hover:bg-white hover:text-red-500'
-            }`}
-            title={fav ? "Remover dos favoritos" : "Curtir veículo"}
-            onClick={handleFavorite}
-          >
+          <motion.button whileTap={{ scale: 0.85 }} className={`w-9 h-9 rounded-full border border-slate-200/60 flex items-center justify-center transition-all shadow-sm ${fav ? 'bg-red-50 text-red-500' : 'bg-white/95 text-slate-500 hover:bg-white hover:text-red-500'}`} title={fav ? 'Remover dos favoritos' : 'Curtir veiculo'} onClick={handleFavorite}>
             <Heart className={`w-4 h-4 transition-all duration-200 ${fav ? 'fill-red-500 text-red-500 scale-110' : 'hover:scale-110'}`} />
           </motion.button>
         </div>
-
       </div>
-
-      {/* Content */}
       <div className="p-4 flex-1 flex flex-col">
         <div className="mb-2">
           <div className="flex items-center justify-between gap-2 flex-wrap sm:flex-nowrap">
             <div className="flex items-center gap-1.5 min-w-0 flex-1">
-              <h3 
-                className="text-lg font-bold text-slate-800 leading-tight group-hover:text-blue-600 transition-colors truncate"
-                title={car.name}
-              >
-                {car.name}
-              </h3>
-              {car.featured && (
-                <span title="Destaque" aria-label="Veículo em Destaque" className="inline-flex items-center shrink-0">
-                  <Star className="w-4 h-4 text-amber-500 fill-amber-500 shrink-0" />
-                </span>
-              )}
+              <h3 className="text-lg font-bold text-slate-800 leading-tight group-hover:text-blue-600 transition-colors truncate" title={car.name}>{car.name}</h3>
+              {car.featured && <span title="Destaque" aria-label="Veiculo em Destaque" className="inline-flex items-center shrink-0"><Star className="w-4 h-4 text-amber-500 fill-amber-500 shrink-0" /></span>}
             </div>
-            {formatPrice(car.price) && (
-              <span className="text-lg font-black text-brand-blue whitespace-nowrap shrink-0">
-                {formatPrice(car.price)}
-              </span>
-            )}
+            {formatPrice(car.price) && <span className="text-lg font-black text-brand-blue whitespace-nowrap shrink-0">{formatPrice(car.price)}</span>}
           </div>
-          <p className="text-xs text-slate-500 font-medium mt-1 uppercase tracking-wider">
-            {car.bodyType}
-          </p>
+          <p className="text-xs text-slate-500 font-medium mt-1 uppercase tracking-wider">{car.bodyType}</p>
         </div>
-
-        {/* Quick Specs Grid */}
         <div className="grid grid-cols-3 gap-2 my-4">
-          <div className="bg-slate-50 rounded-lg px-1 py-2 text-center border border-slate-100 hover:bg-white hover:border-blue-200 transition-colors">
-            <Calendar className="w-3.5 h-3.5 text-blue-500 mx-auto mb-1" />
-            <p className="text-[11px] font-bold text-slate-700">{car.year}</p>
-          </div>
-          <div className="bg-slate-50 rounded-lg px-1 py-2 text-center border border-slate-100 hover:bg-white hover:border-blue-200 transition-colors">
-            <Gauge className="w-3.5 h-3.5 text-blue-500 mx-auto mb-1" />
-            <p className="text-[11px] font-bold text-slate-700 truncate">{car.mileage}</p>
-          </div>
-          <div className="bg-slate-50 rounded-lg px-1 py-2 text-center border border-slate-100 hover:bg-white hover:border-blue-200 transition-colors">
-            <Palette className="w-3.5 h-3.5 text-blue-500 mx-auto mb-1" />
-            <p className="text-[11px] font-bold text-slate-700 truncate">{car.color}</p>
-          </div>
-        </div>
-
-        <p className="text-sm text-slate-600 leading-snug mb-4 line-clamp-2 italic">
-          "{car.description}"
-        </p>
-
-        {/* Tags */}
-        <div className="flex flex-wrap gap-1.5 mt-auto mb-4">
-          {car.tags?.map((tag) => (
-            <span
-              key={`${car.id}-${tag}`}
-              className="text-[9px] font-bold text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full uppercase"
-            >
-              {tag}
-            </span>
+          {[{ label: car.year, icon: '📅' }, { label: car.mileage, icon: '🛣️' }, { label: car.color, icon: '🎨' }].map(({ label, icon }, i) => (
+            <div key={i} className="bg-slate-50 rounded-lg px-1 py-2 text-center border border-slate-100 hover:bg-white hover:border-blue-200 transition-colors">
+              <span className="text-sm block mb-0.5">{icon}</span>
+              <p className="text-[11px] font-bold text-slate-700 truncate">{label}</p>
+            </div>
           ))}
         </div>
-
-        {/* CTA Buttons */}
-        <div className="flex gap-2">
-          <button
-            onClick={handleDetails}
-            className="flex-[4] py-3 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-2 shadow-md shadow-blue-200"
-          >
-            <Eye className="w-4 h-4" />
-            Detalhes
-          </button>
+        <div className="flex flex-wrap gap-1.5 mt-auto mb-4">
+          {car.tags?.map((tag) => <span key={`${car.id}-${tag}`} className="text-[9px] font-bold text-blue-600 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full uppercase">{tag}</span>)}
         </div>
+        <button onClick={handleDetails} className="w-full py-3 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 active:scale-95 transition-all flex items-center justify-center gap-2 shadow-md shadow-blue-200">
+          <Search className="w-4 h-4" />Ver Detalhes
+        </button>
       </div>
     </motion.div>
   );
 };
 
+const FeatureItem = ({ icon, title, description, color, bg, spotlightColor }) => (
+  <SpotlightCard spotlightColor={spotlightColor}>
+    <motion.div variants={fadeUp} className="group h-full">
+      <div className={`w-14 h-14 rounded-2xl ${bg} flex items-center justify-center ${color} mb-6 border border-black/5 shadow-sm group-hover:scale-110 transition-transform duration-300`}>{icon}</div>
+      <h3 className="text-xl font-bold text-slate-900 mb-3 tracking-tight">{title}</h3>
+      <p className="text-slate-600 leading-relaxed font-light">{description}</p>
+    </motion.div>
+  </SpotlightCard>
+);
+
+const stats = [
+  { value: '4.200+', label: 'Veiculos verificados' },
+  { value: '98%', label: 'Satisfacao dos compradores' },
+  { value: '12', label: 'Lojas parceiras' },
+  { value: '< 48h', label: 'Tempo medio de venda' },
+];
+
 const Home = () => {
   const navigate = useNavigate();
   const catalogRef = useRef(null);
+  const heroRef = useRef(null);
   const { user, isAuthenticated } = useAuth();
   const [allCars, setAllCars] = useState(showcaseCars);
-
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const { scrollY } = useScroll();
+  const heroImgY = useTransform(scrollY, [0, 500], [0, 80]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const local = getNewCars();
-    const formatted = local.map(car => ({
-      id: car.id,
-      name: `${car.marca} ${car.modelo}`,
-      year: car.ano,
-      price: car.preco,
-      color: car.cor || 'Não informada',
-      mileage: car.km ? `${Number(car.km).toLocaleString('pt-BR')} km` : '0 km',
-      image: car.imagem || 'https://via.placeholder.com/400x300?text=Sem+Foto',
-      bodyType: 'Novo Anúncio',
-      description: car.descricao || 'Veículo anunciado pelo usuário independente.',
-      tags: [car.transmissao || 'Automático', 'Novidade'],
-      featured: true,
-      storeId: 'particular',
+    const formatted = local.map((car) => ({
+      id: car.id, name: `${car.marca} ${car.modelo}`, year: car.ano, price: car.preco,
+      color: car.cor || 'Nao informada', mileage: car.km ? `${Number(car.km).toLocaleString('pt-BR')} km` : '0 km',
+      image: car.imagem || 'https://via.placeholder.com/400x300?text=Sem+Foto', bodyType: 'Novo Anuncio',
+      description: car.descricao || 'Veiculo anunciado pelo usuario independente.',
+      tags: [car.transmissao || 'Automatico', 'Novidade'], featured: true, storeId: 'particular',
     }));
     setAllCars([...formatted, ...showcaseCars]);
   }, []);
 
-  // Função de Scroll Suave
-  const scrollToCatalog = () => {
-    catalogRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  const scrollToCatalog = () => { catalogRef.current?.scrollIntoView({ behavior: 'smooth' }); };
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
-      {/* Navigation */}
-      <nav className="w-full bg-white border-b border-slate-100 sticky top-0 z-50 shadow-sm">
+      <nav className="w-full bg-white/90 backdrop-blur-md border-b border-slate-100 sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-6">
-            <AutomatchLogo
-              size="md"
-              onClick={() => navigate('/')}
-            />
-
-            <div className="hidden md:flex items-center gap-3 border-l border-slate-200 pl-6 ml-2">
-              <button
-                onClick={() => navigate('/encontrar')}
-                className="text-slate-600 hover:text-blue-600 font-bold text-sm px-3 py-2 transition-colors"
-              >
-                Vitrine Digital
-              </button>
-              <button
-                onClick={() => setIsChatOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 rounded-full text-blue-600 border border-blue-200 bg-transparent hover:bg-blue-50 font-bold text-sm transition-all"
-              >
-                <MessageSquare className="w-4 h-4" />
-                <span>Chat</span>
-              </button>
-              <button onClick={() => navigate('/novo-anuncio')} className="text-blue-600 bg-blue-50 px-4 py-2 rounded-full hover:bg-blue-100 font-bold text-sm transition-all">
-                Vender meu Carro
-              </button>
+            <AutomatchLogo size="md" onClick={() => navigate('/')} />
+            <div className="hidden md:flex items-center gap-1 border-l border-slate-200 pl-6 ml-2">
+              <button onClick={() => navigate('/encontrar')} className="text-slate-600 hover:text-blue-600 font-semibold text-sm px-4 py-2 rounded-lg hover:bg-blue-50 transition-all">Vitrine Digital</button>
+              <button onClick={() => setIsChatOpen(true)} className="flex items-center gap-2 px-4 py-2 rounded-lg text-blue-600 hover:bg-blue-50 font-semibold text-sm transition-all"><MessageSquare className="w-4 h-4" /><span>Chat IA</span></button>
+              <button onClick={() => navigate('/novo-anuncio')} className="flex items-center gap-2 px-4 py-2 rounded-lg text-emerald-700 bg-emerald-50 hover:bg-emerald-100 font-bold text-sm transition-all">Vender meu Carro</button>
             </div>
           </div>
-
           <div className="flex items-center gap-3">
-            <button 
-              onClick={() => {
-                if (!isAuthenticated) {
-                  navigate('/login', { state: { from: { pathname: '/favoritos' } } });
-                } else {
-                  navigate('/favoritos');
-                }
-              }} 
-              className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
-              title="Carros Curtidos"
-            >
-              <Heart className="w-5 h-5" />
-            </button>
+            <button onClick={() => { if (!isAuthenticated) { navigate('/login', { state: { from: { pathname: '/favoritos' } } }); } else { navigate('/favoritos'); } }} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all" title="Carros Curtidos"><Heart className="w-5 h-5" /></button>
             {isAuthenticated ? (
-              <button
-                onClick={() => navigate('/perfil')}
-                className="flex items-center gap-3 px-2 py-1.5 rounded-full border border-slate-100 hover:bg-slate-50 transition-all group shadow-sm"
-              >
+              <button onClick={() => navigate('/perfil')} className="flex items-center gap-3 px-2 py-1.5 rounded-full border border-slate-100 hover:bg-slate-50 transition-all group shadow-sm">
                 <div className="w-8 h-8 rounded-full overflow-hidden border-2 border-white shadow-sm ring-1 ring-slate-100 group-hover:ring-blue-300">
-                  <img
-                    src={user?.photo || `https://api.dicebear.com/7.x/initials/svg?seed=${user?.name || 'User'}`}
-                    alt={user?.name}
-                    className="w-full h-full object-cover"
-                  />
+                  <img src={user?.photo || `https://api.dicebear.com/7.x/initials/svg?seed=${user?.name || 'User'}`} alt={user?.name} className="w-full h-full object-cover" />
                 </div>
-                <span className="text-sm font-bold text-slate-700 pr-2 group-hover:text-blue-600">
-                  {user?.name?.split(' ')[0] || 'Perfil'}
-                </span>
+                <span className="text-sm font-bold text-slate-700 pr-2 group-hover:text-blue-600">{user?.name?.split(' ')[0] || 'Perfil'}</span>
               </button>
             ) : (
-              <button
-                onClick={() => navigate('/login')}
-                className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-bold text-sm transition-all shadow-md shadow-blue-200 active:scale-95"
-              >
-                <LogIn className="w-4 h-4" />
-                <span>Entrar / Cadastrar</span>
-              </button>
+              <button onClick={() => navigate('/login')} className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-full font-bold text-sm transition-all shadow-md shadow-blue-200 active:scale-95"><LogIn className="w-4 h-4" /><span>Entrar / Cadastrar</span></button>
             )}
           </div>
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="relative pt-20 pb-32 overflow-hidden bg-slate-900 flex flex-col justify-center">
-        {/* Background Effects */}
-        <div className="absolute inset-0 z-0">
-          <div className="absolute top-0 right-0 w-3/4 h-full bg-gradient-to-l from-blue-600/20 to-transparent"></div>
-          <div className="absolute top-[30%] left-[-10%] w-[120%] h-[1px] bg-blue-500/30 rotate-[-15deg]"></div>
-          <div className="absolute top-[60%] left-[-10%] w-[120%] h-[1px] bg-emerald-500/20 rotate-[10deg]"></div>
-          <img
-            src="https://images.unsplash.com/photo-1553440569-bcc63803a83d?auto=format&fit=crop&q=80&w=2000"
-            alt="Hero Background"
-            className="w-full h-full object-cover opacity-30 mix-blend-overlay"
-          />
-        </div>
+      <section ref={heroRef} className="relative min-h-[92vh] overflow-hidden bg-slate-900 flex flex-col justify-center">
+        <motion.div style={{ y: heroImgY }} className="absolute inset-0 z-0 scale-110">
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/80 to-blue-950/60 z-10" />
+          <div style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '60px 60px' }} className="absolute inset-0 z-5 opacity-[0.03]" />
+          <img src="https://images.unsplash.com/photo-1553440569-bcc63803a83d?auto=format&fit=crop&q=80&w=2000" alt="Hero Background" className="w-full h-full object-cover opacity-30" />
+        </motion.div>
+        <div className="absolute top-[35%] left-[-5%] w-[60%] h-[1px] bg-gradient-to-r from-transparent via-blue-500/40 to-transparent rotate-[-12deg] z-10" />
+        <div className="absolute top-[60%] right-[-5%] w-[50%] h-[1px] bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent rotate-[8deg] z-10" />
 
-        <div className="max-w-7xl mx-auto px-6 relative z-10 w-full">
-          <div className="max-w-3xl">
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-            >
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm text-emerald-400 font-medium text-sm mb-6">
-                <CheckCircle2 className="w-4 h-4" />
-                <span>100% dos carros com Laudo Cautelar e Histórico</span>
+        <div className="max-w-7xl mx-auto px-6 relative z-20 w-full py-20 md:py-28">
+          <motion.div variants={staggerContainer} initial="hidden" animate="show" className="max-w-3xl">
+            <motion.div variants={fadeUp}>
+              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm text-emerald-400 font-medium text-sm mb-7">
+                <CheckCircle2 className="w-4 h-4" /><span>100% dos carros com Laudo Cautelar e Historico</span>
               </div>
-              <h1 className="text-5xl md:text-7xl font-black text-white leading-tight mb-6 tracking-tight">
-                O Match Perfeito,<br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">Sem Surpresas.</span>
-              </h1>
-              <p className="text-xl text-slate-300 md:w-4/5 mb-10 leading-relaxed font-light">
-                Esqueça o medo de comprar carro usado. A Automatch utiliza inteligência artificial e transparência radical para garantir que seu próximo carro seja exatamente o que você espera.
-              </p>
-
-              <div className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
-                <GlowButton
-                  onClick={() => navigate('/encontrar')}
-                  size="lg"
-                  icon={Search}
-                  className="shadow-xl shadow-blue-900/40"
-                >
-                  <span>Ver Vitrine Digital</span>
-                  <ChevronRight className="w-5 h-5 ml-1" />
-                </GlowButton>
-
-                <WipeButton
-                  onClick={() => navigate('/como-funciona')}
-                  size="lg"
-                  variant="slate"
-                  className="text-white border-white/20 bg-white/5 hover:border-white/40"
-                >
-                  Como funciona?
-                </WipeButton>
-              </div>
-
-              {/* Partners Section */}
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.6, duration: 1 }}
-                className="mt-16"
-              >
-                <p className="text-slate-500 text-[10px] md:text-xs uppercase tracking-[0.2em] font-bold mb-8">
-                  Disponível nas melhores lojas
-                </p>
-                <div className="flex flex-wrap justify-start items-center gap-8 md:gap-12 opacity-70">
-                  {stores?.slice(0, 4).map((store) => (
-                    <div
-                      key={store.id}
-                      className="grayscale hover:grayscale-0 transition-all cursor-pointer"
-                      onClick={() => navigate(`/encontrar?store=${store.id}`)}
-                    >
-                      <span className="text-white font-bold opacity-50 hover:opacity-100 hover:text-blue-400 transition-colors">
-                        {store.name}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </motion.div>
             </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* ====== CATALOG SHOWCASE ====== */}
-      <section ref={catalogRef} id="vitrine" className="bg-slate-100 py-16 px-4 sm:px-6 border-t border-slate-200">
-        <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-12"
-          >
-            <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-full mb-4 border border-blue-200">
-              <Zap className="w-3.5 h-3.5" />
-              Vitrine Digital Automatch
-            </div>
-            <h2 className="text-3xl md:text-4xl font-black text-slate-900 mb-3 tracking-tight">
-              Novos Anúncios e Destaques
-            </h2>
-            <p className="text-slate-500 max-w-2xl mx-auto text-lg font-light">
-              Anúncios verificados com transparência total. Cada veículo possui dossiê completo de procedência.
-            </p>
+            <motion.h1 variants={fadeUp} className="text-5xl md:text-7xl font-black text-white leading-tight mb-6 tracking-tight">
+              O Match Perfeito,<br /><span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">Sem Surpresas.</span>
+            </motion.h1>
+            <motion.p variants={fadeUp} className="text-xl text-slate-300 md:w-4/5 mb-10 leading-relaxed font-light">
+              Esqueca o medo de comprar carro usado. A Automatch utiliza inteligencia artificial e transparencia radical para garantir que seu proximo carro seja exatamente o que voce espera.
+            </motion.p>
+            <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-4 items-stretch sm:items-center">
+              <GlowButton onClick={() => navigate('/encontrar')} size="lg" icon={Search} className="shadow-xl shadow-blue-900/40">
+                <span>Ver Vitrine Digital</span><ChevronRight className="w-5 h-5 ml-1" />
+              </GlowButton>
+              <WipeButton onClick={() => navigate('/como-funciona')} size="lg" variant="slate" className="text-white border-white/20 bg-white/5 hover:border-white/40">
+                Como funciona?
+              </WipeButton>
+            </motion.div>
+            <motion.div variants={fadeIn} className="mt-16">
+              <p className="text-slate-500 text-[10px] md:text-xs uppercase tracking-[0.2em] font-bold mb-6">Disponivel nas melhores lojas</p>
+              <div className="flex flex-wrap justify-start items-center gap-8 md:gap-12">
+                {stores?.slice(0, 4).map((store) => (
+                  <motion.div key={store.id} whileHover={{ scale: 1.05 }} className="cursor-pointer" onClick={() => navigate(`/encontrar?store=${store.id}`)}>
+                    <span className="text-white/40 hover:text-blue-400 font-bold transition-colors text-sm">{store.name}</span>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
           </motion.div>
+        </div>
 
-          {/* Car Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-            {allCars.map((car, index) => (
-              <CarCard key={car.id} car={car} index={index} />
+        <motion.button onClick={scrollToCatalog} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.2, duration: 0.6 }} className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 text-white/40 hover:text-white/70 transition-colors group" aria-label="Rolar para vitrine">
+          <span className="text-xs font-medium uppercase tracking-widest">Explorar</span>
+          <motion.div animate={{ y: [0, 6, 0] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}><ArrowDown className="w-5 h-5" /></motion.div>
+        </motion.button>
+      </section>
+
+      <section className="bg-blue-600 py-6">
+        <div className="max-w-7xl mx-auto px-6">
+          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+            {stats.map((s, i) => (
+              <motion.div key={i} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }}>
+                <p className="text-3xl font-black text-white">{s.value}</p>
+                <p className="text-blue-200 text-xs font-medium mt-1">{s.label}</p>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </div>
       </section>
 
-      {/* Features Grid */}
+      <section ref={catalogRef} id="vitrine" className="bg-slate-100 py-20 px-4 sm:px-6 border-t border-slate-200">
+        <div className="max-w-7xl mx-auto">
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-14">
+            <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-full mb-4 border border-blue-200">
+              <Zap className="w-3.5 h-3.5" />Vitrine Digital Automatch
+            </div>
+            <h2 className="text-3xl md:text-4xl font-black text-slate-900 mb-3 tracking-tight">Novos Anuncios e Destaques</h2>
+            <p className="text-slate-500 max-w-2xl mx-auto text-lg font-light">Anuncios verificados com transparencia total. Cada veiculo possui dossie completo de procedencia.</p>
+          </motion.div>
+          <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-60px' }} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+            {allCars.map((car) => <HomeCarCard key={car.id} car={car} />)}
+          </motion.div>
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mt-12">
+            <button onClick={() => navigate('/encontrar')} className="inline-flex items-center gap-2 px-8 py-4 bg-white border border-slate-200 text-slate-700 rounded-2xl font-bold text-sm hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50 transition-all shadow-sm">
+              <Car className="w-4 h-4" />Ver todos os veiculos<ChevronRight className="w-4 h-4" />
+            </button>
+          </motion.div>
+        </div>
+      </section>
+
       <section className="bg-white py-24 px-6 border-t">
-        <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-12">
-          <FeatureItem
-            icon={<TrendingDown className="w-7 h-7" />}
-            title="Preço FIPE Automatch"
-            description="Nossa inteligência artificial analisa FIPE, quilometragem e estado de conservação para sugerir o preço real."
-            color="text-blue-600"
-            bg="bg-blue-50"
-          />
-          <FeatureItem
-            icon={<CheckCircle2 className="w-7 h-7" />}
-            title="Dossiê de Procedência"
-            description="Laudo cautelar, histórico de multas e leilão comparados com nossa vistoria técnica rigorosa."
-            color="text-emerald-600"
-            bg="bg-emerald-50"
-          />
-          <FeatureItem
-            icon={<Search className="w-7 h-7" />}
-            title="IA Damage Scanner"
-            description="Nossa inteligência identifica danos na lataria por visão computacional e precifica reparos na hora."
-            color="text-slate-700"
-            bg="bg-slate-100"
-          />
+        <div className="max-w-7xl mx-auto">
+          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-14">
+            <div className="inline-flex items-center gap-2 bg-slate-100 text-slate-600 text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-full mb-4 border border-slate-200">
+              <Sparkles className="w-3.5 h-3.5" />Por que Automatch?
+            </div>
+            <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">Tecnologia a seu favor</h2>
+          </motion.div>
+          <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-60px' }} className="grid md:grid-cols-3 gap-8">
+            <FeatureItem icon={<TrendingDown className="w-7 h-7" />} title="Preco FIPE Automatch" description="Nossa inteligencia artificial analisa FIPE, quilometragem e estado de conservacao para sugerir o preco real." color="text-blue-600" bg="bg-blue-50" spotlightColor="rgba(59,130,246,0.12)" />
+            <FeatureItem icon={<CheckCircle2 className="w-7 h-7" />} title="Dossie de Procedencia" description="Laudo cautelar, historico de multas e leilao comparados com nossa vistoria tecnica rigorosa." color="text-emerald-600" bg="bg-emerald-50" spotlightColor="rgba(16,185,129,0.12)" />
+            <FeatureItem icon={<ScanLine className="w-7 h-7" />} title="IA Damage Scanner" description="Nossa inteligencia identifica danos na lataria por visao computacional e precifica reparos na hora." color="text-slate-700" bg="bg-slate-100" spotlightColor="rgba(100,116,139,0.10)" />
+          </motion.div>
         </div>
       </section>
 
-      {/* Asynchronous Non-blocking Chat Modal */}
       {isChatOpen && (
         <React.Suspense fallback={null}>
           <HomeSupportChat isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
@@ -489,21 +259,5 @@ const Home = () => {
     </div>
   );
 };
-
-// Componente auxiliar para as Features
-const FeatureItem = ({ icon, title, description, color, bg }) => (
-  <motion.div
-    initial={{ opacity: 0, y: 20 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true }}
-    className="group"
-  >
-    <div className={`w-14 h-14 rounded-2xl ${bg} flex items-center justify-center ${color} mb-6 border border-black/5 shadow-sm group-hover:scale-110 transition-transform`}>
-      {icon}
-    </div>
-    <h3 className="text-xl font-bold text-slate-900 mb-3 tracking-tight">{title}</h3>
-    <p className="text-slate-600 leading-relaxed font-light">{description}</p>
-  </motion.div>
-);
 
 export default Home;

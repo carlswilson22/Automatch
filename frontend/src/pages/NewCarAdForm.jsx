@@ -6,6 +6,7 @@ import { stores as defaultStores } from '../data/inventoryData';
 import { addNewCar } from '../data/newCarsManager';
 import LaudoFeedbackCard from '../components/vehicle/LaudoFeedbackCard';
 import { useAuth } from '../contexts/AuthContext';
+import AutomatchLogo from '../components/ui/microkit/AutomatchLogo';
 
 // Compressor inteligente via HTML5 Canvas para mitigar QuotaExceededError no localStorage
 const compressImageToJpeg = (file, maxDimension = 1200, quality = 0.82) => {
@@ -575,23 +576,35 @@ const NewCarAdForm = () => {
       initial={{ opacity: 0 }} 
       animate={{ opacity: 1 }} 
       exit={{ opacity: 0 }}
-      className="min-h-screen bg-slate-50 flex flex-col"
+      className="min-h-screen bg-slate-50/70 text-slate-800 flex flex-col font-sans relative overflow-hidden"
     >
+      {/* Background Ambient Accents */}
+      <div className="absolute top-0 right-1/4 w-[600px] h-[350px] bg-blue-500/5 rounded-full blur-3xl pointer-events-none -z-10" />
+
       {/* Header */}
-      <nav className="w-full px-6 py-4 flex justify-between items-center bg-white border-b border-slate-100 sticky top-0 z-40">
+      <nav className="w-full px-4 sm:px-6 py-4 flex justify-between items-center bg-white/85 backdrop-blur-xl border-b border-slate-200/80 sticky top-0 z-40 shadow-sm">
         <div className="flex items-center gap-4">
-          <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-100 rounded-full text-slate-600 transition-colors">
-            <ArrowLeft className="w-6 h-6" />
+          <button 
+            onClick={() => navigate(-1)} 
+            className="p-2 hover:bg-slate-100 rounded-2xl text-slate-600 transition-colors border border-slate-200/60 cursor-pointer active:scale-95"
+            aria-label="Voltar"
+          >
+            <ArrowLeft className="w-5 h-5" />
           </button>
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate('/')}>
-            <ShieldCheck className="w-8 h-8 text-blue-600" />
-            <span className="text-xl font-black tracking-tight text-slate-800 hidden sm:block">AUTOMATCH</span>
+          <div className="cursor-pointer" onClick={() => navigate('/')}>
+            <AutomatchLogo size="md" />
           </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold text-slate-400 bg-slate-100 px-3 py-1 rounded-full border border-slate-200/60">
+            Modo Criação
+          </span>
         </div>
       </nav>
 
-      <div className="flex-1 max-w-4xl mx-auto w-full px-4 py-10">
-        <div className="bg-white rounded-2xl shadow-lg border border-slate-200 p-6 sm:p-10 relative overflow-hidden">
+      <div className="flex-1 max-w-4xl mx-auto w-full px-4 py-10 relative z-10">
+        <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/40 border border-slate-200/90 p-6 sm:p-10 relative overflow-hidden">
           
           <AnimatePresence>
             {status === 'success' && createdCar && (
