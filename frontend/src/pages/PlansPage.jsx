@@ -54,7 +54,7 @@ export default function PlansPage() {
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div className="cursor-pointer" onClick={() => navigate('/')}>
-              <AutomatchLogo isDark={true} size="md" />
+              <AutomatchLogo theme="light" size="md" />
             </div>
           </div>
 

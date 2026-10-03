@@ -28,7 +28,10 @@ export default {
       transitionTimingFunction: {
         'smooth-out': 'cubic-bezier(0.16, 1, 0.3, 1)',
         'spring-natural': 'cubic-bezier(0.32, 0.72, 0, 1)',
-      }
+      },
+      fontFamily: {
+        sans: ['"Atkinson Hyperlegible Next"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+      },
     },
   },
   plugins: [],

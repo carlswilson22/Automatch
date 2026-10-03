@@ -310,10 +310,21 @@ const Vehicle360Viewer = ({
             <span>Quadrante: <strong className="text-white">{getAngleLabel(currentAngle)}</strong></span>
           </div>
 
+          {/* Overlay: Ângulo sem foto real */}
+          {isAngleProjected && (
+            <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-slate-950/70 backdrop-blur-[2px] pointer-events-none">
+              <div className="flex flex-col items-center gap-2 text-center px-4">
+                <span className="text-3xl">📷</span>
+                <span className="text-sm font-bold text-white">Ângulo indisponível</span>
+                <span className="text-[11px] text-slate-400">Foto não cadastrada para este quadrante</span>
+              </div>
+            </div>
+          )}
+
           {/* Badge Orbital 360 */}
           <div className="absolute bottom-4 right-4 bg-slate-950/90 border border-slate-800 px-3 py-1.5 rounded-xl text-[10px] font-mono text-cyan-400 pointer-events-none flex items-center gap-1.5 shadow-lg">
-            <span className={`w-2 h-2 rounded-full ${isAngleProjected ? 'bg-indigo-400' : 'bg-cyan-400 animate-ping'}`} />
-            <span>{isAngleProjected ? 'PERSPECTIVA ORBITAL 3D' : '360° FOTOGRÁFICO REAL'}</span>
+            <span className={`w-2 h-2 rounded-full ${isAngleProjected ? 'bg-slate-500' : 'bg-cyan-400 animate-ping'}`} />
+            <span>{isAngleProjected ? 'SEM FOTO NESTE ÂNGULO' : '360° FOTOGRÁFICO REAL'}</span>
           </div>
         </motion.div>
       </div>

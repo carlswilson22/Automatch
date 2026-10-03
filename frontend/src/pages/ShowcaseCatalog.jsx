@@ -207,7 +207,9 @@ const ShowcaseCatalog = () => {
         const local = getNewCars();
         const mapLocal = c => { const p = typeof c.preco === 'number' ? c.preco : (parseFloat(String(c.preco).replace(/[^\d]/g, '')) || 0); return { id: c.id, name: `${c.marca} ${c.modelo}`, brand: c.marca, year: c.ano, price: p, color: c.cor || 'Prata', mileage: c.km ? Number(c.km) : 0, image: c.imagem || '/images/placeholder-carro.jpg', bodyType: 'Particular', icon: Car, featured: true, description: c.descricao || 'Veiculo anunciado pelo proprietario.', tags: [c.transmissao || 'Automatico', 'Novidade'], storeId: c.storeId || 'store-1' }; };
         const fallback = [...local.map(mapLocal), ...showcaseCars].filter(c => !isCarDeleted(c.id));
-        const filtered = filterStore !== 'Todas' ? fallback.filter(c => c.storeId === filterStore) : fallback;
+        const filtered = fallback
+          .filter(c => filterStore === 'Todas' || c.storeId === filterStore)
+          .filter(c => filterBrand === 'Todas' || c.brand?.toLowerCase().trim() === filterBrand.toLowerCase().trim());
         setAllCars(filtered); setTotalItems(filtered.length); setTotalPages(Math.ceil(filtered.length / itemsPerPage) || 1); setIsLoading(false);
       });
   }, [currentPage, debouncedSearch, filterBrand, filterYear, filterPrice, filterStore]);
@@ -218,6 +220,7 @@ const ShowcaseCatalog = () => {
   const results = useMemo(() => {
     let cars = allCars;
     if (filterStore !== 'Todas') cars = cars.filter(c => c.storeId === filterStore);
+    if (filterBrand !== 'Todas') cars = cars.filter(c => c.brand?.toLowerCase().trim() === filterBrand.toLowerCase().trim());
     if (filterType !== 'Todos') cars = cars.filter(c => c.bodyType === filterType);
     const kmR = KM_RANGES.find(r => r.label === filterKm);
     if (kmR && kmR.max < Infinity) cars = cars.filter(c => c.mileage <= kmR.max);
@@ -228,7 +231,7 @@ const ShowcaseCatalog = () => {
       if (sortBy === 'km') return a.mileage - b.mileage;
       return (b.featured ? 1 : 0) - (a.featured ? 1 : 0);
     });
-  }, [allCars, filterStore, filterType, filterKm, sortBy]);
+  }, [allCars, filterStore, filterBrand, filterType, filterKm, sortBy]);
 
   const handlePageChange = (p) => { if (p >= 1 && p <= totalPages && p !== currentPage) { setCurrentPage(p); catalogRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); } };
   const pageNumbers = useMemo(() => {
@@ -255,7 +258,7 @@ const ShowcaseCatalog = () => {
       <nav className="w-full px-4 sm:px-6 py-4 bg-white border-b border-slate-200 sticky top-0 z-40">
         <div className="max-w-7xl mx-auto flex items-center gap-4">
           <button onClick={() => navigate('/')} aria-label="Voltar" className="p-2 hover:bg-slate-100 rounded-full transition-colors shrink-0"><ArrowLeft className="w-5 h-5 text-slate-600" /></button>
-          <AutomatchLogo size="md" onClick={() => navigate('/')} />
+          <AutomatchLogo size="md" theme="light" onClick={() => navigate('/')} />
           <div className="flex-1 max-w-lg mx-auto hidden md:block">
             <FocusInput value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Buscar por marca, modelo, versao ou cor..." icon={Search} rightElement={searchQuery ? (<button onClick={() => setSearchQuery('')} aria-label="Limpar" className="p-1 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-colors"><X className="w-4 h-4" /></button>) : null} />
           </div>

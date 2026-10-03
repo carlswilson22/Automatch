@@ -592,7 +592,7 @@ const NewCarAdForm = () => {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="cursor-pointer" onClick={() => navigate('/')}>
-            <AutomatchLogo size="md" />
+            <AutomatchLogo size="md" theme="light" />
           </div>
         </div>
 

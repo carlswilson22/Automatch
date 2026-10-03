@@ -172,7 +172,7 @@ export default function FavoritesPage() {
             <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-100 rounded-full text-slate-500 hover:text-slate-800 transition-colors" aria-label="Voltar">
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <AutomatchLogo size="md" onClick={() => navigate('/')} />
+            <AutomatchLogo size="md" theme="light" onClick={() => navigate('/')} />
           </div>
           <div className="flex items-center gap-3">
             {favoriteCars.length >= 2 && (

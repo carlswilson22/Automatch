@@ -28,7 +28,6 @@ import OfficialDossierModal from '../components/vehicle/OfficialDossierModal';
 const PriceAlertModal = React.lazy(() => import('../components/vehicle/PriceAlertModal'));
 const MultichannelSyncModal = React.lazy(() => import('../components/vehicle/MultichannelSyncModal'));
 const VehicleComparatorModal = React.lazy(() => import('../components/vehicle/VehicleComparatorModal'));
-const WarrantyBadgeModal = React.lazy(() => import('../components/vehicle/WarrantyBadgeModal'));
 import MarketPriceIndicator from '../components/vehicle/MarketPriceIndicator';
 import TcoCalculatorCard from '../components/vehicle/TcoCalculatorCard';
 import PriceDropBadge from '../components/vehicle/PriceDropBadge';
@@ -78,7 +77,6 @@ export default function ShowcaseVehicleDetails() {
   const [isDossierModalOpen, setIsDossierModalOpen] = useState(false);
   const [inspectionImage, setInspectionImage] = useState(null);
   const [isTcoOpen, setIsTcoOpen] = useState(false);
-  const [isWarrantyModalOpen, setIsWarrantyModalOpen] = useState(false);
 
   // Scroll to top on mount & initialize favorite state
   useEffect(() => {
@@ -1004,20 +1002,6 @@ export default function ShowcaseVehicleDetails() {
                   </div>
                 </button>
 
-                <button
-                  type="button"
-                  onClick={() => setIsWarrantyModalOpen(true)}
-                  className="p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between group cursor-pointer bg-emerald-950/40 hover:bg-emerald-900/50 border-emerald-800/50 hover:border-emerald-500"
-                >
-                  <div className="flex items-center justify-between mb-2">
-                    <ShieldCheck className="w-5 h-5 text-emerald-400 group-hover:scale-110 transition-transform" />
-                    <span className="text-[10px] bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded-full font-bold">Protect</span>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-bold text-white">Garantia Estendida</h4>
-                    <p className="text-[11px] text-slate-400">3, 6 ou 12 meses · 100+ itens</p>
-                  </div>
-                </button>
               </div>
 
 
@@ -1309,13 +1293,6 @@ export default function ShowcaseVehicleDetails() {
           </ErrorBoundary>
         )}
 
-        {isWarrantyModalOpen && (
-          <WarrantyBadgeModal
-            isOpen={isWarrantyModalOpen}
-            onClose={() => setIsWarrantyModalOpen(false)}
-            car={car}
-          />
-        )}
       </React.Suspense>
 
       {/* Modal Oficial Consolidado do Dossiê Automatch */}

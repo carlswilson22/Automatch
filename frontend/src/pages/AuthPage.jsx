@@ -243,7 +243,7 @@ const AuthPage = () => {
               className="cursor-pointer mb-3 transition-transform hover:scale-105 active:scale-95"
               onClick={() => navigate('/')}
             >
-              <AutomatchLogo isDark={true} size="lg" />
+              <AutomatchLogo theme="light" size="lg" />
             </div>
             <p className="text-slate-400 text-xs sm:text-sm font-medium">
               {isLogin ? 'Entre na sua conta para gerenciar anúncios e compras' : 'Crie sua conta e aproveite o ecossistema com IA'}

@@ -7,6 +7,7 @@ import {
   TrendingDown, TrendingUp, Minus, Car, Sparkles, Scale, ExternalLink,
   Search, ChevronDown, ChevronUp
 } from 'lucide-react';
+import { useScrollLock } from '../../utils/useScrollLock';
 import { getVehicleImageUrl, handleVehicleImageError } from '../../utils/imageHelper';
 
 const CURRENT_YEAR = 2026;
@@ -67,6 +68,7 @@ export default function VehicleComparatorModal({
   availableCars = [],
   availableVehicles = []
 }) {
+  useScrollLock(isOpen);
   const navigate = useNavigate();
 
   const allAvailable = useMemo(() => {

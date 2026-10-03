@@ -106,7 +106,7 @@ export default function PublicValidationPage() {
         </Link>
         
         <div className="flex items-center gap-2">
-          <AutomatchLogo isDark={true} size="sm" showText={false} />
+          <AutomatchLogo theme="light" size="sm" showText={false} />
           <span className="text-[11px] font-black tracking-widest text-cyan-400 uppercase">
             Autenticidade Notarial
           </span>

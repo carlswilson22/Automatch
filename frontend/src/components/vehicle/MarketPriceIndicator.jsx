@@ -139,7 +139,7 @@ export default function MarketPriceIndicator({
           <div>
             <div className="flex items-center gap-2">
               <h4 className="text-xs font-black uppercase tracking-wider text-slate-200">
-                Automatch Deal Rating™
+                Avaliação de Negócio Automatch™
               </h4>
               <button
                 type="button"
@@ -151,14 +151,13 @@ export default function MarketPriceIndicator({
               </button>
             </div>
             <p className="text-[11px] text-slate-400">
-              Instant Market Value: <strong className="text-slate-200 font-mono">R$ {Math.round(instantMarketValue).toLocaleString('pt-BR')}</strong>
+              Valor de Mercado Instantâneo: <strong className="text-slate-200 font-mono">R$ {Math.round(instantMarketValue).toLocaleString('pt-BR')}</strong>
             </p>
           </div>
         </div>
 
         {/* Selo Deal Rating Oficial */}
         <div className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full border text-xs font-black shadow-sm ${dealRating.badgeClass}`}>
-          <span className={`w-2 h-2 rounded-full ${dealRating.dotClass} animate-ping`} />
           <StatusIcon className="w-3.5 h-3.5" />
           <span>{dealRating.label}</span>
         </div>
@@ -330,7 +329,7 @@ export default function MarketPriceIndicator({
 
               <div className="space-y-3 text-xs text-slate-300 leading-relaxed">
                 <p>
-                  Inspirado na referência internacional <strong>CarGurus</strong>, o Automatch não se limita à tabela FIPE estática. Nosso algoritmo calcula o <strong>Instant Market Value (IMV)</strong> cruzando:
+                  Inspirado na referência internacional <strong>CarGurus</strong>, o Automatch não se limita à tabela FIPE estática. Nosso algoritmo calcula o <strong>Valor de Mercado Instantâneo (VMI)</strong> cruzando:
                 </p>
                 <ul className="list-disc pl-5 space-y-1.5 text-slate-400">
                   <li><strong className="text-white">Tabela FIPE Oficial Atualizada:</strong> Base inicial do valor venal.</li>

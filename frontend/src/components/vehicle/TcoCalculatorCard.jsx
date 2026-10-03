@@ -114,9 +114,6 @@ export default function TcoCalculatorCard({
           <div>
             <h3 className="text-lg font-bold text-white flex items-center gap-2">
               <span>Custo Total de Posse (TCO)</span>
-              <span className="text-[10px] uppercase font-black tracking-wider bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 px-2 py-0.5 rounded-full">
-                Estimativa Real
-              </span>
             </h3>
             <p className="text-xs text-slate-400">
               Quanto este carro realmente custa por mês na sua garagem

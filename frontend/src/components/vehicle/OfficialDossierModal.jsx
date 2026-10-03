@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useScrollLock } from '../../utils/useScrollLock';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, 
@@ -15,6 +16,7 @@ import {
 } from 'lucide-react';
 
 export default function OfficialDossierModal({ isOpen, onClose, car }) {
+  useScrollLock(isOpen);
   const modalRef = useRef(null);
   const [isDownloadingPdf, setIsDownloadingPdf] = useState(false);
   const [pdfError, setPdfError] = useState('');
@@ -558,3 +560,4 @@ export default function OfficialDossierModal({ isOpen, onClose, car }) {
     </AnimatePresence>
   );
 }
+

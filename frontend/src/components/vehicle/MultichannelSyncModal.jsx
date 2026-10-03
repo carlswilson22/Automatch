@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Share2, X, CheckCircle2, RefreshCw, ExternalLink, Globe2, Check } from 'lucide-react';
+import { useScrollLock } from '../../utils/useScrollLock';
 import axios from 'axios';
 
 const CHANNELS_CONFIG = [
@@ -10,6 +11,7 @@ const CHANNELS_CONFIG = [
 ];
 
 const MultichannelSyncModal = ({ isOpen, onClose, car }) => {
+  useScrollLock(isOpen);
   const [channelsStatus, setChannelsStatus] = useState(
     CHANNELS_CONFIG.map(c => ({ ...c, status: 'sincronizado', lastSync: 'Há 5 min' }))
   );

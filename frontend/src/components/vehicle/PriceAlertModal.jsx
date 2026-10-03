@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, X, CheckCircle2, MessageCircle, Mail, TrendingDown } from 'lucide-react';
+import { useScrollLock } from '../../utils/useScrollLock';
 import axios from 'axios';
 
 const PriceAlertModal = ({ isOpen, onClose, car }) => {
+  useScrollLock(isOpen);
   const [targetPrice, setTargetPrice] = useState(car?.price ? Math.round(car.price * 0.95) : 135000);
   const [channel, setChannel] = useState('whatsapp'); // 'whatsapp' | 'email'
   const [contactValue, setContactValue] = useState('');

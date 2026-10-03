@@ -1,10 +1,10 @@
-﻿import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
   Search, ChevronRight, CheckCircle2,
-  Zap, LogIn, Heart, MessageSquare, TrendingDown, Star,
-  ArrowDown, Sparkles, Car, ScanLine
+  Zap, LogIn, Heart, MessageSquare, Star,
+  Sparkles
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { stores } from '../data/inventoryData';
@@ -12,7 +12,6 @@ import StoreIdentifier from '../components/ui/StoreIdentifier';
 import AutomatchLogo from '../components/ui/AutomatchLogo';
 import GlowButton from '../components/ui/GlowButton';
 import WipeButton from '../components/ui/WipeButton';
-import SpotlightCard from '../components/ui/microkit/SpotlightCard';
 import { getNewCars } from '../data/newCarsManager';
 import { toggleFavorite, isFavorite } from '../data/favoritesManager';
 import { getVehicleImageUrl, handleVehicleImageError } from '../utils/imageHelper';
@@ -84,26 +83,16 @@ const HomeCarCard = ({ car }) => {
   );
 };
 
-const FeatureItem = ({ icon, title, description, color, bg, spotlightColor }) => (
-  <SpotlightCard spotlightColor={spotlightColor}>
-    <motion.div variants={fadeUp} className="group h-full">
-      <div className={`w-14 h-14 rounded-2xl ${bg} flex items-center justify-center ${color} mb-6 border border-black/5 shadow-sm group-hover:scale-110 transition-transform duration-300`}>{icon}</div>
-      <h3 className="text-xl font-bold text-slate-900 mb-3 tracking-tight">{title}</h3>
-      <p className="text-slate-600 leading-relaxed font-light">{description}</p>
-    </motion.div>
-  </SpotlightCard>
+const FeatureItem = ({ title, description }) => (
+  <motion.div variants={fadeUp} className="group py-4">
+    <h3 className="text-xl font-bold text-slate-900 mb-3 tracking-tight">{title}</h3>
+    <p className="text-slate-600 leading-relaxed font-light">{description}</p>
+  </motion.div>
 );
 
-const stats = [
-  { value: '4.200+', label: 'Veiculos verificados' },
-  { value: '98%', label: 'Satisfacao dos compradores' },
-  { value: '12', label: 'Lojas parceiras' },
-  { value: '< 48h', label: 'Tempo medio de venda' },
-];
 
 const Home = () => {
   const navigate = useNavigate();
-  const catalogRef = useRef(null);
   const heroRef = useRef(null);
   const { user, isAuthenticated } = useAuth();
   const [allCars, setAllCars] = useState(showcaseCars);
@@ -123,17 +112,16 @@ const Home = () => {
     setAllCars([...formatted, ...showcaseCars]);
   }, []);
 
-  const scrollToCatalog = () => { catalogRef.current?.scrollIntoView({ behavior: 'smooth' }); };
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col font-sans">
       <nav className="w-full bg-white/90 backdrop-blur-md border-b border-slate-100 sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
           <div className="flex items-center gap-6">
-            <AutomatchLogo size="md" onClick={() => navigate('/')} />
+            <AutomatchLogo size="md" theme="light" onClick={() => navigate('/')} />
             <div className="hidden md:flex items-center gap-1 border-l border-slate-200 pl-6 ml-2">
               <button onClick={() => navigate('/encontrar')} className="text-slate-600 hover:text-blue-600 font-semibold text-sm px-4 py-2 rounded-lg hover:bg-blue-50 transition-all">Vitrine Digital</button>
-              <button onClick={() => setIsChatOpen(true)} className="flex items-center gap-2 px-4 py-2 rounded-lg text-blue-600 hover:bg-blue-50 font-semibold text-sm transition-all"><MessageSquare className="w-4 h-4" /><span>Chat IA</span></button>
+              <button onClick={() => setIsChatOpen(true)} className="flex items-center gap-2 px-4 py-2 rounded-lg text-blue-600 hover:bg-blue-50 font-semibold text-sm transition-all"><MessageSquare className="w-4 h-4" /><span>Consultor IA</span></button>
               <button onClick={() => navigate('/novo-anuncio')} className="flex items-center gap-2 px-4 py-2 rounded-lg text-emerald-700 bg-emerald-50 hover:bg-emerald-100 font-bold text-sm transition-all">Vender meu Carro</button>
             </div>
           </div>
@@ -154,7 +142,7 @@ const Home = () => {
       </nav>
 
       <section ref={heroRef} className="relative min-h-[92vh] overflow-hidden bg-slate-900 flex flex-col justify-center">
-        <motion.div style={{ y: heroImgY }} className="absolute inset-0 z-0 scale-110">
+        <motion.div style={{ y: heroImgY, willChange: 'transform' }} className="absolute inset-0 z-0 scale-110">
           <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/80 to-blue-950/60 z-10" />
           <div style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '60px 60px' }} className="absolute inset-0 z-5 opacity-[0.03]" />
           <img src="https://images.unsplash.com/photo-1553440569-bcc63803a83d?auto=format&fit=crop&q=80&w=2000" alt="Hero Background" className="w-full h-full object-cover opacity-30" />
@@ -196,26 +184,11 @@ const Home = () => {
           </motion.div>
         </div>
 
-        <motion.button onClick={scrollToCatalog} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.2, duration: 0.6 }} className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 text-white/40 hover:text-white/70 transition-colors group" aria-label="Rolar para vitrine">
-          <span className="text-xs font-medium uppercase tracking-widest">Explorar</span>
-          <motion.div animate={{ y: [0, 6, 0] }} transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}><ArrowDown className="w-5 h-5" /></motion.div>
-        </motion.button>
+
       </section>
 
-      <section className="bg-blue-600 py-6">
-        <div className="max-w-7xl mx-auto px-6">
-          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-            {stats.map((s, i) => (
-              <motion.div key={i} initial={{ opacity: 0, y: 10 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: i * 0.08 }}>
-                <p className="text-3xl font-black text-white">{s.value}</p>
-                <p className="text-blue-200 text-xs font-medium mt-1">{s.label}</p>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
-      </section>
 
-      <section ref={catalogRef} id="vitrine" className="bg-slate-100 py-20 px-4 sm:px-6 border-t border-slate-200">
+      <section id="vitrine" className="bg-slate-100 py-20 px-4 sm:px-6 border-t border-slate-200">
         <div className="max-w-7xl mx-auto">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mb-14">
             <div className="inline-flex items-center gap-2 bg-blue-100 text-blue-700 text-xs font-bold uppercase tracking-widest px-4 py-2 rounded-full mb-4 border border-blue-200">
@@ -226,11 +199,6 @@ const Home = () => {
           </motion.div>
           <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-60px' }} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {allCars.map((car) => <HomeCarCard key={car.id} car={car} />)}
-          </motion.div>
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="text-center mt-12">
-            <button onClick={() => navigate('/encontrar')} className="inline-flex items-center gap-2 px-8 py-4 bg-white border border-slate-200 text-slate-700 rounded-2xl font-bold text-sm hover:border-blue-300 hover:text-blue-600 hover:bg-blue-50 transition-all shadow-sm">
-              <Car className="w-4 h-4" />Ver todos os veiculos<ChevronRight className="w-4 h-4" />
-            </button>
           </motion.div>
         </div>
       </section>
@@ -244,9 +212,9 @@ const Home = () => {
             <h2 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight">Tecnologia a seu favor</h2>
           </motion.div>
           <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: true, margin: '-60px' }} className="grid md:grid-cols-3 gap-8">
-            <FeatureItem icon={<TrendingDown className="w-7 h-7" />} title="Preco FIPE Automatch" description="Nossa inteligencia artificial analisa FIPE, quilometragem e estado de conservacao para sugerir o preco real." color="text-blue-600" bg="bg-blue-50" spotlightColor="rgba(59,130,246,0.12)" />
-            <FeatureItem icon={<CheckCircle2 className="w-7 h-7" />} title="Dossie de Procedencia" description="Laudo cautelar, historico de multas e leilao comparados com nossa vistoria tecnica rigorosa." color="text-emerald-600" bg="bg-emerald-50" spotlightColor="rgba(16,185,129,0.12)" />
-            <FeatureItem icon={<ScanLine className="w-7 h-7" />} title="IA Damage Scanner" description="Nossa inteligencia identifica danos na lataria por visao computacional e precifica reparos na hora." color="text-slate-700" bg="bg-slate-100" spotlightColor="rgba(100,116,139,0.10)" />
+            <FeatureItem title="Preco FIPE Automatch" description="Nossa inteligencia artificial analisa FIPE, quilometragem e estado de conservacao para sugerir o preco real." />
+            <FeatureItem title="Dossie de Procedencia" description="Laudo cautelar, historico de multas e leilao comparados com nossa vistoria tecnica rigorosa." />
+            <FeatureItem title="Scanner de Avarias com IA" description="Nossa inteligencia identifica danos na lataria por visao computacional e precifica reparos na hora." />
           </motion.div>
         </div>
       </section>

@@ -75,7 +75,7 @@ export default function HowItWorksPage() {
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
-            <AutomatchLogo size="md" onClick={() => navigate('/')} />
+            <AutomatchLogo size="md" theme="light" onClick={() => navigate('/')} />
           </div>
           <div className="flex items-center gap-3">
             <button
