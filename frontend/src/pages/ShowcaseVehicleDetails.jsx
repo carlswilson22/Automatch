@@ -1127,7 +1127,7 @@ export default function ShowcaseVehicleDetails() {
               </AccordionPanel>
             </div>
 
-            {/* Calculadora Interativa de Custo Total de Posse (TCO) — No lugar da descrição antiga */}
+            {/* Simulador de Custo Mensal */}
             <div className="bg-slate-900/80 rounded-3xl p-6 sm:p-7 border border-slate-800 shadow-xl">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
@@ -1135,9 +1135,9 @@ export default function ShowcaseVehicleDetails() {
                     <Calculator className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-white">Custo Estimado de Propriedade (TCO)</h3>
+                    <h3 className="text-lg font-bold text-white">Simulador de Custo Mensal</h3>
                     <p className="text-xs text-slate-400">
-                      Simulação personalizada de IPVA, seguro, consumo e manutenção preventiva.
+                      Ajuste estado e km para ver quanto este carro custa por mês no seu bolso.
                     </p>
                   </div>
                 </div>
@@ -1146,7 +1146,7 @@ export default function ShowcaseVehicleDetails() {
                   onClick={() => setIsTcoOpen(!isTcoOpen)}
                   className="px-4 py-2.5 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center justify-center gap-2 transition-all shrink-0 cursor-pointer"
                 >
-                  <span>{isTcoOpen ? 'Ocultar Detalhes' : 'Calcular Custo de Propriedade'}</span>
+                  <span>{isTcoOpen ? 'Ocultar Simulação' : 'Simular Custo Mensal'}</span>
                   <ChevronDown className={`w-4 h-4 transition-transform duration-300 ${isTcoOpen ? 'rotate-180' : ''}`} />
                 </button>
               </div>
