@@ -1,6 +1,7 @@
+from datetime import datetime
 from typing import List, Optional
 # pyrefly: ignore [missing-import]
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 
 class CarBase(BaseModel):
     brand: str
@@ -8,6 +9,22 @@ class CarBase(BaseModel):
     year: int
     km: int
     price: float
+
+    # DEF-03: Validação de intervalos — garante consistência entre frontend e backend
+    @field_validator("year")
+    @classmethod
+    def validate_year(cls, v: int) -> int:
+        current_year = datetime.now().year
+        if v < 1900 or v > current_year + 1:
+            raise ValueError(f"Ano inválido: deve estar entre 1900 e {current_year + 1}.")
+        return v
+
+    @field_validator("price")
+    @classmethod
+    def validate_price(cls, v: float) -> float:
+        if v < 1.0:
+            raise ValueError("Preço inválido: deve ser maior que zero (mínimo R$ 1,00).")
+        return v
     image: Optional[str] = "placeholder-carro.jpg"
     store_id: int
     
@@ -311,4 +328,5 @@ class PlateLookupResponse(BaseModel):
     codigo_fipe: Optional[str] = None
     mes_referencia_fipe: Optional[str] = None
     cache_hit: bool = False
+    is_simulado: bool = False
 

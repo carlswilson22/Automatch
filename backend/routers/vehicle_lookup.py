@@ -179,6 +179,7 @@ async def lookup_plate(placa: str, db: Session = Depends(get_db)):
     # 2. Busca na base de veículos conhecidos ou constrói resposta sintética coerente
     if clean_plate in KNOWN_VEHICLES_DATABASE:
         data = KNOWN_VEHICLES_DATABASE[clean_plate].copy()
+        data["is_simulado"] = False
     else:
         # Se veículo já existir cadastrado na base local da Automatch, reaproveita dados
         local_car = db.query(models.Car).filter(models.Car.plate == clean_plate).first()
@@ -199,7 +200,8 @@ async def lookup_plate(placa: str, db: Session = Depends(get_db)):
                 "historico_leilao": "Sem Registro de Leilão",
                 "preco_fipe_sugerido": local_car.fipe_price or (local_car.price * 0.98),
                 "codigo_fipe": local_car.fipe_code or "002165-2",
-                "mes_referencia_fipe": "Setembro de 2024"
+                "mes_referencia_fipe": "Setembro de 2024",
+                "is_simulado": False
             }
         else:
             # Geração algorítmica realista para qualquer placa válida
@@ -230,7 +232,8 @@ async def lookup_plate(placa: str, db: Session = Depends(get_db)):
                 "historico_leilao": "Sem Registro de Leilão",
                 "preco_fipe_sugerido": picked[2],
                 "codigo_fipe": picked[3],
-                "mes_referencia_fipe": "Setembro de 2024"
+                "mes_referencia_fipe": "Setembro de 2024",
+                "is_simulado": True
             }
 
     data["placa"] = clean_plate

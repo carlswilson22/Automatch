@@ -313,26 +313,29 @@ def analyze_vehicle_damage_cv(
     model = get_yolo_model()
     vehicle_type = "Automóvel"
     yolo_conf = 0.90
+    found_vehicles = []
+    vehicle_bbox = None
 
     if model:
         try:
             temp_path = "/tmp/temp_scan_car.jpg" if os.name != "nt" else os.path.join(os.getenv("TEMP", "."), "temp_scan_car.jpg")
             img.save(temp_path, format="JPEG", quality=85)
-            yolo_res = model.predict(source=temp_path, conf=0.20, verbose=False)
+            yolo_res = model.predict(source=temp_path, conf=0.15, verbose=False)
             if yolo_res and len(yolo_res) > 0:
                 boxes = yolo_res[0].boxes
                 names = yolo_res[0].names
-                found_vehicles = []
                 for box in boxes:
                     cname = names[int(box.cls[0])]
                     if cname in ["car", "truck", "bus", "motorcycle"]:
-                        found_vehicles.append((cname, float(box.conf[0])))
+                        found_vehicles.append((cname, float(box.conf[0]), box.xyxy[0].tolist()))
                 if found_vehicles:
-                    found_vehicles.sort(key=lambda x: x[1], reverse=True)
-                    v_name, v_conf = found_vehicles[0]
+                    # Seleciona o veículo de maior área na imagem
+                    found_vehicles.sort(key=lambda x: (x[2][2] - x[2][0]) * (x[2][3] - x[2][1]), reverse=True)
+                    v_name, v_conf, v_coords = found_vehicles[0]
                     v_translate = {"car": "Carro", "truck": "Caminhonete/SUV", "bus": "Ônibus", "motorcycle": "Motocicleta"}
                     vehicle_type = v_translate.get(v_name, "Automóvel")
                     yolo_conf = v_conf
+                    vehicle_bbox = v_coords
             try:
                 if os.path.exists(temp_path):
                     os.remove(temp_path)
@@ -340,6 +343,20 @@ def analyze_vehicle_damage_cv(
                 pass
         except Exception as ye:
             logger.debug("YOLO check skipped: %s", ye)
+
+    # DEF-02 (CT-C06): Se o modelo YOLO executou e NÃO detectou nenhum veículo na imagem
+    if model and not found_vehicles:
+        return {
+            "status": "rejected",
+            "modelo": "Automatch Vision Engine (CV + YOLOv8)",
+            "resposta": "A imagem enviada não aparenta conter um veículo automotor reconhecível. Por favor, envie uma foto clara de um automóvel.",
+            "tem_avarias": False,
+            "score_lataria": 0,
+            "condicao_geral": "Não Identificado como Veículo",
+            "avarias": [],
+            "pontos_avaria": [],
+            "confianca_ia": "0.0%"
+        }
 
     # 2. Análise pericial adaptativa de 5 zonas anatômicas veiculares (OpenCV + Pillow)
     damage_points: List[Dict[str, Any]] = []
@@ -386,39 +403,83 @@ def analyze_vehicle_damage_cv(
             h, w = cv_img.shape[:2]
             gray = cv2.cvtColor(cv_img, cv2.COLOR_BGR2GRAY)
 
-            # Definição dos 5 quadrantes anatômicos automotivos
-            zones = [
-                {
-                    "name": "Capô e Teto",
-                    "bbox": (int(w * 0.30), int(h * 0.15), int(w * 0.70), int(h * 0.45)),
-                    "center_x": 50.0, "center_y": 30.0,
-                    "default_type": "amassado"
-                },
-                {
-                    "name": "Para-choque Dianteiro",
-                    "bbox": (int(w * 0.25), int(h * 0.65), int(w * 0.75), int(h * 0.90)),
-                    "center_x": 48.0, "center_y": 74.0,
-                    "default_type": "parachoque"
-                },
-                {
-                    "name": "Lateral Esquerda",
-                    "bbox": (int(w * 0.08), int(h * 0.30), int(w * 0.35), int(h * 0.70)),
-                    "center_x": 22.0, "center_y": 52.0,
-                    "default_type": "arranhão"
-                },
-                {
-                    "name": "Lateral Direita",
-                    "bbox": (int(w * 0.65), int(h * 0.30), int(w * 0.92), int(h * 0.70)),
-                    "center_x": 78.0, "center_y": 52.0,
-                    "default_type": "arranhão"
-                },
-                {
-                    "name": "Traseira e Tampa do Porta-Malas",
-                    "bbox": (int(w * 0.30), int(h * 0.40), int(w * 0.70), int(h * 0.75)),
-                    "center_x": 50.0, "center_y": 58.0,
-                    "default_type": "amassado"
-                }
-            ]
+            # Define as 5 zonas relativas ao veículo detectado (se disponível) para evitar ruído de fundo
+            if vehicle_bbox:
+                vx1, vy1, vx2, vy2 = vehicle_bbox
+                vx1, vy1 = max(0, int(vx1)), max(0, int(vy1))
+                vx2, vy2 = min(w, int(vx2)), min(h, int(vy2))
+                vw = max(10, vx2 - vx1)
+                vh = max(10, vy2 - vy1)
+                zones = [
+                    {
+                        "name": "Capô e Teto",
+                        "bbox": (int(vx1 + vw * 0.25), int(vy1 + vh * 0.10), int(vx1 + vw * 0.75), int(vy1 + vh * 0.45)),
+                        "center_x": round(((vx1 + vw * 0.5) / w) * 100, 1),
+                        "center_y": round(((vy1 + vh * 0.28) / h) * 100, 1),
+                        "default_type": "amassado"
+                    },
+                    {
+                        "name": "Para-choque Dianteiro",
+                        "bbox": (int(vx1 + vw * 0.20), int(vy1 + vh * 0.60), int(vx1 + vw * 0.80), int(vy1 + vh * 0.95)),
+                        "center_x": round(((vx1 + vw * 0.5) / w) * 100, 1),
+                        "center_y": round(((vy1 + vh * 0.78) / h) * 100, 1),
+                        "default_type": "parachoque"
+                    },
+                    {
+                        "name": "Lateral Esquerda",
+                        "bbox": (int(vx1 + vw * 0.05), int(vy1 + vh * 0.25), int(vx1 + vw * 0.40), int(vy1 + vh * 0.75)),
+                        "center_x": round(((vx1 + vw * 0.22) / w) * 100, 1),
+                        "center_y": round(((vy1 + vh * 0.5) / h) * 100, 1),
+                        "default_type": "arranhão"
+                    },
+                    {
+                        "name": "Lateral Direita",
+                        "bbox": (int(vx1 + vw * 0.60), int(vy1 + vh * 0.25), int(vx1 + vw * 0.95), int(vy1 + vh * 0.75)),
+                        "center_x": round(((vx1 + vw * 0.78) / w) * 100, 1),
+                        "center_y": round(((vy1 + vh * 0.5) / h) * 100, 1),
+                        "default_type": "arranhão"
+                    },
+                    {
+                        "name": "Traseira e Tampa do Porta-Malas",
+                        "bbox": (int(vx1 + vw * 0.25), int(vy1 + vh * 0.35), int(vx1 + vw * 0.75), int(vy1 + vh * 0.80)),
+                        "center_x": round(((vx1 + vw * 0.5) / w) * 100, 1),
+                        "center_y": round(((vy1 + vh * 0.58) / h) * 100, 1),
+                        "default_type": "amassado"
+                    }
+                ]
+            else:
+                zones = [
+                    {
+                        "name": "Capô e Teto",
+                        "bbox": (int(w * 0.30), int(h * 0.15), int(w * 0.70), int(h * 0.45)),
+                        "center_x": 50.0, "center_y": 30.0,
+                        "default_type": "amassado"
+                    },
+                    {
+                        "name": "Para-choque Dianteiro",
+                        "bbox": (int(w * 0.25), int(h * 0.65), int(w * 0.75), int(h * 0.90)),
+                        "center_x": 48.0, "center_y": 74.0,
+                        "default_type": "parachoque"
+                    },
+                    {
+                        "name": "Lateral Esquerda",
+                        "bbox": (int(w * 0.08), int(h * 0.30), int(w * 0.35), int(h * 0.70)),
+                        "center_x": 22.0, "center_y": 52.0,
+                        "default_type": "arranhão"
+                    },
+                    {
+                        "name": "Lateral Direita",
+                        "bbox": (int(w * 0.65), int(h * 0.30), int(w * 0.92), int(h * 0.70)),
+                        "center_x": 78.0, "center_y": 52.0,
+                        "default_type": "arranhão"
+                    },
+                    {
+                        "name": "Traseira e Tampa do Porta-Malas",
+                        "bbox": (int(w * 0.30), int(h * 0.40), int(w * 0.70), int(h * 0.75)),
+                        "center_x": 50.0, "center_y": 58.0,
+                        "default_type": "amassado"
+                    }
+                ]
 
             zone_metrics = []
             for z in zones:
@@ -432,7 +493,7 @@ def analyze_vehicle_damage_cv(
                     sobely = cv2.Sobel(roi, cv2.CV_64F, 0, 1, ksize=3)
                     sobel_mag = float(np.mean(np.sqrt(sobelx**2 + sobely**2)))
                     # Densidade Canny
-                    canny_roi = cv2.Canny(roi, 80, 180)
+                    canny_roi = cv2.Canny(roi, 100, 200)
                     canny_density = float(np.sum(canny_roi > 0)) / (roi.shape[0] * roi.shape[1])
 
                     # Localiza o ponto de maior descontinuidade no ROI
@@ -450,45 +511,50 @@ def analyze_vehicle_damage_cv(
                         "default_type": z["default_type"]
                     })
 
-            # Se não tínhamos danos pré-existentes, avalia os quadrantes calculados
+            # Se não tínhamos danos pré-existentes, avalia a integridade global e os quadrantes calculados
             if not damage_points and zone_metrics:
-                # Ordena por maior índice de descontinuidade
-                zone_metrics.sort(key=lambda m: (m["lap_var"] * 0.4 + m["sobel_mag"] * 0.6), reverse=True)
-                mean_sobel = np.mean([m["sobel_mag"] for m in zone_metrics])
-                mean_lap = np.mean([m["lap_var"] for m in zone_metrics])
+                # Medição global de integridade superficial (descontinuidades de textura e bordas de colisão)
+                global_canny = cv2.Canny(gray, 100, 200)
+                global_canny_density = float(np.sum(global_canny > 0)) / (gray.shape[0] * gray.shape[1])
+                global_lap_var = float(cv2.Laplacian(gray, cv2.CV_64F).var())
 
-                detected_count = 0
-                for idx, m in enumerate(zone_metrics):
-                    # Identifica anomalias que destoem da média da lataria
-                    is_anomaly = (m["sobel_mag"] > mean_sobel * 1.25 and m["canny_density"] > 0.05) or (m["lap_var"] > mean_lap * 1.35)
-                    if is_anomaly and detected_count < 3:
-                        detected_count += 1
-                        if m["lap_var"] > 550 or m["sobel_mag"] > 38:
-                            sev = "high"
-                            cost = 1200
-                            d_type = "amassado"
-                            desc = f"Amassado com deformação de superfície identificado no(a) {m['name']}"
-                        elif m["lap_var"] > 300 or m["sobel_mag"] > 25:
-                            sev = "medium"
-                            cost = 750
-                            d_type = m["default_type"]
-                            desc = f"Desalinhamento/avaria moderada detectada no(a) {m['name']}"
-                        else:
-                            sev = "low"
-                            cost = 350
-                            d_type = "arranhão"
-                            desc = f"Micro-risco na superfície da pintura no(a) {m['name']}"
+                # DEF-02 (CT-C05): Detecção precisa: veículo com avarias reais apresenta alta densidade de descontinuidade
+                is_vehicle_damaged = (global_canny_density >= 0.115 and global_lap_var > 950) or (global_lap_var > 2200)
 
-                        avarias_detectadas.append(desc)
-                        damage_points.append({
-                            "id": len(damage_points) + 1,
-                            "x": m["x"],
-                            "y": m["y"],
-                            "type": d_type,
-                            "severity": sev,
-                            "description": desc,
-                            "repairCost": cost
-                        })
+                if is_vehicle_damaged:
+                    # Ordena por maior índice de descontinuidade
+                    zone_metrics.sort(key=lambda m: (m["lap_var"] * 0.4 + m["sobel_mag"] * 0.6), reverse=True)
+
+                    detected_count = 0
+                    for idx, m in enumerate(zone_metrics):
+                        if (m["canny_density"] >= 0.08 or m["lap_var"] > 850) and detected_count < 3:
+                            detected_count += 1
+                            if m["lap_var"] > 1800:
+                                sev = "high"
+                                cost = 1200
+                                d_type = "amassado"
+                                desc = f"Amassado com deformação de superfície identificado no(a) {m['name']}"
+                            elif m["lap_var"] > 1100 or m["canny_density"] >= 0.12:
+                                sev = "medium"
+                                cost = 750
+                                d_type = m["default_type"]
+                                desc = f"Desalinhamento/avaria moderada detectada no(a) {m['name']}"
+                            else:
+                                sev = "low"
+                                cost = 350
+                                d_type = "arranhão"
+                                desc = f"Micro-risco na superfície da pintura no(a) {m['name']}"
+
+                            avarias_detectadas.append(desc)
+                            damage_points.append({
+                                "id": len(damage_points) + 1,
+                                "x": m["x"],
+                                "y": m["y"],
+                                "type": d_type,
+                                "severity": sev,
+                                "description": desc,
+                                "repairCost": cost
+                            })
 
                 if damage_points:
                     score_lataria = max(68, 100 - (len(damage_points) * 11))
@@ -512,6 +578,7 @@ def analyze_vehicle_damage_cv(
         )
 
     return {
+        "status": "success",
         "laudo_resumo": laudo_text,
         "tem_avarias": has_damages,
         "score_lataria": score_lataria,
@@ -549,8 +616,8 @@ async def executar_pericia_visual_completa(
 
     cv_result = analyze_vehicle_damage_cv(image_bytes, car_context)
     return {
-        "status": "success",
-        "modelo": "Automatch Vision Engine (CV + YOLOv8)",
+        "status": cv_result.get("status", "success"),
+        "modelo": cv_result.get("modelo", "Automatch Vision Engine (CV + YOLOv8)"),
         "resposta": cv_result.get("laudo_resumo"),
         "tem_avarias": cv_result.get("tem_avarias", False),
         "score_lataria": cv_result.get("score_lataria", 98),

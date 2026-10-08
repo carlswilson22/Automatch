@@ -1,0 +1,23 @@
+{
+    "status":  "success",
+    "modelo":  "Automatch Vision Engine (CV + YOLOv8)",
+    "resposta":  "IA Automatch Vision: Identificadas 1 avaria(s) visual(is) na lataria do veículo. Pontos marcados para vistoria com reparo estimado em R$ 1,200.00. Conformidade estrutural geral em 89%.",
+    "tem_avarias":  true,
+    "score_lataria":  89,
+    "condicao_geral":  "Avarias Leves Identificadas",
+    "avarias":  [
+                    "Amassado com deformação de superfície identificado no(a) Para-choque Dianteiro"
+                ],
+    "pontos_avaria":  [
+                          {
+                              "id":  1,
+                              "x":  41.5,
+                              "y":  65.0,
+                              "type":  "amassado",
+                              "severity":  "high",
+                              "description":  "Amassado com deformação de superfície identificado no(a) Para-choque Dianteiro",
+                              "repairCost":  1200
+                          }
+                      ],
+    "confianca_ia":  "91.7%"
+}

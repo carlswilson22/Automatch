@@ -101,6 +101,14 @@ def create_car(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user_from_header)
 ) -> schemas.CarSchema:
+    # DEF-01: Verificação de role no backend (OWASP A01:2021)
+    # Apenas lojistas e administradores podem publicar anúncios
+    if getattr(current_user, "role", None) not in ("lojista", "admin"):
+        raise HTTPException(
+            status_code=403,
+            detail="Acesso negado: apenas lojistas podem publicar anúncios."
+        )
+
     car_data = car.model_dump()
     car_data["user_id"] = current_user.id
     target_store_id = car_data.get("store_id")

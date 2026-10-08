@@ -490,34 +490,24 @@ const NewCarAdForm = () => {
     }
 
     setStatus('loading');
+    setErrorMessage('');
     
     // Convert price back to number
     const numericPrice = Number(formData.preco.replace(/[^0-9,-]+/g,"").replace(",", ".")) || 0;
 
-    const newCarRecord = addNewCar({
-      marca: formData.marca,
-      modelo: formData.modelo,
-      ano: Number(formData.ano),
-      km: formData.km ? Number(formData.km) : 0,
-      preco: numericPrice,
-      cor: formData.cor,
-      transmissao: formData.transmissao,
-      descricao: formData.descricao,
-      imagem: formData.imagem || (galleryPhotos[0]?.url || ''),
-      video_url: videoUploadedUrl || videoPreviewUrl || formData.video_url || null,
-      gallery: galleryPhotos.map(p => p.url),
-      localizacao: formData.localizacao,
-      laudo: formData.laudo,
-      debitos: formData.debitos,
-      leilao: formData.leilao,
-      storeId: formData.store_id || 'store-1',
-      laudo_url: laudoUploadedUrl || null,
-      laudo_feedback: laudoFeedback || null,
-      userEmail: user?.email || null,
-      userName: user?.name || 'Particular'
-    });
-
     const storeNumericId = formData.store_id ? Number(String(formData.store_id).replace(/\D/g, '')) || 1 : 1;
+
+    // A1: Combina feedback de laudo PDF ou de análise visual pericial para persistência no banco
+    const activeLaudoFeedback = laudoFeedback || (photoAiResult ? {
+      scanner_ia: true,
+      modelo: photoAiResult.modelo,
+      tem_avarias: photoAiResult.tem_avarias,
+      score_lataria: photoAiResult.score_lataria,
+      condicao_geral: photoAiResult.condicao_geral,
+      avarias: photoAiResult.avarias || [],
+      laudo_resumo: photoAiResult.resposta
+    } : null);
+
     const payload = {
       brand: formData.marca,
       model: formData.modelo,
@@ -536,7 +526,7 @@ const NewCarAdForm = () => {
       debt_status: formData.debitos,
       auction_history: formData.leilao,
       laudo_url: laudoUploadedUrl || null,
-      laudo_feedback: laudoFeedback ? JSON.stringify(laudoFeedback) : null,
+      laudo_feedback: activeLaudoFeedback ? JSON.stringify(activeLaudoFeedback) : null,
       // B2B Repasse
       compartilhavel: formData.compartilhavel ? 1 : 0,
       valor_minimo_repasse: formData.valor_minimo_repasse ? Number(formData.valor_minimo_repasse.replace(/[^0-9,-]+/g,"").replace(",", ".")) : null,
@@ -559,15 +549,50 @@ const NewCarAdForm = () => {
     .then(async (response) => {
       if (response.ok) {
         const data = await response.json();
+        // A3: Registra na persistência local com o ID oficial do backend
+        addNewCar({
+          id: data.id,
+          marca: formData.marca,
+          modelo: formData.modelo,
+          ano: Number(formData.ano),
+          km: formData.km ? Number(formData.km) : 0,
+          preco: numericPrice,
+          cor: formData.cor,
+          transmissao: formData.transmissao,
+          descricao: formData.descricao,
+          imagem: formData.imagem || (galleryPhotos[0]?.url || ''),
+          video_url: videoUploadedUrl || videoPreviewUrl || formData.video_url || null,
+          gallery: galleryPhotos.map(p => p.url),
+          localizacao: formData.localizacao,
+          laudo: formData.laudo,
+          debitos: formData.debitos,
+          leilao: formData.leilao,
+          storeId: formData.store_id || 'store-1',
+          laudo_url: laudoUploadedUrl || null,
+          laudo_feedback: activeLaudoFeedback,
+          userEmail: user?.email || null,
+          userName: user?.name || 'Particular'
+        });
         setCreatedCar(data);
+        setStatus('success');
       } else {
-        setCreatedCar(newCarRecord);
+        // A3: Trata falhas de API exibindo a mensagem específica sem mascarar com sucesso
+        const errData = await response.json().catch(() => ({}));
+        let errMsg = 'Erro ao cadastrar veículo no sistema.';
+        if (errData.detail) {
+          if (Array.isArray(errData.detail)) {
+            errMsg = errData.detail.map(d => `${d.loc ? d.loc.join('.') + ': ' : ''}${d.msg}`).join(' | ');
+          } else {
+            errMsg = String(errData.detail);
+          }
+        }
+        setErrorMessage(errMsg);
+        setStatus('error');
       }
-      setStatus('success');
     })
     .catch(() => {
-      setCreatedCar(newCarRecord);
-      setStatus('success');
+      setErrorMessage('Falha na comunicação com o servidor. Verifique sua conexão e tente novamente.');
+      setStatus('error');
     });
   };
 
@@ -798,6 +823,11 @@ const NewCarAdForm = () => {
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
                       🏷️ {plateLookupResult.historico_leilao}
                     </span>
+                    {plateLookupResult.is_simulado && (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200" title="Dados cadastrais gerados preliminarmente para fins de demonstração">
+                        ⚠️ Dados Simulados (Demonstração)
+                      </span>
+                    )}
                     {plateLookupResult.cache_hit && (
                       <span className="text-[10px] font-bold text-slate-400 bg-white px-2 py-0.5 rounded-md border border-slate-200">
                         ⚡ Resposta via Cache 24h
