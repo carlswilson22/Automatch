@@ -14,10 +14,21 @@ logger = logging.getLogger("automatch")
 router = APIRouter(prefix="/api", tags=["Cars & Stores"])
 
 
-@router.get("/stores", response_model=List[schemas.StoreSchema])
-def get_stores(db: Session = Depends(get_db)) -> List[schemas.StoreSchema]:
-    stores = db.query(models.Store).all()
-    return stores
+from typing import List, Optional, Dict, Any, Union
+from sqlalchemy.orm import selectinload
+
+@router.get("/stores", response_model=Union[List[schemas.StoreSchema], List[schemas.StoreSummarySchema]])
+def get_stores(
+    db: Session = Depends(get_db),
+    include_cars: bool = False
+):
+    """Retorna lojas parceiras sem incorrer em N+1 queries."""
+    if include_cars:
+        stores = db.query(models.Store).options(selectinload(models.Store.cars)).all()
+        return [schemas.StoreSchema.model_validate(s) for s in stores]
+    else:
+        stores = db.query(models.Store).all()
+        return [schemas.StoreSummarySchema.model_validate(s) for s in stores]
 
 
 @router.get("/cars")

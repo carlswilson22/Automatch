@@ -87,12 +87,14 @@ class StoreBase(BaseModel):
     logo: Optional[str] = None
     description: Optional[str] = None
 
-class StoreSchema(StoreBase):
+class StoreSummarySchema(StoreBase):
     id: int
-    cars: List[CarSchema] = []
 
     class Config:
         from_attributes = True
+
+class StoreSchema(StoreSummarySchema):
+    cars: List[CarSchema] = []
 
 class LaudoWatchlistSchema(BaseModel):
     id: int
