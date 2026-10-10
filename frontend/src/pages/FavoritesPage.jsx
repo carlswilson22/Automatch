@@ -13,6 +13,8 @@ import { getVehicleImageUrl, handleVehicleImageError } from '../utils/imageHelpe
 import ErrorBoundary from '../components/common/ErrorBoundary';
 import AutomatchLogo from '../components/ui/AutomatchLogo';
 import GlowButton from '../components/ui/GlowButton';
+import { api } from '../services/apiClient';
+import { mapVehicleToViewModel } from '../utils/vehicleMapper';
 
 // Code-Splitting: Comparador carregado sob demanda
 const VehicleComparatorModal = React.lazy(() => import('../components/vehicle/VehicleComparatorModal'));
@@ -56,12 +58,11 @@ export default function FavoritesPage() {
       }
     }) : () => {};
 
-    // Carrega carros do backend para resolver IDs do banco de dados (com timeout de 1.2s)
-    fetch('/api/cars?limit=100', { signal: AbortSignal.timeout(1200) })
-      .then(res => res.ok ? res.json() : null)
+    // Carrega carros do backend para resolver IDs do banco de dados
+    api.get('/api/cars?limit=100')
       .then(data => {
         const items = Array.isArray(data) ? data : (data?.items || []);
-        setDbCars(items);
+        setDbCars(items.map(mapVehicleToViewModel).filter(Boolean));
       })
       .catch(() => {});
 

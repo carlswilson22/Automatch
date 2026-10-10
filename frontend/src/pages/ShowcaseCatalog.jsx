@@ -18,6 +18,9 @@ import {
 } from 'lucide-react';
 import { getVehicleImageUrl, handleVehicleImageError } from '../utils/imageHelper';
 import VehicleCardSkeleton from '../components/common/VehicleCardSkeleton';
+import { api, isDemoModeEnabled } from '../services/apiClient';
+import { mapVehicleToViewModel } from '../utils/vehicleMapper';
+import { filterVehicles } from '../utils/filterVehicles';
 
 export const formatMileage = (val) => {
   if (val === undefined || val === null) return '0 km';
@@ -149,11 +152,13 @@ const ShowcaseCatalog = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [sortBy, setSortBy] = useState('featured');
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
-  const [allCars, setAllCars] = useState(showcaseCars);
+  const [allCars, setAllCars] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [apiError, setApiError] = useState(null);
+  const [reloadKey, setReloadKey] = useState(0);
   const [isComparatorOpen, setIsComparatorOpen] = useState(false);
   const itemsPerPage = 20;
 
@@ -174,64 +179,90 @@ const ShowcaseCatalog = () => {
 
   useEffect(() => {
     setIsLoading(true);
+    setApiError(null);
     const params = new URLSearchParams();
     params.set('page', currentPage.toString());
     params.set('limit', itemsPerPage.toString());
     if (debouncedSearch.trim()) params.set('q', debouncedSearch.trim());
     if (filterBrand !== 'Todas') params.set('brand', filterBrand);
     if (filterYear !== 'Todos') { params.set('year_min', filterYear); params.set('year_max', filterYear); }
-    if (filterPrice !== 'Qualquer') { const pr = PRICE_RANGES.find(r => r.label === filterPrice); if (pr) { if (pr.min > 0) params.set('price_min', pr.min.toString()); if (pr.max < Infinity) params.set('price_max', pr.max.toString()); } }
-    if (filterStore !== 'Todas') { const n = parseInt(filterStore.replace('store-', '')); if (!isNaN(n)) params.set('store_id', n.toString()); }
+    if (filterPrice !== 'Qualquer') {
+      const pr = PRICE_RANGES.find(r => r.label === filterPrice);
+      if (pr) {
+        if (pr.min > 0) params.set('price_min', pr.min.toString());
+        if (pr.max < Infinity) params.set('price_max', pr.max.toString());
+      }
+    }
+    if (filterStore !== 'Todas') {
+      const n = parseInt(filterStore.replace('store-', ''));
+      if (!isNaN(n)) params.set('store_id', n.toString());
+    }
 
-    fetch(`/api/cars?${params.toString()}`, { signal: AbortSignal.timeout(1200) })
-      .then(res => { if (!res.ok) throw new Error(); return res.json(); })
+    api.get(`/api/cars?${params.toString()}`)
       .then(apiData => {
         const rawItems = Array.isArray(apiData) ? apiData : (apiData?.items || []);
         const serverTotal = typeof apiData?.total === 'number' ? apiData.total : rawItems.length;
         const serverPages = typeof apiData?.pages === 'number' ? apiData.pages : (Math.ceil(serverTotal / itemsPerPage) || 1);
         const local = getNewCars();
-        const mapCar = c => ({ id: c.id, name: `${c.brand} ${c.model}`, brand: c.brand, year: c.year, price: typeof c.price === 'number' ? c.price : (parseFloat(c.price) || 0), color: c.color || 'Prata', mileage: c.km ? Number(c.km) : 0, image: c.image || '/images/placeholder-carro.jpg', bodyType: c.body_type || 'Particular', icon: Car, featured: true, description: c.description || 'Veiculo com laudo cautelar aprovado.', tags: [c.transmission || 'Automatico', 'Certificado'], storeId: c.store_id ? `store-${c.store_id}` : 'store-1' });
-        const mapLocal = c => { const p = typeof c.preco === 'number' ? c.preco : (parseFloat(String(c.preco).replace(/[^\d]/g, '')) || 0); return { id: c.id, name: `${c.marca} ${c.modelo}`, brand: c.marca, year: c.ano, price: p, color: c.cor || 'Prata', mileage: c.km ? Number(c.km) : 0, image: c.imagem || '/images/placeholder-carro.jpg', bodyType: 'Particular', icon: Car, featured: true, description: c.descricao || 'Veiculo anunciado pelo proprietario.', tags: [c.transmissao || 'Automatico', 'Novidade'], storeId: c.storeId || 'store-1' }; };
-        const apiF = rawItems.map(mapCar);
-        const localF = local.map(mapLocal);
+
+        const apiF = rawItems.map(mapVehicleToViewModel).filter(Boolean);
+        const localF = local.map(mapVehicleToViewModel).filter(Boolean);
         let list = [...apiF];
-        if (apiF.length === 0 && !debouncedSearch.trim() && filterBrand === 'Todas') list = [...localF, ...showcaseCars];
-        else if (currentPage === 1 && localF.length > 0) list = [...localF, ...apiF];
+
+        if (apiF.length === 0 && !debouncedSearch.trim() && filterBrand === 'Todas') {
+          list = isDemoModeEnabled() ? [...localF, ...showcaseCars.map(mapVehicleToViewModel)] : [...localF];
+        } else if (currentPage === 1 && localF.length > 0) {
+          list = [...localF, ...apiF];
+        }
+
         const unique = Array.from(new Map(list.map(i => [i.id, i])).values()).filter(c => !isCarDeleted(c.id));
         setAllCars(unique);
         setTotalItems(serverTotal > 0 ? serverTotal : unique.length);
         setTotalPages(serverPages > 0 ? serverPages : (Math.ceil(unique.length / itemsPerPage) || 1));
         setIsLoading(false);
       })
-      .catch(() => {
-        const local = getNewCars();
-        const mapLocal = c => { const p = typeof c.preco === 'number' ? c.preco : (parseFloat(String(c.preco).replace(/[^\d]/g, '')) || 0); return { id: c.id, name: `${c.marca} ${c.modelo}`, brand: c.marca, year: c.ano, price: p, color: c.cor || 'Prata', mileage: c.km ? Number(c.km) : 0, image: c.imagem || '/images/placeholder-carro.jpg', bodyType: 'Particular', icon: Car, featured: true, description: c.descricao || 'Veiculo anunciado pelo proprietario.', tags: [c.transmissao || 'Automatico', 'Novidade'], storeId: c.storeId || 'store-1' }; };
-        const fallback = [...local.map(mapLocal), ...showcaseCars].filter(c => !isCarDeleted(c.id));
-        const filtered = fallback
-          .filter(c => filterStore === 'Todas' || c.storeId === filterStore)
-          .filter(c => filterBrand === 'Todas' || c.brand?.toLowerCase().trim() === filterBrand.toLowerCase().trim());
-        setAllCars(filtered); setTotalItems(filtered.length); setTotalPages(Math.ceil(filtered.length / itemsPerPage) || 1); setIsLoading(false);
+      .catch(err => {
+        if (isDemoModeEnabled()) {
+          const local = getNewCars();
+          const fallback = [...local.map(mapVehicleToViewModel), ...showcaseCars.map(mapVehicleToViewModel)].filter(c => !isCarDeleted(c.id));
+          setAllCars(fallback);
+          setTotalItems(fallback.length);
+          setTotalPages(Math.ceil(fallback.length / itemsPerPage) || 1);
+        } else {
+          setApiError(err.message || 'Falha ao carregar o catálogo de veículos. Verifique sua conexão.');
+          setAllCars([]);
+          setTotalItems(0);
+          setTotalPages(1);
+        }
+        setIsLoading(false);
       });
-  }, [currentPage, debouncedSearch, filterBrand, filterYear, filterPrice, filterStore]);
+  }, [currentPage, debouncedSearch, filterBrand, filterYear, filterPrice, filterStore, reloadKey]);
 
   const activeFilterCount = [filterStore !== 'Todas', filterBrand !== 'Todas', filterType !== 'Todos', filterYear !== 'Todos', filterPrice !== 'Qualquer', filterKm !== 'Qualquer'].filter(Boolean).length;
-  const resetFilters = () => { setFilterStore('Todas'); setFilterBrand('Todas'); setFilterType('Todos'); setFilterYear('Todos'); setFilterPrice('Qualquer'); setFilterKm('Qualquer'); setSearchQuery(''); setCurrentPage(1); };
+  const resetFilters = () => {
+    setFilterStore('Todas');
+    setFilterBrand('Todas');
+    setFilterType('Todos');
+    setFilterYear('Todos');
+    setFilterPrice('Qualquer');
+    setFilterKm('Qualquer');
+    setSearchQuery('');
+    setCurrentPage(1);
+    navigate('/encontrar', { replace: true });
+  };
 
   const results = useMemo(() => {
-    let cars = allCars;
-    if (filterStore !== 'Todas') cars = cars.filter(c => c.storeId === filterStore);
-    if (filterBrand !== 'Todas') cars = cars.filter(c => c.brand?.toLowerCase().trim() === filterBrand.toLowerCase().trim());
-    if (filterType !== 'Todos') cars = cars.filter(c => c.bodyType === filterType);
-    const kmR = KM_RANGES.find(r => r.label === filterKm);
-    if (kmR && kmR.max < Infinity) cars = cars.filter(c => c.mileage <= kmR.max);
-    return [...cars].sort((a, b) => {
-      if (sortBy === 'price-asc') return a.price - b.price;
-      if (sortBy === 'price-desc') return b.price - a.price;
-      if (sortBy === 'year') return b.year - a.year;
-      if (sortBy === 'km') return a.mileage - b.mileage;
-      return (b.featured ? 1 : 0) - (a.featured ? 1 : 0);
+    return filterVehicles(allCars, {
+      store: filterStore,
+      brand: filterBrand,
+      bodyType: filterType,
+      year: filterYear,
+      price: filterPrice,
+      km: filterKm,
+      query: debouncedSearch,
+      sortBy
     });
-  }, [allCars, filterStore, filterBrand, filterType, filterKm, sortBy]);
+  }, [allCars, filterStore, filterBrand, filterType, filterYear, filterPrice, filterKm, debouncedSearch, sortBy]);
 
   const handlePageChange = (p) => { if (p >= 1 && p <= totalPages && p !== currentPage) { setCurrentPage(p); catalogRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }); } };
   const pageNumbers = useMemo(() => {
@@ -335,6 +366,23 @@ const ShowcaseCatalog = () => {
               {filterYear !== 'Todos' && <FilterChip label={`Ano: ${filterYear}`} onRemove={() => setFilterYear('Todos')} />}
               {filterPrice !== 'Qualquer' && <FilterChip label={filterPrice} onRemove={() => setFilterPrice('Qualquer')} />}
               {filterKm !== 'Qualquer' && <FilterChip label={filterKm} onRemove={() => setFilterKm('Qualquer')} />}
+            </div>
+          )}
+
+          {apiError && !isLoading && (
+            <div className="w-full py-16 flex flex-col items-center justify-center bg-white rounded-3xl border border-red-100 p-8 shadow-sm text-center my-4">
+              <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center mb-3">
+                <X className="w-6 h-6" />
+              </div>
+              <p className="text-base font-bold text-slate-800 mb-1">Falha na comunicação com o servidor</p>
+              <p className="text-xs text-slate-500 max-w-md mb-5">{apiError}</p>
+              <button
+                type="button"
+                onClick={() => setReloadKey(k => k + 1)}
+                className="px-5 py-2.5 bg-brand-blue hover:bg-blue-600 text-white font-bold text-xs rounded-xl shadow-sm transition-all active:scale-95 cursor-pointer inline-flex items-center gap-2"
+              >
+                <RotateCcw className="w-3.5 h-3.5" /> Tentar novamente
+              </button>
             </div>
           )}
 

@@ -12,6 +12,7 @@ import B2BInventorySkeleton from './B2BInventorySkeleton';
 import { getVehicleImageUrl, handleVehicleImageError } from '../../utils/imageHelper';
 import { showcaseCars } from '../../data/showcaseData';
 import { stores as officialProjectStores } from '../../data/inventoryData';
+import { api } from '../../services/apiClient';
 
 const B2BInventoryCard = memo(function B2BInventoryCard({ car, onReserve }) {
   const piso = car.valor_minimo_repasse || (car.price * 0.90);
@@ -339,32 +340,27 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
   const loadPartnerships = async () => {
     setStoresLoading(true);
     try {
-      const [pRes, sRes] = await Promise.all([
-        fetch('/api/partnerships/my', { headers: getAuthHeaders(), signal: AbortSignal.timeout(1500) }),
-        fetch('/api/partnerships/stores-available', { headers: getAuthHeaders(), signal: AbortSignal.timeout(1500) })
+      const [remotePartnerships, remoteStores] = await Promise.all([
+        api.get('/api/partnerships/my', { headers: getAuthHeaders() }),
+        api.get('/api/partnerships/stores-available', { headers: getAuthHeaders() })
       ]);
-      if (pRes.ok) setPartnerships(await pRes.json());
-      if (sRes.ok) {
-        const remoteStores = await sRes.json();
-        if (Array.isArray(remoteStores) && remoteStores.length > 0) {
-          const seen = new Set();
-          const cleanStores = [];
-          for (const st of remoteStores) {
-            if (!st || !st.name) continue;
-            const normName = st.name.trim();
-            const key = normName.toLowerCase();
-            if (!seen.has(key)) {
-              seen.add(key);
-              cleanStores.push({
-                ...st,
-                name: normName
-              });
-            }
+      if (Array.isArray(remotePartnerships)) setPartnerships(remotePartnerships);
+      if (Array.isArray(remoteStores) && remoteStores.length > 0) {
+        const seen = new Set();
+        const cleanStores = [];
+        for (const st of remoteStores) {
+          if (!st || !st.name) continue;
+          const normName = st.name.trim();
+          const key = normName.toLowerCase();
+          if (!seen.has(key)) {
+            seen.add(key);
+            cleanStores.push({
+              ...st,
+              name: normName
+            });
           }
-          setAvailableStores(cleanStores.length > 0 ? cleanStores : getOfficialFallbackStores());
-        } else {
-          setAvailableStores(getOfficialFallbackStores());
         }
+        setAvailableStores(cleanStores.length > 0 ? cleanStores : getOfficialFallbackStores());
       } else {
         setAvailableStores(getOfficialFallbackStores());
       }

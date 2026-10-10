@@ -5,6 +5,7 @@ import {
   AlertCircle, Search, Eye, X, ZoomIn, CheckCircle2, ChevronRight, FileText
 } from 'lucide-react';
 import { getVehicleImageUrl, handleVehicleImageError } from '../../utils/imageHelper';
+import { isComplete360Set } from '../../utils/vehicleMapper';
 
 const ANGLES = [
   { angle: 0, label: 'Frente', icon: '0°', perspective: 'perspective(1200px) rotateY(0deg) scale(1)', lightX: '50%', flip: false },
@@ -41,6 +42,34 @@ const Vehicle360Viewer = ({
   const startAngleRef = useRef(0);
 
   const effectiveCarName = car?.name || carName;
+  const effectivePhotos360 = photos360 || car?.photos360 || null;
+  const hasValid360Set = useMemo(() => {
+    return isComplete360Set(effectivePhotos360);
+  }, [effectivePhotos360]);
+
+  // Se o conjunto de fotos não cobrir a varredura orbital real de 8 ângulos, exibe estado indisponível
+  if (!hasValid360Set) {
+    return (
+      <div className="rounded-3xl bg-slate-900 border border-slate-800 p-8 sm:p-12 text-center flex flex-col items-center justify-center min-h-[380px] shadow-2xl">
+        <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center mb-4">
+          <RotateCw className="w-7 h-7" />
+        </div>
+        <h3 className="text-lg font-bold text-white mb-2">Varredura 360° indisponível para este veículo</h3>
+        <p className="text-sm text-slate-400 max-w-md mb-6 leading-relaxed">
+          Este veículo ainda não possui a captura orbital completa de 8 ângulos da carroceria. Você pode conferir a foto e os apontamentos periciais na aba Laudo & Lataria.
+        </p>
+        {onOpenLaudo && (
+          <button
+            type="button"
+            onClick={onOpenLaudo}
+            className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold border border-slate-700 transition-colors cursor-pointer"
+          >
+            Ver Laudo Cautelar
+          </button>
+        )}
+      </div>
+    );
+  }
 
   // Pontos de avaria/laudo cautelar mapeados
   const effectiveDamagePoints = useMemo(() => {

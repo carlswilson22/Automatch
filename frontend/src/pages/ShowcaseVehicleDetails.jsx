@@ -35,7 +35,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { getVehicleImageUrl, handleVehicleImageError } from '../utils/imageHelper';
 import ErrorBoundary from '../components/common/ErrorBoundary';
 import AccordionPanel from '../components/vehicle/AccordionPanel';
-
+import { api } from '../services/apiClient';
+import { mapVehicleToViewModel } from '../utils/vehicleMapper';
 
 export const formatMileage = (val) => {
   if (val === undefined || val === null) return '0 km';
@@ -93,11 +94,10 @@ export default function ShowcaseVehicleDetails() {
     });
 
     // Carrega inventário para alimentar o comparador
-    fetch('/api/cars?limit=30', { signal: AbortSignal.timeout(1200) })
-      .then(r => r.ok ? r.json() : null)
+    api.get('/api/cars?limit=30')
       .then(data => {
         const items = Array.isArray(data) ? data : (data?.items || []);
-        setAllInventoryCars(items);
+        setAllInventoryCars(items.map(mapVehicleToViewModel).filter(Boolean));
       })
       .catch(() => {});
 
@@ -220,61 +220,17 @@ export default function ShowcaseVehicleDetails() {
     }
 
     // 2. Busca no banco de dados PostgreSQL via API
-    fetch(`/api/cars/${id}`, { signal: AbortSignal.timeout(1200) })
-      .then(res => res.ok ? res.json() : null)
+    api.get(`/api/cars/${id}`)
       .then(dbCar => {
         if (dbCar) {
-          const formatted = {
-            id: dbCar.id,
-            name: `${dbCar.brand} ${dbCar.model}`,
-            brand: dbCar.brand,
-            model: dbCar.model,
-            year: dbCar.year,
-            price: typeof dbCar.price === 'number' ? dbCar.price : (parseFloat(dbCar.price) || 0),
-            originalPrice: dbCar.original_price || (found?.originalPrice || null),
-            priceHistory: dbCar.price_history ? JSON.parse(dbCar.price_history) : (found?.priceHistory || []),
-            fipePrice: dbCar.fipe_price || (found?.fipePrice || dbCar.price * 1.04),
-            autoPrice: dbCar.auto_price || (found?.autoPrice || null),
-            color: dbCar.color || 'Prata',
-            mileage: dbCar.km || 0,
-            image: dbCar.image || '/images/placeholder-carro.jpg',
-            gallery: (typeof dbCar.tags === 'string' && dbCar.tags.startsWith(String.fromCharCode(91))) 
-              ? (() => { try { return JSON.parse(dbCar.tags); } catch { return [dbCar.image || '/images/placeholder-carro.jpg']; } })()
-              : (Array.isArray(dbCar.gallery) ? dbCar.gallery : [dbCar.image || '/images/placeholder-carro.jpg']),
-            bodyType: dbCar.body_type || 'Particular',
-            storeId: dbCar.store_id ? `store-${dbCar.store_id}` : 'store-1',
-            plate: dbCar.plate || 'ABC1234',
-            fipeCode: dbCar.fipe_code || '004487-3',
-            laudoUrl: dbCar.laudo_url || null,
-            laudoFeedback: dbCar.laudo_feedback || null,
-            videoUrl: dbCar.video_url || null,
-            description: dbCar.description || 'Veículo com laudo cautelar aprovado e procedência garantida.',
-            fullDescription: dbCar.full_description || dbCar.description || 'Excelente estado de conservação, revisões em dia e garantia de procedência Automatch.',
-            tags: [dbCar.transmission || 'Automático', 'Certificado Automatch'],
-            damagePoints: [],
-            specs: {
-              motor: 'Flex de Alta Performance',
-              cambio: dbCar.transmission || 'Automático',
-              combustivel: dbCar.fuel || 'Flex',
-              portas: '4 portas',
-              direcao: 'Elétrica Progressiva',
-              freios: 'ABS com EBD',
-              airbags: '6 airbags',
-              tracao: 'Dianteira'
-            },
-            seller: {
-              name: 'Concessionária Parceira Automatch',
-              avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=AutomatchPartner',
-              rating: 5.0,
-              ads: 18,
-              since: '2023'
-            }
-          };
-          setCar(formatted);
+          const formatted = mapVehicleToViewModel(dbCar);
+          if (formatted) {
+            setCar(formatted);
+          }
         }
-        setIsLoadingCar(false);
       })
-      .catch(() => {
+      .catch(() => {})
+      .finally(() => {
         setIsLoadingCar(false);
       });
 
@@ -368,14 +324,9 @@ export default function ShowcaseVehicleDetails() {
       setIsLaudoLoading(true);
       try {
         const fipeCode = car?.fipeCode || '004487-3';
-        const res = await fetch(`/api/v1/integracoes/laudo-cautelar/${fipeCode}`, { signal: AbortSignal.timeout(1500) });
-        if (res.ok) {
-          const data = await res.json();
-          laudoCacheRef.current = data;
-          setLaudoData(data);
-        } else {
-          throw new Error('API indisponível');
-        }
+        const data = await api.get(`/api/v1/integracoes/laudo-cautelar/${fipeCode}`);
+        laudoCacheRef.current = data;
+        setLaudoData(data);
       } catch (e) {
         const fallback = {
           laudo_id: `LC-${String(car?.id || '0042').slice(-4).toUpperCase()}`,
@@ -399,14 +350,9 @@ export default function ShowcaseVehicleDetails() {
       setIsDetranLoading(true);
       try {
         const plate = car?.plate || 'ABC1234';
-        const res = await fetch(`/api/v1/integracoes/detran/${plate}`, { signal: AbortSignal.timeout(1500) });
-        if (res.ok) {
-          const data = await res.json();
-          detranCacheRef.current = data;
-          setDetranData(data);
-        } else {
-          throw new Error('API indisponível');
-        }
+        const data = await api.get(`/api/v1/integracoes/detran/${plate}`);
+        detranCacheRef.current = data;
+        setDetranData(data);
       } catch (e) {
         const fallback = {
           placa: car?.plate || 'ATM-2026',
