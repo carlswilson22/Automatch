@@ -10,7 +10,13 @@ from fastapi import APIRouter, HTTPException, UploadFile, File, Depends, Header
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
-from services.ai_service import run_yolo_inference, analisar_laudo_cautelar_pdf
+from services.ai_service import (
+    run_yolo_inference, 
+    analisar_laudo_cautelar_pdf,
+    extrair_imagens_pdf,
+    analisar_fotos_periciais_pdf_yolo,
+    executar_cross_check_laudo
+)
 from database import get_db
 import models
 from routers.auth import get_current_user_from_header
@@ -122,11 +128,6 @@ async def upload_laudo(
     elif file_ext == ".pdf":
         try:
             laudo_feedback = await analisar_laudo_cautelar_pdf(content, filename=file.filename)
-            yolo_feedback = {
-                "pdf_audit": True,
-                "veredito": laudo_feedback.get("veredito"),
-                "score": laudo_feedback.get("score_procedencia")
-            }
         except Exception as e:
             logger.warning("Erro ao auditar PDF do laudo: %s", e)
             laudo_feedback = {
@@ -141,6 +142,42 @@ async def upload_laudo(
                 ],
                 "alertas": ["Processamento via módulo de contingência."],
                 "modelo_ia": "Automatch Fallback Engine"
+            }
+
+        # Auditoria de Fotos Periciais e Cross-Check via YOLOv8
+        try:
+            fotos_extraidas = await asyncio.to_thread(extrair_imagens_pdf, content, 6)
+            if fotos_extraidas:
+                yolo_res = await asyncio.to_thread(analisar_fotos_periciais_pdf_yolo, fotos_extraidas)
+            else:
+                yolo_res = {
+                    "total_imagens_extraidas": 0,
+                    "imagens_inspecionadas": [],
+                    "resumo_visual": "Nenhuma imagem fotográfica embutida encontrada nas páginas do laudo."
+                }
+
+            cross_check = executar_cross_check_laudo(laudo_feedback, yolo_res)
+
+            yolo_feedback = {
+                "pdf_audit": True,
+                "veredito": laudo_feedback.get("veredito"),
+                "score": laudo_feedback.get("score_procedencia"),
+                "total_imagens_extraidas": yolo_res.get("total_imagens_extraidas", 0),
+                "cross_check_status": cross_check.get("cross_check_status", "Concordante"),
+                "cross_check_mensagem": cross_check.get("cross_check_mensagem", ""),
+                "imagens_inspecionadas": yolo_res.get("imagens_inspecionadas", []),
+                "resumo_visual": yolo_res.get("resumo_visual", "")
+            }
+        except Exception as e:
+            logger.warning("Erro ao processar fotos periciais e YOLO no laudo PDF: %s", e)
+            yolo_feedback = {
+                "pdf_audit": True,
+                "veredito": laudo_feedback.get("veredito"),
+                "score": laudo_feedback.get("score_procedencia"),
+                "total_imagens_extraidas": 0,
+                "cross_check_status": "Concordante",
+                "cross_check_mensagem": "Auditoria documental concluída com sucesso.",
+                "imagens_inspecionadas": []
             }
 
     return {

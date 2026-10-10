@@ -1061,6 +1061,7 @@ const NewCarAdForm = () => {
                         feedback={laudoFeedback}
                         pdfUrl={laudoUploadedUrl}
                         fileName={laudoPdf?.name}
+                        yoloFeedback={yoloFeedback}
                       />
                     )}
                   </AnimatePresence>
