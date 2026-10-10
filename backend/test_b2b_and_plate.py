@@ -29,6 +29,7 @@ class TestB2BAndVehicleLookup(unittest.TestCase):
         models.Base.metadata.create_all(bind=cls.engine)
 
     def setUp(self):
+        _PLATE_CACHE.clear()
         models.Base.metadata.create_all(bind=self.engine)
         self.db = self.SessionLocal()
         # Seed Lojas
@@ -100,11 +101,9 @@ class TestB2BAndVehicleLookup(unittest.TestCase):
     def test_plate_lookup_and_24h_cache(self):
         """Testa busca automática e cache com TTL de 24h."""
         import asyncio
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
 
         # 1. Consulta inicial (cache miss)
-        res1 = loop.run_until_complete(lookup_plate("ABC1234", self.db))
+        res1 = asyncio.run(lookup_plate("ABC1234", self.db))
         self.assertEqual(res1.marca, "Toyota")
         self.assertEqual(res1.ano_fabricacao, 2023)
         self.assertFalse(res1.cache_hit)
@@ -112,10 +111,9 @@ class TestB2BAndVehicleLookup(unittest.TestCase):
         self.assertEqual(res1.status_roubo_furto, "Nada Consta (Regular)")
 
         # 2. Segunda consulta (deve ser cache hit)
-        res2 = loop.run_until_complete(lookup_plate("ABC1234", self.db))
+        res2 = asyncio.run(lookup_plate("ABC1234", self.db))
         self.assertTrue(res2.cache_hit)
         self.assertEqual(res2.modelo, res1.modelo)
-        loop.close()
 
     # ── Testes de Parcerias B2B ───────────────────────────────────────────────
 

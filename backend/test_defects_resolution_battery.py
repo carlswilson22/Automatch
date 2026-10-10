@@ -106,13 +106,12 @@ class TestDefectsResolutionBattery(unittest.TestCase):
 
     def test_def04_plate_lookup_simulado_flag(self):
         """DEF-04: Placa gerada sinteticamente deve retornar is_simulado = True e conhecida False."""
-        loop = asyncio.get_event_loop()
         # Placa conhecida
-        r_known = loop.run_until_complete(lookup_plate("ABC1234", self.db))
+        r_known = asyncio.run(lookup_plate("ABC1234", self.db))
         self.assertFalse(r_known.is_simulado)
 
         # Placa aleatória sintetizada
-        r_synthetic = loop.run_until_complete(lookup_plate("KPL9B88", self.db))
+        r_synthetic = asyncio.run(lookup_plate("KPL9B88", self.db))
         self.assertTrue(r_synthetic.is_simulado)
 
     def test_def02_non_car_image_rejected(self):
