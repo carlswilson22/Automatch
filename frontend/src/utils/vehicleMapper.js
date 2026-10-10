@@ -30,19 +30,43 @@ export function isComplete360Set(photos360) {
 
 /**
  * Obtém conjunto oficial de photos360 caso o veículo seja um dos modelos homologados.
+ * Suporta IDs no formato 'sc-001' (catálogo local) ou numérico 1–5 (API REST).
  */
 function resolvePhotos360(raw) {
   if (raw.photos360 && isComplete360Set(raw.photos360)) {
     return raw.photos360;
   }
 
-  // Se for um dos 5 carros oficiais com assets homologados em /images/cars/{id}/
+  // Normaliza id: aceita 'sc-001' ou numérico 1–5 → 'sc-001'
   const idStr = String(raw.id || '');
-  if (['sc-001', 'sc-002', 'sc-003', 'sc-004', 'sc-005'].includes(idStr)) {
-    const staticOfficial = showcaseCars.find(c => c.id === idStr);
+  const numericId = parseInt(idStr, 10);
+  const normalizedId = idStr.startsWith('sc-')
+    ? idStr
+    : (!isNaN(numericId) && numericId >= 1 && numericId <= 5)
+      ? `sc-00${numericId}`
+      : null;
+
+  if (normalizedId && ['sc-001', 'sc-002', 'sc-003', 'sc-004', 'sc-005'].includes(normalizedId)) {
+    const staticOfficial = showcaseCars.find(c => c.id === normalizedId);
     if (staticOfficial?.photos360) {
       return staticOfficial.photos360;
     }
+  }
+
+  // Fallback por nome: resolve veículos cujo ID não segue a convenção mas o nome bate
+  if (raw.name || (raw.brand && raw.model)) {
+    const searchName = (raw.name || `${raw.brand || ''} ${raw.model || ''}`).toLowerCase().trim();
+    const byName = showcaseCars.find(c =>
+      c.name.toLowerCase().includes(searchName) || searchName.includes(c.name.toLowerCase())
+    );
+    if (byName?.photos360) {
+      return byName.photos360;
+    }
+  }
+
+  if (import.meta.env?.DEV) {
+    // eslint-disable-next-line no-console
+    console.warn(`[Automatch 360°] photos360 não resolvido para id="${idStr}" — varredura orbital indisponível.`);
   }
 
   return null;
