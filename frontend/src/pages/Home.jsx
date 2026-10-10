@@ -1,10 +1,10 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
   Search, ChevronRight, CheckCircle2,
   Zap, LogIn, Heart, MessageSquare, Star,
-  Sparkles
+  Sparkles, Calendar, Gauge, Palette
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { stores } from '../data/inventoryData';
@@ -65,9 +65,9 @@ const HomeCarCard = ({ car }) => {
           <p className="text-xs text-slate-500 font-medium mt-1 uppercase tracking-wider">{car.bodyType}</p>
         </div>
         <div className="grid grid-cols-3 gap-2 my-4">
-          {[{ label: car.year, icon: '📅' }, { label: car.mileage, icon: '🛣️' }, { label: car.color, icon: '🎨' }].map(({ label, icon }, i) => (
+          {[{ label: car.year, Icon: Calendar }, { label: car.mileage, Icon: Gauge }, { label: car.color, Icon: Palette }].map(({ label, Icon }, i) => (
             <div key={i} className="bg-slate-50 rounded-lg px-1 py-2 text-center border border-slate-100 hover:bg-white hover:border-blue-200 transition-colors">
-              <span className="text-sm block mb-0.5">{icon}</span>
+              <Icon className="w-3.5 h-3.5 text-slate-400 mx-auto mb-0.5" />
               <p className="text-[11px] font-bold text-slate-700 truncate">{label}</p>
             </div>
           ))}
@@ -93,12 +93,9 @@ const FeatureItem = ({ title, description }) => (
 
 const Home = () => {
   const navigate = useNavigate();
-  const heroRef = useRef(null);
   const { user, isAuthenticated } = useAuth();
   const [allCars, setAllCars] = useState(showcaseCars);
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const { scrollY } = useScroll();
-  const heroImgY = useTransform(scrollY, [0, 500], [0, 80]);
 
   useEffect(() => {
     const local = getNewCars();
@@ -141,12 +138,12 @@ const Home = () => {
         </div>
       </nav>
 
-      <section ref={heroRef} className="relative min-h-[92vh] overflow-hidden bg-slate-900 flex flex-col justify-center">
-        <motion.div style={{ y: heroImgY, willChange: 'transform' }} className="absolute inset-0 z-0 scale-110">
+      <section className="relative min-h-[92vh] overflow-hidden bg-slate-900 flex flex-col justify-center">
+        <div className="absolute inset-0 z-0 scale-110">
           <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/80 to-blue-950/60 z-10" />
           <div style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '60px 60px' }} className="absolute inset-0 z-5 opacity-[0.03]" />
           <img src="https://images.unsplash.com/photo-1553440569-bcc63803a83d?auto=format&fit=crop&q=80&w=2000" alt="Hero Background" className="w-full h-full object-cover opacity-30" />
-        </motion.div>
+        </div>
         <div className="absolute top-[35%] left-[-5%] w-[60%] h-[1px] bg-gradient-to-r from-transparent via-blue-500/40 to-transparent rotate-[-12deg] z-10" />
         <div className="absolute top-[60%] right-[-5%] w-[50%] h-[1px] bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent rotate-[8deg] z-10" />
 
