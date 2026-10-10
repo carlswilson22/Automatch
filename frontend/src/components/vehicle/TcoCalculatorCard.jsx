@@ -41,6 +41,7 @@ export default function TcoCalculatorCard({
   fipePrice,
   fuelType  = 'Flex',
   carYear,
+  showHeader = true,
   className = ''
 }) {
   const [selectedUf,  setSelectedUf]  = useState('SP');
@@ -111,27 +112,29 @@ export default function TcoCalculatorCard({
     <div className={`bg-slate-900/90 rounded-3xl p-6 sm:p-7 border border-slate-800 shadow-2xl space-y-6 ${className}`}>
 
       {/* ── Header ───────────────────────────────────────────────────── */}
-      <div className="flex items-center justify-between gap-4 flex-wrap pb-4 border-b border-slate-800">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-cyan-600 to-blue-500 flex items-center justify-center text-white shadow-lg shadow-cyan-900/30">
-            <Calculator className="w-5 h-5" />
+      {showHeader && (
+        <div className="flex items-center justify-between gap-4 flex-wrap pb-4 border-b border-slate-800">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-cyan-600 to-blue-500 flex items-center justify-center text-white shadow-lg shadow-cyan-900/30">
+              <Calculator className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-lg font-bold text-white">Simulador de Custo Mensal</h3>
+              <p className="text-xs text-slate-400">
+                Ajuste o estado e a quilometragem para ver a projeção do seu bolso
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-lg font-bold text-white">Simulador de Custo Mensal</h3>
-            <p className="text-xs text-slate-400">
-              Ajuste o estado e a quilometragem para ver a projeção do seu bolso
-            </p>
-          </div>
-        </div>
 
-        {/* Custo Diário */}
-        <div className="bg-slate-950/80 px-4 py-2 rounded-xl border border-slate-800 text-right">
-          <span className="text-[10px] text-slate-400 uppercase font-semibold block">Por dia</span>
-          <span className="text-base font-black text-cyan-400 whitespace-nowrap">
-            R$ {fmt(c.custodia)} / dia
-          </span>
+          {/* Custo Diário */}
+          <div className="bg-slate-950/80 px-4 py-2 rounded-xl border border-slate-800 text-right">
+            <span className="text-[10px] text-slate-400 uppercase font-semibold block">Por dia</span>
+            <span className="text-base font-black text-cyan-400 whitespace-nowrap">
+              R$ {fmt(c.custodia)} / dia
+            </span>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* ── Controles ────────────────────────────────────────────────── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 bg-slate-950/60 p-4 rounded-2xl border border-slate-800/80">

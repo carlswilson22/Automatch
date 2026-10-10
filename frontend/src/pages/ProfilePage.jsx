@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { 
@@ -30,6 +30,22 @@ export default function ProfilePage() {
     email: user?.email || '',
     bio: 'Apaixonado por tecnologia e carros premium selecionados com laudo cautelar.'
   });
+  const [previewPhoto, setPreviewPhoto] = useState(null);
+  const fileInputRef = useRef(null);
+
+  const handlePhotoChange = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target.result;
+      setPreviewPhoto(dataUrl);
+      updateProfile({ photo: dataUrl });
+    };
+    reader.readAsDataURL(file);
+    // Limpa o valor para permitir re-upload do mesmo arquivo
+    e.target.value = '';
+  };
 
   // Contadores dinâmicos de veículos e favoritos
   const [favoriteCount, setFavoriteCount] = useState(() => getFavorites().length);
@@ -96,7 +112,7 @@ export default function ProfilePage() {
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100">
               <Sparkles className="w-3.5 h-3.5 text-blue-600" />
-              Painel do Usuário
+              Automatch
             </span>
           </div>
         </div>
@@ -114,9 +130,16 @@ export default function ProfilePage() {
             <SpotlightCard className="p-7 flex flex-col items-center text-center">
               {/* Avatar with Camera Trigger */}
               <div className="relative mb-5 group">
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  hidden
+                  onChange={handlePhotoChange}
+                />
                 <div className="w-28 h-28 rounded-3xl overflow-hidden ring-4 ring-slate-100 shadow-md bg-slate-100 transition-transform duration-300 group-hover:scale-105">
                   <img 
-                    src={user.photo || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`} 
+                    src={previewPhoto || user.photo || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.name}`} 
                     alt={user.name} 
                     className="w-full h-full object-cover"
                   />
@@ -124,6 +147,7 @@ export default function ProfilePage() {
                 <button 
                   type="button"
                   aria-label="Atualizar foto de perfil"
+                  onClick={() => fileInputRef.current?.click()}
                   className="absolute -bottom-1.5 -right-1.5 bg-blue-600 hover:bg-blue-700 text-white p-2.5 rounded-2xl shadow-lg shadow-blue-500/30 transition-transform active:scale-95 border-2 border-white cursor-pointer"
                 >
                   <Camera className="w-4 h-4" />
