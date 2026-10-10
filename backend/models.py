@@ -1,5 +1,5 @@
 # pyrefly: ignore [missing-import]
-from sqlalchemy import Column, Integer, String, Text, ForeignKey, Float, Index
+from sqlalchemy import Column, Integer, String, Text, ForeignKey, Float, Index, Boolean, Numeric
 from sqlalchemy.orm import relationship
 import uuid
 from database import Base
@@ -23,7 +23,7 @@ class Car(Base):
     model = Column(String, index=True)
     year = Column(Integer, index=True)
     km = Column(Integer)
-    price = Column(Float, index=True)
+    price = Column(Numeric(12, 2), index=True)
     image = Column(String)
     video_url = Column(String, nullable=True)
     
@@ -40,11 +40,11 @@ class Car(Base):
     laudo_status = Column(String, nullable=True)
     debt_status = Column(String, nullable=True)
     auction_history = Column(String, nullable=True)
-    fipe_price = Column(Float, nullable=True)
-    auto_price = Column(Float, nullable=True)
+    fipe_price = Column(Numeric(12, 2), nullable=True)
+    auto_price = Column(Numeric(12, 2), nullable=True)
     laudo_url = Column(String, nullable=True)
     laudo_feedback = Column(Text, nullable=True)
-    original_price = Column(Float, nullable=True)
+    original_price = Column(Numeric(12, 2), nullable=True)
     price_history = Column(Text, nullable=True)
 
     store_id = Column(Integer, ForeignKey("stores.id"), index=True)
@@ -53,9 +53,9 @@ class Car(Base):
     user_id = Column(String(36), ForeignKey("users.id"), nullable=True, index=True)
     
     # B2B Estoque Compartilhado & Repasse
-    compartilhavel = Column(Integer, default=0, index=True) # 0 = False, 1 = True (Indexado para busca rápida)
-    valor_minimo_repasse = Column(Float, nullable=True)
-    comissao_fixa = Column(Float, nullable=True)
+    compartilhavel = Column(Boolean, default=False, index=True)
+    valor_minimo_repasse = Column(Numeric(12, 2), nullable=True)
+    comissao_fixa = Column(Numeric(12, 2), nullable=True)
     observacoes_repasse = Column(Text, nullable=True)
     status_reserva = Column(String(32), default="disponivel", index=True) # disponivel, reservado, em_fechamento, vendido
 

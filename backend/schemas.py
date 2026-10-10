@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import List, Optional
 # pyrefly: ignore [missing-import]
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, ConfigDict, field_validator
 
 class CarBase(BaseModel):
     brand: str
@@ -48,7 +48,7 @@ class CarBase(BaseModel):
     video_url: Optional[str] = None
     original_price: Optional[float] = None
     user_id: Optional[str] = None
-    compartilhavel: Optional[int] = 0
+    compartilhavel: Optional[bool] = False
     valor_minimo_repasse: Optional[float] = None
     comissao_fixa: Optional[float] = None
     observacoes_repasse: Optional[str] = None
@@ -56,9 +56,7 @@ class CarBase(BaseModel):
 
 class CarSchema(CarBase):
     id: str
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class CarUpdate(BaseModel):
     brand: Optional[str] = None
@@ -76,7 +74,7 @@ class CarUpdate(BaseModel):
     debt_status: Optional[str] = None
     auction_history: Optional[str] = None
     # B2B Repasse
-    compartilhavel: Optional[int] = None
+    compartilhavel: Optional[bool] = None
     valor_minimo_repasse: Optional[float] = None
     comissao_fixa: Optional[float] = None
     observacoes_repasse: Optional[str] = None
@@ -89,22 +87,18 @@ class StoreBase(BaseModel):
 
 class StoreSummarySchema(StoreBase):
     id: int
-
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 class StoreSchema(StoreSummarySchema):
     cars: List[CarSchema] = []
 
 class LaudoWatchlistSchema(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: int
     car_id: str
     placa: str
     last_check: Optional[str] = None
     status: Optional[str] = None
-
-    class Config:
-        from_attributes = True
 
 class UserCreate(BaseModel):
     name: str
@@ -116,6 +110,7 @@ class UserLogin(BaseModel):
     password: str
 
 class UserResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: str
     name: str
     email: str
@@ -125,9 +120,6 @@ class UserResponse(BaseModel):
     sub_role: Optional[str] = "owner"
     store_id: Optional[int] = 1
     token: Optional[str] = None
-
-    class Config:
-        from_attributes = True
 
 
 class UserProfileUpdate(BaseModel):
@@ -191,6 +183,7 @@ class PartnershipInviteRequest(BaseModel):
     notes: Optional[str] = None
 
 class PartnershipResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: str
     requester_store_id: int
     receiver_store_id: int
@@ -204,10 +197,8 @@ class PartnershipResponse(BaseModel):
     activated_at: Optional[str] = None
     is_incoming: Optional[bool] = False
 
-    class Config:
-        from_attributes = True
-
 class SharedCarResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: str
     brand: str
     model: str
@@ -227,9 +218,6 @@ class SharedCarResponse(BaseModel):
     fuel: Optional[str] = None
     transmission: Optional[str] = None
 
-    class Config:
-        from_attributes = True
-
 class ReservationCreateRequest(BaseModel):
     car_id: str
     proposed_price: float
@@ -238,6 +226,7 @@ class ReservationCreateRequest(BaseModel):
     duration_minutes: Optional[int] = 120
 
 class ReservationResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: str
     car_id: str
     car_title: Optional[str] = None
@@ -259,14 +248,12 @@ class ReservationResponse(BaseModel):
     consent_notes: Optional[str] = None
     is_owner: Optional[bool] = False
 
-    class Config:
-        from_attributes = True
-
 class ReservationConsentRequest(BaseModel):
     approved: bool
     notes: Optional[str] = None
 
 class PartnerTransactionResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: str
     protocol: str
     reservation_id: Optional[str] = None
@@ -284,13 +271,11 @@ class PartnerTransactionResponse(BaseModel):
     status: str
     created_at: str
 
-    class Config:
-        from_attributes = True
-
 class PartnerMessageCreate(BaseModel):
     message: str
 
 class PartnerMessageResponse(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     id: str
     reservation_id: str
     sender_user_id: str
@@ -300,9 +285,6 @@ class PartnerMessageResponse(BaseModel):
     message: str
     created_at: str
     is_me: Optional[bool] = False
-
-    class Config:
-        from_attributes = True
 
 class PartnerReviewCreate(BaseModel):
     transaction_id: Optional[str] = None

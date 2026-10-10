@@ -4,17 +4,15 @@ from sqlalchemy import pool
 from alembic import context
 import os
 
-from database import Base
+from database import Base, DATABASE_URL
 import models
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
 
-# override sqlalchemy.url if env var exists
-db_url = os.getenv("DATABASE_URL")
-if db_url:
-    config.set_main_option("sqlalchemy.url", db_url)
+# Garante uso da DATABASE_URL do ambiente ou fallback canônico
+config.set_main_option("sqlalchemy.url", DATABASE_URL)
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
