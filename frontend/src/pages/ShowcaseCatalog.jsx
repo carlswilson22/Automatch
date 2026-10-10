@@ -222,18 +222,19 @@ const ShowcaseCatalog = () => {
         setIsLoading(false);
       })
       .catch(err => {
-        if (isDemoModeEnabled()) {
-          const local = getNewCars();
-          const fallback = [...local.map(mapVehicleToViewModel), ...showcaseCars.map(mapVehicleToViewModel)].filter(c => !isCarDeleted(c.id));
-          setAllCars(fallback);
-          setTotalItems(fallback.length);
-          setTotalPages(Math.ceil(fallback.length / itemsPerPage) || 1);
-        } else {
-          setApiError(err.message || 'Falha ao carregar o catálogo de veículos. Verifique sua conexão.');
-          setAllCars([]);
-          setTotalItems(0);
-          setTotalPages(1);
-        }
+        // Fallback garantido: exibe catálogo estático + anúncios locais em qualquer ambiente.
+        // A diferença entre modo demo e produção é apenas a exibição do banner de aviso.
+        const local = getNewCars();
+        const fallback = [
+          ...local.map(mapVehicleToViewModel),
+          ...showcaseCars.map(mapVehicleToViewModel)
+        ].filter(c => !isCarDeleted(c.id));
+        const unique = Array.from(new Map(fallback.map(i => [i.id, i])).values());
+        setAllCars(unique);
+        setTotalItems(unique.length);
+        setTotalPages(Math.ceil(unique.length / itemsPerPage) || 1);
+        // Mostra banner de aviso mas não zera o catálogo
+        setApiError(err.message || 'Servidor temporariamente indisponível. Exibindo catálogo local.');
         setIsLoading(false);
       });
   }, [currentPage, debouncedSearch, filterBrand, filterYear, filterPrice, filterStore, reloadKey]);
@@ -370,18 +371,19 @@ const ShowcaseCatalog = () => {
           )}
 
           {apiError && !isLoading && (
-            <div className="w-full py-16 flex flex-col items-center justify-center bg-white rounded-3xl border border-red-100 p-8 shadow-sm text-center my-4">
-              <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center mb-3">
-                <X className="w-6 h-6" />
+            <div className="flex items-center gap-3 px-4 py-3 mb-4 bg-amber-50 border border-amber-200 rounded-2xl text-sm">
+              <div className="w-7 h-7 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+                <X className="w-4 h-4" />
               </div>
-              <p className="text-base font-bold text-slate-800 mb-1">Falha na comunicação com o servidor</p>
-              <p className="text-xs text-slate-500 max-w-md mb-5">{apiError}</p>
+              <p className="text-amber-800 font-medium flex-1 text-xs">
+                Catálogo local — servidor indisponível no momento.
+              </p>
               <button
                 type="button"
-                onClick={() => setReloadKey(k => k + 1)}
-                className="px-5 py-2.5 bg-brand-blue hover:bg-blue-600 text-white font-bold text-xs rounded-xl shadow-sm transition-all active:scale-95 cursor-pointer inline-flex items-center gap-2"
+                onClick={() => { setApiError(null); setReloadKey(k => k + 1); }}
+                className="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold text-[11px] rounded-lg transition-all active:scale-95 cursor-pointer inline-flex items-center gap-1.5 shrink-0"
               >
-                <RotateCcw className="w-3.5 h-3.5" /> Tentar novamente
+                <RotateCcw className="w-3 h-3" /> Tentar novamente
               </button>
             </div>
           )}
