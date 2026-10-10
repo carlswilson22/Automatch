@@ -265,11 +265,11 @@ describe('BATERIA DE TESTES - NOVAS FUNCIONALIDADES (SPRINT EXPANDIDA)', () => {
     const catalogContent = fs.readFileSync(path.join(rootDir, 'src/pages/ShowcaseCatalog.jsx'), 'utf-8');
     const dashboardContent = fs.readFileSync(path.join(rootDir, 'src/pages/Dashboard.jsx'), 'utf-8');
 
-    test('7.1: ShowcaseVehicleDetails integra MarketPriceIndicator, VehicleComparatorModal, Vehicle360Viewer e WarrantyBadgeModal', () => {
+    test('7.1: ShowcaseVehicleDetails integra MarketPriceIndicator, VehicleComparatorModal, Vehicle360Viewer e assegura ausência de WarrantyBadgeModal (decisão de produto)', () => {
       assert.ok(detailsContent.includes('MarketPriceIndicator'), 'ShowcaseVehicleDetails deve integrar MarketPriceIndicator');
       assert.ok(detailsContent.includes('VehicleComparatorModal'), 'ShowcaseVehicleDetails deve integrar VehicleComparatorModal');
       assert.ok(detailsContent.includes('Vehicle360Viewer'), 'ShowcaseVehicleDetails deve integrar Vehicle360Viewer');
-      assert.ok(detailsContent.includes('WarrantyBadgeModal'), 'ShowcaseVehicleDetails deve integrar WarrantyBadgeModal');
+      assert.strictEqual(detailsContent.includes('WarrantyBadgeModal'), false, 'WarrantyBadgeModal (Garantia Estendida) foi removida por decisão de produto');
     });
 
     test('7.2: ShowcaseCatalog integra VehicleComparatorModal com comparador rápido', () => {

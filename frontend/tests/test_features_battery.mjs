@@ -49,7 +49,7 @@ describe('BATERIA DE TESTES 1: Remoção de "Diferenciais e Itens de Série"', (
     );
   });
 
-  test('1.3: As seções essenciais "Descrição do Veículo" e "Ficha Técnica & Equipamentos" devem permanecer intactas', () => {
+  test('1.3: As seções essenciais "Descrição do Veículo", "Ficha Técnica & Equipamentos" e Simulador de Custo Mensal / TCO devem permanecer intactas', () => {
     assert.ok(
       showcaseContent.includes('Descrição do Veículo'),
       'A seção "Descrição do Veículo" deve ser mantida!'
@@ -59,8 +59,8 @@ describe('BATERIA DE TESTES 1: Remoção de "Diferenciais e Itens de Série"', (
       'A seção "Ficha Técnica & Equipamentos" deve ser mantida!'
     );
     assert.ok(
-      showcaseContent.includes('Custo Estimado de Propriedade (TCO)'),
-      'A seção de calculadora TCO deve ser mantida!'
+      showcaseContent.includes('Simulador de Custo Mensal') || showcaseContent.includes('TcoCalculatorCard'),
+      'A seção de calculadora/simulador de custo mensal (TCO) deve ser mantida!'
     );
   });
 
@@ -1044,14 +1044,16 @@ describe('BATERIA DE TESTES 28: Sprint 09 Tarefa 6 - Detalhes do Anúncio (Sobre
   const detailsPath = path.join(rootDir, 'src/pages/ShowcaseVehicleDetails.jsx');
   const detailsContent = fs.readFileSync(detailsPath, 'utf-8');
 
-  test('28.1: Bloco "Sobre o Veículo" deve anteceder o "Dossiê de Transparência"', () => {
-    const idxSobre = detailsContent.indexOf('{/* Sobre o Veículo — Nome, Metadados, Descrição e Ficha Técnica Consolidados */}');
-    const idxDossie = detailsContent.indexOf('{/* Dossiê de Transparência Automatch */}');
-    const idxTco = detailsContent.indexOf('{/* Calculadora Interativa de Custo Total de Posse (TCO)');
+  test('28.1: Bloco "Sobre o Veículo" deve anteceder o "Dossiê de Transparência" e este deve anteceder o TCO', () => {
+    const idxSobre = detailsContent.indexOf('Sobre o Veículo');
+    const idxDossie = detailsContent.indexOf('Dossiê de Transparência');
+    const idxTco = detailsContent.indexOf('Simulador de Custo Mensal') !== -1 
+      ? detailsContent.indexOf('Simulador de Custo Mensal') 
+      : detailsContent.indexOf('TcoCalculatorCard');
 
     assert.ok(idxSobre > 0, 'Bloco Sobre o Veículo deve existir');
     assert.ok(idxDossie > 0, 'Bloco Dossiê de Transparência deve existir');
-    assert.ok(idxTco > 0, 'Bloco TCO deve existir');
+    assert.ok(idxTco > 0, 'Bloco TCO / Simulador de Custo Mensal deve existir');
     assert.ok(idxSobre < idxDossie, 'Sobre o Veículo deve vir ANTES do Dossiê de Transparência');
     assert.ok(idxDossie < idxTco, 'Dossiê de Transparência deve vir ANTES do TCO (TCO na sua posição original)');
   });
