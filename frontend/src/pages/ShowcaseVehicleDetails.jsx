@@ -1111,6 +1111,7 @@ export default function ShowcaseVehicleDetails() {
                       fipePrice={car.fipePrice}
                       fuelType={car.specs?.combustivel || car.fuel || 'Flex'}
                       carYear={car.year}
+                      showHeader={false}
                     />
                   </motion.div>
                 )}
