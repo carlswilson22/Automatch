@@ -5,7 +5,6 @@
 [![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)](https://react.dev/)
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![Redis](https://img.shields.io/badge/Redis-7-DC382D?logo=redis&logoColor=white)](https://redis.io/)
 [![OpenCV](https://img.shields.io/badge/OpenCV-Computer%20Vision-5C3EE8?logo=opencv&logoColor=white)](https://opencv.org/)
 
 Plataforma automotiva Fullstack que une **marketplace de compra e venda de veículos**, **perícia veicular por IA (OpenCV + YOLOv8 + Gemini)**, **varredura 360° interativa**, **auditoria cadastral DETRAN/FIPE**, **emissão de laudos periciais em PDF com QR Code público** e **painel B2B para lojistas**.
@@ -20,7 +19,7 @@ Plataforma automotiva Fullstack que une **marketplace de compra e venda de veíc
 | **Backend** | Python 3.11, FastAPI assíncrono, SQLAlchemy ORM, Pydantic v2, APScheduler |
 | **Inteligência Artificial** | OpenCV (5 zonas anatômicas), Ultralytics YOLOv8, Google Gemini Vision |
 | **Documentos & Mídia** | ReportLab (Laudo A4 vetorial), QRCode 300 DPI, Pillow |
-| **Infraestrutura** | Docker Compose, PostgreSQL 15, Redis 7, Nginx Gateway |
+| **Infraestrutura** | Docker Compose, PostgreSQL 15, Nginx Gateway |
 | **Segurança** | JWT (RFC 7519), PBKDF2-HMAC-SHA256, Magic Bytes, OWASP A01 Access Control |
 
 ---
@@ -81,8 +80,7 @@ docker compose logs -f
 | **Aplicação Web (Gateway)** | `http://localhost` ou `http://localhost:5173` | Interface principal do Automatch |
 | **API Docs (Swagger UI)** | `http://localhost:8000/docs` | Documentação interativa dos endpoints FastAPI |
 | **OpenAPI Schema** | `http://localhost:8000/openapi.json` | Contrato OpenAPI da aplicação |
-| **PostgreSQL** | `localhost:5432` (`db: automatch`) | Banco relacional |
-| **Cache Redis** | `localhost:6379` | Cache de cotações e sessões |
+| **PostgreSQL** | `localhost:5433` (`db: automatch`) | Banco relacional (porta externa 5433 no compose) |
 
 ---
 

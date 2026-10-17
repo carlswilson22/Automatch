@@ -16,8 +16,7 @@ graph TD
     User([Cliente / Navegador]) -->|HTTP 80 / 3000| Gateway[Nginx Reverse Proxy]
     Gateway -->|/*| Frontend[React 18 + Vite SPA]
     Gateway -->|/api/*| Backend[FastAPI Python 3.11]
-    Backend -->|Persistência Relacional| DB[(PostgreSQL 15)]
-    Backend -->|Cache & Sessões| Cache[(Redis 7)]
+    Backend -->|Persistência Relacional| DB[(PostgreSQL 15 / SQLite Dev)]
     Backend -->|Visão Computacional| VisionEngine[OpenCV + YOLOv8 Engine]
     Backend -->|LLM Multimodal| GeminiAPI[Google Gemini 1.5 Flash Vision]
     Backend -->|Consultas Oficiais| ExternalGov[APIs DETRAN & FIPE]
@@ -34,8 +33,8 @@ graph TD
 | **Backend API** | FastAPI / Python 3.11 | API RESTful assíncrona, validação de esquemas com Pydantic v2, autenticação JWT e orquestração de microsserviços. |
 | **Motor de Visão Computacional** | OpenCV + YOLOv8 + PIL | Pré-processamento e compressão de fotos (*LANCZOS*), detecção de classes automotivas e mapeamento de avarias na lataria. |
 | **Motor de Diagnóstico Acústico** | Python DSP + FFT / Web Audio | Análise espectral de frequências sonoras da marcha lenta e simulação de áudio mecânico. |
-| **Banco de Dados Relacional** | PostgreSQL 15 | Armazenamento de dados persistentes de veículos, lojas, laudos periciais e usuários com SQLAlchemy ORM. |
-| **Cache & Mensageria** | Redis 7 Alpine | Cache em memória de consultas veiculares de placas, cotas FIPE e controle de sessões. |
+| **Banco de Dados Relacional** | PostgreSQL 15 | Armazenamento de dados persistentes de veículos, lojas, laudos periciais e usuários com SQLAlchemy ORM (com modo SQLite para dev). |
+| **Gerenciamento de Estado** | FastAPI / JWT Stateless | Gerenciamento de sessões JWT sem estado e cache de contingência em memória. |
 | **Agendador em Background** | APScheduler | Monitoramento periódico assíncrono (a cada 60 segundos) de débitos da Watchlist DETRAN. |
 
 ---
@@ -99,7 +98,7 @@ sequenceDiagram
 | Risco Identificado | Impacto | Estratégia de Mitigação |
 | :--- | :---: | :--- |
 | **Latência no upload de imagens pesadas** | Médio | Pré-compressão com algoritmo *LANCZOS* reduzindo fotos para 1024x1024 antes da transmissão. |
-| **Indisponibilidade de APIs governamentais (DETRAN/FIPE)** | Alto | Cache persistente em Redis com expiração configurável e dados simulados de contingência. |
+| **Indisponibilidade de APIs governamentais (DETRAN/FIPE)** | Alto | Contingência resiliente via dados locais simulados e fallback assíncrono. |
 | **Sobrecarga em consultas concorrentes de estoque** | Médio | Pool assíncrono de conexões com SQLAlchemy e indexação por chaves primárias UUID e códigos FIPE. |
 
 ---
@@ -115,8 +114,7 @@ Em conformidade com as melhores práticas de segurança de contêineres, o siste
 | **`gateway`** | `80` | `80:80`, `3000:80` (Acesso Local) | `80:80`, `443:443` (Acesso Público) | Ponto único de entrada HTTP/HTTPS. |
 | **`frontend`** | `5173` / `80` | `127.0.0.1:5173:5173` | **Nenhuma porta exposta no host** | Servido exclusivamente através do Gateway. |
 | **`backend`** | `8000` | `127.0.0.1:8000:8000` (Docs Swagger) | **Nenhuma porta exposta no host** | Isolado 100% na rede interna `automatch-prod-network`. |
-| **`db` (Postgres)** | `5432` | `127.0.0.1:5432:5432` (DBeaver Local) | **Nenhuma porta exposta no host** | Acessível unicamente pelo contêiner do `backend`. |
-| **`redis`** | `6379` | `127.0.0.1:6379:6379` (Auth Ativa) | **Nenhuma porta exposta no host** | `--requirepass` obrigatório em todos os ambientes. |
+| **`db` (Postgres)** | `5432` | `127.0.0.1:5433:5432` (DBeaver Local) | **Nenhuma porta exposta no host** | Acessível unicamente pelo contêiner do `backend`. |
 
 ### 7.2. ADR-04: Segregação de Perfis de Orquestração
 - **Decisão**: Manter o `docker-compose.yml` voltado para DX (live-reload com volumes) e criar `docker-compose.prod.yml` com build imutável e multi-workers.
