@@ -137,4 +137,54 @@ describe('AUDITORIA DE SEGURANÇA E MITIGAÇÃO (OWASP TOP 10 & RBAC)', () => {
     assert.ok(howItWorksContent.includes('{isB2BAuthorized &&'), 'HowItWorksPage condiciona bloco B2B a isB2BAuthorized');
     assert.ok(protectedRouteContent.includes('allowedRoles.includes(effectiveRole)'), 'ProtectedRoute restringe acesso por perfil');
   });
+
+  test('SEC-08: Proteção Estrita C1 nas Rotas de Anúncio e Dashboard (App.jsx)', () => {
+    const appPath = path.join(frontendDir, 'src/App.jsx');
+    const appContent = fs.readFileSync(appPath, 'utf-8').replace(/\r\n/g, '\n');
+
+    // /dashboard deve exigir allowedRoles=['admin', 'lojista']
+    assert.ok(
+      appContent.includes('<Route path="/dashboard" element={\n            <ProtectedRoute allowedRoles={[\'admin\', \'lojista\']}>') ||
+      appContent.includes('<ProtectedRoute allowedRoles={[\'admin\', \'lojista\']}>\n              <Dashboard />'),
+      '/dashboard deve ter guarda estrita C1 para lojista e admin'
+    );
+
+    // /novo-anuncio deve exigir allowedRoles=['admin', 'lojista']
+    assert.ok(
+      appContent.includes('<ProtectedRoute allowedRoles={[\'admin\', \'lojista\']}>\n              <NewCarAdForm />'),
+      '/novo-anuncio deve ter guarda estrita C1 para lojista e admin'
+    );
+
+    // /meus-anuncios deve exigir allowedRoles=['admin', 'lojista']
+    assert.ok(
+      appContent.includes('<ProtectedRoute allowedRoles={[\'admin\', \'lojista\']}>\n              <MyAdsPage />'),
+      '/meus-anuncios deve ter guarda estrita C1 para lojista e admin'
+    );
+  });
+
+  test('SEC-09: Endpoint de Onboarding de Loja com Guard RBAC (auth.py & schemas.py)', () => {
+    const schemasPath = path.join(backendDir, 'schemas.py');
+    const authPyPath = path.join(backendDir, 'routers/auth.py');
+
+    const schemasContent = fs.readFileSync(schemasPath, 'utf-8');
+    const authContent = fs.readFileSync(authPyPath, 'utf-8');
+
+    assert.ok(schemasContent.includes('class StoreOnboardingRequest(BaseModel):'), 'StoreOnboardingRequest deve existir no schema');
+    assert.ok(authContent.includes('@router.post("/store/onboarding"'), 'Endpoint /store/onboarding deve existir em auth.py');
+    assert.ok(authContent.includes('Depends(require_lojista_or_admin)'), 'Endpoint deve usar guard centralizado require_lojista_or_admin');
+  });
+
+  test('SEC-10: Alerta Visual de Acesso Negado e Nav Condicional (Home.jsx & ShowcaseCatalog.jsx)', () => {
+    const homePath = path.join(frontendDir, 'src/pages/Home.jsx');
+    const catalogPath = path.join(frontendDir, 'src/pages/ShowcaseCatalog.jsx');
+
+    const homeContent = fs.readFileSync(homePath, 'utf-8');
+    const catalogContent = fs.readFileSync(catalogPath, 'utf-8');
+
+    assert.ok(homeContent.includes('location.state?.accessDenied'), 'Home.jsx deve capturar accessDenied do roteamento');
+    assert.ok(homeContent.includes('ShieldAlert'), 'Home.jsx deve renderizar ShieldAlert no banner de aviso');
+    assert.ok(homeContent.includes('canAccessB2B && canAccessB2B()'), 'Home.jsx deve condicionar botão de anúncio a canAccessB2B');
+    assert.ok(catalogContent.includes('canAccessB2B && canAccessB2B()'), 'ShowcaseCatalog.jsx deve condicionar + Anunciar a canAccessB2B');
+  });
 });
+
