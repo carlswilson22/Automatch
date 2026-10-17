@@ -16,6 +16,8 @@ import schemas
 import security
 from database import get_db
 from security_guard import login_rate_limiter, mask_email
+# get_current_user centralizado — importado de dependencies para evitar duplicidade
+from dependencies import get_current_user
 
 logger = logging.getLogger("automatch")
 router = APIRouter(prefix="/api", tags=["Auth"])
@@ -23,39 +25,9 @@ router = APIRouter(prefix="/api", tags=["Auth"])
 EMAIL_REGEX = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
 
-def get_current_user_from_header(
-    authorization: Optional[str] = Header(default=None),
-    db: Session = Depends(get_db)
-) -> models.User:
-    """
-    Extrai e valida o JWT do header Authorization: Bearer <token>.
-    Suporta tokens de contingência para ambiente demo/admin.
-    Retorna o objeto User autenticado ou levanta HTTPException 401.
-    """
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=401, detail="Token de autenticação obrigatório.")
-    token = authorization.removeprefix("Bearer ").strip()
-
-    # Suporte a tokens demo/contingência estritamente restrito a ambiente de desenvolvimento/testes
-    allow_demo = os.getenv("ALLOW_DEMO_TOKENS", "true").lower() in ["true", "1"] and os.getenv("ENVIRONMENT", "").lower() != "production"
-    if allow_demo and token in ["demo-admin-token", "demo-lojista-token"]:
-        admin_user = db.query(models.User).filter(models.User.email == "admin@automatch.com").first()
-        if admin_user:
-            return admin_user
-        first_user = db.query(models.User).first()
-        if first_user:
-            return first_user
-
-    payload = security.decode_access_token(token)
-    if not payload:
-        raise HTTPException(status_code=401, detail="Token inválido ou expirado.")
-    user_id = payload.get("sub")
-    if not user_id:
-        raise HTTPException(status_code=401, detail="Token malformado.")
-    user = db.query(models.User).filter(models.User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
-    return user
+# get_current_user_from_header mantido como alias para retrocompatibilidade
+# com quaisquer routers que ainda o importem diretamente.
+get_current_user_from_header = get_current_user
 
 # Rate limiting em memória para recuperação de senha
 _reset_attempts: Dict[str, List[float]] = {}
@@ -65,6 +37,16 @@ RATE_LIMIT_MAX = 3         # máx 3 tentativas por hora
 
 @router.post("/register", response_model=schemas.UserResponse)
 def register(request: schemas.UserCreate, db: Session = Depends(get_db)) -> Dict[str, Any]:
+    """
+    Cadastro de novo usuário.
+
+    Regras de role (P4):
+      - role aceito: 'lojista' ou 'comprador'. Qualquer outro valor (incluindo 'admin')
+        é rejeitado com HTTP 400.
+      - Lojista: obrigatório informar store_name. Uma nova loja é criada e vinculada
+        atomicamente (sub_role='owner').
+      - Comprador: store_id fica nulo. Não tem acesso ao painel B2B (C1).
+    """
     email = request.email.strip().lower()
     if not EMAIL_REGEX.match(email):
         raise HTTPException(status_code=400, detail="Formato de e-mail inválido.")
@@ -76,38 +58,79 @@ def register(request: schemas.UserCreate, db: Session = Depends(get_db)) -> Dict
     if len(request.password) < 6:
         raise HTTPException(status_code=400, detail="A senha deve ter no mínimo 6 caracteres.")
 
+    # Validação de role: nunca aceitar 'admin' ou roles desconhecidas via API pública
+    requested_role = (request.role or "comprador").strip().lower()
+    if requested_role not in ("lojista", "comprador"):
+        raise HTTPException(
+            status_code=400,
+            detail="Papel inválido. Escolha entre 'lojista' ou 'comprador'."
+        )
+
+    # Lojista DEVE informar o nome da loja (P5 Opção A)
+    if requested_role == "lojista":
+        store_name = (request.store_name or "").strip()
+        if len(store_name) < 3:
+            raise HTTPException(
+                status_code=400,
+                detail="Lojistas devem informar o nome da loja (mínimo 3 caracteres)."
+            )
+
     existing = db.query(models.User).filter(models.User.email == email).first()
     if existing:
         raise HTTPException(status_code=400, detail="Este e-mail já está cadastrado no sistema.")
-    
-    # Associa à loja padrão (ou primeira loja disponível)
-    first_store = db.query(models.Store).first()
-    default_store_id = first_store.id if first_store else 1
 
+    # --- Criação da Loja (apenas para lojistas) — P5 Opção A ---
+    new_store_id = None
+    sub_role = None
+    if requested_role == "lojista":
+        slug_base = re.sub(r"[^a-z0-9]+", "-", store_name.lower()).strip("-")
+        # Garante slug único no banco
+        slug = slug_base
+        counter = 1
+        while db.query(models.Store).filter(models.Store.slug == slug).first():
+            slug = f"{slug_base}-{counter}"
+            counter += 1
+
+        new_store = models.Store(
+            name=store_name,
+            slug=slug,
+            logo="",
+            description=f"Loja cadastrada por {clean_name}."
+        )
+        db.add(new_store)
+        db.flush()  # Obtém o ID antes do commit
+        new_store_id = new_store.id
+        sub_role = "owner"
+
+    member_since = datetime.now().strftime("%B %Y")
     user = models.User(
         name=clean_name,
         email=email,
         hashed_password=security.hash_password(request.password),
-        member_since="Março 2024",
-        photo="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200",
-        role="lojista",
-        sub_role="owner",
-        store_id=default_store_id
+        member_since=member_since,
+        photo="https://api.dicebear.com/7.x/initials/svg?seed=" + clean_name.replace(" ", "+"),
+        role=requested_role,
+        sub_role=sub_role,
+        store_id=new_store_id  # None para compradores
     )
     db.add(user)
     db.commit()
     db.refresh(user)
-    
-    token = security.create_access_token({"sub": user.id, "email": user.email})
+
+    token = security.create_access_token({"sub": user.id, "email": user.email, "role": user.role})
+    logger.info(
+        "Novo usuário cadastrado: %s | role=%s | store_id=%s",
+        mask_email(email), requested_role, new_store_id
+    )
     return {
         "id": user.id,
         "name": user.name,
         "email": user.email,
         "memberSince": user.member_since,
         "photo": user.photo,
-        "role": user.role or "lojista",
-        "sub_role": user.sub_role or "owner",
-        "store_id": user.store_id or default_store_id,
+        "role": user.role,
+        "sub_role": user.sub_role,
+        "store_id": user.store_id,
         "token": token
     }
 

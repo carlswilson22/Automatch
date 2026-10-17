@@ -495,7 +495,9 @@ const NewCarAdForm = () => {
     // Convert price back to number
     const numericPrice = Number(formData.preco.replace(/[^0-9,-]+/g,"").replace(",", ".")) || 0;
 
-    const storeNumericId = formData.store_id ? Number(String(formData.store_id).replace(/\D/g, '')) || 1 : 1;
+    const storeNumericId = isB2BUser
+      ? (formData.store_id ? Number(String(formData.store_id).replace(/\D/g, '')) || 1 : 1)
+      : null;
 
     // A1: Combina feedback de laudo PDF ou de análise visual pericial para persistência no banco
     const activeLaudoFeedback = laudoFeedback || (photoAiResult ? {
@@ -527,11 +529,11 @@ const NewCarAdForm = () => {
       auction_history: formData.leilao,
       laudo_url: laudoUploadedUrl || null,
       laudo_feedback: activeLaudoFeedback ? JSON.stringify(activeLaudoFeedback) : null,
-      // B2B Repasse
-      compartilhavel: formData.compartilhavel ? 1 : 0,
-      valor_minimo_repasse: formData.valor_minimo_repasse ? Number(formData.valor_minimo_repasse.replace(/[^0-9,-]+/g,"").replace(",", ".")) : null,
-      comissao_fixa: formData.comissao_fixa ? parseFloat(formData.comissao_fixa) : 3.0,
-      observacoes_repasse: formData.observacoes_repasse || null,
+      // B2B Repasse (apenas para lojistas/concessionárias)
+      compartilhavel: isB2BUser && formData.compartilhavel ? 1 : 0,
+      valor_minimo_repasse: isB2BUser && formData.valor_minimo_repasse ? Number(formData.valor_minimo_repasse.replace(/[^0-9,-]+/g,"").replace(",", ".")) : null,
+      comissao_fixa: isB2BUser && formData.comissao_fixa ? parseFloat(formData.comissao_fixa) : null,
+      observacoes_repasse: isB2BUser ? (formData.observacoes_repasse || null) : null,
       plate: plateInput.replace(/[^A-Za-z0-9]/g, '').toUpperCase() || null
     };
 

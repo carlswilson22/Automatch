@@ -8,7 +8,8 @@ from fastapi import APIRouter, Depends, HTTPException, Header
 import models
 import schemas
 from database import get_db
-from routers.auth import get_current_user_from_header
+# Guard centralizado (dependencies.py) — alias de retrocompatibilidade mantido
+from dependencies import get_current_user as get_current_user_from_header
 
 logger = logging.getLogger("automatch")
 router = APIRouter(prefix="/api", tags=["Cars & Stores"])
@@ -112,33 +113,36 @@ def create_car(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user_from_header)
 ) -> schemas.CarSchema:
-    # DEF-01: Verificação de role no backend (OWASP A01:2021)
-    # Apenas lojistas e administradores podem publicar anúncios
-    if getattr(current_user, "role", None) not in ("lojista", "admin"):
-        raise HTTPException(
-            status_code=403,
-            detail="Acesso negado: apenas lojistas podem publicar anúncios."
-        )
-
+    """
+    Publicação de veículos:
+    - Compradores (particulares): criam anúncios vinculados ao seu user_id (venda direta).
+    - Lojistas / Admins: criam anúncios vinculados à sua loja e podem ativar a rede de repasse B2B.
+    """
     car_data = car.model_dump()
     car_data["user_id"] = current_user.id
+
+    is_b2b_seller = getattr(current_user, "role", None) in ("lojista", "admin")
+
+    # Apenas lojistas/admins podem habilitar repasse comercial B2B
+    if not is_b2b_seller:
+        car_data["compartilhavel"] = False
+        car_data["valor_minimo_repasse"] = None
+        car_data["comissao_fixa"] = None
+        car_data["observacoes_repasse"] = None
+
     target_store_id = car_data.get("store_id")
     if target_store_id is not None:
         store_exists = db.query(models.Store).filter(models.Store.id == target_store_id).first()
         if not store_exists:
-            first_store = db.query(models.Store).first()
-            if first_store:
-                car_data["store_id"] = first_store.id
+            if getattr(current_user, "store_id", None):
+                car_data["store_id"] = current_user.store_id
+            elif is_b2b_seller:
+                first_store = db.query(models.Store).first()
+                car_data["store_id"] = first_store.id if first_store else None
             else:
-                default_store = models.Store(
-                    name="Automatch Matriz",
-                    slug="automatch-matriz",
-                    description="Concessionária padrão da plataforma"
-                )
-                db.add(default_store)
-                db.commit()
-                db.refresh(default_store)
-                car_data["store_id"] = default_store.id
+                car_data["store_id"] = None
+    elif is_b2b_seller and getattr(current_user, "store_id", None):
+        car_data["store_id"] = current_user.store_id
 
     db_car = models.Car(**car_data)
     db.add(db_car)

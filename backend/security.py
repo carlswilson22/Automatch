@@ -11,11 +11,37 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Chave secreta obtida do ambiente com fallback seguro de contingencia
-SECRET_KEY = os.getenv("JWT_SECRET") or "automatch-jwt-secret-key-production-ceub-2026"
+# Chave secreta: OBRIGATÓRIA em produção via JWT_SECRET no ambiente.
+# Em desenvolvimento, o valor padrão é aceito com aviso em log.
+_DEFAULT_SECRET = "automatch-jwt-secret-key-production-ceub-2026"
+SECRET_KEY = os.getenv("JWT_SECRET") or _DEFAULT_SECRET
 
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 dias
+
+# Duração do token: lida do ambiente (padrão 1440 min = 24 horas).
+# Defina ACCESS_TOKEN_EXPIRE_MINUTES no .env para alterar.
+ACCESS_TOKEN_EXPIRE_MINUTES: int = int(
+    os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "1440")
+)
+
+
+def check_production_secrets() -> None:
+    """
+    Guard de inicialização: levanta RuntimeError se o ambiente for 'production'
+    e o JWT_SECRET ainda estiver com o valor padrão do repositório (R2).
+    Chame esta função em main.py durante o lifespan, ANTES de aceitar tráfego.
+    """
+    env = os.getenv("ENVIRONMENT", "").strip().lower()
+    if env == "production" and SECRET_KEY == _DEFAULT_SECRET:
+        raise RuntimeError(
+            "[SEGURANÇA CRÍTICA] JWT_SECRET não definido no ambiente de produção. "
+            "Defina a variável JWT_SECRET com um valor secreto exclusivo antes de iniciar."
+        )
+    if env == "production" and os.getenv("ALLOW_DEMO_TOKENS", "false").lower() in ("true", "1"):
+        raise RuntimeError(
+            "[SEGURANÇA CRÍTICA] ALLOW_DEMO_TOKENS=true não é permitido em ENVIRONMENT=production. "
+            "Remova ou defina ALLOW_DEMO_TOKENS=false."
+        )
 
 def hash_password(password: str) -> str:
     """Gera hash seguro de senha utilizando PBKDF2-HMAC-SHA256 com salt aleatório."""

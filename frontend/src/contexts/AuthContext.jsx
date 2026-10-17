@@ -2,7 +2,22 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext({});
 
-// Hash seguro unidirecional para credenciais locais (evita exposição de senhas em plaintext no localStorage)
+// ===========================================================================
+// Utilitários Internos
+// ===========================================================================
+
+/**
+ * isDemoModeEnabled — retorna true apenas em modo de desenvolvimento local.
+ * Nunca habilita fallbacks de demo em produção (variável VITE_ENABLE_DEMO_DATA).
+ */
+const isDemoModeEnabled = () => {
+  return import.meta.env.VITE_ENABLE_DEMO_DATA === 'true' && import.meta.env.DEV === true;
+};
+
+/**
+ * Hash unidirecional para credenciais locais (fallback offline).
+ * Evita exposição de senhas em plaintext no sessionStorage.
+ */
 const hashPasswordLocal = async (plainPassword) => {
   if (typeof crypto !== 'undefined' && crypto?.subtle) {
     try {
@@ -20,25 +35,54 @@ const hashPasswordLocal = async (plainPassword) => {
   return 'sh_' + Math.abs(hash);
 };
 
+// ===========================================================================
+// AuthProvider
+// ===========================================================================
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  /**
+   * P4 — "sempre que o usuário entrar no site ele deve fazer login":
+   * A sessão é armazenada em sessionStorage (apagada quando o browser/aba fecha).
+   * O usuário precisa fazer login a cada nova sessão de navegação.
+   * localStorage é usado apenas para a lista de contas locais (fallback offline).
+   */
   useEffect(() => {
-    // Restaura a sessão do usuário previamente salvo
-    const savedUser = localStorage.getItem('automatch_user');
+    const savedUser = sessionStorage.getItem('automatch_user');
     if (savedUser) {
       try {
         setUser(JSON.parse(savedUser));
       } catch (e) {
-        localStorage.removeItem('automatch_user');
+        sessionStorage.removeItem('automatch_user');
+        sessionStorage.removeItem('automatch_token');
       }
     }
     setLoading(false);
   }, []);
 
+  // ---------------------------------------------------------------------------
+  // Helpers de persistência (sessionStorage)
+  // ---------------------------------------------------------------------------
+  const _persistSession = (userData) => {
+    sessionStorage.setItem('automatch_user', JSON.stringify(userData));
+    if (userData?.token) {
+      sessionStorage.setItem('automatch_token', userData.token);
+    }
+  };
+
+  const _clearSession = () => {
+    sessionStorage.removeItem('automatch_user');
+    sessionStorage.removeItem('automatch_token');
+  };
+
+  // ---------------------------------------------------------------------------
+  // login
+  // ---------------------------------------------------------------------------
   const login = async (rawEmail, password) => {
     const cleanEmail = (rawEmail || '').trim().replace(/^@+/, '').toLowerCase();
+
     try {
       const response = await fetch('/api/login', {
         method: 'POST',
@@ -52,17 +96,20 @@ export const AuthProvider = ({ children }) => {
       }
 
       const userData = await response.json();
-      const reconciledRole = userData.role || (userData.accountType === 'store' ? 'lojista' : 'comprador');
-      const resolvedUser = { ...userData, role: reconciledRole };
+      // Reconcilia role: usa o que o backend retorna (fonte da verdade)
+      const resolvedUser = {
+        ...userData,
+        role: userData.role || 'comprador',
+        accountType: userData.role === 'lojista' ? 'store' : (userData.role === 'admin' ? 'store' : 'buyer')
+      };
+
       setUser(resolvedUser);
-      localStorage.setItem('automatch_user', JSON.stringify(resolvedUser));
-      if (resolvedUser.token) {
-        localStorage.setItem('automatch_token', resolvedUser.token);
-      }
+      _persistSession(resolvedUser);
       return resolvedUser;
+
     } catch (error) {
-      // 1. Fallback para as credenciais oficiais de demonstração (README)
-      if (cleanEmail === 'admin@automatch.com' && password === 'admin123') {
+      // Fallback demo — APENAS em ambiente de desenvolvimento com VITE_ENABLE_DEMO_DATA=true
+      if (isDemoModeEnabled() && cleanEmail === 'admin@automatch.com' && password === 'admin123') {
         const demoAdmin = {
           id: 1,
           name: 'Administrador Automatch',
@@ -75,45 +122,60 @@ export const AuthProvider = ({ children }) => {
           photo: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200',
           token: 'demo-admin-token'
         };
-
         setUser(demoAdmin);
-        localStorage.setItem('automatch_user', JSON.stringify(demoAdmin));
-        localStorage.setItem('automatch_token', demoAdmin.token);
+        _persistSession(demoAdmin);
         return demoAdmin;
       }
 
-      // 2. Fallback para usuários registrados localmente no navegador
-      try {
-        const localAccounts = JSON.parse(localStorage.getItem('@automatch:registered_users') || '[]');
-        const inputHash = await hashPasswordLocal(password);
-        const found = localAccounts.find(u =>
-          u.email.toLowerCase() === cleanEmail &&
-          (u.passwordHash === inputHash || u.password === password) // compatibilidade retroativa
-        );
-        if (found) {
-          const { password: _p, passwordHash: _ph, ...userData } = found;
-          setUser(userData);
-          localStorage.setItem('automatch_user', JSON.stringify(userData));
-          if (userData.token) {
-            localStorage.setItem('automatch_token', userData.token);
+      // Fallback offline — contas registradas localmente (sem backend)
+      if (isDemoModeEnabled()) {
+        try {
+          const localAccounts = JSON.parse(localStorage.getItem('@automatch:registered_users') || '[]');
+          const inputHash = await hashPasswordLocal(password);
+          const found = localAccounts.find(u =>
+            u.email.toLowerCase() === cleanEmail &&
+            (u.passwordHash === inputHash || u.password === password)
+          );
+          if (found) {
+            const { password: _p, passwordHash: _ph, ...userData } = found;
+            setUser(userData);
+            _persistSession(userData);
+            return userData;
           }
-          return userData;
+        } catch (storageErr) {
+          console.warn('Erro ao consultar contas locais:', storageErr);
         }
-      } catch (storageErr) {
-        console.warn('Erro ao consultar contas locais:', storageErr);
       }
 
       throw error;
     }
   };
 
+  // ---------------------------------------------------------------------------
+  // register
+  // ---------------------------------------------------------------------------
   const register = async (name, rawEmail, password, extraData = {}) => {
     const cleanEmail = (rawEmail || '').trim().replace(/^@+/, '').toLowerCase();
+
+    // Mapeia accountType do frontend para role do backend
+    const roleMap = {
+      store: 'lojista',
+      seller: 'lojista',
+      buyer: 'comprador',
+    };
+    const mappedRole = roleMap[extraData.accountType] || 'comprador';
+
     try {
       const response = await fetch('/api/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: name.trim(), email: cleanEmail, password })
+        body: JSON.stringify({
+          name: name.trim(),
+          email: cleanEmail,
+          password,
+          role: mappedRole,
+          store_name: extraData.storeName || null
+        })
       });
 
       let userData;
@@ -124,11 +186,10 @@ export const AuthProvider = ({ children }) => {
         throw new Error(errData.detail || 'Erro ao realizar cadastro.');
       }
 
-      const effectiveRole = extraData.accountType === 'store' ? 'lojista' : (userData.role === 'admin' ? 'admin' : 'comprador');
       const fullUser = {
         ...userData,
-        role: effectiveRole,
-        accountType: extraData.accountType || (effectiveRole === 'lojista' ? 'store' : 'buyer'),
+        // O role vem do backend (fonte da verdade)
+        accountType: userData.role === 'lojista' ? 'store' : 'buyer',
         phone: extraData.phone || '',
         city: extraData.city || '',
         storeName: extraData.storeName || '',
@@ -137,34 +198,38 @@ export const AuthProvider = ({ children }) => {
       };
 
       setUser(fullUser);
-      localStorage.setItem('automatch_user', JSON.stringify(fullUser));
-      if (fullUser.token) {
-        localStorage.setItem('automatch_token', fullUser.token);
+      _persistSession(fullUser);
+
+      // Persiste conta local para fallback offline (sem expor senha)
+      if (isDemoModeEnabled()) {
+        try {
+          const localAccounts = JSON.parse(localStorage.getItem('@automatch:registered_users') || '[]');
+          const updated = localAccounts.filter(u => u.email.toLowerCase() !== cleanEmail);
+          const { password: _p, ...safeUser } = fullUser;
+          const passwordHash = await hashPasswordLocal(password);
+          updated.push({ ...safeUser, passwordHash });
+          localStorage.setItem('@automatch:registered_users', JSON.stringify(updated));
+        } catch (e) {}
       }
 
-      // Salva cópia local para garantir login offline futuro (sem expor senha em texto claro)
-      try {
-        const localAccounts = JSON.parse(localStorage.getItem('@automatch:registered_users') || '[]');
-        const updated = localAccounts.filter(u => u.email.toLowerCase() !== cleanEmail);
-        const { password: _p, ...safeUser } = fullUser;
-        const passwordHash = await hashPasswordLocal(password);
-        updated.push({ ...safeUser, passwordHash });
-        localStorage.setItem('@automatch:registered_users', JSON.stringify(updated));
-      } catch (e) {}
-
       return fullUser;
+
     } catch (error) {
-      // Fallback local resiliente: permite cadastrar qualquer tipo de perfil mesmo com backend offline
-      console.warn('Modo cadastro local resiliente:', error.message);
-      const fallbackRole = extraData.accountType === 'store' ? 'lojista' : 'comprador';
+      // Fallback local resiliente (apenas em modo demo)
+      if (!isDemoModeEnabled()) {
+        throw error;
+      }
+
+      console.warn('Modo cadastro local resiliente (demo):', error.message);
+      const fallbackRole = mappedRole;
       const fallbackUser = {
         id: 'user-' + Date.now(),
         name: name.trim(),
         email: cleanEmail,
-        memberSince: 'Setembro 2026',
+        memberSince: new Date().toLocaleString('pt-BR', { month: 'long', year: 'numeric' }),
         photo: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name.trim())}`,
         role: fallbackRole,
-        accountType: extraData.accountType || 'buyer',
+        accountType: fallbackRole === 'lojista' ? 'store' : 'buyer',
         phone: extraData.phone || '',
         city: extraData.city || '',
         storeName: extraData.storeName || '',
@@ -173,31 +238,34 @@ export const AuthProvider = ({ children }) => {
         token: 'local-jwt-token-' + Date.now()
       };
 
-      // Persiste nas contas registradas locais (sem expor senha em texto claro)
       try {
         const localAccounts = JSON.parse(localStorage.getItem('@automatch:registered_users') || '[]');
         const updated = localAccounts.filter(u => u.email.toLowerCase() !== cleanEmail);
-        const { password: _p, ...safeFallbackUser } = fallbackUser;
         const passwordHash = await hashPasswordLocal(password);
-        updated.push({ ...safeFallbackUser, passwordHash });
+        updated.push({ ...fallbackUser, passwordHash });
         localStorage.setItem('@automatch:registered_users', JSON.stringify(updated));
       } catch (e) {}
 
       setUser(fallbackUser);
-      localStorage.setItem('automatch_user', JSON.stringify(fallbackUser));
+      _persistSession(fallbackUser);
       return fallbackUser;
     }
   };
 
+  // ---------------------------------------------------------------------------
+  // logout
+  // ---------------------------------------------------------------------------
   const logout = () => {
     setUser(null);
-    localStorage.removeItem('automatch_user');
-    localStorage.removeItem('automatch_token');
+    _clearSession();
   };
 
+  // ---------------------------------------------------------------------------
+  // updateProfile
+  // ---------------------------------------------------------------------------
   const updateProfile = async (updates) => {
     try {
-      const token = user?.token || localStorage.getItem('automatch_token');
+      const token = user?.token || sessionStorage.getItem('automatch_token');
       const headers = { 'Content-Type': 'application/json' };
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
@@ -209,25 +277,54 @@ export const AuthProvider = ({ children }) => {
         body: JSON.stringify(updates)
       });
 
+      // Sessão expirada — força logout
+      if (response.status === 401) {
+        logout();
+        throw new Error('Sessão expirada. Faça login novamente.');
+      }
+
       if (response.ok) {
         const updated = await response.json();
         const merged = { ...user, ...updated };
         setUser(merged);
-        localStorage.setItem('automatch_user', JSON.stringify(merged));
+        _persistSession(merged);
         return merged;
       }
     } catch (e) {
-      // Continua com atualização local se falhar
+      if (e.message?.includes('Sessão expirada')) throw e;
+      // Continua com atualização local se a chamada de rede falhar
     }
 
     const newUser = { ...user, ...updates };
     setUser(newUser);
-    localStorage.setItem('automatch_user', JSON.stringify(newUser));
+    _persistSession(newUser);
     return newUser;
   };
 
+  // ---------------------------------------------------------------------------
+  // Helpers expostos
+  // ---------------------------------------------------------------------------
+
+  /** Retorna true se o usuário tem acesso ao painel B2B/Dashboard (C1). */
+  const canAccessB2B = () => {
+    return ['lojista', 'admin'].includes(user?.role);
+  };
+
+  /** Retorna o token da sessão atual. */
+  const getToken = () => sessionStorage.getItem('automatch_token') || user?.token || null;
+
   return (
-    <AuthContext.Provider value={{ user, loading, login, register, logout, updateProfile, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{
+      user,
+      loading,
+      login,
+      register,
+      logout,
+      updateProfile,
+      canAccessB2B,
+      getToken,
+      isAuthenticated: !!user,
+    }}>
       {children}
     </AuthContext.Provider>
   );

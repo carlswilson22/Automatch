@@ -55,6 +55,9 @@ async def lifespan(app: FastAPI):
     Inicializa banco, seed de admin, scheduler e pre-warm do modelo YOLO.
     """
     # ── Startup ────────────────────────────────────────────────────────────────
+    # Guard de produção: falha rápido se JWT_SECRET ou ALLOW_DEMO_TOKENS estiverem inseguros (R2)
+    security.check_production_secrets()
+
     models.Base.metadata.create_all(bind=engine)
 
     # Auto-migração idempotente e agnóstica de colunas (compatível com SQLite e Postgres)
@@ -106,21 +109,45 @@ async def lifespan(app: FastAPI):
 
 
     # Auto-seed admin user se não existir
+    # Senha lida de ADMIN_SEED_PASSWORD (obrigatório em produção).
+    # Em desenvolvimento, usa 'admin123' com aviso CRITICAL no log.
     db = SessionLocal()
     try:
         admin_user = db.query(models.User).filter(models.User.email == "admin@automatch.com").first()
         if not admin_user:
+            env = os.getenv("ENVIRONMENT", "").strip().lower()
+            seed_password = os.getenv("ADMIN_SEED_PASSWORD", "")
+
+            if not seed_password:
+                if env == "production":
+                    # Em produção: falha rápido — não criamos admin sem senha definida (R3)
+                    raise RuntimeError(
+                        "[SEGURANÇA CRÍTICA] ADMIN_SEED_PASSWORD não definido em ENVIRONMENT=production. "
+                        "Defina a variável com uma senha segura para criar o admin inicial."
+                    )
+                else:
+                    seed_password = "admin123"
+                    logger.critical(
+                        "[AVISO SEGURANÇA] Admin criado com senha padrão 'admin123'. "
+                        "Defina ADMIN_SEED_PASSWORD antes de ir para produção!"
+                    )
+
             admin_user = models.User(
                 id="user-1",
                 name="Admin",
                 email="admin@automatch.com",
-                hashed_password=security.hash_password("admin123"),
+                hashed_password=security.hash_password(seed_password),
                 member_since="Abril 2024",
-                photo="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200"
+                photo="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200",
+                role="admin",
+                sub_role="owner",
+                store_id=1
             )
             db.add(admin_user)
             db.commit()
             logger.info("Admin padrão cadastrado com sucesso.")
+    except RuntimeError:
+        raise
     except Exception as e:
         logger.warning("Aviso na verificação de admin: %s", e)
         db.rollback()

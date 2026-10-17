@@ -26,7 +26,7 @@ class CarBase(BaseModel):
             raise ValueError("Preço inválido: deve ser maior que zero (mínimo R$ 1,00).")
         return v
     image: Optional[str] = "placeholder-carro.jpg"
-    store_id: int
+    store_id: Optional[int] = None
     
     color: Optional[str] = None
     fuel: Optional[str] = None
@@ -104,6 +104,11 @@ class UserCreate(BaseModel):
     name: str
     email: str
     password: str
+    # Papel solicitado pelo usuário: apenas 'lojista' ou 'comprador'.
+    # 'admin' nunca pode ser definido via API pública (ignorado e rejeitado).
+    role: Optional[str] = "comprador"
+    # Nome da loja: obrigatório quando role == 'lojista' (validação feita no endpoint).
+    store_name: Optional[str] = None
 
 class UserLogin(BaseModel):
     email: str
@@ -115,10 +120,10 @@ class UserResponse(BaseModel):
     name: str
     email: str
     photo: Optional[str] = None
-    memberSince: Optional[str] = "Março 2024"
-    role: Optional[str] = "lojista"
-    sub_role: Optional[str] = "owner"
-    store_id: Optional[int] = 1
+    memberSince: Optional[str] = None
+    role: Optional[str] = "comprador"
+    sub_role: Optional[str] = None
+    store_id: Optional[int] = None
     token: Optional[str] = None
 
 

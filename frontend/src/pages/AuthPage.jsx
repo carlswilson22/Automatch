@@ -100,9 +100,7 @@ const AuthPage = () => {
         if (selectedPlanId && selectedPlanId !== 'free') {
           navigate(`/checkout?type=plan&planId=${selectedPlanId}`);
         } else if (!isLogin) {
-          if (accountType === 'seller') {
-            navigate('/novo-anuncio');
-          } else if (accountType === 'store') {
+          if (accountType === 'store') {
             navigate('/dashboard');
           } else {
             navigate('/encontrar');
@@ -312,44 +310,39 @@ const AuthPage = () => {
               <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2 block text-center">
                 Selecione Seu Perfil
               </label>
-              <div className="grid grid-cols-3 gap-2 bg-slate-950/80 p-1.5 rounded-2xl border border-slate-800">
+              <div className="grid grid-cols-2 gap-2 bg-slate-950/80 p-1.5 rounded-2xl border border-slate-800">
                 <button
                   type="button"
+                  id="profile-comprador"
                   onClick={() => setAccountType('buyer')}
-                  className={`py-2 px-2 rounded-xl text-xs font-bold transition-all flex flex-col items-center gap-1 cursor-pointer ${
+                  className={`py-3 px-2 rounded-xl text-xs font-bold transition-all flex flex-col items-center gap-1.5 cursor-pointer ${
                     accountType === 'buyer'
                       ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  <User className="w-4 h-4" />
+                  <User className="w-5 h-5" />
                   <span>Comprador</span>
+                  <span className={`text-[9px] font-normal leading-tight text-center ${
+                    accountType === 'buyer' ? 'text-blue-200' : 'text-slate-600'
+                  }`}>Busca e compra veículos</span>
                 </button>
 
                 <button
                   type="button"
-                  onClick={() => setAccountType('seller')}
-                  className={`py-2 px-2 rounded-xl text-xs font-bold transition-all flex flex-col items-center gap-1 cursor-pointer ${
-                    accountType === 'seller'
-                      ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
-                      : 'text-slate-400 hover:text-white'
-                  }`}
-                >
-                  <Sparkles className="w-4 h-4" />
-                  <span>Vendedor</span>
-                </button>
-
-                <button
-                  type="button"
+                  id="profile-lojista"
                   onClick={() => setAccountType('store')}
-                  className={`py-2 px-2 rounded-xl text-xs font-bold transition-all flex flex-col items-center gap-1 cursor-pointer ${
+                  className={`py-3 px-2 rounded-xl text-xs font-bold transition-all flex flex-col items-center gap-1.5 cursor-pointer ${
                     accountType === 'store'
                       ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
                       : 'text-slate-400 hover:text-white'
                   }`}
                 >
-                  <Building2 className="w-4 h-4" />
+                  <Building2 className="w-5 h-5" />
                   <span>Lojista</span>
+                  <span className={`text-[9px] font-normal leading-tight text-center ${
+                    accountType === 'store' ? 'text-blue-200' : 'text-slate-600'
+                  }`}>Vende e acessa painel B2B</span>
                 </button>
               </div>
             </motion.div>
@@ -367,7 +360,7 @@ const AuthPage = () => {
                 >
                   <div className="space-y-1.5">
                     <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">
-                      {accountType === 'store' ? 'Nome do Responsável' : 'Nome Completo'}
+                      Nome Completo
                     </label>
                     <div className="relative group">
                       <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 group-hover:text-blue-400 transition-colors" />
@@ -377,12 +370,13 @@ const AuthPage = () => {
                         required={!isLogin}
                         value={formData.name}
                         onChange={handleInputChange}
-                        placeholder={accountType === 'store' ? 'Ex: Carlos Wilson' : 'Ex: Carlos Wilson Gomes'}
+                        placeholder={accountType === 'store' ? 'Ex: Carlos Wilson (responsável)' : 'Ex: Carlos Wilson Gomes'}
                         className="w-full bg-slate-950 border border-slate-800 rounded-2xl py-3 pl-11 pr-4 text-sm text-white placeholder:text-slate-600 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all"
                       />
                     </div>
                   </div>
 
+                  {/* Nome da Loja — obrigatório para Lojista (P5 Opção A) */}
                   {accountType === 'store' && (
                     <div className="space-y-1.5">
                       <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">Nome da Loja / Revenda</label>

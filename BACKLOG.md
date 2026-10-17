@@ -16,14 +16,14 @@ Abaixo está a consolidação fidedigna do quadro de gestão ágil de atividades
 |                                             QUADRO: DESENVOLVIMENTO PI 2                                                |
 +---------------------+-------------------+---------------------+-------------------------+-------------------------------+
 | BACKLOG DO PROJETO  | ITENS ESSENCIAIS  | A FAZER             | FAZENDO                 | FINALIZADO                    |
-| (20 cartões)        | (10 cartões)      | (1 cartão)          | (1 cartão)              | (19 cartões)                  |
+| (20 cartões)        | (10 cartões)      | (0 cartões)         | (0 cartões)             | (21 cartões)                  |
 +---------------------+-------------------+---------------------+-------------------------+-------------------------------+
-| • Front-End         | • Front-end       | • Fazer             | • Implementação de      | [x] Front-end                 |
-| • Back-End          | • Back-End        |   implementação de  |   Conexão b2b com       | [x] Back-end                  |
-| • Protótipo         | • Protótipo       |   feedback do       |   lojas parceiras       | [x] Modelagem de dados        |
-| • Modelagem Dados   | • Modelagem Dados |   yolov8 após       |   (Concluído no código  | [x] Protótipo                 |
-| • Diagrama Caso Uso | • Impl. IA Gemini |   upload de laudos  |   via VLAEG e validado  | [x] Impl. da IA do gemini     |
-| • Diagrama Sequenc. | • Doc. Completa   |   cautelares        |   com 100% testes!)     | [x] Impl. upload laudos       |
+| • Front-End         | • Front-end       |                     |                         | [x] Front-end                 |
+| • Back-End          | • Back-End        |                     |                         | [x] Back-end                  |
+| • Protótipo         | • Protótipo       |                     |                         | [x] Modelagem de dados        |
+| • Modelagem Dados   | • Modelagem Dados |                     |                         | [x] Protótipo                 |
+| • Diagrama Caso Uso | • Impl. IA Gemini |                     |                         | [x] Impl. da IA do gemini     |
+| • Diagrama Sequenc. | • Doc. Completa   |                     |                         | [x] Impl. upload laudos       |
 | • Diagrama Compon.  | • Doc. Arquit. SW |                     |                         | [x] Implementação yolov8      |
 | • Doc. Completa     | • Impl. API Gemini|                     |                         | [x] Melhoria velocidade Gemini|
 | • Doc. Arquit. SW   | • Impl. yolov8    |                     |                         | [x] Doc. arquitetura de sw    |
@@ -37,7 +37,8 @@ Abaixo está a consolidação fidedigna do quadro de gestão ágil de atividades
 | • Vídeo pericial 15s|                   |                     |                         | [x] Impl. Vídeo pericial 15s  |
 | • Impl. de TCO      |                   |                     |                         | [x] Implementação de TCO      |
 | • Comparador Multid.|                   |                     |                         | [x] Comparador Multidimens.   |
-| • Conexão B2B lojas |                   |                     |                         |                               |
+| • Conexão B2B lojas |                   |                     |                         | [x] Conexão B2B lojas         |
+|                     |                   |                     |                         | [x] Feedback YOLOv8 pós-laudo |
 +---------------------+-------------------+---------------------+-------------------------+-------------------------------+
 ```
 
@@ -72,7 +73,7 @@ Esta matriz mapeia cada cartão do quadro oficial com a sua implementação fís
 | **Diagrama de Componentes** | *Finalizado* | `docs/arquitetura.md` | ✅ Concluído | Arquitetura de microsserviços e gateways |
 | **Planilha Excel Backlog** | *BackLog Do Projeto* | `BACKLOG.md` (Exportável para XLSX/CSV) | ✅ Concluído | Estrutura MoSCoW com Story Points e RICE |
 | **Conexão B2B com lojas parceiras**| *Fazendo ➔ Finalizado* | `backend/routers/partnerships.py`, `PartnershipHubModal.jsx` | ✅ Concluído | Paginação server-side, cache TTL 60s, skeleton shimmer |
-| **Feedback do YOLOv8 pós-laudo** | *A Fazer* | Pipeline de OCR/Visão para fotos anexas no PDF | ⏳ A Fazer | Detalhamento na seção 4 deste documento |
+| **Feedback do YOLOv8 pós-laudo** | *Finalizado* | `backend/services/ai_service.py` (`extrair_imagens_pdf`, `analisar_fotos_periciais_pdf_yolo`, `executar_cross_check_laudo`) + `LaudoFeedbackCard.jsx` | ✅ Concluído | `test_laudo_yolo_feedback.py` (6 testes: extração PDF, inferência YOLO, cross-check e integração API) |
 
 ---
 
@@ -91,20 +92,24 @@ O **Automatch** tem como missão eliminar a assimetria de informações e fraude
 
 ---
 
-### ⏳ A Fazer (Próxima Implementação do Quadro)
+### ✅ Todos os Itens Concluídos
 
-#### 🏷️ [ATM-AI-05] Fazer implementação de feedback do YOLOv8 após upload de laudos cautelares
-* **Origem no Quadro:** Coluna `A fazer` (1 cartão)
-* **Prioridade:** 🔴 `P0 - Essencial` | **Esforço Estimado:** 8 Story Points
-* **Camada:** Backend (`routers/laudos.py` + `ai_vision.py`) + Frontend (`LaudoFeedbackCard.jsx`)
+> Não há itens na coluna "A Fazer" ou "Fazendo". Todos os 21 cartões do backlog foram implementados e validados com sucesso.
+
+---
+
+#### ✅ [ATM-AI-05] Fazer implementação de feedback do YOLOv8 após upload de laudos cautelares
+* **Origem no Quadro:** Coluna `A fazer` ➔ **Finalizado com Sucesso via VLAEG**
+* **Prioridade:** 🔴 `P0 - Essencial` | **Esforço Realizado:** 8 Story Points | **Status:** ✅ `Concluído`
+* **Camada:** Backend (`routers/uploads.py` + `services/ai_service.py`) + Frontend (`LaudoFeedbackCard.jsx`)
 * **Descrição do Usuário:**
   > *Como* vistoriador, lojista ou comprador, *quero* que, após fazer o upload do laudo cautelar em PDF, o modelo YOLOv8 extraia as fotos das peças anexadas no documento e forneça um parecer visual imediato sobre integridade de chassi, longarinas, caixas de roda e pontas de eixo, *para que* o sistema aponte visualmente discrepâncias entre o texto do laudo e as imagens periciais.
-* **Critérios de Aceite:**
-  - [ ] **Extração de Imagens do PDF:** Extrair streams de imagens embutidas nas páginas periciais do PDF via `PyMuPDF` (`fitz`) ou `pdf2image`.
-  - [ ] **Inferência com YOLOv8:** Submeter as imagens extraídas ao classificador/detector de componentes estruturais e avarias da lataria.
-  - [ ] **Cruzamento Textual vs Visual:** Confrontar o parecer pericial gerado pelo Gemini/heurística com as marcações detectadas pelo YOLOv8.
-  - [ ] **Feedback no Card Visual:** Apresentar no componente `LaudoFeedbackCard.jsx` uma galeria com os recortes inspecionados, caixas delimitadoras (*bounding boxes*) e score percentual de confiança.
-  - [ ] **Teste Automatizado:** Criar teste em `test_laudo_yolo_feedback.py` validando o pipeline completo com amostra de PDF pericial.
+* **Entregas Realizadas:**
+  - [x] **Extração de Imagens do PDF:** `extrair_imagens_pdf()` em `ai_service.py` extrai streams via `pypdf` com fallback para varredura direta de streams JPEG (DCTDecode), filtrando logos e ícones pequenos (< 500 bytes).
+  - [x] **Inferência com YOLOv8:** `analisar_fotos_periciais_pdf_yolo()` submete cada imagem extraída ao modelo `yolov8n.pt`, detecta classes estruturais (`car`, `truck`, peças), gera miniaturas Base64 (máx 320px) e atribui `status_peca` (Conforme/Inconforme).
+  - [x] **Cruzamento Textual vs Visual:** `executar_cross_check_laudo()` confronta o veredito do Gemini/heurística com as marcações do YOLOv8, emitindo `cross_check_status` (`Concordante` ou `Divergência Detectada`) e mensagem explicativa.
+  - [x] **Feedback no Card Visual:** `LaudoFeedbackCard.jsx` exibe galeria com thumbnails Base64, badge de confiança, status de conformidade por peça e modal lightbox de inspeção ampliada com detalhes do YOLOv8.
+  - [x] **Teste Automatizado:** `test_laudo_yolo_feedback.py` valida o pipeline completo com 6 testes: extração de PDF com foto, PDF sem foto, análise YOLO com imagens sintéticas, lista vazia, cross-check concordante e divergência detectada, além de teste integrado do endpoint `/api/v1/laudos/upload`.
 
 ---
 

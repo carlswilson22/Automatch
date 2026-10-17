@@ -13,64 +13,21 @@ from database import get_db
 import models
 import schemas
 import security
+# Guards centralizados — eliminam o get_current_b2b_user local (R5 / OWASP A01)
+from dependencies import get_current_user, require_lojista_with_store
 
 logger = logging.getLogger("automatch")
 router = APIRouter(prefix="/api/partnerships", tags=["B2B Store Partnerships & Shared Inventory"])
 
 
 # ==============================================================================
-# Helpers de Autenticação e Verificação de Papéis B2B
+# get_current_b2b_user substituído por require_lojista_with_store de dependencies.py
+# Garante: (1) token JWT válido, (2) role lojista/admin, (3) store_id não-nulo.
+# Compradores são bloqueados com HTTP 403 (C1 — B2B exclusivo para lojistas).
+# O auto-vínculo a store_id=1 foi REMOVIDO (R5 / OWASP A01 / P5 Opção A).
 # ==============================================================================
+get_current_b2b_user = require_lojista_with_store
 
-def get_current_b2b_user(
-    db: Session = Depends(get_db),
-    authorization: Optional[str] = Header(None)
-) -> models.User:
-    """
-    Valida token JWT e garante que o usuário possui papel Lojista ou Administrador.
-    Atribui store_id padrão (store-1) caso o lojista ainda não tenha store_id associado.
-    """
-    if not authorization or not authorization.startswith("Bearer "):
-        raise HTTPException(
-            status_code=401,
-            detail="Token de autenticação obrigatório para acessar o ecossistema B2B."
-        )
-
-    token = authorization.removeprefix("Bearer ").strip()
-
-    # Suporte a tokens demo/contingência B2B estritamente restrito a ambiente de desenvolvimento/testes
-    allow_demo = os.getenv("ALLOW_DEMO_TOKENS", "true").lower() in ["true", "1"] and os.getenv("ENVIRONMENT", "").lower() != "production"
-    if allow_demo and token in ["demo-admin-token", "demo-lojista-token"]:
-        admin_user = db.query(models.User).filter(models.User.email == "admin@automatch.com").first()
-        if admin_user:
-            return admin_user
-        first_b2b_user = db.query(models.User).filter(models.User.role.in_(['lojista', 'admin'])).first()
-        if first_b2b_user:
-            return first_b2b_user
-
-    payload = security.verify_token(token)
-    if not payload:
-        raise HTTPException(status_code=401, detail="Token de autenticação inválido ou expirado.")
-
-    user_id = payload.get("sub")
-    user = db.query(models.User).filter(models.User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="Usuário não encontrado.")
-
-    # Validação de papel (Estritamente Lojista ou Admin)
-    role = getattr(user, 'role', None)
-    if role not in ['lojista', 'admin']:
-        raise HTTPException(status_code=403, detail="Acesso restrito a lojistas parceiros e administradores.")
-
-    # Atribui loja padrão caso ainda não definida
-    if not user.store_id:
-        user.store_id = 1
-        try:
-            db.commit()
-        except Exception:
-            db.rollback()
-
-    return user
 
 
 
