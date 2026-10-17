@@ -60,8 +60,8 @@ export function getVehicleImageUrl(imagePath) {
     return trimmed;
   }
 
-  // Obtém o BASE_URL configurado no Vite (ex: '/AutoMatch/' ou '/')
-  const rawBase = import.meta.env.BASE_URL || '/';
+  // Obtém o BASE_URL configurado no Vite (ex: '/AutoMatch/' ou '/') com fallback seguro
+  const rawBase = (typeof import.meta !== 'undefined' && import.meta?.env?.BASE_URL) || '/';
   const baseUrl = rawBase.endsWith('/') ? rawBase : `${rawBase}/`;
 
   // Limpa as barras iniciais

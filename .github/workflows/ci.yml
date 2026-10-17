@@ -61,6 +61,12 @@ jobs:
         working-directory: ./frontend
         run: npm run build
 
+      - name: Executar Bateria de Testes do Frontend (Visual, 360°, IA e Segurança)
+        working-directory: ./frontend
+        run: |
+          node tests/test_visual_and_360_experience.mjs
+          node tests/test_security_audit.mjs
+
   # 3. VERIFICAÇÃO DO DOCKER
   testar-docker:
     name: Validação de Build do Container Docker

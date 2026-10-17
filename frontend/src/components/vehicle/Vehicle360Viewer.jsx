@@ -94,6 +94,21 @@ const Vehicle360Viewer = ({
     return () => clearInterval(interval);
   }, [isAutoRotating]);
 
+  // Suporte a navegação por teclado (ArrowLeft / ArrowRight)
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowLeft') {
+        setCurrentAngle((prev) => (prev - 45 + 360) % 360);
+        setIsAutoRotating(false);
+      } else if (e.key === 'ArrowRight') {
+        setCurrentAngle((prev) => (prev + 45) % 360);
+        setIsAutoRotating(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   // Controles de rotação por arraste (mouse ou touch)
   const handleMouseDown = (e) => {
     setIsDragging(true);
