@@ -1,13 +1,25 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
-// Plugin para garantir que requisições diretas a /images/* no dev server sejam resolvidas sob /Automatch/images/*
+const getBasePath = () => {
+  if (process.env.VITE_BASE_PATH) {
+    return process.env.VITE_BASE_PATH.endsWith('/') ? process.env.VITE_BASE_PATH : `${process.env.VITE_BASE_PATH}/`;
+  }
+  if (process.env.GITHUB_REPOSITORY) {
+    return `/${process.env.GITHUB_REPOSITORY.split('/')[1]}/`;
+  }
+  return '/';
+};
+
+const basePath = getBasePath();
+
+// Plugin para garantir que requisições diretas a /images/* no dev server sejam resolvidas sob o base path quando não na raiz
 const serveRootImagesPlugin = () => ({
   name: 'serve-root-images',
   configureServer(server) {
     server.middlewares.use((req, res, next) => {
-      if (req.url && req.url.startsWith('/images/')) {
-        req.url = '/Automatch' + req.url;
+      if (basePath !== '/' && req.url && req.url.startsWith('/images/')) {
+        req.url = basePath.replace(/\/$/, '') + req.url;
       }
       next();
     });
@@ -15,9 +27,7 @@ const serveRootImagesPlugin = () => ({
 });
 
 export default defineConfig({
-  base: process.env.VITE_BASE_PATH
-    ? (process.env.VITE_BASE_PATH.endsWith('/') ? process.env.VITE_BASE_PATH : `${process.env.VITE_BASE_PATH}/`)
-    : (process.env.GITHUB_REPOSITORY ? `/${process.env.GITHUB_REPOSITORY.split('/')[1]}/` : '/Automatch/'),
+  base: basePath,
   plugins: [react(), serveRootImagesPlugin()],
   server: {
     host: '0.0.0.0',
