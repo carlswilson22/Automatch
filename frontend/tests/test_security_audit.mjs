@@ -19,21 +19,24 @@ describe('AUDITORIA DE SEGURANÇA E MITIGAÇÃO (OWASP TOP 10 & RBAC)', () => {
     const authContent = fs.readFileSync(authPyPath, 'utf-8');
     const partContent = fs.readFileSync(partPyPath, 'utf-8');
 
-    // Verifica que o bypass aberto de startswith("demo-") foi removido
+    const depPyPath = path.join(backendDir, 'dependencies.py');
+    const depContent = fs.readFileSync(depPyPath, 'utf-8');
+
+    // Verifica que o bypass aberto de startswith("demo-") foi removido de auth.py
     assert.strictEqual(
       authContent.includes('token.startswith("demo-")'),
       false,
       'auth.py não deve aceitar tokens arbitrários iniciando com demo-'
     );
 
-    // Verifica que demo tokens são condicionados a ambiente dev/testes e allow_demo
+    // Verifica que demo tokens são centralizados em dependencies.py e condicionados a ambiente seguro
     assert.ok(
-      authContent.includes('allow_demo =') && authContent.includes('os.getenv("ALLOW_DEMO_TOKENS"'),
-      'auth.py deve condicionar tokens demo a variável de ambiente segura'
+      depContent.includes('ALLOW_DEMO_TOKENS') && depContent.includes('ENVIRONMENT'),
+      'dependencies.py deve condicionar tokens demo a variável de ambiente segura'
     );
     assert.ok(
-      partContent.includes('allow_demo =') && partContent.includes('os.getenv("ALLOW_DEMO_TOKENS"'),
-      'partnerships.py deve condicionar tokens demo a variável de ambiente segura'
+      authContent.includes('from dependencies import get_current_user'),
+      'auth.py deve importar o guard centralizado e seguro de dependencies.py'
     );
   });
 

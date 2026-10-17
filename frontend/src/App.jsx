@@ -72,9 +72,9 @@ function App() {
               <ProfilePage />
             </ProtectedRoute>
           } />
-          {/* /dashboard: adapta-se ao perfil logado (comprador particular vs lojista B2B) */}
+          {/* /dashboard: exclusivo para lojistas e administradores (B2B) */}
           <Route path="/dashboard" element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['admin', 'lojista']}>
               <Dashboard />
             </ProtectedRoute>
           } />
