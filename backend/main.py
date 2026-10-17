@@ -58,6 +58,25 @@ async def lifespan(app: FastAPI):
     # Guard de produção: falha rápido se JWT_SECRET ou ALLOW_DEMO_TOKENS estiverem inseguros (R2)
     security.check_production_secrets()
 
+    # Diagnóstico e validação imediata da conexão com o banco de dados
+    try:
+        from sqlalchemy import text
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+    except Exception as db_exc:
+        db_mode = os.getenv("DATABASE_MODE", "").strip().lower()
+        if "db:5432" in str(engine.url) and db_mode != "sqlite":
+            logger.error(
+                "\n" + "="*80 + "\n"
+                "[ERRO DE CONEXÃO AO BANCO DE DADOS]\n"
+                "O backend tentou conectar ao PostgreSQL no host 'db:5432' (rede interna do Docker Compose).\n"
+                "Se você estiver executando o backend LOCALMENTE fora do Docker:\n"
+                "  Opção 1 (PostgreSQL via Docker exposto): Defina DATABASE_URL=postgresql://postgres:postgres@localhost:5433/automatch\n"
+                "  Opção 2 (SQLite para desenvolvimento rápido): Defina DATABASE_MODE=sqlite\n"
+                "="*80 + "\n"
+            )
+        raise RuntimeError(f"Falha crítica na conexão com o banco de dados: {db_exc}") from db_exc
+
     models.Base.metadata.create_all(bind=engine)
 
     # Auto-migração idempotente e agnóstica de colunas (compatível com SQLite e Postgres)

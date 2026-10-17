@@ -5,10 +5,21 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-DATABASE_URL = os.getenv(
-    "DATABASE_URL", 
-    "postgresql://postgres:postgres@db:5432/automatch"
-)
+ENVIRONMENT = os.getenv("ENVIRONMENT", "development").strip().lower()
+DATABASE_MODE = os.getenv("DATABASE_MODE", "").strip().lower()
+
+if DATABASE_MODE == "sqlite":
+    if ENVIRONMENT == "production":
+        raise RuntimeError(
+            "[SEGURANÇA CRÍTICA] DATABASE_MODE=sqlite não é permitido em ambiente de produção (ENVIRONMENT=production). "
+            "Configure um banco PostgreSQL resiliente através da variável DATABASE_URL."
+        )
+    DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./automatch_dev.db")
+else:
+    DATABASE_URL = os.getenv(
+        "DATABASE_URL", 
+        "postgresql://postgres:postgres@db:5432/automatch"
+    )
 
 # SQLAlchemy 2.0: Assegura compatibilidade com psycopg2 quando a URL inicia com postgresql:// ou postgres://
 if DATABASE_URL.startswith("postgres://"):
