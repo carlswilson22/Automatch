@@ -79,7 +79,7 @@ class User(Base):
     member_since = Column(String, default="Março 2024")
     
     # Papéis e vinculação B2B à Concessionária
-    role = Column(String(32), default="lojista") # lojista, admin, comprador
+    role = Column(String(32), default="comum") # comum, lojista, admin
     sub_role = Column(String(32), default="owner") # owner, manager, seller
     store_id = Column(Integer, ForeignKey("stores.id"), nullable=True, index=True)
     store = relationship("Store", foreign_keys=[store_id])

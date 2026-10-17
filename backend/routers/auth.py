@@ -58,12 +58,17 @@ def register(request: schemas.UserCreate, db: Session = Depends(get_db)) -> Dict
     if len(request.password) < 6:
         raise HTTPException(status_code=400, detail="A senha deve ter no mínimo 6 caracteres.")
 
-    # Validação de role: nunca aceitar 'admin' ou roles desconhecidas via API pública
-    requested_role = (request.role or "comprador").strip().lower()
-    if requested_role not in ("lojista", "comprador"):
+    # Validação de role: aceita 'lojista' ou 'comum' (comprador legado mapeia para comum)
+    raw_role = (request.role or "comum").strip().lower()
+    if raw_role == "comprador":
+        requested_role = "comum"
+    else:
+        requested_role = raw_role
+
+    if requested_role not in ("lojista", "comum"):
         raise HTTPException(
             status_code=400,
-            detail="Papel inválido. Escolha entre 'lojista' ou 'comprador'."
+            detail="Papel inválido. Escolha entre 'lojista' ou 'comum'."
         )
 
     # Lojista DEVE informar o nome da loja (P5 Opção A)
@@ -111,7 +116,7 @@ def register(request: schemas.UserCreate, db: Session = Depends(get_db)) -> Dict
         photo="https://api.dicebear.com/7.x/initials/svg?seed=" + clean_name.replace(" ", "+"),
         role=requested_role,
         sub_role=sub_role,
-        store_id=new_store_id  # None para compradores
+        store_id=new_store_id  # None para usuários comuns
     )
     db.add(user)
     db.commit()
@@ -161,16 +166,20 @@ def login(request: schemas.UserLogin, db: Session = Depends(get_db)) -> Dict[str
     # Limpa tentativas prévias com sucesso
     login_rate_limiter.reset(email)
     
-    token = security.create_access_token({"sub": user.id, "email": user.email})
+    effective_role = user.role if user.role else "comum"
+    if effective_role in ("comprador", "vendedor"):
+        effective_role = "comum"
+
+    token = security.create_access_token({"sub": user.id, "email": user.email, "role": effective_role})
     return {
         "id": user.id,
         "name": user.name,
         "email": user.email,
         "memberSince": user.member_since,
         "photo": user.photo,
-        "role": getattr(user, 'role', 'lojista') or 'lojista',
-        "sub_role": getattr(user, 'sub_role', 'owner') or 'owner',
-        "store_id": getattr(user, 'store_id', 1) or 1,
+        "role": effective_role,
+        "sub_role": user.sub_role,
+        "store_id": user.store_id,
         "token": token
     }
 

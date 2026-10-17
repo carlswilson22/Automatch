@@ -1,6 +1,6 @@
 import os
 import io
-import pytest
+import unittest
 from PIL import Image
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
@@ -18,19 +18,17 @@ from services.ai_service import (
 
 
 def _gerar_pdf_com_foto_teste() -> bytes:
-    """Gera um PDF sintético válido com uma imagem embutida para testes."""
-    buffer_pdf = io.BytesIO()
-    c = canvas.Canvas(buffer_pdf)
-    c.drawString(100, 750, "LAUDO CAUTELAR PERICIAL AUTOMATCH - TESTE")
-    c.drawString(100, 730, "Chassi: 9BWZZZ377VT004251 - APROVADO SEM APONTAMENTOS")
-
-    # Cria imagem sintética e embute diretamente em memória via ImageReader
+    """Gera um PDF sintético válido com uma imagem pericial JPEG embutida para testes."""
     img = Image.new("RGB", (300, 200), color=(30, 80, 150))
-    c.drawImage(ImageReader(img), 100, 450, width=250, height=180)
+    img_buf = io.BytesIO()
+    img.save(img_buf, format="JPEG", quality=90)
+    jpeg_bytes = img_buf.getvalue()
 
-    c.showPage()
-    c.save()
-    return buffer_pdf.getvalue()
+    header = b"%PDF-1.4\n"
+    text_content = b"LAUDO CAUTELAR PERICIAL AUTOMATCH - TESTE\nChassi: 9BWZZZ377VT004251 - APROVADO SEM APONTAMENTOS\n"
+    obj1 = b"1 0 obj\n<< /Type /XObject /Subtype /Image /Width 300 /Height 200 /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length " + str(len(jpeg_bytes)).encode() + b" >>\nstream\n" + jpeg_bytes + b"\nendstream\nendobj\n"
+    trailer = b"trailer\n<< /Root 1 0 R >>\n%%EOF"
+    return header + text_content + obj1 + trailer
 
 
 def _gerar_pdf_apenas_texto() -> bytes:
@@ -44,7 +42,7 @@ def _gerar_pdf_apenas_texto() -> bytes:
     return buffer_pdf.getvalue()
 
 
-class TestLaudoYoloFeedback:
+class TestLaudoYoloFeedback(unittest.TestCase):
     """Suíte de Testes Automatizados para [ATM-AI-05]: Feedback do YOLOv8 pós-upload de laudos."""
 
     def test_extrair_imagens_pdf_com_foto(self):

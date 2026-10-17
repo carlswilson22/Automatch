@@ -95,6 +95,7 @@ coverage.xml
 *.db-journal
 *.db-wal
 *.db-shm
+*.sql
 automatch_postgres_data/
 postgres-data/
 

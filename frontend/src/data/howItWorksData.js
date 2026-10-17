@@ -130,7 +130,7 @@ export const howItWorksSections = [
 
 /**
  * Nota exclusiva para perfis autorizados (Administrador ou Lojista).
- * Não deve ser renderizada para compradores ou visitantes não autenticados.
+ * Não deve ser renderizada para usuários comuns ou visitantes não autenticados.
  */
 export const b2bSectionNotice = {
   badge: 'Exclusivo para Lojistas e Administradores',
@@ -157,7 +157,7 @@ export const generalFaqList = [
   },
   {
     q: 'O Consultor IA da Automatch pode garantir dados mecânicos?',
-    a: 'O Consultor IA responde com base estrita nas especificações cadastradas, no laudo cautelar pericial e na descrição técnica do anúncio. Quando uma informação não consta nas fontes oficiais, a IA informa honestamente que o dado não está disponível e orienta o comprador a consultar o vendedor.'
+    a: 'O Consultor IA responde com base estrita nas especificações cadastradas, no laudo cautelar pericial e na descrição técnica do anúncio. Quando uma informação não consta nas fontes oficiais, a IA informa honestamente que o dado não está disponível e orienta o interessado a consultar o vendedor.'
   },
   {
     q: 'Como funciona o cálculo do Custo Total de Posse (TCO)?',
@@ -165,7 +165,7 @@ export const generalFaqList = [
   },
   {
     q: 'Preciso pagar para usar os filtros, varredura 360° ou consultar os laudos?',
-    a: 'Não. Todas as ferramentas de consulta, varredura 360°, comparativo FIPE, cálculo de TCO e visualização do Dossiê Oficial são 100% gratuitas para os compradores na plataforma.'
+    a: 'Não. Todas as ferramentas de consulta, varredura 360°, comparativo FIPE, cálculo de TCO e visualização do Dossiê Oficial são 100% gratuitas para os usuários na plataforma.'
   }
 ];
 

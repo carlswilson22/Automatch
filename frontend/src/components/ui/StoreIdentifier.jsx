@@ -1,13 +1,36 @@
 import React from 'react';
 import { stores } from '../../data/inventoryData';
-import { Store } from 'lucide-react';
+import { Store, UserCheck } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 const StoreIdentifier = ({ storeId, variant = 'default', className = "", dark = false }) => {
   const navigate = useNavigate();
-  const store = stores.find(s => s.id === storeId);
+  const store = storeId ? stores.find(s => s.id === storeId) : null;
 
-  if (!store) return null;
+  if (!store) {
+    if (variant === 'badge') {
+      return (
+        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-slate-800/90 backdrop-blur-sm border border-slate-700/60 shadow-sm text-slate-300 ${className}`}>
+          <div className="w-4 h-4 rounded-full flex items-center justify-center bg-slate-700 text-slate-300 shrink-0">
+            <UserCheck className="w-2.5 h-2.5" />
+          </div>
+          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-300">
+            Vendedor Particular
+          </span>
+        </div>
+      );
+    }
+    return (
+      <div className={`inline-flex items-center gap-1.5 text-slate-500 ${className}`}>
+        <div className={`${variant === 'large' ? 'w-6 h-6' : 'w-5 h-5'} rounded-full flex items-center justify-center bg-slate-100 border border-slate-200 shrink-0 text-slate-500`}>
+          <UserCheck className="w-3 h-3" />
+        </div>
+        <span className={`${variant === 'large' ? 'text-sm' : 'text-xs'} font-semibold text-slate-500`}>
+          Vendedor Particular
+        </span>
+      </div>
+    );
+  }
 
   const handleClick = (e) => {
     e.stopPropagation();

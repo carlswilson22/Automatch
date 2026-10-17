@@ -398,23 +398,21 @@ export default function ProfilePage() {
                 </button>
               )}
 
-              {isB2BUser && (
-                <button 
-                  onClick={() => navigate('/novo-anuncio')}
-                  className="group p-5 bg-white border border-slate-200/90 text-slate-800 rounded-3xl shadow-sm hover:shadow-lg hover:border-emerald-300 text-left transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.98] flex flex-col justify-between cursor-pointer"
-                >
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
-                      <PlusCircle className="w-5 h-5" />
-                    </div>
-                    <ChevronRight className="w-5 h-5 text-slate-400 group-hover:translate-x-1 group-hover:text-emerald-600 transition-all" />
+              <button 
+                onClick={() => navigate('/novo-anuncio')}
+                className="group p-5 bg-white border border-slate-200/90 text-slate-800 rounded-3xl shadow-sm hover:shadow-lg hover:border-emerald-300 text-left transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.98] flex flex-col justify-between cursor-pointer"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
+                    <PlusCircle className="w-5 h-5" />
                   </div>
-                  <div>
-                    <h4 className="font-black text-base text-slate-900 group-hover:text-emerald-600 transition-colors">Criar Anúncio</h4>
-                    <p className="text-xs text-slate-500 mt-0.5 font-medium">Venda seu carro com laudo e IA</p>
-                  </div>
-                </button>
-              )}
+                  <ChevronRight className="w-5 h-5 text-slate-400 group-hover:translate-x-1 group-hover:text-emerald-600 transition-all" />
+                </div>
+                <div>
+                  <h4 className="font-black text-base text-slate-900 group-hover:text-emerald-600 transition-colors">Criar Anúncio</h4>
+                  <p className="text-xs text-slate-500 mt-0.5 font-medium">Venda seu carro com laudo e IA</p>
+                </div>
+              </button>
             </div>
 
             {/* B2B Partnership Banner */}

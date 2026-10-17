@@ -15,20 +15,20 @@ class TestDefectsResolutionBattery(unittest.TestCase):
         cls.client = TestClient(app)
         cls.db = SessionLocal()
 
-        # Cria usuário comprador para teste de DEF-01
-        cls.buyer_email = "qa-comprador-def01@automatch-battery.com"
+        # Cria usuário comum para teste de perfil
+        cls.buyer_email = "qa-comum-def01@automatch-battery.com"
         buyer = cls.db.query(models.User).filter(models.User.email == cls.buyer_email).first()
         if not buyer:
             buyer = models.User(
-                name="Comprador QA",
+                name="Comum QA",
                 email=cls.buyer_email,
-                role="comprador",
+                role="comum",
                 hashed_password="fakehash"
             )
             cls.db.add(buyer)
             cls.db.commit()
             cls.db.refresh(buyer)
-        cls.buyer_token = security.create_access_token({"sub": buyer.id, "email": buyer.email, "role": "comprador"})
+        cls.buyer_token = security.create_access_token({"sub": buyer.id, "email": buyer.email, "role": "comum"})
 
         # Cria usuário lojista
         cls.dealer_email = "qa-lojista-def01@automatch-battery.com"
@@ -53,15 +53,14 @@ class TestDefectsResolutionBattery(unittest.TestCase):
         cls.db.commit()
         cls.db.close()
 
-    def test_def01_buyer_cannot_create_car(self):
-        """DEF-01: Usuário com role 'comprador' deve receber HTTP 403 ao tentar criar anúncio."""
+    def test_def01_comum_user_can_create_car_without_store(self):
+        """Usuário com role 'comum' pode criar anúncio, que fica com store_id=None e compartilhavel=False."""
         payload = {
             "brand": "Toyota",
             "model": "Yaris Hatchback",
             "year": 2022,
             "km": 25000,
             "price": 85000.0,
-            "store_id": 1,
             "description": "Bateria-Defeitos - Teste DEF-01"
         }
         res = self.client.post(
@@ -69,8 +68,18 @@ class TestDefectsResolutionBattery(unittest.TestCase):
             headers={"Authorization": f"Bearer {self.buyer_token}"},
             json=payload
         )
+        self.assertEqual(res.status_code, 200)
+        data = res.json()
+        self.assertIsNone(data.get("store_id"))
+        self.assertFalse(data.get("compartilhavel"))
+
+    def test_def01b_comum_user_cannot_access_b2b_inventory(self):
+        """Usuário com role 'comum' recebe HTTP 403 ao tentar acessar recursos B2B de lojistas."""
+        res = self.client.get(
+            "/api/partnerships/stores-available",
+            headers={"Authorization": f"Bearer {self.buyer_token}"}
+        )
         self.assertEqual(res.status_code, 403)
-        self.assertIn("Acesso negado", res.json().get("detail", ""))
 
     def test_def03_year_and_price_validation(self):
         """DEF-03: Validação backend rejeita ano no futuro distante e preço zero com HTTP 422."""

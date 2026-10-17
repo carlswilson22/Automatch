@@ -1067,29 +1067,46 @@ def extrair_imagens_pdf(pdf_bytes: bytes, max_images: int = 6) -> List[Dict[str,
     except Exception as e:
         logger.debug("Tentativa pypdf falhou ou pypdf ausente: %s", e)
 
-    # 2. Fallback de varredura direta de streams JPEG (DCTDecode)
+    # 2. Fallback de varredura direta de streams JPEG (DCTDecode ou FlateDecode)
     if not extracted:
         try:
+            import zlib
             jpeg_pattern = re.compile(rb"\xff\xd8\xff[\s\S]+?\xff\xd9")
             count = 0
-            for match in jpeg_pattern.finditer(pdf_bytes):
-                img_data = match.group(0)
-                if len(img_data) >= 800:
-                    # Valida se PIL consegue carregar para garantir integridade
+
+            # Coleta tanto os bytes brutos do PDF quanto os streams descomprimidos
+            search_buffers = [pdf_bytes]
+            streams = re.findall(rb"stream[\r\n]+([\s\S]*?)[\r\n]+endstream", pdf_bytes)
+            for s in streams:
+                try:
+                    search_buffers.append(zlib.decompress(s))
+                except Exception:
                     try:
-                        probe_img = Image.open(io.BytesIO(img_data))
-                        if probe_img.width >= 50 and probe_img.height >= 50:
-                            count += 1
-                            extracted.append({
-                                "id": count,
-                                "name": f"foto_pericial_stream_{count}.jpg",
-                                "data": img_data,
-                                "page": 1
-                            })
-                            if len(extracted) >= max_images:
-                                break
+                        search_buffers.append(zlib.decompress(s, -zlib.MAX_WBITS))
                     except Exception:
-                        continue
+                        pass
+
+            for buf in search_buffers:
+                for match in jpeg_pattern.finditer(buf):
+                    img_data = match.group(0)
+                    if len(img_data) >= 800:
+                        # Valida se PIL consegue carregar para garantir integridade
+                        try:
+                            probe_img = Image.open(io.BytesIO(img_data))
+                            if probe_img.width >= 50 and probe_img.height >= 50:
+                                count += 1
+                                extracted.append({
+                                    "id": count,
+                                    "name": f"foto_pericial_stream_{count}.jpg",
+                                    "data": img_data,
+                                    "page": 1
+                                })
+                                if len(extracted) >= max_images:
+                                    break
+                        except Exception:
+                            continue
+                if len(extracted) >= max_images:
+                    break
 
         except Exception as e:
             logger.debug("Fallback de extração JPEG falhou: %s", e)

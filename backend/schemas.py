@@ -104,9 +104,9 @@ class UserCreate(BaseModel):
     name: str
     email: str
     password: str
-    # Papel solicitado pelo usuário: apenas 'lojista' ou 'comprador'.
+    # Papel solicitado pelo usuário: apenas 'lojista' ou 'comum'.
     # 'admin' nunca pode ser definido via API pública (ignorado e rejeitado).
-    role: Optional[str] = "comprador"
+    role: Optional[str] = "comum"
     # Nome da loja: obrigatório quando role == 'lojista' (validação feita no endpoint).
     store_name: Optional[str] = None
 
@@ -121,7 +121,7 @@ class UserResponse(BaseModel):
     email: str
     photo: Optional[str] = None
     memberSince: Optional[str] = None
-    role: Optional[str] = "comprador"
+    role: Optional[str] = "comum"
     sub_role: Optional[str] = None
     store_id: Optional[int] = None
     token: Optional[str] = None

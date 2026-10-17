@@ -14,19 +14,24 @@ import models
 import schemas
 import security
 # Guards centralizados — eliminam o get_current_b2b_user local (R5 / OWASP A01)
-from dependencies import get_current_user, require_lojista_with_store
+from dependencies import get_current_user, require_lojista_or_admin, require_lojista_with_store
 
 logger = logging.getLogger("automatch")
 router = APIRouter(prefix="/api/partnerships", tags=["B2B Store Partnerships & Shared Inventory"])
 
 
 # ==============================================================================
-# get_current_b2b_user substituído por require_lojista_with_store de dependencies.py
+# get_current_b2b_user: integração e compatibilidade com testes unitários
 # Garante: (1) token JWT válido, (2) role lojista/admin, (3) store_id não-nulo.
-# Compradores são bloqueados com HTTP 403 (C1 — B2B exclusivo para lojistas).
-# O auto-vínculo a store_id=1 foi REMOVIDO (R5 / OWASP A01 / P5 Opção A).
 # ==============================================================================
-get_current_b2b_user = require_lojista_with_store
+def get_current_b2b_user(
+    db: Session = Depends(get_db),
+    authorization: Optional[str] = Header(None)
+) -> models.User:
+    """Valida token JWT e exige que o usuário seja lojista/admin com store_id vinculado."""
+    user = get_current_user(db=db, authorization=authorization)
+    user_with_role = require_lojista_or_admin(current_user=user)
+    return require_lojista_with_store(current_user=user_with_role)
 
 
 
@@ -362,7 +367,7 @@ def get_shared_inventory(
 
     # Consulta veículos compartilháveis das lojas parceiras
     query = db.query(models.Car).filter(
-        models.Car.compartilhavel == 1,
+        models.Car.compartilhavel.is_(True),
         models.Car.store_id.in_(list(partner_store_ids)),
         models.Car.store_id != my_store_id  # não exibe o próprio estoque
     )

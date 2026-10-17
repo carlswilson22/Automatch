@@ -115,7 +115,7 @@ def create_car(
 ) -> schemas.CarSchema:
     """
     Publicação de veículos:
-    - Compradores (particulares): criam anúncios vinculados ao seu user_id (venda direta).
+    - Usuários comuns (particulares): criam anúncios vinculados ao seu user_id (venda direta, store_id=None).
     - Lojistas / Admins: criam anúncios vinculados à sua loja e podem ativar a rede de repasse B2B.
     """
     car_data = car.model_dump()
@@ -123,26 +123,25 @@ def create_car(
 
     is_b2b_seller = getattr(current_user, "role", None) in ("lojista", "admin")
 
-    # Apenas lojistas/admins podem habilitar repasse comercial B2B
+    # Apenas lojistas/admins podem habilitar repasse comercial B2B ou vincular a uma concessionária
     if not is_b2b_seller:
         car_data["compartilhavel"] = False
         car_data["valor_minimo_repasse"] = None
         car_data["comissao_fixa"] = None
         car_data["observacoes_repasse"] = None
-
-    target_store_id = car_data.get("store_id")
-    if target_store_id is not None:
-        store_exists = db.query(models.Store).filter(models.Store.id == target_store_id).first()
-        if not store_exists:
-            if getattr(current_user, "store_id", None):
-                car_data["store_id"] = current_user.store_id
-            elif is_b2b_seller:
-                first_store = db.query(models.Store).first()
-                car_data["store_id"] = first_store.id if first_store else None
-            else:
-                car_data["store_id"] = None
-    elif is_b2b_seller and getattr(current_user, "store_id", None):
-        car_data["store_id"] = current_user.store_id
+        car_data["store_id"] = None
+    else:
+        target_store_id = car_data.get("store_id")
+        if target_store_id is not None:
+            store_exists = db.query(models.Store).filter(models.Store.id == target_store_id).first()
+            if not store_exists:
+                if getattr(current_user, "store_id", None):
+                    car_data["store_id"] = current_user.store_id
+                else:
+                    first_store = db.query(models.Store).first()
+                    car_data["store_id"] = first_store.id if first_store else None
+        elif getattr(current_user, "store_id", None):
+            car_data["store_id"] = current_user.store_id
 
     db_car = models.Car(**car_data)
     db.add(db_car)
