@@ -92,6 +92,9 @@ coverage.xml
 *.sqlite
 *.sqlite3
 *.db
+*.db-journal
+*.db-wal
+*.db-shm
 automatch_postgres_data/
 postgres-data/
 

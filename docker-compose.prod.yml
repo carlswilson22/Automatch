@@ -41,6 +41,12 @@ services:
     # Sem portas expostas no host
     volumes:
       - backend_uploads:/app/uploads
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8000/api/health" ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 45s
     depends_on:
       db:
         condition: service_healthy
@@ -75,8 +81,10 @@ services:
     volumes:
       - ./gateway/nginx.prod.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
-      - backend
-      - frontend
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_started
     networks:
       - automatch-prod-network
 

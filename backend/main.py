@@ -242,6 +242,43 @@ app.include_router(laudos_export.router)
 app.include_router(partnerships.router)
 app.include_router(vehicle_lookup.router)
 
+# ── Health Check Endpoints (Liveness & Readiness Probes) ──────────────────────
+from fastapi.responses import JSONResponse
+
+
+@app.get("/api/health", tags=["Health"])
+async def health_liveness():
+    """Liveness probe: indica que o processo FastAPI está rodando."""
+    return {"status": "ok"}
+
+
+@app.get("/api/health/ready", tags=["Health"])
+async def health_readiness():
+    """
+    Readiness probe: verifica conectividade com o banco e diretório de uploads.
+    Retorna 200 se todos os checks passam, 503 se algum falha.
+    Não expõe informações sensíveis (versões, senhas, stack traces).
+    """
+    checks = {}
+
+    # Check 1: Conectividade com o banco de dados
+    try:
+        from sqlalchemy import text
+        with engine.connect() as conn:
+            conn.execute(text("SELECT 1"))
+        checks["database"] = "ok"
+    except Exception:
+        checks["database"] = "error"
+
+    # Check 2: Diretório de uploads acessível
+    checks["uploads_dir"] = "ok" if UPLOADS_DIR.exists() and UPLOADS_DIR.is_dir() else "error"
+
+    all_ok = all(v == "ok" for v in checks.values())
+    return JSONResponse(
+        status_code=200 if all_ok else 503,
+        content={"status": "ok" if all_ok else "degraded", "checks": checks}
+    )
+
 # ── Monta diretório de imagens estáticas (fallback de alta disponibilidade) ───
 from fastapi.staticfiles import StaticFiles
 
