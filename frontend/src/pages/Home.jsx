@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import {
   Search, ChevronRight, CheckCircle2,
   Zap, LogIn, Heart, MessageSquare, Star,
-  Sparkles, Calendar, Gauge, Palette
+  Sparkles, Calendar, Gauge, Palette,
+  ShieldAlert, X
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { stores } from '../data/inventoryData';
@@ -93,9 +94,18 @@ const FeatureItem = ({ title, description }) => (
 
 const Home = () => {
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
+  const location = useLocation();
+  const { user, isAuthenticated, canAccessB2B } = useAuth();
   const [allCars, setAllCars] = useState(showcaseCars);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [accessDeniedAlert, setAccessDeniedAlert] = useState(false);
+
+  useEffect(() => {
+    if (location.state?.accessDenied) {
+      setAccessDeniedAlert(true);
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   useEffect(() => {
     const local = getNewCars();
@@ -119,7 +129,9 @@ const Home = () => {
             <div className="hidden md:flex items-center gap-1 border-l border-slate-200 pl-6 ml-2">
               <button onClick={() => navigate('/encontrar')} className="text-slate-600 hover:text-blue-600 font-semibold text-sm px-4 py-2 rounded-lg hover:bg-blue-50 transition-all">Vitrine Digital</button>
               <button onClick={() => setIsChatOpen(true)} className="flex items-center gap-2 px-4 py-2 rounded-lg text-blue-600 hover:bg-blue-50 font-semibold text-sm transition-all"><MessageSquare className="w-4 h-4" /><span>Consultor IA</span></button>
-              <button onClick={() => navigate('/novo-anuncio')} className="flex items-center gap-2 px-4 py-2 rounded-lg text-emerald-700 bg-emerald-50 hover:bg-emerald-100 font-bold text-sm transition-all">Vender meu Carro</button>
+              {(!isAuthenticated || (canAccessB2B && canAccessB2B())) && (
+                <button onClick={() => navigate('/novo-anuncio')} className="flex items-center gap-2 px-4 py-2 rounded-lg text-emerald-700 bg-emerald-50 hover:bg-emerald-100 font-bold text-sm transition-all">Vender meu Carro</button>
+              )}
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -137,6 +149,37 @@ const Home = () => {
           </div>
         </div>
       </nav>
+
+      <AnimatePresence>
+        {accessDeniedAlert && (
+          <motion.div
+            initial={{ opacity: 0, y: -16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16 }}
+            transition={{ duration: 0.3 }}
+            className="w-full bg-gradient-to-r from-amber-500/15 via-amber-500/25 to-amber-500/15 border-b border-amber-300 text-amber-950 px-6 py-3.5 z-40 relative backdrop-blur-sm shadow-sm"
+          >
+            <div className="max-w-7xl mx-auto flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3.5">
+                <div className="w-9 h-9 rounded-2xl bg-amber-100 border border-amber-300/80 flex items-center justify-center text-amber-800 shrink-0 shadow-xs">
+                  <ShieldAlert className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-black text-amber-950 tracking-tight">Acesso Restrito — Exclusivo para Lojistas e Administradores (B2B)</p>
+                  <p className="text-xs text-amber-800 font-medium mt-0.5">Seu perfil atual de Comprador não possui permissão para anunciar ou acessar o painel B2B. Para ser um parceiro lojista, solicite o credenciamento em seu perfil.</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setAccessDeniedAlert(false)}
+                className="p-1.5 rounded-full text-amber-800 hover:text-amber-950 hover:bg-amber-100/80 transition-colors shrink-0 cursor-pointer"
+                title="Fechar aviso"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <section className="relative min-h-[92vh] overflow-hidden bg-slate-900 flex flex-col justify-center">
         <div className="absolute inset-0 z-0 scale-110">
