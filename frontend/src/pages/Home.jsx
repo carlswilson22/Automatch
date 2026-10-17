@@ -129,9 +129,7 @@ const Home = () => {
             <div className="hidden md:flex items-center gap-1 border-l border-slate-200 pl-6 ml-2">
               <button onClick={() => navigate('/encontrar')} className="text-slate-600 hover:text-blue-600 font-semibold text-sm px-4 py-2 rounded-lg hover:bg-blue-50 transition-all">Vitrine Digital</button>
               <button onClick={() => setIsChatOpen(true)} className="flex items-center gap-2 px-4 py-2 rounded-lg text-blue-600 hover:bg-blue-50 font-semibold text-sm transition-all"><MessageSquare className="w-4 h-4" /><span>Consultor IA</span></button>
-              {(!isAuthenticated || (canAccessB2B && canAccessB2B())) && (
-                <button onClick={() => navigate('/novo-anuncio')} className="flex items-center gap-2 px-4 py-2 rounded-lg text-emerald-700 bg-emerald-50 hover:bg-emerald-100 font-bold text-sm transition-all">Vender meu Carro</button>
-              )}
+              <button onClick={() => { if (!isAuthenticated) { navigate('/login', { state: { from: { pathname: '/novo-anuncio' } } }); } else { navigate('/novo-anuncio'); } }} className="flex items-center gap-2 px-4 py-2 rounded-lg text-emerald-700 bg-emerald-50 hover:bg-emerald-100 font-bold text-sm transition-all">Vender meu Carro</button>
             </div>
           </div>
           <div className="flex items-center gap-3">
@@ -166,7 +164,7 @@ const Home = () => {
                 </div>
                 <div>
                   <p className="text-sm font-black text-amber-950 tracking-tight">Acesso Restrito — Exclusivo para Lojistas e Administradores (B2B)</p>
-                  <p className="text-xs text-amber-800 font-medium mt-0.5">Seu perfil atual de Comprador não possui permissão para anunciar ou acessar o painel B2B. Para ser um parceiro lojista, solicite o credenciamento em seu perfil.</p>
+                  <p className="text-xs text-amber-800 font-medium mt-0.5">O recurso solicitado é restrito a lojistas credenciados e administradores da plataforma.</p>
                 </div>
               </div>
               <button

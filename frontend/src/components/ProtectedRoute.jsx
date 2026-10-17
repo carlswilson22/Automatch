@@ -19,7 +19,8 @@ const ProtectedRoute = ({ children, allowedRoles = null }) => {
   }
 
   if (allowedRoles && Array.isArray(allowedRoles) && allowedRoles.length > 0) {
-    const effectiveRole = user?.role || (user?.accountType === 'store' ? 'lojista' : 'comprador');
+    const rawRole = user?.role || (user?.accountType === 'store' ? 'lojista' : 'comum');
+    const effectiveRole = (rawRole === 'comprador' || rawRole === 'vendedor') ? 'comum' : rawRole;
     if (!allowedRoles.includes(effectiveRole)) {
       return <Navigate to="/" replace state={{ accessDenied: true }} />;
     }

@@ -84,6 +84,10 @@ def get_current_user(
     if not user:
         raise HTTPException(status_code=404, detail="Usuário não encontrado.")
 
+    # Normalização em runtime para papéis legados
+    if getattr(user, "role", None) in ("comprador", "vendedor") or not getattr(user, "role", None):
+        user.role = "comum"
+
     return user
 
 
@@ -94,7 +98,7 @@ def get_current_user(
 def require_lojista_or_admin(
     current_user: models.User = Depends(get_current_user)
 ) -> models.User:
-    """Guard: exige papel lojista ou admin. Compradores são rejeitados (403)."""
+    """Guard: exige papel lojista ou admin. Usuários comuns são rejeitados (403)."""
     if getattr(current_user, "role", None) not in ("lojista", "admin"):
         raise HTTPException(
             status_code=403,

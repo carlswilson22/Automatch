@@ -313,7 +313,7 @@ const AuthPage = () => {
               <div className="grid grid-cols-2 gap-2 bg-slate-950/80 p-1.5 rounded-2xl border border-slate-800">
                 <button
                   type="button"
-                  id="profile-comprador"
+                  id="profile-comum"
                   onClick={() => setAccountType('buyer')}
                   className={`py-3 px-2 rounded-xl text-xs font-bold transition-all flex flex-col items-center gap-1.5 cursor-pointer ${
                     accountType === 'buyer'
@@ -322,10 +322,10 @@ const AuthPage = () => {
                   }`}
                 >
                   <User className="w-5 h-5" />
-                  <span>Comprador</span>
+                  <span>Usuário Comum</span>
                   <span className={`text-[9px] font-normal leading-tight text-center ${
                     accountType === 'buyer' ? 'text-blue-200' : 'text-slate-600'
-                  }`}>Busca e compra veículos</span>
+                  }`}>Compra, vende e anuncia</span>
                 </button>
 
                 <button
@@ -342,7 +342,7 @@ const AuthPage = () => {
                   <span>Lojista</span>
                   <span className={`text-[9px] font-normal leading-tight text-center ${
                     accountType === 'store' ? 'text-blue-200' : 'text-slate-600'
-                  }`}>Vende e acessa painel B2B</span>
+                  }`}>Estoque e rede B2B</span>
                 </button>
               </div>
             </motion.div>

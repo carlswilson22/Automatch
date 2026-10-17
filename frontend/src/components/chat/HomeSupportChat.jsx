@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, X, Send } from 'lucide-react';
+import { MessageSquare, X, Send, Square } from 'lucide-react';
 
+import { streamChatMessage } from '../../services/aiChatService';
 import { generateGeneralSupportAnswer } from '../../utils/aiConsultantCore';
 import { showcaseCars } from '../../data/showcaseData';
 
@@ -9,7 +10,10 @@ export default function HomeSupportChat({ isOpen, onClose }) {
   const [chatTab, setChatTab] = useState('system');
   const [chatMessage, setChatMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const chatEndRef = useRef(null);
+  const abortControllerRef = useRef(null);
+  const streamingMsgIdRef = useRef(null);
   const [messages, setMessages] = useState([
     { id: 1, text: 'Olá! Bem-vindo ao AutoMatch. Como podemos ajudar com sua busca ou negociação hoje?', sender: 'system' }
   ]);
@@ -32,6 +36,24 @@ export default function HomeSupportChat({ isOpen, onClose }) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
+  // Cleanup abort controller on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
+
+  const handleCancelStream = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setIsStreaming(false);
+    setIsTyping(false);
+  }, []);
+
   const generateAssistantResponse = (text) => {
     return generateGeneralSupportAnswer(text, showcaseCars);
   };
@@ -39,35 +61,78 @@ export default function HomeSupportChat({ isOpen, onClose }) {
   const handleSendMessage = async (e, directText = null) => {
     if (e && e.preventDefault) e.preventDefault();
     const textToSend = (directText || chatMessage).trim();
-    if (!textToSend) return;
+    if (!textToSend || isStreaming) return;
     
     setMessages(prev => [...prev, { id: Date.now(), text: textToSend, sender: 'user' }]);
     if (!directText) setChatMessage('');
     setIsTyping(true);
 
+    // Cria AbortController para esta requisição
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    const streamMsgId = Date.now() + 1;
+    streamingMsgIdRef.current = streamMsgId;
+
     try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+      // Adiciona mensagem vazia que será preenchida pelo streaming
+      setMessages(prev => [...prev, { id: streamMsgId, text: '', sender: 'system', isStreaming: true }]);
+      setIsStreaming(true);
+      setIsTyping(false);
+
+      await streamChatMessage({
+        message: textToSend,
+        historico: [],
+        carContext: null,
+        signal: controller.signal,
+        onChunk: (token) => {
+          setMessages(prev =>
+            prev.map(msg =>
+              msg.id === streamMsgId
+                ? { ...msg, text: msg.text + token }
+                : msg
+            )
+          );
         },
-        body: JSON.stringify({ mensagem: textToSend }),
-      });
-      
-      if (response.ok) {
-        const data = await response.json();
-        if (data.resposta) {
-          setIsTyping(false);
-          setMessages(prev => [...prev, { id: Date.now(), text: data.resposta, sender: 'system' }]);
-          return;
+        onDone: () => {
+          setMessages(prev =>
+            prev.map(msg =>
+              msg.id === streamMsgId
+                ? { ...msg, isStreaming: false }
+                : msg
+            )
+          );
+          setIsStreaming(false);
+          abortControllerRef.current = null;
+          streamingMsgIdRef.current = null;
+        },
+        onError: () => {
+          // onError é chamado antes do throw, tratado no catch abaixo
         }
-      }
-      throw new Error('Fallback para assistente inteligente');
+      });
     } catch (error) {
-      setTimeout(() => {
-        setIsTyping(false);
-        setMessages(prev => [...prev, { id: Date.now(), text: generateAssistantResponse(textToSend), sender: 'system' }]);
-      }, 700);
+      // Se foi cancelado pelo usuário, mantém o texto parcial
+      if (controller.signal.aborted) {
+        setMessages(prev =>
+          prev.map(msg =>
+            msg.id === streamMsgId
+              ? { ...msg, isStreaming: false }
+              : msg
+          )
+        );
+        setIsStreaming(false);
+        return;
+      }
+
+      // Fallback semântico local se o stream falhou
+      setMessages(prev => {
+        const filtered = prev.filter(msg => msg.id !== streamMsgId);
+        return [...filtered, { id: Date.now(), text: generateAssistantResponse(textToSend), sender: 'system' }];
+      });
+      setIsStreaming(false);
+      setIsTyping(false);
+      abortControllerRef.current = null;
+      streamingMsgIdRef.current = null;
     }
   };
 
@@ -135,7 +200,12 @@ export default function HomeSupportChat({ isOpen, onClose }) {
                           : 'bg-white border border-slate-100 text-slate-700 rounded-tl-sm shadow-md'
                         }`}
                     >
-                      <p className="text-sm leading-relaxed">{msg.text}</p>
+                      <p className="text-sm leading-relaxed">
+                        {msg.text}
+                        {msg.isStreaming && (
+                          <span className="inline-block w-1.5 h-4 ml-0.5 bg-blue-500 rounded-sm animate-pulse align-text-bottom" />
+                        )}
+                      </p>
                     </div>
                   </div>
                 ))}
@@ -183,13 +253,24 @@ export default function HomeSupportChat({ isOpen, onClose }) {
                     placeholder="Digite sua mensagem..."
                     className="flex-1 bg-transparent border-none focus:outline-none px-4 text-slate-700 text-sm placeholder:text-slate-400"
                   />
-                  <button
-                    type="submit"
-                    disabled={!chatMessage.trim() || isTyping}
-                    className="p-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 disabled:bg-slate-300 disabled:cursor-not-allowed transition-all transform active:scale-95 shadow-md"
-                  >
-                    <Send className="w-4 h-4" />
-                  </button>
+                  {isStreaming ? (
+                    <button
+                      type="button"
+                      onClick={handleCancelStream}
+                      title="Parar resposta"
+                      className="p-3 bg-red-500 text-white rounded-full hover:bg-red-600 transition-all transform active:scale-95 shadow-md"
+                    >
+                      <Square className="w-4 h-4" />
+                    </button>
+                  ) : (
+                    <button
+                      type="submit"
+                      disabled={!chatMessage.trim() || isTyping}
+                      className="p-3 bg-blue-600 text-white rounded-full hover:bg-blue-700 disabled:opacity-50 disabled:bg-slate-300 disabled:cursor-not-allowed transition-all transform active:scale-95 shadow-md"
+                    >
+                      <Send className="w-4 h-4" />
+                    </button>
+                  )}
                 </form>
               </div>
             </>

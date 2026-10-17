@@ -53,7 +53,11 @@ export const AuthProvider = ({ children }) => {
     const savedUser = sessionStorage.getItem('automatch_user');
     if (savedUser) {
       try {
-        setUser(JSON.parse(savedUser));
+        const parsed = JSON.parse(savedUser);
+        if (parsed?.role === 'comprador' || parsed?.role === 'vendedor') {
+          parsed.role = 'comum';
+        }
+        setUser(parsed);
       } catch (e) {
         sessionStorage.removeItem('automatch_user');
         sessionStorage.removeItem('automatch_token');
@@ -97,10 +101,12 @@ export const AuthProvider = ({ children }) => {
 
       const userData = await response.json();
       // Reconcilia role: usa o que o backend retorna (fonte da verdade)
+      const rawRole = userData.role || 'comum';
+      const effectiveRole = (rawRole === 'comprador' || rawRole === 'vendedor') ? 'comum' : rawRole;
       const resolvedUser = {
         ...userData,
-        role: userData.role || 'comprador',
-        accountType: userData.role === 'lojista' ? 'store' : (userData.role === 'admin' ? 'store' : 'buyer')
+        role: effectiveRole,
+        accountType: effectiveRole === 'lojista' ? 'store' : (effectiveRole === 'admin' ? 'store' : 'buyer')
       };
 
       setUser(resolvedUser);
@@ -161,9 +167,10 @@ export const AuthProvider = ({ children }) => {
     const roleMap = {
       store: 'lojista',
       seller: 'lojista',
-      buyer: 'comprador',
+      buyer: 'comum',
+      comum: 'comum',
     };
-    const mappedRole = roleMap[extraData.accountType] || 'comprador';
+    const mappedRole = roleMap[extraData.accountType] || 'comum';
 
     try {
       const response = await fetch('/api/register', {
@@ -186,10 +193,13 @@ export const AuthProvider = ({ children }) => {
         throw new Error(errData.detail || 'Erro ao realizar cadastro.');
       }
 
+      const rawRole = userData.role || mappedRole;
+      const effectiveRole = (rawRole === 'comprador' || rawRole === 'vendedor') ? 'comum' : rawRole;
       const fullUser = {
         ...userData,
+        role: effectiveRole,
         // O role vem do backend (fonte da verdade)
-        accountType: userData.role === 'lojista' ? 'store' : 'buyer',
+        accountType: effectiveRole === 'lojista' ? 'store' : 'buyer',
         phone: extraData.phone || '',
         city: extraData.city || '',
         storeName: extraData.storeName || '',

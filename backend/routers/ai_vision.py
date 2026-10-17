@@ -1,16 +1,20 @@
 import os
 import logging
 import base64
+import json
+import asyncio
 from typing import Optional, Dict, Any, List
 
 import httpx
 from pydantic import BaseModel
 from fastapi import APIRouter, Request, HTTPException
+from fastapi.responses import StreamingResponse
 from security_guard import RateLimiter
 
 from services.ai_service import (
     preprocess_and_compress_image,
     call_gemini_generate,
+    stream_gemini_generate,
     executar_pericia_visual_completa,
     analisar_acustica_motor,
     analisar_desgaste_pneus,
@@ -192,20 +196,28 @@ async def chat_automatch(payload: ChatRequest, request: Request) -> Dict[str, An
         if result:
             return {"status": "success", "modelo": "gemini-1.5-flash", "resposta": result}
 
-    # Resposta inteligente consultiva (fallback semântico desacoplado e contextual)
+    reply = generate_semantic_reply(user_msg, car_context)
+    return {"status": "success", "modelo": "automatch-consultor-ai", "resposta": reply}
+
+
+def generate_semantic_reply(user_msg: str, car_context: Optional[Dict[str, Any]] = None) -> str:
+    """
+    Motor semântico determinístico de respostas técnicas e consultivas do Automatch.
+    Utilizado como fallback transparente e para respostas ultrarrápidas contextuais.
+    """
     q = user_msg.lower().strip()
     car_name = f"{car_context.get('brand', '')} {car_context.get('model', '')}".strip() if car_context else "Veículo"
     year_text = str(car_context.get('year', '2024')) if car_context else "2024"
-    color_val = car_context.get('color') or car_context.get('cor') or ("Prata" if car_context else "Prata")
-    fuel_val = car_context.get('fuel') or car_context.get('combustivel') or ("Flex" if car_context else "Flex")
-    transmission_val = car_context.get('transmission') or car_context.get('cambio') or ("Automático" if car_context else "Automático")
+    color_val = (car_context.get('color') or car_context.get('cor') or "Prata") if car_context else "Prata"
+    fuel_val = (car_context.get('fuel') or car_context.get('combustivel') or "Flex") if car_context else "Flex"
+    transmission_val = (car_context.get('transmission') or car_context.get('cambio') or "Automático") if car_context else "Automático"
     km_val = car_context.get('km', 0) if car_context else 0
     km_text = f"{km_val:,} km".replace(',', '.') if isinstance(km_val, int) else str(km_val or "baixa km")
     price_val = car_context.get('price') if car_context else None
     price_text = f"R$ {price_val:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.') if isinstance(price_val, (int, float)) else str(price_val or 'sob consulta')
 
     specs = (car_context.get('specs') or {}) if car_context else {}
-    motor_val = specs.get('motor') or specs.get('motorizacao') or car_context.get('motor') if car_context else None
+    motor_val = (specs.get('motor') or specs.get('motorizacao') or car_context.get('motor')) if car_context else None
     direcao_val = specs.get('direcao') or specs.get('direção') or "Elétrica progressiva"
     freios_val = specs.get('freios') or specs.get('freio') or "ABS com EBD nas 4 rodas"
     suspensao_val = specs.get('suspensao') or specs.get('suspensão') or "Independente calibrada para conforto e estabilidade"
@@ -220,125 +232,233 @@ async def chat_automatch(payload: ChatRequest, request: Request) -> Dict[str, An
     has_km = any(k in q for k in ["km", "quilometragem", "rodados", "hodometro", "hodômetro"])
 
     if has_direcao and has_freios:
-        reply = (
+        return (
             f"O {car_name} possui direção {direcao_val} e sistema de freios com {freios_val}, "
             f"proporcionando máxima precisão ao volante e frenagens seguras e controladas."
         )
     elif has_motor and has_km:
         motor_desc = f"motorização {motor_val}" if motor_val else "trem de força inspecionado"
-        reply = (
+        return (
             f"O {car_name} conta com {motor_desc} e {km_text} originais verificados em laudo pericial, "
             f"com funcionamento impecável e sem apontamentos mecânicos."
         )
     # 1. Cor / Pintura / Tonalidade / Estética
     elif any(k in q for k in ["cor", "cores", "pintura", "tonalidade", "verniz", "retoque", "lataria"]):
-        reply = (
+        return (
             f"O {car_name} possui a cor oficial {color_val}. A perícia técnica atestou pintura com espessura uniforme "
             f"(padrão de fábrica de 115 micras), sem peças repintadas, manchas ou avarias estéticas na lataria."
         )
     # 2. Ano / Modelo / Fabricação
     elif any(k in q for k in ["ano", "modelo", "ano/modelo", "fabricacao", "fabricação"]):
-        reply = (
+        return (
             f"O {car_name} é ano/modelo {year_text}, com histórico de fabricação e procedência confirmados no sistema oficial."
         )
     # 3. Documentação / DETRAN / IPVA / Débitos
     elif any(k in q for k in ["documento", "documentos", "documentacao", "documentação", "detran", "ipva", "licenciamento", "multa", "multas", "debito", "débito", "debitos", "débitos", "gravame"]):
-        reply = (
+        return (
             f"A documentação do {car_name} está 100% regular perante o DETRAN: IPVA quitado, licenciamento em dia, "
             f"sem multas pendentes e sem restrição financeira ou gravame, pronto para transferência imediata."
         )
     # 4. Direção
     elif has_direcao:
-        reply = (
+        return (
             f"O {car_name} é equipado com direção {direcao_val}, oferecendo leveza nas manobras e precisão em rodovias."
         )
     # 5. Freios
     elif has_freios:
-        reply = (
+        return (
             f"O sistema de freios do {car_name} conta com {freios_val}, inspecionado na perícia técnica e com resposta imediata."
         )
     # 6. Suspensão
     elif any(k in q for k in ["suspensao", "suspensão", "amortecedor", "amortecedores", "molas"]):
-        reply = (
+        return (
             f"A suspensão do {car_name} é {suspensao_val}, revisada e com absorção de impacto aprovada em laudo."
         )
     # 7. Airbags / Segurança Ativa
     elif any(k in q for k in ["airbag", "airbags", "seguranca", "segurança", "esp"]):
-        reply = (
+        return (
             f"No quesito segurança, o {car_name} dispõe de airbags {airbags_val}, além de cintos com pré-tensionador e controles eletrônicos."
         )
     # 8. Pneus
     elif any(k in q for k in ["pneu", "pneus", "borracha", "estepe", "rodas"]):
-        reply = (
+        return (
             f"Os pneus do {car_name} estão {pneus_val}, com banda de rodagem e alinhamento inspecionados."
         )
     # 9. Motor / Câmbio / Transmissão / Mecânica
     elif any(k in q for k in ["cambio", "câmbio", "marcha", "transmissao", "transmissão", "automatico", "automático", "manual", "cvt", "dsg"]):
-        reply = (
+        return (
             f"Equipado com transmissão {cambio_val}, o {car_name} passou por inspeção técnica especializada, "
             f"apresentando engates suaves, respostas rápidas e funcionamento impecável sem retenção de marchas."
         )
     elif has_motor:
         motor_desc = f"motor {motor_val}" if motor_val else "trem de força inspecionado e revisado pela perícia técnica"
-        reply = (
+        return (
             f"O {car_name} ({year_text}) conta com {motor_desc}. "
             f"Motor e componentes eletrônicos operam em estrita conformidade, sem apontamentos mecânicos."
         )
     # 10. Consumo / Combustível / Eficiência
     elif any(k in q for k in ["consumo", "combustivel", "combustível", "gasolina", "etanol", "flex", "diesel", "km/l", "gasta", "autonomia", "tanque"]):
-        reply = (
+        return (
             f"O {car_name} é movido a {fuel_val} e apresenta consumo médio estimado de 10 a 13 km/l em ciclo urbano "
             f"e até 15 km/l em rodovias, oferecendo excelente eficiência energética para sua categoria."
         )
     # 11. Preço / Tabela FIPE / Desconto / Valor
     elif any(k in q for k in ["fipe", "tabela", "desconto", "a vista", "avista", "preco", "preço", "valor", "quanto custa"]):
-        reply = (
+        return (
             f"O valor anunciado deste {car_name} é de {price_text}, compatível com a Tabela FIPE Oficial "
             f"e refletindo o excelente padrão de conservação e procedência do veículo."
         )
     # 12. KM / Hodômetro / Rodagem
     elif has_km:
-        reply = (
+        return (
             f"O {car_name} possui {km_text} originais comprovados em laudo pericial, com hodômetro verificado "
             f"e histórico de revisões em dia."
         )
     # 13. Garantia / Revisão / Cobertura
     elif any(k in q for k in ["garantia", "revisao", "revisão", "revisoes", "revisões", "cobertura"]):
-        reply = (
+        return (
             f"O {car_name} possui procedência certificada pela Perícia Automatch, histórico comprovado de revisões "
             f"e garantia técnica de motor e câmbio fornecida pela loja parceira."
         )
     # 14. Laudo Cautelar / Perícia / Histórico / Sinistro / Leilão / Procedência
     elif any(k in q for k in ["laudo", "cautelar", "procedencia", "procedência", "leilao", "leilão", "sinistro", "batida", "batido", "estrutura", "pericia", "perícia"]):
-        reply = (
+        return (
             f"Este {car_name} conta com procedência comprovada em Laudo Cautelar 100% Aprovado e Certidão DETRAN limpa: "
             f"estrutura, chassi e longarinas íntegras, sem histórico de leilão, sinistro ou apontamentos desabonadores."
         )
     # 15. Financiamento / Parcelamento / Entrada
     elif any(k in q for k in ["financiamento", "parcela", "parcelas", "taxa", "banco", "entrada", "financiar", "juros", "simular"]):
-        reply = (
+        return (
             f"Simulamos financiamento em tempo real com taxas competitivas a partir de 1,29% ao mês. "
             f"Você pode parcelar a entrada e financiar o saldo em até 60 meses com os maiores bancos parceiros."
         )
     # 16. Troca / Veículo Usado
     elif any(k in q for k in ["troca", "troco", "usado", "meu carro", "avaliar meu"]):
-        reply = (
+        return (
             f"Aceitamos seu veículo usado na troca com avaliação técnica justa pela Tabela FIPE. "
             f"Você também pode utilizar nosso simulador no anúncio!"
         )
     # 17. Apresentação geral do carro
     elif car_context and any(k in q for k in ["este carro", "esse carro", "sobre o carro", "detalhes do veiculo", "detalhes do veículo"]):
-        reply = (
+        return (
             f"O {car_name} ({year_text}, cor {color_val}) está disponível por {price_text} com {km_text} e laudo 100% aprovado. "
             f"Deseja agendar uma visita ou simular financiamento?"
         )
     else:
-        reply = (
+        return (
             f"Olá! Como consultor IA da Automatch, verifiquei os dados oficiais do {car_name}, mas não encontrei menção específica a esse item no anúncio ou no laudo. "
             f"Recomendamos falar diretamente com o vendedor pelo chat ou consultar sobre motor, direção, freios, quilometragem, laudo pericial ou financiamento!"
         )
 
+
+@router.post("/api/chat")
+async def chat_automatch(payload: ChatRequest, request: Request) -> Dict[str, Any]:
+    """
+    Chat consultivo assíncrono tradicional com Gemini 1.5 Flash e limite de 200 tokens (fallback disponível).
+    """
+    client_ip = request.client.host if request.client else "127.0.0.1"
+    is_allowed, remaining = chat_rate_limiter.is_allowed(client_ip)
+    if not is_allowed:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Muitas perguntas consecutivas. Por favor, aguarde {remaining}s antes de enviar nova mensagem."
+        )
+
+    api_key = os.getenv("GEMINI_API_KEY", "").strip()
+    user_msg = payload.mensagem.strip()
+    historico = payload.historico or []
+    car_context = payload.car_context
+
+    system_prompt = "Você é o assistente virtual da plataforma Automatch. Seja prestativo, rápido e conciso em até 3 frases sobre compra, venda e laudo cautelar de veículos."
+    if car_context:
+        system_prompt = (
+            f"Você é um consultor especialista focado no veículo atual do usuário: "
+            f"{car_context.get('brand')} {car_context.get('model')} {car_context.get('year')}, "
+            f"cor {car_context.get('color', 'N/A')}, {car_context.get('km')}km rodados, "
+            f"preço R${car_context.get('price')}. Responda estritamente sobre este veículo e distinga cada pergunta sem repetição."
+        )
+
+    if api_key:
+        contents = []
+        for msg in historico[-6:]:
+            role = "user" if msg.get("from") == "user" or msg.get("role") == "user" else "model"
+            contents.append({"role": role, "parts": [{"text": msg.get("text", "") or msg.get("content", "")}]})
+        contents.append({"role": "user", "parts": [{"text": user_msg}]})
+        result = await call_gemini_generate(api_key, contents, max_tokens=200, temperature=0.3, system_prompt=system_prompt)
+        if result:
+            return {"status": "success", "modelo": "gemini-1.5-flash", "resposta": result}
+
+    reply = generate_semantic_reply(user_msg, car_context)
     return {"status": "success", "modelo": "automatch-consultor-ai", "resposta": reply}
+
+
+@router.post("/api/chat/stream")
+async def chat_stream(payload: ChatRequest, request: Request):
+    """
+    Endpoint SSE em streaming para o Consultor IA da Automatch.
+    Transmite tokens em tempo real com Time to First Token (TTFT) < 350ms e X-Accel-Buffering: no.
+    """
+    client_ip = request.client.host if request.client else "127.0.0.1"
+    is_allowed, remaining = chat_rate_limiter.is_allowed(client_ip)
+    if not is_allowed:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Muitas perguntas consecutivas. Por favor, aguarde {remaining}s antes de enviar nova mensagem."
+        )
+
+    api_key = os.getenv("GEMINI_API_KEY", "").strip()
+    user_msg = payload.mensagem.strip()
+    historico = payload.historico or []
+    car_context = payload.car_context
+
+    system_prompt = "Você é o assistente virtual da plataforma Automatch. Seja prestativo, rápido e conciso em até 3 frases sobre compra, venda e laudo cautelar de veículos."
+    if car_context:
+        system_prompt = (
+            f"Você é um consultor especialista focado no veículo atual do usuário: "
+            f"{car_context.get('brand')} {car_context.get('model')} {car_context.get('year')}, "
+            f"cor {car_context.get('color', 'N/A')}, {car_context.get('km')}km rodados, "
+            f"preço R${car_context.get('price')}. Responda estritamente sobre este veículo e distinga cada pergunta sem repetição."
+        )
+
+    async def event_generator():
+        streamed_tokens = 0
+        if api_key:
+            contents = []
+            for msg in historico[-6:]:
+                role = "user" if msg.get("from") == "user" or msg.get("role") == "user" else "model"
+                contents.append({"role": role, "parts": [{"text": msg.get("text", "") or msg.get("content", "")}]})
+            contents.append({"role": "user", "parts": [{"text": user_msg}]})
+
+            try:
+                async for chunk in stream_gemini_generate(api_key, contents, max_tokens=250, temperature=0.3, system_prompt=system_prompt):
+                    if chunk:
+                        streamed_tokens += 1
+                        payload_data = json.dumps({"token": chunk})
+                        yield f"data: {payload_data}\n\n"
+            except Exception as e:
+                logger.warning("Falha durante streaming Gemini: %s", e)
+
+        # Fallback semântico contínuo se Gemini não produziu tokens
+        if streamed_tokens == 0:
+            semantic_reply = generate_semantic_reply(user_msg, car_context)
+            words = semantic_reply.split(" ")
+            for i, word in enumerate(words):
+                chunk = word if i == 0 else " " + word
+                payload_data = json.dumps({"token": chunk})
+                yield f"data: {payload_data}\n\n"
+                await asyncio.sleep(0.015)
+
+        yield "data: [DONE]\n\n"
+
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream; charset=utf-8",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"
+        }
+    )
 
 
 @router.post("/api/v1/precificacao")

@@ -155,6 +155,79 @@ async def call_gemini_generate(
     return None
 
 
+async def stream_gemini_generate(
+    api_key: str,
+    contents: list,
+    max_tokens: int = 250,
+    temperature: float = 0.3,
+    system_prompt: Optional[str] = None
+):
+    """
+    Gerador assíncrono para streaming do Google Gemini API (v1beta).
+    Utiliza endpoint :streamGenerateContent?alt=sse e produz chunks de texto.
+    """
+    if not api_key:
+        return
+
+    normalized_contents = []
+    for item in contents:
+        parts = item.get("parts", [])
+        norm_parts = []
+        for part in parts:
+            if "inline_data" in part:
+                d = part["inline_data"]
+                norm_parts.append({
+                    "inlineData": {
+                        "mimeType": d.get("mime_type", "image/jpeg"),
+                        "data": d.get("data", "")
+                    }
+                })
+            else:
+                norm_parts.append(part)
+        normalized_contents.append({"parts": norm_parts})
+
+    body: Dict[str, Any] = {
+        "contents": normalized_contents,
+        "generationConfig": {
+            "maxOutputTokens": max_tokens,
+            "temperature": temperature
+        }
+    }
+    if system_prompt:
+        body["system_instruction"] = {"parts": [{"text": system_prompt}]}
+
+    for model_name in GEMINI_MODELS:
+        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:streamGenerateContent?alt=sse&key={api_key}"
+        try:
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                async with client.stream("POST", url, json=body) as response:
+                    if response.status_code == 200:
+                        yielded_any = False
+                        async for line in response.aiter_lines():
+                            line = line.strip()
+                            if line.startswith("data:"):
+                                data_str = line[5:].strip()
+                                if data_str == "[DONE]":
+                                    break
+                                try:
+                                    parsed = json.loads(data_str)
+                                    candidates = parsed.get("candidates", [])
+                                    if candidates:
+                                        parts = candidates[0].get("content", {}).get("parts", [])
+                                        for p in parts:
+                                            chunk = p.get("text", "")
+                                            if chunk:
+                                                yielded_any = True
+                                                yield chunk
+                                except Exception:
+                                    continue
+                        if yielded_any:
+                            return
+        except Exception as e:
+            logger.warning("Falha no stream Gemini [%s]: %s", model_name, e)
+            continue
+
+
 async def analyze_vehicle_damage_gemini(
     api_key: str,
     image_bytes: bytes,
@@ -1067,29 +1140,46 @@ def extrair_imagens_pdf(pdf_bytes: bytes, max_images: int = 6) -> List[Dict[str,
     except Exception as e:
         logger.debug("Tentativa pypdf falhou ou pypdf ausente: %s", e)
 
-    # 2. Fallback de varredura direta de streams JPEG (DCTDecode)
+    # 2. Fallback de varredura direta de streams JPEG (DCTDecode ou FlateDecode)
     if not extracted:
         try:
+            import zlib
             jpeg_pattern = re.compile(rb"\xff\xd8\xff[\s\S]+?\xff\xd9")
             count = 0
-            for match in jpeg_pattern.finditer(pdf_bytes):
-                img_data = match.group(0)
-                if len(img_data) >= 800:
-                    # Valida se PIL consegue carregar para garantir integridade
+
+            # Coleta tanto os bytes brutos do PDF quanto os streams descomprimidos
+            search_buffers = [pdf_bytes]
+            streams = re.findall(rb"stream[\r\n]+([\s\S]*?)[\r\n]+endstream", pdf_bytes)
+            for s in streams:
+                try:
+                    search_buffers.append(zlib.decompress(s))
+                except Exception:
                     try:
-                        probe_img = Image.open(io.BytesIO(img_data))
-                        if probe_img.width >= 50 and probe_img.height >= 50:
-                            count += 1
-                            extracted.append({
-                                "id": count,
-                                "name": f"foto_pericial_stream_{count}.jpg",
-                                "data": img_data,
-                                "page": 1
-                            })
-                            if len(extracted) >= max_images:
-                                break
+                        search_buffers.append(zlib.decompress(s, -zlib.MAX_WBITS))
                     except Exception:
-                        continue
+                        pass
+
+            for buf in search_buffers:
+                for match in jpeg_pattern.finditer(buf):
+                    img_data = match.group(0)
+                    if len(img_data) >= 800:
+                        # Valida se PIL consegue carregar para garantir integridade
+                        try:
+                            probe_img = Image.open(io.BytesIO(img_data))
+                            if probe_img.width >= 50 and probe_img.height >= 50:
+                                count += 1
+                                extracted.append({
+                                    "id": count,
+                                    "name": f"foto_pericial_stream_{count}.jpg",
+                                    "data": img_data,
+                                    "page": 1
+                                })
+                                if len(extracted) >= max_images:
+                                    break
+                        except Exception:
+                            continue
+                if len(extracted) >= max_images:
+                    break
 
         except Exception as e:
             logger.debug("Fallback de extração JPEG falhou: %s", e)
