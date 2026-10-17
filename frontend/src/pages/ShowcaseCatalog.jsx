@@ -146,7 +146,7 @@ const FilterSelect = ({ label, icon: Icon, value, onChange, options }) => (
 
 const ShowcaseCatalog = () => {
   const catalogRef = useRef(null);
-  const { user, isAuthenticated } = useAuth();
+  const { user, isAuthenticated, canAccessB2B } = useAuth();
   const navigate = useNavigate();
   const [viewMode, setViewMode] = useState('grid');
   const [searchQuery, setSearchQuery] = useState('');
@@ -299,7 +299,9 @@ const ShowcaseCatalog = () => {
               <Scale className="w-3.5 h-3.5 text-amber-600" />
               <span>Comparar</span>
             </button>
-            <button onClick={() => navigate('/novo-anuncio')} className="text-xs font-bold text-brand-blue bg-blue-50 hover:bg-blue-100 px-3.5 py-1.5 rounded-full transition-colors">+ Anunciar</button>
+            {canAccessB2B && canAccessB2B() && (
+              <button onClick={() => navigate('/novo-anuncio')} className="text-xs font-bold text-brand-blue bg-blue-50 hover:bg-blue-100 px-3.5 py-1.5 rounded-full transition-colors">+ Anunciar</button>
+            )}
           </div>
           <div className="flex items-center gap-2">
             <button onClick={() => { if (!isAuthenticated) navigate('/login', { state: { from: { pathname: '/favoritos' } } }); else navigate('/favoritos'); }} className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all" title="Carros Curtidos"><Heart className="w-5 h-5" /></button>

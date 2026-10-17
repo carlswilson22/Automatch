@@ -47,9 +47,9 @@ function App() {
               <CheckoutPage />
             </ProtectedRoute>
           } />
-          {/* /novo-anuncio: disponível para todos os usuários autenticados (particulares e lojistas) */}
+          {/* /novo-anuncio: exclusivo para lojistas e administradores (B2B) */}
           <Route path="/novo-anuncio" element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['admin', 'lojista']}>
               <NewCarAdForm />
             </ProtectedRoute>
           } />
@@ -61,9 +61,9 @@ function App() {
               <FavoritesPage />
             </ProtectedRoute>
           } />
-          {/* /meus-anuncios: disponível para todos os usuários autenticados */}
+          {/* /meus-anuncios: exclusivo para lojistas e administradores (B2B) */}
           <Route path="/meus-anuncios" element={
-            <ProtectedRoute>
+            <ProtectedRoute allowedRoles={['admin', 'lojista']}>
               <MyAdsPage />
             </ProtectedRoute>
           } />
