@@ -132,6 +132,11 @@ class UserProfileUpdate(BaseModel):
     email: Optional[str] = None
     photo: Optional[str] = None
 
+class StoreOnboardingRequest(BaseModel):
+    name: str
+    description: Optional[str] = None
+    logo: Optional[str] = None
+
 class CheckoutRequest(BaseModel):
     customer_name: str
     customer_email: Optional[str] = None

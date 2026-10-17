@@ -17,7 +17,7 @@ import security
 from database import get_db
 from security_guard import login_rate_limiter, mask_email
 # get_current_user centralizado — importado de dependencies para evitar duplicidade
-from dependencies import get_current_user
+from dependencies import get_current_user, require_lojista_or_admin
 
 logger = logging.getLogger("automatch")
 router = APIRouter(prefix="/api", tags=["Auth"])
@@ -451,4 +451,64 @@ def delete_or_anonymize_user_account(
         "message": "Conta e dados pessoais foram devidamente anonimizados e desvinculados em conformidade com o Art. 18 da LGPD.",
         "titular_id": anonymized_id
     }
+
+
+@router.post("/store/onboarding", response_model=schemas.UserResponse)
+def onboard_store(
+    request: schemas.StoreOnboardingRequest,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(require_lojista_or_admin)
+) -> Dict[str, Any]:
+    """
+    Onboarding de Loja para Lojistas (P5 Opção A / Checkpoint 96):
+    Permite que usuários com role 'lojista' (ou 'admin') que ainda não possuam store_id
+    vinculem ou registrem sua loja, habilitando o acesso pleno ao ecossistema B2B.
+    """
+    clean_name = request.name.strip()
+    if len(clean_name) < 3:
+        raise HTTPException(status_code=400, detail="O nome da loja deve conter pelo menos 3 caracteres.")
+
+    # Se o lojista já tem uma loja válida vinculada, rejeita duplicação
+    if current_user.store_id:
+        existing_store = db.query(models.Store).filter(models.Store.id == current_user.store_id).first()
+        if existing_store:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Sua conta já possui a loja '{existing_store.name}' vinculada."
+            )
+
+    slug_base = re.sub(r"[^a-z0-9]+", "-", clean_name.lower()).strip("-")
+    slug = slug_base
+    counter = 1
+    while db.query(models.Store).filter(models.Store.slug == slug).first():
+        slug = f"{slug_base}-{counter}"
+        counter += 1
+
+    new_store = models.Store(
+        name=clean_name,
+        slug=slug,
+        logo=request.logo or "",
+        description=request.description or f"Loja cadastrada por {current_user.name}."
+    )
+    db.add(new_store)
+    db.flush()
+
+    current_user.store_id = new_store.id
+    current_user.sub_role = "owner"
+    db.commit()
+    db.refresh(current_user)
+
+    logger.info("Onboarding de loja '%s' (ID %d) concluído para usuário %s.", new_store.name, new_store.id, current_user.email)
+
+    return {
+        "id": current_user.id,
+        "name": current_user.name,
+        "email": current_user.email,
+        "photo": current_user.photo,
+        "memberSince": current_user.member_since,
+        "role": current_user.role,
+        "sub_role": current_user.sub_role,
+        "store_id": current_user.store_id
+    }
+
 
