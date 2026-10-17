@@ -1,5 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Bot, Send, RotateCcw, Trash2, RefreshCw } from 'lucide-react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Bot, Send, RotateCcw, Square } from 'lucide-react';
+import { streamChatMessage } from '../../services/aiChatService';
 import { generateVehicleConsultantAnswer } from '../../utils/aiConsultantCore';
 
 const AIChatBox = ({ car }) => {
@@ -16,7 +17,7 @@ const AIChatBox = ({ car }) => {
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          return parsed.filter(m => !m.isLoading && m.text);
+          return parsed.filter(m => !m.isLoading && !m.isStreaming && m.text);
         }
       }
     } catch (e) {
@@ -26,7 +27,10 @@ const AIChatBox = ({ car }) => {
   });
 
   const [input, setInput] = useState('');
+  const [isStreaming, setIsStreaming] = useState(false);
   const endRef = useRef(null);
+  const abortControllerRef = useRef(null);
+  const streamingIndexRef = useRef(null);
 
   useEffect(() => { 
     if (messages.length > 1) {
@@ -34,17 +38,27 @@ const AIChatBox = ({ car }) => {
     }
   }, [messages]);
 
-  // Sincroniza histórico no localStorage a cada atualização
+  // Persistência debounced: grava no localStorage somente quando NÃO está em streaming
   useEffect(() => {
+    if (isStreaming) return;
     try {
-      const toSave = messages.filter(m => !m.isLoading && m.text);
+      const toSave = messages.filter(m => !m.isLoading && !m.isStreaming && m.text);
       if (toSave.length > 0) {
         localStorage.setItem(storageKey, JSON.stringify(toSave));
       }
     } catch (e) {
       console.warn('Erro ao salvar histórico do chat:', e);
     }
-  }, [messages, storageKey]);
+  }, [messages, storageKey, isStreaming]);
+
+  // Cleanup abort controller on unmount
+  useEffect(() => {
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, []);
 
   const handleClearHistory = () => {
     try {
@@ -55,18 +69,33 @@ const AIChatBox = ({ car }) => {
     setMessages([defaultWelcome]);
   };
 
+  const handleCancelStream = useCallback(() => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setIsStreaming(false);
+    // Remove o flag de streaming da mensagem atual
+    setMessages(prev =>
+      prev.map(m => m.isStreaming ? { ...m, isStreaming: false } : m)
+    );
+  }, []);
+
   const handleSend = async (overrideText = null) => {
     const textToSend = (overrideText || input).trim();
-    if (!textToSend) return;
+    if (!textToSend || isStreaming) return;
     const userMessage = textToSend;
     const currentMessages = messages;
     setMessages(m => [...m, { from: 'user', text: userMessage }]);
     if (!overrideText) setInput('');
-    setMessages(m => [...m, { from: 'ai', text: 'Consultando especialista Automatch...', isLoading: true }]);
+
+    // Cria AbortController para esta requisição
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
 
     // Histórico conversacional para contexto
     const historico = currentMessages
-      .filter(m => !m.isLoading && m.text)
+      .filter(m => !m.isLoading && !m.isStreaming && m.text)
       .map(m => ({ from: m.from, text: m.text }));
 
     const fullCarContext = {
@@ -84,36 +113,67 @@ const AIChatBox = ({ car }) => {
       laudoStatus: car?.timeline?.find(t => t.type === 'laudo')?.status || 'approved'
     };
 
-    try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          mensagem: userMessage,
-          historico,
-          car_context: fullCarContext
-        })
-      });
+    // Índice da mensagem de streaming
+    const streamIdx = currentMessages.length + 1; // +1 porque adicionamos a user message acima
+    streamingIndexRef.current = streamIdx;
 
-      if (response.ok) {
-        const data = await response.json();
-        setMessages(m => {
-          const newM = [...m];
-          if (newM[newM.length - 1]?.isLoading) newM.pop();
-          return [...newM, { from: 'ai', text: data.resposta || generateVehicleConsultantAnswer(userMessage, car, historico) }];
-        });
-      } else {
-        throw new Error('API offline');
-      }
+    // Adiciona mensagem vazia para preencher via streaming
+    setMessages(m => [...m, { from: 'ai', text: '', isStreaming: true }]);
+    setIsStreaming(true);
+
+    try {
+      await streamChatMessage({
+        message: userMessage,
+        historico,
+        carContext: fullCarContext,
+        signal: controller.signal,
+        onChunk: (token) => {
+          setMessages(prev => {
+            const newM = [...prev];
+            const lastAi = newM.length - 1;
+            if (newM[lastAi]?.isStreaming) {
+              newM[lastAi] = { ...newM[lastAi], text: newM[lastAi].text + token };
+            }
+            return newM;
+          });
+        },
+        onDone: () => {
+          setMessages(prev => {
+            const newM = [...prev];
+            const lastAi = newM.length - 1;
+            if (newM[lastAi]?.isStreaming) {
+              newM[lastAi] = { ...newM[lastAi], isStreaming: false };
+            }
+            return newM;
+          });
+          setIsStreaming(false);
+          abortControllerRef.current = null;
+          streamingIndexRef.current = null;
+        },
+        onError: () => {
+          // Tratado no catch abaixo
+        }
+      });
     } catch (err) {
+      // Se foi cancelado pelo usuário, mantém texto parcial
+      if (controller.signal.aborted) {
+        setMessages(prev =>
+          prev.map(m => m.isStreaming ? { ...m, isStreaming: false } : m)
+        );
+        setIsStreaming(false);
+        return;
+      }
+
       // Fallback semântico fundamentado nas 3 fontes (anúncio, laudo e descrição)
-      setTimeout(() => {
-        setMessages(m => {
-          const newM = [...m];
-          if (newM[newM.length - 1]?.isLoading) newM.pop();
-          return [...newM, { from: 'ai', text: generateVehicleConsultantAnswer(userMessage, car, historico) }];
-        });
-      }, 350);
+      setMessages(m => {
+        const newM = [...m];
+        // Remove a mensagem de streaming vazia/parcial
+        if (newM[newM.length - 1]?.isStreaming) newM.pop();
+        return [...newM, { from: 'ai', text: generateVehicleConsultantAnswer(userMessage, car, historico) }];
+      });
+      setIsStreaming(false);
+      abortControllerRef.current = null;
+      streamingIndexRef.current = null;
     }
   };
 
@@ -149,7 +209,12 @@ const AIChatBox = ({ car }) => {
         {messages.map((m, i) => (
           <div key={i} className={`flex gap-2 ${m.from === 'user' ? 'justify-end' : ''}`}>
             {m.from === 'ai' && <div className="w-7 h-7 rounded-full bg-blue-600/20 text-blue-400 flex items-center justify-center shrink-0 mt-0.5 border border-blue-500/30"><Bot className="w-4 h-4" /></div>}
-            <div className={`max-w-[85%] px-3.5 py-2.5 rounded-2xl text-xs leading-relaxed ${m.from === 'ai' ? 'bg-slate-800 text-slate-200 border border-slate-700' : 'bg-blue-600 text-white'} ${m.isLoading ? 'animate-pulse' : ''}`}>{m.text}</div>
+            <div className={`max-w-[85%] px-3.5 py-2.5 rounded-2xl text-xs leading-relaxed ${m.from === 'ai' ? 'bg-slate-800 text-slate-200 border border-slate-700' : 'bg-blue-600 text-white'} ${m.isLoading ? 'animate-pulse' : ''}`}>
+              {m.text}
+              {m.isStreaming && (
+                <span className="inline-block w-1.5 h-4 ml-0.5 bg-blue-400 rounded-sm animate-pulse align-text-bottom" />
+              )}
+            </div>
           </div>
         ))}
         <div ref={endRef} />
@@ -163,7 +228,8 @@ const AIChatBox = ({ car }) => {
             key={idx}
             type="button"
             onClick={() => handleSend(pill)}
-            className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-slate-800 hover:bg-blue-600/20 text-slate-300 hover:text-blue-300 border border-slate-700 hover:border-blue-500/40 transition-all shrink-0 active:scale-95"
+            disabled={isStreaming}
+            className="text-[11px] font-medium px-2.5 py-1 rounded-full bg-slate-800 hover:bg-blue-600/20 text-slate-300 hover:text-blue-300 border border-slate-700 hover:border-blue-500/40 transition-all shrink-0 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {pill}
           </button>
@@ -174,13 +240,24 @@ const AIChatBox = ({ car }) => {
         <input 
           value={input} 
           onChange={e => setInput(e.target.value)} 
-          onKeyDown={e => e.key === 'Enter' && handleSend()}
+          onKeyDown={e => e.key === 'Enter' && !isStreaming && handleSend()}
           placeholder="Pergunte sobre cor, ano, motor, consumo, laudo..." 
           className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2 text-xs text-white placeholder:text-slate-500 focus:ring-2 focus:ring-blue-500 outline-none" 
         />
-        <button onClick={() => handleSend()} className="bg-blue-600 text-white p-2.5 rounded-xl hover:bg-blue-500 transition-colors">
-          <Send className="w-4 h-4" />
-        </button>
+        {isStreaming ? (
+          <button
+            type="button"
+            onClick={handleCancelStream}
+            title="Parar resposta"
+            className="bg-red-500 text-white p-2.5 rounded-xl hover:bg-red-400 transition-colors active:scale-95"
+          >
+            <Square className="w-4 h-4" />
+          </button>
+        ) : (
+          <button onClick={() => handleSend()} className="bg-blue-600 text-white p-2.5 rounded-xl hover:bg-blue-500 transition-colors">
+            <Send className="w-4 h-4" />
+          </button>
+        )}
       </div>
     </div>
   );
