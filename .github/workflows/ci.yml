@@ -36,6 +36,7 @@ jobs:
         run: |
           python -m unittest test_audit_full_battery.py
           python -m unittest test_improvements_battery.py
+          python -m unittest test_health_probes.py
 
   # 2. VERIFICAÇÃO DO FRONTEND (REACT + VITE + TAILWIND)
   testar-frontend:
