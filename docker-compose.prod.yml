@@ -21,23 +21,6 @@ services:
     networks:
       - automatch-prod-network
 
-  # Redis Service (Cache & Rate Limiting - Producao)
-  redis:
-    image: redis:7-alpine
-    container_name: automatch-prod-redis
-    restart: always
-    command: [ "redis-server", "--requirepass", "${REDIS_PASSWORD}", "--appendonly", "yes" ]
-    # Sem portas expostas no host
-    volumes:
-      - redis_prod_data:/data
-    healthcheck:
-      test: [ "CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping" ]
-      interval: 10s
-      timeout: 3s
-      retries: 5
-    networks:
-      - automatch-prod-network
-
   # Backend Service (FastAPI / Python 3.11 - Producao com 4 Workers)
   backend:
     image: automatch-backend-prod:latest
@@ -48,7 +31,6 @@ services:
     restart: always
     environment:
       - DATABASE_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
-      - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
       - GEMINI_API_KEY=${GEMINI_API_KEY:-}
       - JWT_SECRET=${JWT_SECRET}
       - JWT_ALGORITHM=${JWT_ALGORITHM:-HS256}
@@ -61,8 +43,6 @@ services:
       - backend_uploads:/app/uploads
     depends_on:
       db:
-        condition: service_healthy
-      redis:
         condition: service_healthy
     networks:
       - automatch-prod-network
@@ -106,5 +86,4 @@ networks:
 
 volumes:
   postgres_prod_data:
-  redis_prod_data:
   backend_uploads:
