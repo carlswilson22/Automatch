@@ -20,6 +20,23 @@ else:
         "DATABASE_URL", 
         "postgresql://postgres:postgres@db:5432/automatch"
     )
+    # Fail-fast: se nenhuma DATABASE_URL foi explicitamente definida e o hostname 'db'
+    # não resolve (estamos fora da rede Docker), aborta com instruções claras
+    if not os.getenv("DATABASE_URL") and "db:5432" in DATABASE_URL:
+        import socket
+        try:
+            socket.getaddrinfo("db", 5432)
+        except socket.gaierror:
+            raise RuntimeError(
+                "\n" + "="*80 + "\n"
+                "[CONFIGURAÇÃO AUSENTE] Backend executando fora do Docker sem DATABASE_URL.\n"
+                "O hostname 'db' (rede interna do Docker Compose) não é acessível.\n\n"
+                "  Opção 1 (PostgreSQL via Docker exposto na porta 5433):\n"
+                "    export DATABASE_URL=postgresql://postgres:postgres@localhost:5433/automatch\n\n"
+                "  Opção 2 (SQLite para desenvolvimento rápido):\n"
+                "    export DATABASE_MODE=sqlite\n"
+                + "="*80 + "\n"
+            )
 
 # SQLAlchemy 2.0: Assegura compatibilidade com psycopg2 quando a URL inicia com postgresql:// ou postgres://
 if DATABASE_URL.startswith("postgres://"):
