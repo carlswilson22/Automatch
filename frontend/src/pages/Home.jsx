@@ -114,7 +114,7 @@ const Home = () => {
       color: car.cor || 'Nao informada', mileage: car.km ? `${Number(car.km).toLocaleString('pt-BR')} km` : '0 km',
       image: car.imagem || 'https://via.placeholder.com/400x300?text=Sem+Foto', bodyType: 'Novo Anuncio',
       description: car.descricao || 'Veiculo anunciado pelo usuario independente.',
-      tags: [car.transmissao || 'Automatico', 'Novidade'], featured: true, storeId: 'particular',
+      tags: [car.transmissao || 'Automatico', 'Particular'], featured: false, storeId: 'particular',
     }));
     setAllCars([...formatted, ...showcaseCars]);
   }, []);

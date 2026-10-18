@@ -191,7 +191,7 @@ export default function ShowcaseVehicleDetails() {
             damagePoints: [],
             description: local.descricao || 'Veículo anunciado pelo proprietário.',
             fullDescription: local.descricao || 'Carro em excelente estado de conservação, sem batidas, documentação rigorosamente em dia.',
-            tags: ['Novidade', local.transmissao || 'Automático', 'Particular'],
+            tags: [local.transmissao || 'Automático', 'Particular'],
             specs: {
               motor: 'Flex de Alta Eficiência',
               cambio: local.transmissao || 'Automático',

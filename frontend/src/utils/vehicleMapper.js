@@ -110,9 +110,10 @@ export function mapVehicleToViewModel(raw) {
   const photos360 = resolvePhotos360(raw);
   const gallery = resolveGallery(raw, image);
 
-  const originalPrice = raw.original_price || raw.originalPrice || (price > 0 ? price * 1.04 : null);
-  const fipePrice = raw.fipe_price || raw.fipePrice || (price > 0 ? price * 1.04 : null);
-  const autoPrice = raw.auto_price || raw.autoPrice || (price > 0 ? price * 0.98 : null);
+  const rawOriginal = raw.original_price ?? raw.originalPrice ?? null;
+  const originalPrice = (rawOriginal !== null && Number(rawOriginal) > price) ? Number(rawOriginal) : null;
+  const fipePrice = raw.fipe_price || raw.fipePrice || null;
+  const autoPrice = raw.auto_price || raw.autoPrice || null;
 
   let priceHistory = [];
   if (Array.isArray(raw.priceHistory)) {

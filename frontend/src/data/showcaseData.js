@@ -38,7 +38,8 @@ Conta com teto solar elétrico panorâmico, bancos revestidos em couro claro com
 O pacote de segurança ativa Toyota Safety Sense inclui controle de cruzeiro adaptativo (ACC), frenagem autônoma de emergência, alerta de ponto cego e assistente de permanência em faixa. 
 
 Laudo cautelar 100% aprovado, sem qualquer retoque de funilaria ou histórico de sinistro/leilão. Garantia de fábrica vigente de 5 anos no veículo e 8 anos no sistema híbrido. Possui manual, chave reserva presencial e IPVA 2026 totalmente quitado.`,
-    tags: ['Híbrido Flex', 'Teto Solar', 'Safety Sense', 'Único Dono', 'Garantia de Fábrica'],
+    tags: ['Novidade', 'Híbrido Flex', 'Teto Solar', 'Safety Sense', 'Único Dono', 'Garantia de Fábrica'],
+    isNew: true,
     specs: { motor: '1.8 Híbrido Flex', cambio: 'Automático CVT', combustivel: 'Flex / Elétrico Híbrido', portas: '4 portas', direcao: 'Elétrica Progressiva', freios: 'ABS com EBD nas 4 rodas', airbags: '7 airbags (frontais, laterais, cortina e joelho)', tracao: 'Dianteira' },
     seller: { name: 'AutoShop Prime', avatar: 'https://images.unsplash.com/photo-1543610892-0b1f7e6d8ac1?auto=format&fit=crop&w=100&h=100', rating: 4.9, ads: 28, since: '2020', bio: 'Loja matriz oficial certificada AutoShop Prime.' },
   },
@@ -78,7 +79,8 @@ Destaque para o cockpit tecnológico com o painel digital Active Info Display to
 Veículo de uso estritamente particular, com todas as revisões periódicas efetuadas rigorosamente por tempo na concessionária autorizada VW. Pneus dianteiros e traseiros em perfeito estado de conservação, interior impecável sem desgastes e lataria com pintura 100% original de fábrica.
 
 Acompanha laudo pericial cautelar sem apontamentos, manual do proprietário com carimbos de revisão, chave presencial e documentação 2026 totalmente liberada para transferência imediata.`,
-    tags: ['1.0 Turbo TSI', 'Painel Digital', 'VW Play', 'Câmbio Automático 6M', 'Laudo Aprovado'],
+    tags: ['Novidade', '1.0 Turbo TSI', 'Painel Digital', 'VW Play', 'Câmbio Automático 6M', 'Laudo Aprovado'],
+    isNew: true,
     damagePoints: [
       {
         id: 'dp-polo-1',
@@ -133,10 +135,9 @@ Veículo com procedência certificada de único dono, selo de vistoria cautelar 
   },
   {
     id: 'sc-004', name: 'Chevrolet Tracker Premier', brand: 'Chevrolet', model: 'Tracker',
-    year: 2024, price: 152000, fipePrice: 159000, originalPrice: 158000,
+    year: 2024, price: 152000, fipePrice: 159000, isNew: false,
     priceHistory: [
-      { date: '20/08/2026', price: 158000, label: 'Preço Inicial' },
-      { date: '10/09/2026', price: 152000, label: 'Preço Baixou' }
+      { date: '20/08/2026', price: 152000, label: 'Preço Atual' }
     ],
     color: 'Azul Escuro',
     mileage: 8500, image: '/images/FotoChevroletTracker.jpg',
