@@ -43,6 +43,7 @@ jobs:
         working-directory: ./frontend
         env:
           VITE_BASE_PATH: ${{ steps.pages.outputs.base_path }}/
+          VITE_DEMO_MODE: "true"
         run: |
           npm run build
           cp -n dist/index.html dist/404.html || true

@@ -27,7 +27,7 @@ export class ApiError extends Error {
  * NUNCA ativo em produção.
  */
 export function isDemoModeEnabled() {
-  return import.meta.env?.VITE_ENABLE_DEMO_DATA === 'true';
+  return import.meta.env?.VITE_DEMO_MODE === 'true' || import.meta.env?.VITE_ENABLE_DEMO_DATA === 'true';
 }
 
 /**

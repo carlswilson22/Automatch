@@ -14,7 +14,7 @@ import VehicleComparatorModal from '../components/vehicle/VehicleComparatorModal
 import {
   Search, ChevronRight, ChevronLeft, ChevronsLeft, ChevronsRight, Calendar, Gauge, Palette,
   MapPin, Heart, Eye, Zap, Filter, ArrowLeft, LogIn, Scale,
-  Car, ChevronDown, X, Star, RotateCcw, Tag, Loader2, LayoutGrid, List
+  Car, ChevronDown, X, Star, RotateCcw, Tag, Loader2, LayoutGrid, List, Sparkles
 } from 'lucide-react';
 import { getVehicleImageUrl, handleVehicleImageError } from '../utils/imageHelper';
 import VehicleCardSkeleton from '../components/common/VehicleCardSkeleton';
@@ -180,6 +180,22 @@ const ShowcaseCatalog = () => {
   useEffect(() => {
     setIsLoading(true);
     setApiError(null);
+
+    // Em modo demonstração (ex: GitHub Pages), carrega o catálogo oficial local sem tentar chamar a API que não existe no Pages
+    if (isDemoModeEnabled()) {
+      const local = getNewCars();
+      const demoList = [
+        ...local.map(mapVehicleToViewModel),
+        ...showcaseCars.map(mapVehicleToViewModel)
+      ].filter(c => !isCarDeleted(c.id));
+      const unique = Array.from(new Map(demoList.map(i => [i.id, i])).values());
+      setAllCars(unique);
+      setTotalItems(unique.length);
+      setTotalPages(Math.ceil(unique.length / itemsPerPage) || 1);
+      setIsLoading(false);
+      return;
+    }
+
     const params = new URLSearchParams();
     params.set('page', currentPage.toString());
     params.set('limit', itemsPerPage.toString());
@@ -372,7 +388,14 @@ const ShowcaseCatalog = () => {
             </div>
           )}
 
-          {apiError && !isLoading && (
+          {isDemoModeEnabled() && (
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 mb-4 rounded-full bg-blue-50/90 border border-blue-200/70 text-brand-blue text-xs font-semibold shadow-xs">
+              <Sparkles className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+              <span>Modo demonstração • Catálogo oficial integrado</span>
+            </div>
+          )}
+
+          {!isDemoModeEnabled() && apiError && !isLoading && (
             <div className="flex items-center gap-3 px-4 py-3 mb-4 bg-amber-50 border border-amber-200 rounded-2xl text-sm">
               <div className="w-7 h-7 rounded-xl bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
                 <X className="w-4 h-4" />
