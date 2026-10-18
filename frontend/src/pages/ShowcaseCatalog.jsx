@@ -45,7 +45,7 @@ const showcaseCars = [
 ];
 
 const BRANDS = ['Todas', 'Chevrolet', 'Fiat', 'Ford', 'Honda', 'Hyundai', 'Jeep', 'Nissan', 'Renault', 'Tesla', 'Toyota', 'Volkswagen', 'BMW', 'Porsche'];
-const BODY_TYPES = ['Todos', 'Seda', 'SUV', 'Hatch', 'Picape'];
+const BODY_TYPES = ['Todos', 'Sedan', 'SUV', 'Hatch', 'Picape'];
 const YEAR_OPTIONS = ['Todos', '2024', '2023', '2022', '2021', '2020'];
 const KM_RANGES = [{ label: 'Qualquer', max: Infinity }, { label: 'Ate 10.000 km', max: 10000 }, { label: 'Ate 30.000 km', max: 30000 }, { label: 'Ate 50.000 km', max: 50000 }];
 const PRICE_RANGES = [{ label: 'Qualquer', min: 0, max: Infinity }, { label: 'Ate R$ 80.000', min: 0, max: 80000 }, { label: 'R$ 80.000 a R$ 150.000', min: 80000, max: 150000 }, { label: 'R$ 150.000 a R$ 200.000', min: 150000, max: 200000 }, { label: 'Acima de R$ 200.000', min: 200000, max: Infinity }];

@@ -92,7 +92,7 @@ export default function FavoritesPage() {
       price: mock.price,
       mileage: mock.mileage,
       image: mock.images?.[0] || '/images/placeholder-carro.jpg',
-      bodyType: mock.metadata?.bodyType || 'Seda',
+      bodyType: mock.metadata?.bodyType || 'Sedan',
       fuel: mock.metadata?.fuel || 'Flex',
       transmission: mock.metadata?.transmission || 'Automatico',
       fipePrice: mock.fipePrice || (mock.price ? mock.price * 1.04 : null),

@@ -32,6 +32,18 @@ export function normalizeString(str) {
 }
 
 /**
+ * Normaliza categorias de carroceria para garantir equivalência canônica (ex: Seda/Sedã -> sedan).
+ */
+export function normalizeBodyType(bodyType) {
+  if (!bodyType) return '';
+  const norm = normalizeString(bodyType);
+  if (norm === 'seda' || norm === 'sedan') {
+    return 'sedan';
+  }
+  return norm;
+}
+
+/**
  * Filtra e ordena uma lista de veículos com base nos critérios especificados.
  *
  * @param {Array} vehicles Lista de veículos
@@ -54,7 +66,7 @@ export function filterVehicles(vehicles, filters = {}) {
 
   const normalizedQuery = normalizeString(query);
   const normalizedBrand = normalizeString(brand);
-  const normalizedBodyType = normalizeString(bodyType);
+  const normalizedBodyType = normalizeBodyType(bodyType);
 
   // Faixas numéricas
   const priceRange = typeof price === 'object' && price !== null
@@ -81,9 +93,9 @@ export function filterVehicles(vehicles, filters = {}) {
       if (carBrand !== normalizedBrand) return false;
     }
 
-    // 3. Tipo de Veículo (Carroceria)
+    // 3. Tipo de Veículo (Carroceria com normalização canônica)
     if (bodyType !== 'Todos') {
-      const carType = normalizeString(c.bodyType || c.body_type);
+      const carType = normalizeBodyType(c.bodyType || c.body_type);
       if (carType !== normalizedBodyType) return false;
     }
 

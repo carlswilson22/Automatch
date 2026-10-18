@@ -129,7 +129,7 @@ export default function ShowcaseVehicleDetails() {
           color: 'Prata',
           mileage: mock.mileage,
           image: mock.images?.[0] || '/images/placeholder-carro.jpg',
-          bodyType: mock.metadata?.bodyType || 'Sedã',
+          bodyType: mock.metadata?.bodyType || 'Sedan',
           storeId: mock.storeId || 'store-1',
           damagePoints: mock.damagePoints || [],
           description: 'Veículo com laudo cautelar aprovado e procedência garantida.',

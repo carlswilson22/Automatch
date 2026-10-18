@@ -9,7 +9,7 @@
  */
 
 import { Car } from 'lucide-react';
-import { showcaseCars } from '../data/showcaseData';
+import { showcaseCars } from '../data/showcaseData.js';
 
 // Conjunto canônico de ângulos da varredura 360° orbital
 export const ORBITAL_ANGLES = [0, 45, 90, 135, 180, 225, 270, 315];
@@ -105,7 +105,8 @@ export function mapVehicleToViewModel(raw) {
   const mileage = raw.km !== undefined && raw.km !== null ? Number(raw.km) : (Number(raw.mileage) || 0);
   const image = raw.image || raw.imagem || '/images/placeholder-carro.jpg';
   const color = raw.color || raw.cor || 'Prata';
-  const bodyType = raw.body_type || raw.bodyType || 'Particular';
+  const rawBody = raw.body_type || raw.bodyType || 'Particular';
+  const bodyType = ['seda', 'sedã'].includes(String(rawBody).trim().toLowerCase()) ? 'Sedan' : rawBody;
   const storeId = raw.store_id ? `store-${raw.store_id}` : (raw.storeId || 'store-1');
   const photos360 = resolvePhotos360(raw);
   const gallery = resolveGallery(raw, image);

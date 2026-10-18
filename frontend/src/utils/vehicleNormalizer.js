@@ -57,7 +57,10 @@ export function normalizeVehicle(rawCar) {
     color: rawCar.color || rawCar.cor || 'Prata',
     fuel: rawCar.fuel || rawCar.combustivel || 'Flex',
     transmission: rawCar.transmission || rawCar.cambio || 'Automático',
-    bodyType: rawCar.bodyType || rawCar.body_type || 'SUV',
+    bodyType: (() => {
+      const bt = rawCar.bodyType || rawCar.body_type || 'SUV';
+      return ['seda', 'sedã'].includes(String(bt).trim().toLowerCase()) ? 'Sedan' : bt;
+    })(),
     image: rawCar.image || rawCar.imagem || 'placeholder-carro.jpg',
     gallery: Array.isArray(rawCar.gallery) && rawCar.gallery.length > 0 
       ? rawCar.gallery 
