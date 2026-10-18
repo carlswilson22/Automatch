@@ -184,6 +184,30 @@ def login(request: schemas.UserLogin, db: Session = Depends(get_db)) -> Dict[str
     }
 
 
+@router.get("/users/profile", response_model=schemas.UserResponse)
+def get_profile(
+    current_user: models.User = Depends(get_current_user_from_header)
+) -> Dict[str, Any]:
+    """
+    Retorna o perfil do usuário autenticado via JWT.
+    Requer header: Authorization: Bearer <token>
+    """
+    effective_role = current_user.role if current_user.role else "comum"
+    if effective_role in ("comprador", "vendedor"):
+        effective_role = "comum"
+    return {
+        "id": current_user.id,
+        "name": current_user.name,
+        "email": current_user.email,
+        "memberSince": current_user.member_since,
+        "photo": current_user.photo,
+        "role": effective_role,
+        "sub_role": current_user.sub_role,
+        "store_id": current_user.store_id,
+        "token": None
+    }
+
+
 @router.put("/users/profile", response_model=schemas.UserResponse)
 def update_profile(
     request: schemas.UserProfileUpdate,
