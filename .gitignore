@@ -158,3 +158,4 @@ backend/uploads/
 
 # Assistente e regras locais de agentes
 .agents/
+DOCUMENTACAO_BANCO_DE_DADOS.md

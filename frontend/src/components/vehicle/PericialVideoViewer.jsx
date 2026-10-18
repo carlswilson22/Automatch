@@ -5,26 +5,28 @@ import {
   Clock, Video, Sparkles, AlertCircle, Upload, Check, Volume2, VolumeX
 } from 'lucide-react';
 
+const VIDEO_DURATION = 20;
+
 const CHECKPOINTS = [
   {
     start: 0,
     end: 5,
-    title: 'Frente & Óptica',
-    detail: 'Alinhamento de para-choque, capô, faróis Full LED e ausência de deformações frontais.',
+    title: 'Frente & Conjunto Óptico',
+    detail: 'Alinhamento minucioso de para-choque, capô, faróis Full LED, grade e ausência de deformações frontais.',
     color: 'emerald'
   },
   {
     start: 5,
-    end: 10,
-    title: 'Linha de Cintura & Pneus',
-    detail: 'Colunas A, B e C originais de fábrica, rodas sem empeno e sulcos de pneus em conformidade.',
+    end: 15,
+    title: 'Linha de Cintura & 4 Pneus',
+    detail: 'Tempo dedicado de 10s: filmagem das laterais direita e esquerda, colunas A, B e C, e inspeção dos 4 pneus com sulcos e rodas sem empeno.',
     color: 'cyan'
   },
   {
-    start: 10,
-    end: 15,
-    title: 'Traseira & Vão do Motor',
-    detail: 'Painel traseiro íntegro, estepe e lacres de fábrica, compartimento mecânico sem vazamentos.',
+    start: 15,
+    end: 20,
+    title: 'Traseira & Porta-Malas',
+    detail: 'Painel traseiro íntegro, lanternas, tampa do porta-malas, para-choque sem deformações, estepe e lacres de fábrica.',
     color: 'blue'
   }
 ];
@@ -37,23 +39,23 @@ export default function PericialVideoViewer({
   const videoRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(15);
+  const [duration, setDuration] = useState(VIDEO_DURATION);
   const [isMuted, setIsMuted] = useState(true);
   const [activeSegment, setActiveSegment] = useState(0);
   const [simulatedProgress, setSimulatedProgress] = useState(0);
   const [videoError, setVideoError] = useState(false);
   const isSimulated = !videoUrl || videoError;
 
-  // Se não houver videoUrl real fornecido ou der erro, usa simulação interativa de 15s de alta fidelidade
+  // Se não houver videoUrl real fornecido ou der erro, usa simulação interativa de 20s de alta fidelidade
   useEffect(() => {
     let timer;
     if (isSimulated && isPlaying) {
       timer = setInterval(() => {
         setSimulatedProgress(prev => {
           const next = prev + 0.1;
-          if (next >= 15) {
+          if (next >= VIDEO_DURATION) {
             setIsPlaying(false);
-            return 15;
+            return VIDEO_DURATION;
           }
           return next;
         });
@@ -65,14 +67,13 @@ export default function PericialVideoViewer({
   const effectiveTime = isSimulated ? simulatedProgress : currentTime;
 
   useEffect(() => {
-    if (effectiveTime < 5) setActiveSegment(0);
-    else if (effectiveTime < 10) setActiveSegment(1);
-    else setActiveSegment(2);
+    const segIdx = CHECKPOINTS.findIndex(cp => effectiveTime >= cp.start && effectiveTime < cp.end);
+    setActiveSegment(segIdx >= 0 ? segIdx : CHECKPOINTS.length - 1);
   }, [effectiveTime]);
 
   const togglePlay = () => {
     if (isSimulated) {
-      if (simulatedProgress >= 15) setSimulatedProgress(0);
+      if (simulatedProgress >= VIDEO_DURATION) setSimulatedProgress(0);
       setIsPlaying(!isPlaying);
       return;
     }
@@ -107,7 +108,7 @@ export default function PericialVideoViewer({
     }
   };
 
-  const progressPercent = Math.min(100, (effectiveTime / 15) * 100);
+  const progressPercent = Math.min(100, (effectiveTime / VIDEO_DURATION) * 100);
 
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
@@ -119,20 +120,20 @@ export default function PericialVideoViewer({
           </div>
           <div>
             <div className="flex items-center gap-2 flex-wrap">
-              <h3 className="text-sm font-black text-white tracking-wide">Vídeo Pericial Oficial de 15s</h3>
+              <h3 className="text-sm font-black text-white tracking-wide">Vídeo Pericial Oficial de 20s</h3>
               <span className="text-[11px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1.5">
                 <ShieldCheck className="w-3.5 h-3.5" /> Laudo Audiovisual Verificado
               </span>
             </div>
             <p className="text-xs text-slate-400 mt-0.5">
-              Vistoria pericial acelerada em alta definição com checagem de 3 pilares estruturais
+              Vistoria pericial em alta definição: Frente (5s), Linha de Cintura & 4 Pneus (10s), Traseira (5s)
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
           <span className="text-xs font-mono font-bold text-cyan-400 bg-cyan-950/60 border border-cyan-800/40 px-3 py-1 rounded-lg">
-            {effectiveTime.toFixed(1)}s / 15.0s
+            {effectiveTime.toFixed(1)}s / {VIDEO_DURATION}.0s
           </span>
         </div>
       </div>
@@ -150,13 +151,13 @@ export default function PericialVideoViewer({
             onTimeUpdate={() => {
               if (videoRef.current) {
                 setCurrentTime(videoRef.current.currentTime);
-                if (videoRef.current.ended || videoRef.current.currentTime >= 15) {
+                if (videoRef.current.ended || videoRef.current.currentTime >= VIDEO_DURATION) {
                   setIsPlaying(false);
                 }
               }
             }}
             onLoadedMetadata={() => {
-              if (videoRef.current) setDuration(videoRef.current.duration || 15);
+              if (videoRef.current) setDuration(videoRef.current.duration || VIDEO_DURATION);
             }}
           />
         ) : (
@@ -227,16 +228,16 @@ export default function PericialVideoViewer({
             onClick={(e) => {
               const rect = e.currentTarget.getBoundingClientRect();
               const pos = (e.clientX - rect.left) / rect.width;
-              jumpToTime(pos * 15);
+              jumpToTime(pos * VIDEO_DURATION);
             }}
           >
             <div
               className="h-full bg-gradient-to-r from-cyan-500 via-teal-400 to-emerald-400 transition-all duration-100 rounded-full"
               style={{ width: `${progressPercent}%` }}
             />
-            {/* 5s and 10s dividers */}
-            <div className="absolute left-[33.33%] top-0 bottom-0 w-0.5 bg-white/40" title="Checkpoint 5s"></div>
-            <div className="absolute left-[66.66%] top-0 bottom-0 w-0.5 bg-white/40" title="Checkpoint 10s"></div>
+            {/* Divisores: 5s (Fim da Frente) e 15s (Fim das Laterais & 4 Pneus - 10s dedicados) */}
+            <div className="absolute left-[25%] top-0 bottom-0 w-0.5 bg-white/40" title="Checkpoint 5s: Frente (5s)"></div>
+            <div className="absolute left-[75%] top-0 bottom-0 w-0.5 bg-white/40" title="Checkpoint 15s: Laterais e 4 Pneus (10s)"></div>
           </div>
 
           <div className="flex items-center justify-between gap-3 text-white">
@@ -253,7 +254,7 @@ export default function PericialVideoViewer({
                 type="button"
                 onClick={handleRestart}
                 className="p-2 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition-all active:scale-95"
-                title="Reiniciar vídeo (15s)"
+                title="Reiniciar vídeo (20s)"
               >
                 <RotateCcw className="w-4 h-4" />
               </button>

@@ -213,11 +213,23 @@ export function generateVehicleConsultantAnswer(userMsg, car, history = []) {
   // Tópico: CONSUMO / COMBUSTÍVEL
   if (topics.includes('consumo')) {
     const fuel = specs.combustivel || car.fuel || 'Flex / Elétrico';
-    let consumoInfo = 'apresentando excelente rendimento energético tanto em circuito urbano quanto rodoviário';
-    if (description.includes('km/l')) {
-      const match = description.match(/(\d+[\s]*km\/l[^\.\,\n]*)/i);
+    let consumoInfo = '';
+
+    // 1. Prioridade máxima: dados INMETRO cadastrados nos specs
+    if (specs.consumoInmetro) {
+      consumoInfo = `com médias homologadas pelo INMETRO de **${specs.consumoInmetro}**`;
+    }
+    // 2. Fallback: extrair da descrição completa
+    else if (description.includes('km/l')) {
+      const match = description.match(/(\d+[\s,.]*\d*\s*km\/l[^.\n]*)/i);
       if (match) consumoInfo = `com médias de ${match[1]}`;
     }
+
+    // 3. Genérico caso não haja nenhum dado
+    if (!consumoInfo) {
+      consumoInfo = 'apresentando excelente rendimento energético tanto em circuito urbano quanto rodoviário';
+    }
+
     answers.push(`O veículo roda com combustível **${fuel}**, ${consumoInfo}`);
   }
 

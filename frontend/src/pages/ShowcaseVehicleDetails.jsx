@@ -579,7 +579,7 @@ export default function ShowcaseVehicleDetails() {
                 }`}
               >
                 <Video className="w-3.5 h-3.5 text-purple-300" />
-                <span>Vídeo Pericial 15s</span>
+                <span>Vídeo Pericial 20s</span>
               </button>
             </div>
 
