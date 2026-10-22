@@ -7,11 +7,17 @@ const AuthContext = createContext({});
 // ===========================================================================
 
 /**
- * isDemoModeEnabled — retorna true apenas em modo de desenvolvimento local.
- * Nunca habilita fallbacks de demo em produção (variável VITE_ENABLE_DEMO_DATA).
+ * isDemoModeEnabled — retorna true quando o sistema está em modo demonstração.
+ * Critérios (consistentes com apiClient.js):
+ *   1. VITE_DEMO_MODE=true  OU  VITE_ENABLE_DEMO_DATA=true  → ativa em qualquer build
+ *   2. import.meta.env.DEV === true (dev server) → ativa automaticamente no desenvolvimento
  */
 const isDemoModeEnabled = () => {
-  return import.meta.env.VITE_ENABLE_DEMO_DATA === 'true' && import.meta.env.DEV === true;
+  return (
+    import.meta.env.VITE_DEMO_MODE === 'true' ||
+    import.meta.env.VITE_ENABLE_DEMO_DATA === 'true' ||
+    import.meta.env.DEV === true
+  );
 };
 
 /**
