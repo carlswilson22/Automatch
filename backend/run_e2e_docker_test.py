@@ -1,4 +1,11 @@
 """
+run_e2e_docker_test.py — Teste ponta a ponta (E2E) da jornada completa contra container Docker.
+
+Objetivo e Motivo da Criação:
+  - Criado para testar todos os serviços integrados rodando dentro do container Docker oficial,
+    validando comunicação de rede, persistência de banco e integridade dos endpoints HTTP.
+"""
+"""
 test_e2e_full_user_journey.py
 Teste end-to-end completo contra o backend Docker rodando em http://localhost:8000.
 Simula a jornada completa de um Usuário Comum e um Lojista na plataforma Automatch.

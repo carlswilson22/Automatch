@@ -1,4 +1,11 @@
 """
+test_audit_full_battery.py — Bateria completa de auditoria técnica e de segurança da API.
+
+Objetivo e Motivo da Criação:
+  - Criado para validar a conformidade de segurança dos cabeçalhos HTTP, rotas de autenticação,
+    proteção contra injeção e integridade dos dados retornados nos endpoints REST.
+"""
+"""
 test_audit_full_battery.py
 Suíte de Testes Automatizados de Regressão e Integridade — Auditoria Técnica Automatch
 Cobre exaustivamente os 9 módulos auditados:

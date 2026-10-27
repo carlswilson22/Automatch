@@ -1,3 +1,10 @@
+/**
+ * HeroVideoScrub.jsx — Componente interativo de controle de vídeo da página inicial.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para permitir que o usuário interaja dinamicamente com o vídeo de demonstração do veículo,
+ *     controlando o progresso por rolagem de tela ou arraste para uma experiência imersiva e moderna.
+ */
 import React, { useRef, useEffect, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';

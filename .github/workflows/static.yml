@@ -1,3 +1,10 @@
+# ==============================================================================
+# .github/workflows/static.yml — Pipeline de Deploy Contínuo (CD) no GitHub Pages.
+#
+# Objetivo e Motivo da Criação:
+#   - Compila o frontend do Automatch e faz o deploy automatizado para a visualização pública
+#     estática no GitHub Pages a cada publicação na branch principal.
+# ==============================================================================
 name: Deploy static content to Pages
 
 on:

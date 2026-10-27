@@ -1,4 +1,11 @@
 """
+test_vision_and_delete.py — Testes do pipeline de visão computacional e exclusão segura de dados.
+
+Objetivo e Motivo da Criação:
+  - Criado para testar o envio de imagens para perícia visual e o ciclo de vida de deleção lógica (soft-delete),
+    assegurando que anúncios excluídos liberem recursos sem gerar registros órfãos no banco.
+"""
+"""
 Script de Testes Automatizados da Perícia Visual IA e Exclusão de Anúncios Automatch.
 Pode ser executado diretamente ou dentro do container Docker do backend.
 """

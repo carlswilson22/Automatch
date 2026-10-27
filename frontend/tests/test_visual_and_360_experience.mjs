@@ -1,4 +1,10 @@
 /**
+ * test_visual_and_360_experience.mjs — Bateria de testes da experiência visual e animações.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para auditar a suavidade das transições do Framer Motion e layout em diferentes resoluções.
+ */
+/**
  * test_visual_and_360_experience.mjs
  * Bateria de Testes Automatizados da Experiência Visual, Varredura 360°,
  * Scanner IA Pericial, Animações Framer Motion e Auditoria de Fotos de Veículos.

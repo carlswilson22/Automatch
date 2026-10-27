@@ -1,4 +1,11 @@
 """
+dependencies.py — Injeção de dependências e controle de sessão do FastAPI.
+
+Objetivo e Motivo da Criação:
+  - Criado para gerenciar o ciclo de vida de sessões do banco de dados (get_db),
+    autenticação de usuários via JWT (get_current_user) e controle de autorização baseado em papéis.
+"""
+"""
 dependencies.py — Guards centralizados de autenticação e autorização do Automatch.
 
 Substitui os duplicados:

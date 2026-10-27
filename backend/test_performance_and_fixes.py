@@ -1,4 +1,11 @@
 """
+test_performance_and_fixes.py — Bateria de benchmark de latência e validação de correções de bugs.
+
+Objetivo e Motivo da Criação:
+  - Criado para mensurar tempos de resposta sob carga e garantir que anomalias de performance
+    identificadas em relatórios de auditoria permaneçam devidamente solucionadas.
+"""
+"""
 test_performance_and_fixes.py
 Validação automatizada de performance, paginação B2B, remoção de AutoCerto XML,
 sanitização de WebPush no Radar de Oportunidades e histórico semântico no Chat Bot IA.

@@ -1,3 +1,10 @@
+/**
+ * index.css — Folha de estilos central e diretivas globais do Automatch.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Define as camadas base do TailwindCSS, variáveis de cores CSS customizadas (temas),
+ *     fontes tipográficas e classes utilitárias compartilhadas em toda a aplicação.
+ */
 /* Fonte principal: Atkinson Hyperlegible Next (Google Fonts) — SIL Open Font License */
 
 @tailwind base;

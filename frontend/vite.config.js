@@ -1,3 +1,10 @@
+/**
+ * vite.config.js — Configuração de empacotamento e build do Vite.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para configurar o ambiente de desenvolvimento rápido (HMR), plugins React,
+ *     divisão de código em chunks (code-splitting) e otimizações de produção.
+ */
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 

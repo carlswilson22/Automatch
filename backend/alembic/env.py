@@ -1,3 +1,10 @@
+"""
+alembic/env.py — Ambiente de execução das migrações de banco de dados do Alembic.
+
+Objetivo e Motivo da Criação:
+  - Criado para conectar o mecanismo de migrações do Alembic ao SQLAlchemy e aos modelos da aplicação.
+  - Suporta execução de migrações em modo offline (geração de SQL) e modo online (aplicação direta no banco).
+"""
 from logging.config import fileConfig
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool

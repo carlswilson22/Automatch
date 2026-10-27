@@ -1,3 +1,10 @@
+/**
+ * VehicleCardSkeleton.jsx — Skeleton loader para cards de veículos no catálogo.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para manter a estrutura da grade da vitrine enquanto os dados da API são requisitados,
+ *     eliminando pulos de layout (Cumulative Layout Shift - CLS).
+ */
 import React from 'react';
 
 /**

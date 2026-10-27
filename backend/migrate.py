@@ -1,4 +1,11 @@
 """
+migrate.py — Script de automação e execução de migrações do banco de dados.
+
+Objetivo e Motivo da Criação:
+  - Criado para inicializar e atualizar o esquema do banco de dados durante o boot da aplicação
+    ou em pipelines de deploy automatizado via Alembic.
+"""
+"""
 Script de Migração: Recriação do banco de dados com suporte a UUID.
 
 Este script:

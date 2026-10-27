@@ -1,4 +1,11 @@
 /**
+ * imageHelper.js — Utilitários de manipulação, validação e resolução de imagens de veículos.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para resolver URLs relativas e absolutas de fotos, aplicar imagens de fallback em caso de falha
+ *     e otimizar o carregamento de thumbnails da vitrine.
+ */
+/**
  * imageHelper.js — Utilitário central de alta disponibilidade para imagens no AutoMatch
  * Resolve URLs estáticas respeitando o BASE_URL do Vite (/AutoMatch/), URLs externas,
  * dados em base64 e provê fallback vetorial em SVG automotivo premium.

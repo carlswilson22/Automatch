@@ -1,4 +1,11 @@
 /**
+ * filterVehicles.js — Mecanismo de filtragem em memória para catálogo de veículos.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para executar filtragens rápidas e reativas por marca, faixa de preço, quilometragem,
+ *     combustível, laudo aprovado e termos de busca livre sem sobrecarregar a rede.
+ */
+/**
  * Pure and Testable Vehicle Filtering & Sorting Engine — Automatch
  *
  * Implementa a fonte única da verdade para filtragem e ordenação (GAR-02).

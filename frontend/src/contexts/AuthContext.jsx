@@ -1,3 +1,10 @@
+/**
+ * AuthContext.jsx — Provedor de contexto global de autenticação e sessão do usuário.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para gerenciar estado de login, perfil de usuário (buyer/dealer), armazenamento seguro
+ *     de tokens JWT e métodos de login/logout em toda a aplicação React.
+ */
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext({});

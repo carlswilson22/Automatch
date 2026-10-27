@@ -1,3 +1,9 @@
+# ==============================================================================
+# frontend/Dockerfile — Container de desenvolvimento do frontend React/Vite.
+#
+# Objetivo e Motivo da Criação:
+#   - Provê ambiente isolado com Node.js para rodar o servidor de desenvolvimento local.
+# ==============================================================================
 FROM node:20-alpine
 
 WORKDIR /app

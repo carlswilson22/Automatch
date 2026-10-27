@@ -1,3 +1,9 @@
+/**
+ * test_security_audit.mjs — Auditoria automatizada de segurança de código e pacotes do frontend.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para verificar a ausência de vulnerabilidades em dependências e boas práticas de proteção XSS.
+ */
 import test, { describe } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';

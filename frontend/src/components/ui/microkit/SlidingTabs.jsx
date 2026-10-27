@@ -1,4 +1,10 @@
 /**
+ * microkit/SlidingTabs.jsx — Componente de abas deslizantes do microkit.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para fornecer controle de abas de alta fidelidade visual para telas modulares.
+ */
+/**
  * SlidingTabs — Adapted from MicroKit UI (https://microkit.co)
  * License: MIT (c) Henrique Barone
  * 

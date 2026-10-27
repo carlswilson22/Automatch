@@ -1,3 +1,10 @@
+/**
+ * AutomatchLogo.jsx — Logotipo vetorial oficial da marca Automatch.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para centralizar a representação visual da marca com suporte a proporções responsivas,
+ *     variações com símbolo isolado e tipografia integrada.
+ */
 import React from 'react';
 import { ShieldCheck } from 'lucide-react';
 

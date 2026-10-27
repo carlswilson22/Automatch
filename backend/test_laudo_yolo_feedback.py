@@ -1,3 +1,10 @@
+"""
+test_laudo_yolo_feedback.py — Testes dos fluxos de emissão pericial e feedback de detecção por IA.
+
+Objetivo e Motivo da Criação:
+  - Criado para validar a acurácia dos laudos periciais gerados pela visão computacional,
+    verificando o mapeamento correto de avarias na lataria e registro de notas de inspeção.
+"""
 import os
 import io
 import unittest

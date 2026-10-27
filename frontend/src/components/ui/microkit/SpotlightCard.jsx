@@ -1,4 +1,10 @@
 /**
+ * microkit/SpotlightCard.jsx — Card interativo com iluminação que acompanha o mouse.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para enriquecer a experiência visual da vitrine com efeito spotlight de luz direcional.
+ */
+/**
  * SpotlightCard — Adapted from MicroKit UI (https://microkit.co) & Details.so Card Hover
  * License: MIT (c) Henrique Barone
  * 

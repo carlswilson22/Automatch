@@ -1,3 +1,10 @@
+/**
+ * RouteLoadingSkeleton.jsx — Skeleton de carregamento exibido na transição de rotas.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para proporcionar transição visual suave e agradável enquanto os módulos
+ *     carregados via React.lazy são baixados sob demanda pelo navegador.
+ */
 import React from 'react';
 
 /**

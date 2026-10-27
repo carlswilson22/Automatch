@@ -1,3 +1,10 @@
+# ==============================================================================
+# backend/.dockerignore — Padrões de exclusão para o build da imagem Docker do backend.
+#
+# Objetivo e Motivo da Criação:
+#   - Otimiza o tamanho da imagem e a velocidade do build, ignorando caches (__pycache__),
+#     ambientes virtuais (venv) e bancos de dados locais durante o docker build.
+# ==============================================================================
 __pycache__/
 *.py[cod]
 *$py.class

@@ -1,4 +1,10 @@
 /**
+ * test_video_20s_and_chatbot_consumo.mjs — Testes do tempo de vídeo de vistoria e respostas de consumo.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para validar que vídeos periciais cumpram a meta de 20s e o chatbot retorne médias de consumo confiáveis.
+ */
+/**
  * test_video_20s_and_chatbot_consumo.mjs
  * Testes das Tarefas 6 e 7:
  *   - Vídeo pericial deve ser 20s (não 15s)

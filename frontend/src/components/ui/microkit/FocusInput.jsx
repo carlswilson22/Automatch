@@ -1,4 +1,10 @@
 /**
+ * microkit/FocusInput.jsx — Componente de entrada de dados do microkit de UI.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para compor o catálogo de micro-componentes desacoplados e reutilizáveis do design system.
+ */
+/**
  * FocusInput — Adapted from MicroKit UI (https://microkit.co)
  * License: MIT (c) Henrique Barone
  * 

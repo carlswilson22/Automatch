@@ -1,3 +1,10 @@
+"""
+9e22ea1485c3_add_missing_indexes_and_fks.py — Migração de adição de índices e chaves estrangeiras.
+
+Objetivo e Motivo da Criação:
+  - Criado para otimizar a velocidade de consultas no catálogo de veículos e garantir integridade
+    referencial rígida entre veículos, lojas e laudos periciais.
+"""
 """add_missing_indexes_and_fks
 
 Revision ID: 9e22ea1485c3

@@ -1,4 +1,11 @@
 /**
+ * howItWorksData.js — Conteúdo informativo sobre a metodologia de trabalho do Automatch.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para alimentar as seções explicativas da jornada de compra segura, vistoria por IA
+ *     e certificação de procedência veicular.
+ */
+/**
  * Base de dados estruturada do Guia "Como Funciona" da plataforma Automatch.
  * Reflete estritamente as funcionalidades reais implementadas no projeto.
  */

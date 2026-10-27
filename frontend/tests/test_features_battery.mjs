@@ -1,3 +1,9 @@
+/**
+ * test_features_battery.mjs — Suíte de testes automatizados de funcionalidades da vitrine.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para validar ordenação por preço, busca textual, contadores de itens e persistência de favoritos.
+ */
 import { test, describe, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';

@@ -1,3 +1,10 @@
+/**
+ * test_body_type_sedan.mjs — Testes de validação dos tipos de carroceria (sedan, SUV, hatch).
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para validar que a classificação de carroceria e seus filtros de busca
+ *     operam com precisão técnica em todo o catálogo.
+ */
 import { describe, test } from 'node:test';
 import assert from 'node:assert';
 import fs from 'node:fs';

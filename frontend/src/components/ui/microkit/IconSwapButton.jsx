@@ -1,4 +1,10 @@
 /**
+ * microkit/IconSwapButton.jsx — Botão com alternância animada de ícones.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para botões interativos de ação com feedback instantâneo (ex: favoritar, copiar link, curtir).
+ */
+/**
  * IconSwapButton — Adapted from MicroKit UI (https://microkit.co)
  * License: MIT (c) Henrique Barone
  * 

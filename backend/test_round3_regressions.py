@@ -1,4 +1,11 @@
 """
+test_round3_regressions.py — Bateria de proteção anti-regressão da rodada 3 de estabilização.
+
+Objetivo e Motivo da Criação:
+  - Criado para blindar os endpoints críticos da API contra quebras acidentais durante refatorações,
+    cobrindo edge-cases de datas, conversões de moeda e filtros com valores nulos.
+"""
+"""
 Testes de Regressão Automatizados — Rodada 3 (VLAEG)
 Valida os 5 itens principais solicitados:
 1. Scanner de IA (/api/analise-visual)

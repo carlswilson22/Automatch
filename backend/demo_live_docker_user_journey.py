@@ -1,4 +1,11 @@
 """
+demo_live_docker_user_journey.py — Roteiro automatizado de demonstração da jornada do usuário.
+
+Objetivo e Motivo da Criação:
+  - Criado para executar a demonstração completa da plataforma em ambiente Docker: cadastro, login,
+    busca de veículos, emissão de laudo cautelar por IA, simulação de proposta e reserva de repasse.
+"""
+"""
 demo_live_docker_user_journey.py
 Demonstração completa ao vivo com Docker:
 1. Registra e autentica um usuário comum no sistema

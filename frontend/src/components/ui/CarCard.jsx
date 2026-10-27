@@ -1,3 +1,10 @@
+/**
+ * CarCard.jsx — Card principal de exibição de veículos no catálogo e vitrines.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para apresentar as informações essenciais de cada veículo: imagem principal, marca, modelo,
+ *     ano, quilometragem, preço, selo de laudo cautelar e atalho para favoritar.
+ */
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';

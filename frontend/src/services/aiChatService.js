@@ -1,4 +1,11 @@
 /**
+ * aiChatService.js — Serviço de comunicação com o assistente inteligente de IA.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para conectar a interface do usuário aos endpoints de chat inteligente do backend,
+ *     gerenciando histórico de mensagens, contexto do veículo e streaming de respostas.
+ */
+/**
  * aiChatService.js — Serviço de Streaming SSE e Integração com o Consultor IA da Automatch.
  *
  * Características:

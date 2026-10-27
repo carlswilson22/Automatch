@@ -1,4 +1,11 @@
 /**
+ * aiConsultantCore.js — Lógica de recomendação e cálculo de compatibilidade de veículos.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para calcular a aderência entre as preferências do comprador (orçamento, uso, consumo)
+ *     e as características técnicas dos carros do estoque.
+ */
+/**
  * aiConsultantCore.js
  * Módulo compartilhado de inteligência conversacional para o Consultor IA Automatch.
  * Atende tanto a aba de anúncio do veículo quanto o chat de suporte da aba principal.

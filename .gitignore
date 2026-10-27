@@ -1,4 +1,11 @@
 # ==============================================================================
+# .gitignore — Arquivo de exclusão de arquivos e diretórios do Git.
+#
+# Objetivo e Motivo da Criação:
+#   - Impede que arquivos temporários, logs, pastas de dependências (node_modules, venv)
+#     e segredos locais (.env) sejam comitados no controle de versão.
+# ==============================================================================
+# ==============================================================================
 # .gitignore Definitivo - Stack: Python (FastAPI) + Node.js (React/Vite) + Docker
 # ==============================================================================
 

@@ -1,4 +1,10 @@
 /**
+ * test_scanner_ia_and_360_4cars.mjs — Testes do scanner de avarias por IA e visualizador 360 graus.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para verificar a renderização de peças avariadas e a rotação correta das fotos em 360°.
+ */
+/**
  * test_scanner_ia_and_360_4cars.mjs
  * Teste específico para o Scanner de IA e a Varredura 360° em 4 veículos:
  *   - 2 carros SEM avarias na lataria (sc-001 Toyota Corolla Cross e sc-002 VW Polo TSI)

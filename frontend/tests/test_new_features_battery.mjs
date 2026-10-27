@@ -1,3 +1,9 @@
+/**
+ * test_new_features_battery.mjs — Bateria de testes das novas interfaces do ecossistema.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para assegurar o funcionamento dos modais de perícia, simulação de parcelas e dossiê em PDF.
+ */
 import { test, describe } from 'node:test';
 import assert from 'node:assert';
 import fs from 'node:fs';

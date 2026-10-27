@@ -1,3 +1,10 @@
+/**
+ * tailwind.config.js — Configuração do framework de utilitários TailwindCSS.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para definir a paleta de cores institucional do Automatch, fontes, breakpoints responsivos
+ *     e temas visuais aplicados em toda a interface do usuário.
+ */
 /** @type {import('tailwindcss').Config} */
 export default {
   content: [

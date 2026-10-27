@@ -1,4 +1,11 @@
 /**
+ * vehicleNormalizer.js — Normalizador de dados de cadastro e consulta veicular.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para sanitizar placas, formatar valores monetários, padronizar nomes de fabricantes
+ *     e tratar dados incompletos antes da renderização.
+ */
+/**
  * vehicleNormalizer.js
  * Utilitário canônico para harmonizar dados de veículos entre o banco relacional (snake_case/ints)
  * e os mocks estáticos da vitrine (camelCase/strings formatadas).

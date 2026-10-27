@@ -1,4 +1,10 @@
 /**
+ * scrollLockCore.js — Lógica central para bloqueio de rolagem de página em modais.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para evitar rolagem dupla indesejada no corpo da página enquanto modais e gavetas estão abertos.
+ */
+/**
  * Gestão de bloqueio de rolagem com contador de referências (Reference-Counted Scroll Lock).
  * Resolve de forma definitiva o problema de duplo bloqueio quando múltiplos componentes
  * ou modais aninhados (Pai e Filho) solicitam bloqueio concorrente.

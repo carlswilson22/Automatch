@@ -1,3 +1,10 @@
+/**
+ * SlidingTabs.jsx — Abas deslizantes com indicador animado de seleção.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para navegação intuitiva entre categorias de veículos e opções de visualização,
+ *     com transições suaves através de propriedades de animação.
+ */
 import React from 'react';
 import { motion } from 'framer-motion';
 

@@ -1,3 +1,9 @@
+/**
+ * test_filter_vehicles.mjs — Testes unitários do algoritmo de filtragem combinada de veículos.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para testar exaustivamente múltiplos filtros combinados (faixa de preço, ano, quilometragem).
+ */
 import { test, describe } from 'node:test';
 import assert from 'node:assert';
 import { filterVehicles, PRICE_RANGES, KM_RANGES } from '../src/utils/filterVehicles.js';

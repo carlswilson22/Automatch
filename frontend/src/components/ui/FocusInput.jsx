@@ -1,3 +1,10 @@
+/**
+ * FocusInput.jsx — Campo de entrada de texto com realce dinâmico de foco.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para padronizar os campos de formulário da aplicação com microinterações suaves,
+ *     validação de estado e foco visual aprimorado.
+ */
 import React, { useState, forwardRef } from 'react';
 import { motion } from 'framer-motion';
 

@@ -1,3 +1,10 @@
+/**
+ * GlowButton.jsx — Botão interativo com efeito de iluminação e brilho (glow).
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para destacar botões de ação prioritária (CTAs de compra, proposta e agendamento)
+ *     com acabamento visual premium e alta taxa de conversão.
+ */
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 

@@ -1,3 +1,10 @@
+"""
+001_initial_schema.py — Migração inicial do esquema do banco de dados Automatch.
+
+Objetivo e Motivo da Criação:
+  - Criado para definir a estrutura inicial das tabelas centrais: lojas (stores),
+    veículos do catálogo (cars) e usuários (users) com seus relacionamentos fundamentais.
+"""
 """Initial baseline schema
 
 Revision ID: 001_initial_schema

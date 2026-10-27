@@ -1,4 +1,11 @@
 /**
+ * animations.js — Variantes e configurações de animação Framer Motion.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para padronizar transições de entrada, fade, slide e microinterações de cards e modais
+ *     em conformidade com o design system do Automatch.
+ */
+/**
  * animations.js
  * Padrões de transição e animações Framer Motion reutilizáveis no AutoMatch.
  * Garante consistência visual, fluidez de 60fps e acessibilidade (respeito a prefers-reduced-motion).

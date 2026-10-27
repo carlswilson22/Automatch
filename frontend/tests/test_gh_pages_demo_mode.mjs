@@ -1,3 +1,9 @@
+/**
+ * test_gh_pages_demo_mode.mjs — Testes de validação do modo demonstração para deploy no GitHub Pages.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para garantir que a aplicação funcione perfeitamente sem backend ativo quando hospedada estaticamente.
+ */
 import { describe, test } from 'node:test';
 import assert from 'node:assert';
 import fs from 'node:fs';

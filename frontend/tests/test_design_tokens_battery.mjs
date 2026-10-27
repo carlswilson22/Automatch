@@ -1,3 +1,9 @@
+/**
+ * test_design_tokens_battery.mjs — Bateria de testes de integridade dos design tokens de UI.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para verificar a conformidade de cores, fontes, variáveis CSS e espaçamentos do design system.
+ */
 import { test, describe } from 'node:test';
 import assert from 'node:assert';
 import fs from 'node:fs';

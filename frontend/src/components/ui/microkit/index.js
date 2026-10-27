@@ -1,4 +1,10 @@
 /**
+ * microkit/index.js — Ponto central de exportação dos componentes do MicroKit UI.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para permitir importações simplificadas e limpas de todos os micro-componentes visuais.
+ */
+/**
  * MicroKit UI Atomic Components Barrel Export
  * License: MIT (c) Henrique Barone (https://microkit.co)
  */

@@ -1,3 +1,10 @@
+/**
+ * WipeButton.jsx — Botão estético com transição de preenchimento em onda (wipe).
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para oferecer interatividade refinada no hover, reforçando a identidade moderna
+ *     e futurista da interface do Automatch.
+ */
 import React from 'react';
 import { motion } from 'framer-motion';
 

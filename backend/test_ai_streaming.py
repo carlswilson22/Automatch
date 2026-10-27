@@ -1,4 +1,11 @@
 """
+test_ai_streaming.py — Testes do streaming de respostas da IA e resiliência de fallback.
+
+Objetivo e Motivo da Criação:
+  - Criado para validar o streaming assíncrono (Server-Sent Events) das respostas do Google Gemini,
+    assegurando tolerância a falhas e ativação suave do fallback heurístico local quando a API estiver inacessível.
+"""
+"""
 test_ai_streaming.py
 Bateria de testes automatizados para o endpoint SSE de streaming do Consultor IA da Automatch.
 Valida:

@@ -1,3 +1,10 @@
+# ==============================================================================
+# robots.txt — Diretrizes de rastreamento para robôs de busca (SEO).
+#
+# Objetivo e Motivo da Criação:
+#   - Orienta os mecanismos de busca (Google, Bing) sobre páginas públicas indexáveis
+#     e rotas administrativas privadas restritas do Automatch.
+# ==============================================================================
 # Robots.txt - AutoMatch Plataforma de Veículos
 User-agent: *
 Allow: /

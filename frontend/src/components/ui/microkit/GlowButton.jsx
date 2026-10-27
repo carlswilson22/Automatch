@@ -1,4 +1,10 @@
 /**
+ * microkit/GlowButton.jsx — Botão com brilho do microkit de componentes reutilizáveis.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para disponibilizar botão com efeito neon/glow de forma modular para qualquer tela.
+ */
+/**
  * GlowButton — Adapted from MicroKit UI (https://microkit.co)
  * License: MIT (c) Henrique Barone
  * 

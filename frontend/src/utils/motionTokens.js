@@ -1,4 +1,10 @@
 /**
+ * motionTokens.js — Tokens padronizados de temporização e curvas de animação (easing).
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para garantir harmonia e consistência no ritmo visual de todas as animações da interface.
+ */
+/**
  * Motion Tokens & Animation Presets
  * Inspired by Details.so and MicroKit UI
  * Preserves 60fps performance and respects prefers-reduced-motion

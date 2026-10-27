@@ -1,3 +1,10 @@
+"""
+004_unify_user_roles.py — Migração de unificação de papéis e permissões de usuários.
+
+Objetivo e Motivo da Criação:
+  - Criado para padronizar as roles de autenticação (buyer, seller, dealership, admin)
+    e simplificar as regras de autorização nos endpoints protegidos.
+"""
 """Unify user roles to comum, lojista, admin
 
 Revision ID: 004_unify_user_roles

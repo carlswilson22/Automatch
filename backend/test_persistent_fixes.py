@@ -1,4 +1,11 @@
 """
+test_persistent_fixes.py — Testes de persistência de dados e compatibilidade SQLite/PostgreSQL.
+
+Objetivo e Motivo da Criação:
+  - Criado para validar a fidelidade de armazenamento e integridade de tipos em ambos os ambientes:
+    SQLite para testes rápidos locais e PostgreSQL para ambiente de produção conteinerizado.
+"""
+"""
 test_persistent_fixes.py
 Bateria de testes automatizados de regressão para os 4 itens críticos:
 1. Reintegração do AutoCerto DMS no Hub de Sincronização Multicanal (somente API de conexão) e blindagem contra feed XML.

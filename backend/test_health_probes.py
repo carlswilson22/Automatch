@@ -1,4 +1,11 @@
 """
+test_health_probes.py — Testes das sondas de integridade (health checks) e telemetria.
+
+Objetivo e Motivo da Criação:
+  - Criado para garantir que os endpoints de monitoramento (/health, /live, /ready) respondam
+    com precisão o status do banco de dados, scheduler e serviços de background para o Docker e Kubernetes.
+"""
+"""
 test_health_probes.py
 Testes unitários dos endpoints de healthcheck (Liveness e Readiness)
 Implementação do Problema 5 da Auditoria de Infraestrutura DevOps.

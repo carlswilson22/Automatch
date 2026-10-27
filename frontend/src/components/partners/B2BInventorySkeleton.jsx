@@ -1,3 +1,10 @@
+/**
+ * B2BInventorySkeleton.jsx — Skeleton animado para o painel de estoque B2B.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para fornecer feedback visual instantâneo durante o carregamento de tabelas e métricas
+ *     de estoque compartilhado entre lojas parceiras.
+ */
 import React from 'react';
 
 /**

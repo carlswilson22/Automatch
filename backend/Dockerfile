@@ -1,3 +1,10 @@
+# ==============================================================================
+# backend/Dockerfile — Imagem de container para a API FastAPI do Automatch.
+#
+# Objetivo e Motivo da Criação:
+#   - Empacota o backend Python com todas as dependências, migrações e rotinas de inicialização
+#     em um container leve e seguro para execução padronizada local e em produção.
+# ==============================================================================
 FROM python:3.11-slim
 
 # Set environment variables

@@ -1,3 +1,10 @@
+/**
+ * AccordionPanel.jsx — Painel expansível (sanfonado) para itens técnicos do veículo.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para organizar de forma compacta e legível a ficha técnica completa, lista de opcionais
+ *     e histórico de revisões na página de detalhes do veículo.
+ */
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 

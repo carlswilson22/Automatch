@@ -1,3 +1,9 @@
+# ==============================================================================
+# frontend/Dockerfile.prod — Build de produção multi-estágio e servidor Nginx.
+#
+# Objetivo e Motivo da Criação:
+#   - Compila o bundle estático do Vite e serve os arquivos otimizados através de um servidor Nginx leve.
+# ==============================================================================
 # Stage 1: Build da SPA React
 FROM node:20-alpine AS builder
 

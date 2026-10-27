@@ -1,3 +1,10 @@
+# ==============================================================================
+# .github/workflows/ci.yml — Pipeline de Integração Contínua (CI) do GitHub Actions.
+#
+# Objetivo e Motivo da Criação:
+#   - Executa testes automatizados de backend e frontend a cada push ou pull request,
+#     garantindo que código com defeitos não seja integrado à branch principal.
+# ==============================================================================
 name: ProjetoPI CI & Quality Gate
 
 # Ativado em push direto e Pull Requests para as branches principais e de homologação

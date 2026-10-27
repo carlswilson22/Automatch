@@ -1,4 +1,11 @@
 """
+audit_performance_profiler.py — Profiler de carga e auditoria de concorrência da API.
+
+Objetivo e Motivo da Criação:
+  - Criado para simular múltiplos usuários e lojistas acessando simultaneamente os endpoints do catálogo,
+    medindo latência, vazão (requests/s) e consumo de recursos para certificação de performance.
+"""
+"""
 audit_performance_profiler.py
 Módulo de Profiling e Teste sob Carga Concorrente (Auditoria Técnica Automatch)
 Simula concorrência real de múltiplos lojistas e compradores simultâneos.

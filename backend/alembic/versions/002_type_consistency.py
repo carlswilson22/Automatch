@@ -1,3 +1,10 @@
+"""
+002_type_consistency.py — Migração de padronização e consistência de tipos de dados.
+
+Objetivo e Motivo da Criação:
+  - Criado para harmonizar tipos de colunas entre SQLite e PostgreSQL, garantindo compatibilidade
+    de valores monetários, quilometragem e chaves de identificação.
+"""
 """Type consistency for financial amounts and boolean flags
 
 Revision ID: 002_type_consistency

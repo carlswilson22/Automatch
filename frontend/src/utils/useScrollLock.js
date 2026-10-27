@@ -1,3 +1,9 @@
+/**
+ * useScrollLock.js — Hook React para travar e destravar a rolagem da tela dinamicamente.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para encapsular o ciclo de vida do bloqueio de scroll ao abrir e fechar componentes de diálogo.
+ */
 import { useEffect } from 'react';
 import { lockScroll, unlockScroll, resetScrollLock, getScrollLockCount, getOriginalOverflow } from './scrollLockCore';
 

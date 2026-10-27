@@ -1,3 +1,10 @@
+<!--
+  sitemap.xml — Mapa do site para indexação de motores de busca (SEO).
+  
+  Objetivo e Motivo da Criação:
+    - Lista as URLs canônicas da plataforma (Home, Catálogo, Como Funciona, Planos)
+      para otimizar a descoberta e indexação pelo Google e outros buscadores.
+-->
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>

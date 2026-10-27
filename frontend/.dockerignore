@@ -1,3 +1,9 @@
+# ==============================================================================
+# frontend/.dockerignore — Padrões de exclusão para o build da imagem Docker do frontend.
+#
+# Objetivo e Motivo da Criação:
+#   - Evita cópia de node_modules locais, pastas dist e arquivos de teste para dentro da imagem.
+# ==============================================================================
 node_modules
 dist
 dist-ssr

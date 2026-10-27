@@ -1,4 +1,11 @@
 /**
+ * vehicleMapper.js — Mapeador de contratos de dados de veículos (Backend -> Frontend).
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para converter estruturas recebidas da API REST nos formatos canônicos esperados
+ *     pelos componentes visuais da vitrine e detalhes do carro.
+ */
+/**
  * Unified Vehicle ViewModel Mapper — Automatch
  *
  * Mapeador central e canônico para converter registros brutos de veículos (API / banco de dados / local)

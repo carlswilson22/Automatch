@@ -1,4 +1,11 @@
 """
+test_improvements_battery.py — Bateria de testes de melhorias contínuas de robustez e concorrência.
+
+Objetivo e Motivo da Criação:
+  - Criado para validar otimizações de paginação, filtros combinados de alta cardinalidade e
+    comportamento da API sob múltiplas conexões simultâneas.
+"""
+"""
 test_improvements_battery.py — Bateria de Testes Automatizados para Melhorias
 Cobre:
 1. Cabeçalhos HTTP de segurança defensiva (OWASP)

@@ -1,4 +1,11 @@
 /**
+ * apiClient.js — Cliente HTTP centralizado para requisições à API REST do backend.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para padronizar as chamadas à API, injetar automaticamente o token de autorização Bearer,
+ *     configurar timeouts e tratar respostas de erro de maneira uniforme.
+ */
+/**
  * Centralized API Client — Automatch
  *
  * Princípios Arquiteturais:

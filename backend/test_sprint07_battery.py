@@ -1,4 +1,11 @@
 """
+test_sprint07_battery.py — Suíte de testes de aceitação das entregas da Sprint 07.
+
+Objetivo e Motivo da Criação:
+  - Criado para validar os requisitos funcionais e não funcionais implementados na Sprint 07,
+    com foco em melhorias no catálogo, validação de laudos e sincronização multicanal.
+"""
+"""
 test_sprint07_battery.py — Bateria de Testes Automatizados — Sprint 07
 Valida todas as melhorias e correções implementadas na Sprint 07:
 1. Fechamento B2B Resiliente: closing_requested=1 e mensageria no chat

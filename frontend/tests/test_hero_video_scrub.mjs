@@ -1,3 +1,9 @@
+/**
+ * test_hero_video_scrub.mjs — Testes do componente de scrubbing de vídeo pericial no hero.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para verificar o carregamento de quadros e sincronização de tempo do player interativo.
+ */
 import { test, describe } from 'node:test';
 import assert from 'node:assert';
 import fs from 'node:fs';

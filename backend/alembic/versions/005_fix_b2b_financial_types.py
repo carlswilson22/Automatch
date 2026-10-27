@@ -1,3 +1,10 @@
+"""
+005_fix_b2b_financial_types.py — Migração de precisão financeira para repasse B2B.
+
+Objetivo e Motivo da Criação:
+  - Criado para converter tipos de dados de colunas de preço e comissões financeiras de Float para Numeric(12,2),
+    prevenindo erros de arredondamento em transações e reservas B2B no PostgreSQL e SQLite.
+"""
 """Fix B2B financial columns from Float to Numeric
 
 Revision ID: 005_fix_b2b_financial_types

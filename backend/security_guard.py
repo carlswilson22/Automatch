@@ -1,4 +1,11 @@
 """
+security_guard.py — Middleware de proteção de segurança, sanitização e rate limiting.
+
+Objetivo e Motivo da Criação:
+  - Criado para proteger a API FastAPI contra ataques de força bruta, injeção de código,
+    requisições excessivas (rate-limit) e validação de cabeçalhos de segurança HTTP.
+"""
+"""
 security_guard.py — Módulo Central de Segurança e Conformidade (OWASP / LGPD)
 Implementa:
 - RateLimiter com janela deslizante (Sliding Window Counter) e bloqueio temporário

@@ -1,3 +1,10 @@
+## ==============================================================================
+## alembic/script.py.mako — Template Mako para geração de novos scripts de migração.
+##
+## Objetivo e Motivo da Criação:
+##   - Criado como modelo estrutural padrão do Alembic para gerar migrações consistentes,
+##     contendo funções de upgrade() e downgrade() padronizadas.
+## ==============================================================================
 """${message}
 
 Revision ID: ${up_revision}

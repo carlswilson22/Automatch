@@ -1,3 +1,9 @@
+/**
+ * test_novidade_and_price_drop.mjs — Testes das tags de veículos recém-chegados e promoções.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para validar os cálculos automáticos que atribuem o badge de novidade e de desconto na vitrine.
+ */
 import { describe, test } from 'node:test';
 import assert from 'node:assert';
 import fs from 'node:fs';

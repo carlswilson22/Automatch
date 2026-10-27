@@ -1,4 +1,11 @@
 """
+models.py — Definição dos modelos ORM (SQLAlchemy) das entidades de domínio do Automatch.
+
+Objetivo e Motivo da Criação:
+  - Criado para mapear a persistência relacional do sistema: lojas parceiras (Store), catálogo de veículos (Car),
+    usuários autenticados (User), reservas B2B (CarReservation), transações financeiras e protocolos de laudos periciais.
+"""
+"""
 models.py — Definição dos modelos ORM (SQLAlchemy) do Automatch.
 
 Entidades mapeadas:

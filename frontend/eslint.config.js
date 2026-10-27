@@ -1,3 +1,9 @@
+/**
+ * eslint.config.js — Configuração de padronização de código do ESLint.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para manter a qualidade de código, boas práticas de React Hooks e consistência de sintaxe.
+ */
 import js from '@eslint/js';
 import globals from 'globals';
 import reactPlugin from 'eslint-plugin-react';

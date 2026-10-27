@@ -1,3 +1,9 @@
+# ==============================================================================
+# docker-compose.prod.yml — Orquestração de containers para ambiente de produção.
+#
+# Objetivo e Motivo da Criação:
+#   - Executa a stack de produção com volumes persistentes, Nginx gateway e backend otimizado.
+# ==============================================================================
 name: automatch-prod
 
 services:

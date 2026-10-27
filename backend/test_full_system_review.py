@@ -1,4 +1,11 @@
 """
+test_full_system_review.py — Suíte de testes integrados e validação ponta a ponta do sistema.
+
+Objetivo e Motivo da Criação:
+  - Criado para testar o ecossistema integrado: ciclo de vida do veículo, vistoria pericial,
+    emissão de laudos em PDF e consistência transacional entre lojas parceiras.
+"""
+"""
 Suíte Modular Completa de Testes e Revisão Geral do Sistema Automatch.
 Valida 100% das funcionalidades ativas no backend e regras de negócio da plataforma.
 """

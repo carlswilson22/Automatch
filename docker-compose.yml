@@ -1,3 +1,10 @@
+# ==============================================================================
+# docker-compose.yml — Orquestração de containers para ambiente de desenvolvimento.
+#
+# Objetivo e Motivo da Criação:
+#   - Sobe simultaneamente os serviços de frontend, backend FastAPI e banco de dados PostgreSQL
+#     com hot-reloading e rede interna configurada.
+# ==============================================================================
 name: automatch
 
 services:

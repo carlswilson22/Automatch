@@ -1,3 +1,10 @@
+# ==============================================================================
+# requirements.txt — Lista de dependências Python do backend FastAPI Automatch.
+#
+# Objetivo e Motivo da Criação:
+#   - Define as bibliotecas fundamentais do servidor: FastAPI, SQLAlchemy, Pydantic,
+#     ReportLab (PDFs), Pillow (imagens), APScheduler e drivers de banco de dados.
+# ==============================================================================
 fastapi>=0.100.0
 uvicorn>=0.23.0
 sqlalchemy>=2.0.0
