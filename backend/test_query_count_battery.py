@@ -1,3 +1,10 @@
+"""
+test_query_count_battery.py — Auditoria de contagem de queries SQL para prevenção de gargalos N+1.
+
+Objetivo e Motivo da Criação:
+  - Criado para auditar o número de comandos SQL disparados por cada requisição aos endpoints de catálogo.
+  - Garante o uso adequado de eager loading (joinedload/selectinload) no SQLAlchemy para alta performance sob carga.
+"""
 import unittest
 from sqlalchemy import create_engine, event
 from sqlalchemy.orm import sessionmaker

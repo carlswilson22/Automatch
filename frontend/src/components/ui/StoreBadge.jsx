@@ -1,3 +1,10 @@
+/**
+ * StoreBadge.jsx — Selo visual de identificação da loja credenciada.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para destacar veículos de concessionárias oficiais certificadas pelo Automatch,
+ *     reforçando a confiança e transparência na procedência do veículo ofertado.
+ */
 import React from 'react';
 import { Store } from 'lucide-react';
 

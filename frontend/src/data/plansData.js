@@ -1,3 +1,10 @@
+/**
+ * plansData.js — Tabela comercial de planos de assinatura e serviços periciais do Automatch.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para centralizar as configurações de preços, recursos inclusos, limites de anúncios e taxas
+ *     dos planos Gratuito, Pro Lojista e Concessionária Premium consumidos pelas telas de planos e checkout.
+ */
 export const PLANS_DATA = [
   {
     id: 'free',

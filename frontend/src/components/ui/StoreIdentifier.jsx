@@ -1,3 +1,10 @@
+/**
+ * StoreIdentifier.jsx — Bloco de identificação resumida da loja com avaliação e localização.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para exibir de forma compacta os dados da loja responsável pelo anúncio
+ *     nos cards de listagem e cabeçalhos de detalhe do veículo.
+ */
 import React from 'react';
 import { stores } from '../../data/inventoryData';
 import { Store, UserCheck } from 'lucide-react';

@@ -1,3 +1,10 @@
+/**
+ * HomeSupportChat.jsx — Widget de chat de atendimento e suporte na página inicial.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para facilitar o contato imediato de visitantes e novos clientes com o suporte Automatch,
+ *     esclarecendo dúvidas frequentes e aumentando a taxa de conversão da vitrine.
+ */
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageSquare, X, Send, Square } from 'lucide-react';

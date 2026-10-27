@@ -1,3 +1,10 @@
+/**
+ * AssetConfigurationModal.jsx — Modal de configuração de mídias, laudos e fotos 360 do veículo.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para dar controle completo ao lojista sobre as mídias associadas a cada veículo,
+ *     incluindo upload de laudos PDF, vídeos periciais e sequência de imagens 360 graus.
+ */
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 

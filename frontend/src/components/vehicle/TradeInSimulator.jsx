@@ -1,3 +1,10 @@
+/**
+ * TradeInSimulator.jsx — Simulador de avaliação de veículo usado na troca.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para calcular uma estimativa prévia de valorização do carro atual do cliente como entrada
+ *     na compra de um veículo do estoque da concessionária.
+ */
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Calculator, CheckCircle2, Building2, ShieldCheck } from 'lucide-react';

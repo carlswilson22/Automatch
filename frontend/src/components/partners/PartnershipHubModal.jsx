@@ -1,3 +1,10 @@
+/**
+ * PartnershipHubModal.jsx — Hub central de gestão de parcerias entre concessionárias.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para exibir a rede de lojistas conectados, gerenciar status de convites enviados e recebidos,
+ *     e visualizar o volume de repasses e comissões geradas no ecossistema de parceiros.
+ */
 import React, { useState, useEffect, useCallback, useRef, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 

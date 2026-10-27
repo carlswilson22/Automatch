@@ -1,3 +1,10 @@
+/**
+ * B2BRepassePanel.jsx — Painel de controle de veículos para repasse B2B entre parceiros.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para conectar concessionárias e revendas em uma rede de repasse rápido de estoque,
+ *     com preços especiais, cálculo de margem e bloqueio temporário de unidades negociadas.
+ */
 import React, { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {

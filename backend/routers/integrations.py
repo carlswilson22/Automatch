@@ -1,3 +1,15 @@
+"""
+integrations.py — Router de integrações externas e multichannel do Automatch.
+
+Responsabilidades:
+  - Publicação simultânea de anúncios em múltiplas plataformas (OLX, Webmotors, iCarros).
+  - Sincronização de status de anúncios entre plataformas.
+  - Geração de links de compartilhamento e QR codes para anúncios.
+
+Criado para implementar a estratégia multichannel de publicação, permitindo
+que vendedores atinjam múltiplos marketplaces a partir de um único anúncio.
+"""
+
 import uuid
 from datetime import datetime
 from typing import Optional, Dict, Any, List

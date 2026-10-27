@@ -1,3 +1,10 @@
+/**
+ * PartnerChatModal.jsx — Modal de negociação direta e chat em tempo real entre lojistas.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para agilizar o fechamento de transações B2B de repasse, permitindo troca de mensagens,
+ *     envio de contrapropostas e confirmação de reserva de veículos entre gerentes de vendas.
+ */
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, MessageSquare, Car, DollarSign, Store, Shield, CheckCircle, Clock } from 'lucide-react';

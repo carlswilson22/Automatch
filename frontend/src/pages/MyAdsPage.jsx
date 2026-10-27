@@ -1,3 +1,10 @@
+/**
+ * MyAdsPage.jsx — Página de gestão dos anúncios criados pelo usuário anunciante.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para que vendedores particulares e lojistas gerenciem seus anúncios ativos,
+ *     acompanhem o status da vistoria pericial, atualizem valores e recebam alertas de interessados.
+ */
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';

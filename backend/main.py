@@ -1,3 +1,19 @@
+"""
+main.py — Ponto de entrada principal da API REST do Automatch.
+
+Responsabilidades:
+  - Inicializa a aplicação FastAPI com middlewares (CORS, GZip, rate-limiting).
+  - Registra todos os routers (auth, cars, detran, ai_vision, uploads, alerts,
+    integrations, laudos_export, partnerships, vehicle_lookup).
+  - Gerencia o ciclo de vida (lifespan): criação das tabelas, seed do banco,
+    inicialização do scheduler de tarefas e startup do APScheduler.
+  - Serve arquivos estáticos (uploads de imagens/vídeos periciais).
+
+Criado como parte do projeto integrador Automatch — marketplace inteligente
+de veículos seminovos com perícia por IA, rede B2B de repasse e consultor
+automotivo alimentado por Gemini.
+"""
+
 import os
 import logging
 import asyncio

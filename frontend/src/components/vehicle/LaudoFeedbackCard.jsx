@@ -1,3 +1,10 @@
+/**
+ * LaudoFeedbackCard.jsx — Card de feedback e avaliação do laudo pericial pelo usuário.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para coletar a percepção do usuário sobre a clareza e precisão do laudo emitido,
+ *     alimentando o ciclo de melhoria contínua dos modelos de perícia por visão computacional.
+ */
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 

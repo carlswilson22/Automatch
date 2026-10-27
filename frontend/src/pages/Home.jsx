@@ -1,3 +1,10 @@
+/**
+ * Home.jsx — Página principal (Landing Page) da plataforma Automatch.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado como a porta de entrada da plataforma, apresentando o hero interativo, busca rápida por placa/marca,
+ *     destaques do catálogo com laudo 100% verificado, calculadora de Preço Justo e depoimentos.
+ */
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';

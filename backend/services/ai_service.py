@@ -1,3 +1,12 @@
+"""
+ai_service.py — Serviço central de inteligência artificial multimodal (Perícia Vision & Chat).
+
+Objetivo e Motivo da Criação:
+  - Criado para alimentar os recursos de visão computacional e consultor inteligente do Automatch.
+  - Conecta à API do Google Gemini (gemini-1.5-flash / gemini-2.0) com streaming e fallback resiliente.
+  - Executa análise de avarias em fotos de veículos (riscos, amassados, desalinhamento de peças, desgaste).
+  - Provê o assistente de negociação e suporte com respostas contextuais aos dados do veículo.
+"""
 import os
 import io
 import json

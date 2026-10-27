@@ -1,3 +1,10 @@
+/**
+ * AIChatBox.jsx — Caixa de chat contextualizada com o veículo em exibição.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para permitir que o comprador tire dúvidas específicas sobre o carro selecionado
+ *     (histórico de revisões, estado dos pneus, laudo cautelar e negociação de preço) via IA.
+ */
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Bot, Send, RotateCcw, Square } from 'lucide-react';
 import { streamChatMessage } from '../../services/aiChatService';

@@ -1,3 +1,10 @@
+/**
+ * TireDepthScanner.jsx — Scanner visual de profundidade dos sulcos e vida útil dos pneus.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para analisar imagens dos pneus dianteiros e traseiros, indicando a profundidade restante
+ *     em milímetros e alertando sobre a necessidade de troca ou alinhamento.
+ */
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Gauge, ShieldCheck, AlertTriangle, Disc, RefreshCw, CheckCircle2, ChevronRight } from 'lucide-react';

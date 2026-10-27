@@ -1,3 +1,10 @@
+/**
+ * App.jsx — Componente raiz da aplicação React (Single Page Application).
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para centralizar o roteamento SPA (React Router), gerenciamento de sessão global (AuthContext),
+ *     resiliência contra erros com GlobalErrorBoundary e otimização de bundle via lazy loading dinâmico.
+ */
 import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';

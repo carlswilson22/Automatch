@@ -1,3 +1,10 @@
+/**
+ * showcaseData.js — Coleção de dados canônicos da vitrine oficial do Automatch.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para atuar como catálogo base e fallback estruturado dos 5 veículos canônicos da plataforma
+ *     (Civic Touring, Corolla Altis, Jeep Compass, VW T-Cross, BMW 320i M Sport) com laudos completos.
+ */
 import { Car } from 'lucide-react';
 
 export const showcaseCars = [

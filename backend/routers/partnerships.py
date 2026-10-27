@@ -1,3 +1,11 @@
+"""
+partnerships.py — Router de gestão do Hub B2B de parcerias entre concessionárias e lojistas.
+
+Objetivo e Motivo da Criação:
+  - Criado para viabilizar a colaboração inter-lojas (B2B Repasse e Parcerias).
+  - Permite convites formais entre lojas, negociação direta, chat de lojistas e compartilhamento de estoque.
+  - Viabiliza a expansão da liquidez de repasse na rede de lojas cadastradas no ecossistema Automatch.
+"""
 import os
 import time
 import uuid

@@ -1,3 +1,11 @@
+"""
+test_usecases_full_battery.py — Bateria integrada cobrindo jornadas completas de usuários da plataforma.
+
+Objetivo e Motivo da Criação:
+  - Criado para testar fluxos reais de ponta a ponta: cadastro de usuário, criação de anúncio,
+    vistoria cautelar via IA, favoritos, proposta e checkout.
+  - Valida a interoperabilidade entre todos os módulos de regras de negócio do Automatch.
+"""
 import os
 import sys
 import base64

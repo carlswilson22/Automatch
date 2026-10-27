@@ -1,3 +1,11 @@
+"""
+vehicle_lookup.py — Router de decodificação e enriquecimento de dados de veículos por placa e chassi.
+
+Objetivo e Motivo da Criação:
+  - Criado para automatizar o preenchimento da ficha técnica do veículo ao cadastrar anúncio ou laudo.
+  - Normaliza placas Mercosul e padrão antigo, consultando metadados de fabricante, modelo, ano e versão.
+  - Reduz drasticamente o tempo de digitação manual de anúncios pelo lojista ou vendedor particular.
+"""
 import re
 import time
 import logging

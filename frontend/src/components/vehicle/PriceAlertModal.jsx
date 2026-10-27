@@ -1,3 +1,10 @@
+/**
+ * PriceAlertModal.jsx — Modal para cadastro de alertas de variação e queda de preço.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para permitir que usuários definam um valor-alvo para o veículo e sejam notificados
+ *     automaticamente assim que o vendedor aplicar um desconto ou atingir a cotação desejada.
+ */
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, X, CheckCircle2, MessageCircle, Mail, TrendingDown } from 'lucide-react';

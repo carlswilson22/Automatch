@@ -1,3 +1,10 @@
+/**
+ * GlobalErrorBoundary.jsx — Error Boundary global de último nível da aplicação.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para proteger a aplicação inteira de panes inesperadas de JavaScript,
+ *     oferecendo interface de recuperação amigável e relatório de erro para o suporte.
+ */
 import React from 'react';
 import { AlertOctagon, RotateCcw, Home } from 'lucide-react';
 

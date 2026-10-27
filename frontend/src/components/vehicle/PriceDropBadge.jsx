@@ -1,3 +1,10 @@
+/**
+ * PriceDropBadge.jsx — Selo de destaque para veículos com redução recente de preço.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para evidenciar visualmente nos cards de catálogo os carros que sofreram redução de preço,
+ *     mostrando o valor anterior riscado e a economia proporcionada ao comprador.
+ */
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Flame, TrendingDown, Clock, ChevronDown, CheckCircle2, History, Tag } from 'lucide-react';

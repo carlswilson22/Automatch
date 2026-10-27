@@ -1,3 +1,10 @@
+/**
+ * PlansPage.jsx — Página institucional de planos de assinatura e serviços para lojistas.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para apresentar as opções de planos de assinatura mensal e anual, destacando benefícios de
+ *     destaque na vitrine, emissão ilimitada de laudos cautelares e acesso à rede de repasse B2B.
+ */
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';

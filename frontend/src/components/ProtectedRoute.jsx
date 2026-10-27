@@ -1,3 +1,10 @@
+/**
+ * ProtectedRoute.jsx — Componente guardião de rotas privadas e autenticadas.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para proteger telas restritas (Dashboard, Novo Anúncio, Meus Anúncios, Perfil)
+ *     impedindo acesso de usuários não logados e redirecionando-os de volta com o caminho de retorno.
+ */
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';

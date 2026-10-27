@@ -1,3 +1,10 @@
+/**
+ * TcoCalculatorCard.jsx — Calculadora de Custo Total de Propriedade (TCO - Total Cost of Ownership).
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para projetar os gastos recorrentes do veículo nos primeiros 12 a 36 meses
+ *     (combustível, IPVA, seguro, manutenção preventiva e depreciação estimada).
+ */
 import React, { useState, useMemo } from 'react';
 import {
   Calculator, Fuel, ShieldCheck, Wrench, Building2, ChevronDown,
