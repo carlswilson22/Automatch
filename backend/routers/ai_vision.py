@@ -50,19 +50,70 @@ class PrecificacaoRequest(BaseModel):
 
 
 @router.post("/api/analise-visual")
-async def analisar_avarias_veiculo(payload: AnaliseVisualRequest) -> Dict[str, Any]:
+async def analisar_avarias_veiculo(request: Request) -> Dict[str, Any]:
     """
     Endpoint de Perícia Visual de Avarias de Veículos:
-    Suporta fotos via base64, data URI, URLs remotas ou caminhos de imagens de anúncios.
+    Suporta fotos via JSON (base64, data URI, URLs remotas ou caminhos locais)
+    ou via upload direto multipart/form-data.
     Executa verificação por Google Gemini Vision ou Motor Pericial Local Automatch Vision (CV + YOLOv8).
     """
     api_key = os.getenv("GEMINI_API_KEY", "").strip()
     image_bytes = None
+    car_context = None
+    image_url = None
+    image_base64 = None
+
+    content_type = request.headers.get("content-type", "").lower()
+
+    if "multipart/form-data" in content_type:
+        try:
+            form = await request.form()
+            upload_file = form.get("file") or form.get("imagem") or form.get("image") or form.get("photo")
+            if upload_file and hasattr(upload_file, "read"):
+                raw_bytes = await upload_file.read()
+                if raw_bytes and len(raw_bytes) > 0:
+                    image_bytes = preprocess_and_compress_image(raw_bytes)
+            if form.get("imageUrl"):
+                image_url = str(form.get("imageUrl"))
+            if form.get("imageBase64"):
+                image_base64 = str(form.get("imageBase64"))
+            if form.get("car_context"):
+                raw_ctx = form.get("car_context")
+                try:
+                    car_context = json.loads(raw_ctx) if isinstance(raw_ctx, str) else raw_ctx
+                except Exception:
+                    pass
+        except Exception as fe:
+            logger.warning("Falha ao processar formulário multipart: %s", fe)
+            raise HTTPException(status_code=422, detail="Falha ao processar dados multipart/form-data.")
+    else:
+        # Tenta decodificar como JSON
+        try:
+            raw_json = await request.json()
+            payload = AnaliseVisualRequest(**raw_json)
+            image_base64 = payload.imageBase64
+            image_url = payload.imageUrl
+            car_context = payload.car_context
+        except Exception:
+            # Se não for JSON válido, verifica se o payload contém bytes brutos de imagem (JPEG/PNG)
+            try:
+                raw_body = await request.body()
+                if raw_body and len(raw_body) > 10 and (raw_body[:3] == b"\xff\xd8\xff" or raw_body[:8] == b"\x89PNG\r\n\x1a\n"):
+                    image_bytes = preprocess_and_compress_image(raw_body)
+                else:
+                    raise HTTPException(
+                        status_code=422,
+                        detail="Corpo da requisição deve ser um JSON válido ou multipart/form-data."
+                    )
+            except HTTPException:
+                raise
+            except Exception:
+                raise HTTPException(status_code=422, detail="Dados da requisição inválidos.")
 
     # 1. Resolução a partir de imageBase64
-    if payload.imageBase64:
+    if not image_bytes and image_base64:
         try:
-            raw_base64 = payload.imageBase64
+            raw_base64 = image_base64
             if "," in raw_base64:
                 raw_base64 = raw_base64.split(",")[1]
             raw_bytes = base64.b64decode(raw_base64)
@@ -71,8 +122,8 @@ async def analisar_avarias_veiculo(payload: AnaliseVisualRequest) -> Dict[str, A
             logger.warning("Falha ao decodificar imageBase64: %s", e)
 
     # 2. Resolução a partir de imageUrl
-    if not image_bytes and payload.imageUrl:
-        url_str = payload.imageUrl.strip()
+    if not image_bytes and image_url:
+        url_str = image_url.strip()
 
         # Caso seja Data URI embutido na URL
         if url_str.startswith("data:image/"):
@@ -152,7 +203,7 @@ async def analisar_avarias_veiculo(payload: AnaliseVisualRequest) -> Dict[str, A
     resultado = await executar_pericia_visual_completa(
         image_bytes=image_bytes,
         api_key=api_key if len(api_key) > 5 else None,
-        car_context=payload.car_context
+        car_context=car_context
     )
 
     return resultado
@@ -350,46 +401,6 @@ def generate_semantic_reply(user_msg: str, car_context: Optional[Dict[str, Any]]
             f"Recomendamos falar diretamente com o vendedor pelo chat ou consultar sobre motor, direção, freios, quilometragem, laudo pericial ou financiamento!"
         )
 
-
-@router.post("/api/chat")
-async def chat_automatch(payload: ChatRequest, request: Request) -> Dict[str, Any]:
-    """
-    Chat consultivo assíncrono tradicional com Gemini 1.5 Flash e limite de 200 tokens (fallback disponível).
-    """
-    client_ip = request.client.host if request.client else "127.0.0.1"
-    is_allowed, remaining = chat_rate_limiter.is_allowed(client_ip)
-    if not is_allowed:
-        raise HTTPException(
-            status_code=429,
-            detail=f"Muitas perguntas consecutivas. Por favor, aguarde {remaining}s antes de enviar nova mensagem."
-        )
-
-    api_key = os.getenv("GEMINI_API_KEY", "").strip()
-    user_msg = payload.mensagem.strip()
-    historico = payload.historico or []
-    car_context = payload.car_context
-
-    system_prompt = "Você é o assistente virtual da plataforma Automatch. Seja prestativo, rápido e conciso em até 3 frases sobre compra, venda e laudo cautelar de veículos."
-    if car_context:
-        system_prompt = (
-            f"Você é um consultor especialista focado no veículo atual do usuário: "
-            f"{car_context.get('brand')} {car_context.get('model')} {car_context.get('year')}, "
-            f"cor {car_context.get('color', 'N/A')}, {car_context.get('km')}km rodados, "
-            f"preço R${car_context.get('price')}. Responda estritamente sobre este veículo e distinga cada pergunta sem repetição."
-        )
-
-    if api_key:
-        contents = []
-        for msg in historico[-6:]:
-            role = "user" if msg.get("from") == "user" or msg.get("role") == "user" else "model"
-            contents.append({"role": role, "parts": [{"text": msg.get("text", "") or msg.get("content", "")}]})
-        contents.append({"role": "user", "parts": [{"text": user_msg}]})
-        result = await call_gemini_generate(api_key, contents, max_tokens=200, temperature=0.3, system_prompt=system_prompt)
-        if result:
-            return {"status": "success", "modelo": "gemini-1.5-flash", "resposta": result}
-
-    reply = generate_semantic_reply(user_msg, car_context)
-    return {"status": "success", "modelo": "automatch-consultor-ai", "resposta": reply}
 
 
 @router.post("/api/chat/stream")
