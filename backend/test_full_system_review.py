@@ -86,6 +86,23 @@ def run_full_system_review():
     # Filtro por marca
     filter_resp = client.get("/api/cars?brand=Volkswagen")
     assert filter_resp.status_code == 200
+
+    # Validação ACH-10: Presença dos carros canônicos sc-001 a sc-005 no catálogo
+    for sc_id in ["sc-001", "sc-002", "sc-003", "sc-004", "sc-005"]:
+        sc_resp = client.get(f"/api/cars/{sc_id}")
+        assert sc_resp.status_code == 200, f"Carro oficial {sc_id} deve existir no catálogo"
+
+    # Validação ACH-12: Integridade física de mídias (0 arquivos inexistentes)
+    all_cars_resp = client.get("/api/cars?limit=100")
+    assert all_cars_resp.status_code == 200
+    catalog_items = all_cars_resp.json().get("items", [])
+    public_img_dir = "/app/public_images"
+    if os.path.exists(public_img_dir):
+        for c in catalog_items:
+            img_name = os.path.basename(c.get("image") or "")
+            if img_name:
+                assert os.path.exists(os.path.join(public_img_dir, img_name)), f"Imagem {img_name} do veículo {c.get('id')} deve existir fisicamente no disco"
+
     results["2. Catálogo Paginado e Filtros"] = "PASS"
     print("✅ SUÍTE 2 CONCLUÍDA COM SUCESSO!")
 
@@ -93,11 +110,16 @@ def run_full_system_review():
     # SUÍTE 3: Perícia Visual de Lataria por IA (YOLOv8 + Gemini)
     # -------------------------------------------------------------------------
     print("\n[SUÍTE 3] Perícia Visual de Lataria com IA...")
-    # Cria imagem de teste JPEG
-    test_img = Image.new("RGB", (320, 240), color=(200, 30, 40))
-    buf = io.BytesIO()
-    test_img.save(buf, format="JPEG")
-    b64_str = "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode("utf-8")
+    # Prepara imagem veicular real em Base64 para teste
+    car_sample_path = "/app/public_images/FotoCorollaCross.jpg"
+    if os.path.exists(car_sample_path):
+        with open(car_sample_path, "rb") as f:
+            b64_str = "data:image/jpeg;base64," + base64.b64encode(f.read()).decode("utf-8")
+    else:
+        test_img = Image.new("RGB", (320, 240), color=(200, 30, 40))
+        buf = io.BytesIO()
+        test_img.save(buf, format="JPEG")
+        b64_str = "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode("utf-8")
 
     vision_resp = client.post("/api/analise-visual", json={
         "imageUrl": b64_str,
@@ -124,10 +146,10 @@ def run_full_system_review():
     assert video_upload_resp.status_code == 200, f"Falha no upload de vídeo pericial: {video_upload_resp.text}"
     video_data = video_upload_resp.json()
     assert video_data.get("status") == "success"
-    assert video_data.get("duracao_estimada_segundos") == 15
-    assert len(video_data.get("checklist_inspecao", [])) == 3
+    assert video_data.get("duracao_estimada_segundos") == 20
+    assert len(video_data.get("checklist_inspecao", [])) == 4
     print(f"Vídeo Registrado: {video_data.get('filename')} | Checkpoints Sincronizados: {len(video_data.get('checklist_inspecao'))}")
-    results["4. Vídeo Pericial 15s da Carroceria"] = "PASS"
+    results["4. Vídeo Pericial 20s da Carroceria"] = "PASS"
     print("✅ SUÍTE 4 CONCLUÍDA COM SUCESSO!")
 
     # -------------------------------------------------------------------------

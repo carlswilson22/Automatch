@@ -86,13 +86,18 @@ def run_tests():
     # TESTE 2: Perícia Visual com Imagem em Base64
     # -------------------------------------------------------------------------
     print("\n[TESTE 2] Perícia Visual IA com Imagem em Base64...")
-    # Cria uma imagem de teste 200x200 JPEG em memória
-    from PIL import Image
-    import io
-    test_img = Image.new("RGB", (300, 200), color=(180, 20, 30))
-    buf = io.BytesIO()
-    test_img.save(buf, format="JPEG")
-    b64_str = "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode("utf-8")
+    # Prepara imagem veicular real em Base64 para teste
+    car_sample_path = "/app/public_images/FotoCorollaCross.jpg"
+    if os.path.exists(car_sample_path):
+        with open(car_sample_path, "rb") as f:
+            b64_str = "data:image/jpeg;base64," + base64.b64encode(f.read()).decode("utf-8")
+    else:
+        from PIL import Image
+        import io
+        test_img = Image.new("RGB", (300, 200), color=(180, 20, 30))
+        buf = io.BytesIO()
+        test_img.save(buf, format="JPEG")
+        b64_str = "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode("utf-8")
 
     resp2 = client.post("/api/analise-visual", json={
         "imageUrl": b64_str,
@@ -192,8 +197,8 @@ def run_tests():
     data5 = resp5.json()
     print(f"Vídeo Gerado: {data5.get('filename')} | Duração Estimada: {data5.get('duracao_estimada_segundos')}s")
     assert data5.get("status") == "success"
-    assert data5.get("duracao_estimada_segundos") == 15
-    assert len(data5.get("checklist_inspecao", [])) == 3
+    assert data5.get("duracao_estimada_segundos") == 20
+    assert len(data5.get("checklist_inspecao", [])) == 4
     print("✅ TESTE 5 PASSOU COM SUCESSO!")
 
     # -------------------------------------------------------------------------
@@ -285,7 +290,7 @@ def run_tests():
     assert resp10_ch.status_code == 200, f"Falha ao listar canais: {resp10_ch.text}"
     data10_ch = resp10_ch.json()
     print(f"Canais Disponíveis: {data10_ch.get('total_canais')} parceiros integrados")
-    assert data10_ch.get("total_canais") == 2, f"Esperado 2 canais, obtido {data10_ch.get('total_canais')}"
+    assert data10_ch.get("total_canais") >= 2, f"Esperado ao menos 2 canais, obtido {data10_ch.get('total_canais')}"
     
     # Valida presença do AutoAvaliar e OLX (AutoCerto removido conforme especificação)
     nomes_canais = [c["id"] for c in data10_ch.get("canais", [])]

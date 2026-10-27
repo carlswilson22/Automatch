@@ -3,6 +3,7 @@ import time
 import uuid
 import logging
 from datetime import datetime
+from decimal import Decimal
 from typing import List, Optional, Dict, Any
 
 from fastapi import APIRouter, HTTPException, Depends, Header, Response
@@ -411,7 +412,7 @@ def get_shared_inventory(
     result = []
     for c in cars:
         store = store_map.get(c.store_id)
-        piso = c.valor_minimo_repasse or (c.price * 0.90)
+        piso = c.valor_minimo_repasse or ((Decimal(str(c.price)) * Decimal("0.90")) if c.price else Decimal("0.00"))
         comissao = c.comissao_fixa or commission_map.get(c.store_id, 3.0)
 
         result.append({
@@ -483,8 +484,8 @@ def create_car_reservation(
         raise HTTPException(status_code=403, detail="Não há parceria ativa entre sua loja e a loja proprietária do carro.")
 
     # Validação do Piso Inviolável
-    piso_inviolavel = car.valor_minimo_repasse or (car.price * 0.90)
-    if payload.proposed_price < piso_inviolavel:
+    piso_inviolavel = car.valor_minimo_repasse or ((Decimal(str(car.price)) * Decimal("0.90")) if car.price else Decimal("0.00"))
+    if Decimal(str(payload.proposed_price)) < Decimal(str(piso_inviolavel)):
         raise HTTPException(
             status_code=400,
             detail=f"Proposta rejeitada: O valor proposto (R$ {payload.proposed_price:,.2f}) é inferior ao piso mínimo de repasse (R$ {piso_inviolavel:,.2f})."
@@ -696,10 +697,10 @@ def give_reservation_consent(
         car.status_reserva = "vendido"
 
     protocol_code = f"REP-{datetime.now().year}-{str(uuid.uuid4())[:8].upper()}"
-    piso = res.proposed_price
-    markup = res.client_markup or 0.0
+    piso = Decimal(str(res.proposed_price)) if res.proposed_price is not None else Decimal("0.00")
+    markup = Decimal(str(res.client_markup)) if res.client_markup is not None else Decimal("0.00")
     final_price = piso + markup
-    commission = piso * 0.03  # comissão padrão de 3% sobre o repasse
+    commission = round(piso * Decimal("0.03"), 2)  # comissão padrão de 3% sobre o repasse
 
     transaction = models.PartnerTransaction(
         protocol=protocol_code,
@@ -742,7 +743,7 @@ def give_reservation_consent(
         "message": "Negócio fechado com sucesso! Protocolo oficial gerado.",
         "protocol": protocol_code,
         "transaction_id": transaction.id,
-        "final_price": final_price
+        "final_price": float(final_price)
     }
 
 

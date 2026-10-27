@@ -230,6 +230,32 @@ async def security_headers_middleware(request: Request, call_next):
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     return response
 
+# ── Tratamento Defensivo de Erros de Validação (OWASP A03 / ACH-02) ───────────
+from fastapi.exceptions import RequestValidationError
+from fastapi.encoders import jsonable_encoder
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Trata erros de validação garantindo que bodies binários não disparem UnicodeDecodeError (evita HTTP 500)."""
+    clean_errors = []
+    for err in exc.errors():
+        clean_err = {}
+        for k, v in err.items():
+            if k == "input" and isinstance(v, (bytes, bytearray)):
+                clean_err[k] = "<binary data>"
+            elif k == "ctx" and isinstance(v, dict):
+                clean_err[k] = {ck: str(cv) if isinstance(cv, Exception) else cv for ck, cv in v.items()}
+            else:
+                clean_err[k] = v
+        clean_errors.append(clean_err)
+    return JSONResponse(
+        status_code=422,
+        content={
+            "detail": jsonable_encoder(clean_errors),
+            "message": "Dados da requisição inválidos. Certifique-se de enviar payload no formato correto."
+        }
+    )
+
 # ── Registra as rotas ─────────────────────────────────────────────────────────
 app.include_router(auth.router)
 app.include_router(cars.router)

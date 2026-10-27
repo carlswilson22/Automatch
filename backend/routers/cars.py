@@ -1,4 +1,5 @@
 import logging
+from decimal import Decimal
 from typing import List, Optional, Dict, Any
 
 from sqlalchemy import or_
@@ -177,8 +178,8 @@ def update_car(
 
     # Validação de piso inviolável de repasse B2B
     target_price = update_data.get("price") if update_data.get("price") is not None else car.price
-    if update_data.get("valor_minimo_repasse") is not None:
-        if update_data["valor_minimo_repasse"] > target_price:
+    if update_data.get("valor_minimo_repasse") is not None and target_price is not None:
+        if Decimal(str(update_data["valor_minimo_repasse"])) > Decimal(str(target_price)):
             raise HTTPException(
                 status_code=400,
                 detail=f"O valor mínimo de repasse (R$ {update_data['valor_minimo_repasse']:,.2f}) não pode ser superior ao preço do veículo (R$ {target_price:,.2f})."

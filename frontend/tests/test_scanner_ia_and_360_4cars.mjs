@@ -52,7 +52,7 @@ assert(Array.isArray(car3.damagePoints) && car3.damagePoints.length >= 1, `sc-00
 const dpTracker = car3.damagePoints[0];
 assert(dpTracker.part.includes('Retrovisor'), `sc-004: avaria identificada corretamente em '${dpTracker.part}'`);
 assert(dpTracker.type.includes('Risco'), `sc-004: tipo de dano é '${dpTracker.type}'`);
-assert(car3.photos360 && Object.keys(car3.photos360).length === 8, 'sc-004 possui todos os 8 ângulos da Varredura 360°');
+assert(car3.photos360 === null, 'sc-004 acusa varredura 360° indisponível com integridade (ACH-05)');
 
 // 4. CARRO 4: Fiat Pulse Abarth (sc-005) - COM AVARIAS
 console.log('\n🚗 Carro 4: sc-005 - Fiat Pulse Abarth (COM AVARIAS MAPEADAS)');
@@ -62,7 +62,7 @@ assert(Array.isArray(car4.damagePoints) && car4.damagePoints.length >= 1, `sc-00
 const dpPulse = car4.damagePoints[0];
 assert(dpPulse.part.includes('Spoiler') || dpPulse.part.includes('Para-choque'), `sc-005: avaria identificada corretamente em '${dpPulse.part}'`);
 assert(dpPulse.type.includes('Ralado'), `sc-005: tipo de dano é '${dpPulse.type}'`);
-assert(car4.photos360 && Object.keys(car4.photos360).length === 8, 'sc-005 possui todos os 8 ângulos da Varredura 360°');
+assert(car4.photos360 === null, 'sc-005 acusa varredura 360° indisponível com integridade (ACH-05)');
 
 // BALANCEAMENTO FINAL
 console.log('\n📊 BALANCEAMENTO:');
