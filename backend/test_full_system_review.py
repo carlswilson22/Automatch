@@ -86,6 +86,23 @@ def run_full_system_review():
     # Filtro por marca
     filter_resp = client.get("/api/cars?brand=Volkswagen")
     assert filter_resp.status_code == 200
+
+    # Validação ACH-10: Presença dos carros canônicos sc-001 a sc-005 no catálogo
+    for sc_id in ["sc-001", "sc-002", "sc-003", "sc-004", "sc-005"]:
+        sc_resp = client.get(f"/api/cars/{sc_id}")
+        assert sc_resp.status_code == 200, f"Carro oficial {sc_id} deve existir no catálogo"
+
+    # Validação ACH-12: Integridade física de mídias (0 arquivos inexistentes)
+    all_cars_resp = client.get("/api/cars?limit=100")
+    assert all_cars_resp.status_code == 200
+    catalog_items = all_cars_resp.json().get("items", [])
+    public_img_dir = "/app/public_images"
+    if os.path.exists(public_img_dir):
+        for c in catalog_items:
+            img_name = os.path.basename(c.get("image") or "")
+            if img_name:
+                assert os.path.exists(os.path.join(public_img_dir, img_name)), f"Imagem {img_name} do veículo {c.get('id')} deve existir fisicamente no disco"
+
     results["2. Catálogo Paginado e Filtros"] = "PASS"
     print("✅ SUÍTE 2 CONCLUÍDA COM SUCESSO!")
 
