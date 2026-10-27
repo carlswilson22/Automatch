@@ -349,9 +349,18 @@ def generate_semantic_reply(user_msg: str, car_context: Optional[Dict[str, Any]]
         )
     # 10. Consumo / Combustível / Eficiência
     elif any(k in q for k in ["consumo", "combustivel", "combustível", "gasolina", "etanol", "flex", "diesel", "km/l", "gasta", "autonomia", "tanque"]):
+        is_eletrico = any(e in fuel_val.lower() for e in ["elétrico", "eletrico", "electric"])
+        if is_eletrico:
+            return (
+                f"O {car_name} é um veículo 100% elétrico, portanto não consome combustíveis fósseis e possui emissão zero. "
+                f"Sua eficiência é avaliada pela autonomia por recarga da bateria e modo de condução."
+            )
+        consumo_val = (specs.get('consumo') or specs.get('consumo_urbano') or car_context.get('consumo') or car_context.get('consumoInmetro')) if car_context else None
+        if consumo_val:
+            return f"O {car_name} é movido a {fuel_val} e apresenta consumo oficial homologado de {consumo_val}."
         return (
-            f"O {car_name} é movido a {fuel_val} e apresenta consumo médio estimado de 10 a 13 km/l em ciclo urbano "
-            f"e até 15 km/l em rodovias, oferecendo excelente eficiência energética para sua categoria."
+            f"O {car_name} é movido a {fuel_val}. Não constam dados específicos de consumo médio no cadastro deste anúncio. "
+            f"Recomendamos consultar a tabela oficial do Programa Brasileiro de Etiquetagem Veicular (PBEV/Inmetro) para esta motorização."
         )
     # 11. Preço / Tabela FIPE / Desconto / Valor
     elif any(k in q for k in ["fipe", "tabela", "desconto", "a vista", "avista", "preco", "preço", "valor", "quanto custa"]):

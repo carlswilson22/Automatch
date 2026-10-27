@@ -192,8 +192,8 @@ def run_tests():
     data5 = resp5.json()
     print(f"Vídeo Gerado: {data5.get('filename')} | Duração Estimada: {data5.get('duracao_estimada_segundos')}s")
     assert data5.get("status") == "success"
-    assert data5.get("duracao_estimada_segundos") == 15
-    assert len(data5.get("checklist_inspecao", [])) == 3
+    assert data5.get("duracao_estimada_segundos") == 20
+    assert len(data5.get("checklist_inspecao", [])) == 4
     print("✅ TESTE 5 PASSOU COM SUCESSO!")
 
     # -------------------------------------------------------------------------

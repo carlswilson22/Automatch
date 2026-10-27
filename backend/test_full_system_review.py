@@ -124,10 +124,10 @@ def run_full_system_review():
     assert video_upload_resp.status_code == 200, f"Falha no upload de vídeo pericial: {video_upload_resp.text}"
     video_data = video_upload_resp.json()
     assert video_data.get("status") == "success"
-    assert video_data.get("duracao_estimada_segundos") == 15
-    assert len(video_data.get("checklist_inspecao", [])) == 3
+    assert video_data.get("duracao_estimada_segundos") == 20
+    assert len(video_data.get("checklist_inspecao", [])) == 4
     print(f"Vídeo Registrado: {video_data.get('filename')} | Checkpoints Sincronizados: {len(video_data.get('checklist_inspecao'))}")
-    results["4. Vídeo Pericial 15s da Carroceria"] = "PASS"
+    results["4. Vídeo Pericial 20s da Carroceria"] = "PASS"
     print("✅ SUÍTE 4 CONCLUÍDA COM SUCESSO!")
 
     # -------------------------------------------------------------------------
