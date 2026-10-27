@@ -39,10 +39,34 @@ def _resolve_uploads_dir() -> Path:
 
 UPLOADS_DIR = _resolve_uploads_dir()
 
+try:
+    import cv2
+except ImportError:
+    cv2 = None
+
 ALLOWED_LAUDO_EXTENSIONS = {".pdf", ".jpg", ".jpeg", ".png", ".mp4", ".webm", ".mov"}
 ALLOWED_VIDEO_EXTENSIONS = {".mp4", ".webm", ".mov", ".m4v"}
 MAX_LAUDO_SIZE_BYTES = 15 * 1024 * 1024  # 15 MB para laudos/fotos
-MAX_VIDEO_SIZE_BYTES = 40 * 1024 * 1024  # 40 MB para video pericial 15s
+MAX_VIDEO_SIZE_BYTES = 50 * 1024 * 1024  # 50 MB para vídeo pericial de até 20s
+
+
+def _inspect_video_duration(file_path: Path) -> Any:
+    """Inspeciona a duração temporal do vídeo via OpenCV."""
+    if not cv2:
+        return None
+    try:
+        cap = cv2.VideoCapture(str(file_path))
+        if not cap.isOpened():
+            return None
+        fps = cap.get(cv2.CAP_PROP_FPS)
+        frame_count = cap.get(cv2.CAP_PROP_FRAME_COUNT)
+        cap.release()
+        if fps and fps > 0 and frame_count and frame_count > 0:
+            return frame_count / fps
+        return None
+    except Exception as e:
+        logger.debug("Aviso ao inspecionar duração do vídeo com OpenCV: %s", e)
+        return None
 
 
 @router.post("/laudos/upload")
@@ -289,18 +313,30 @@ async def upload_pericia_video(
             file_path.unlink()
         raise
 
+    # Validação temporal via OpenCV (ACH-06: limite estrito de 20s)
+    detected_duration = await asyncio.to_thread(_inspect_video_duration, file_path)
+    if detected_duration is not None and detected_duration > 20.9:
+        if file_path.exists():
+            file_path.unlink()
+        raise HTTPException(
+            status_code=400,
+            detail=f"O vídeo pericial excede o limite máximo permitido de 20 segundos (detectado: {detected_duration:.1f}s)."
+        )
+
     return {
         "status": "success",
         "id": file_id,
         "filename": safe_filename,
         "video_url": f"/api/v1/laudos/files/{safe_filename}",
         "size_bytes": total_size,
-        "duracao_estimada_segundos": 15,
-        "tipo": "video_pericial_15s",
+        "duracao_estimada_segundos": 20,
+        "duracao_real_segundos": round(detected_duration, 1) if detected_duration else 20.0,
+        "tipo": "video_pericial_20s",
         "checklist_inspecao": [
             {"tempo": "0s - 5s", "foco": "Lataria Frontal, Para-choque e Conjunto Óptico"},
-            {"tempo": "5s - 10s", "foco": "Linha de Cintura, Portas, Rodas e Pneus"},
-            {"tempo": "10s - 15s", "foco": "Traseira, Tampa do Porta-Malas e Vão do Motor"}
+            {"tempo": "5s - 10s", "foco": "Linha de Cintura Lateral, Portas e Pneus"},
+            {"tempo": "10s - 15s", "foco": "Traseira e Vão do Porta-Malas"},
+            {"tempo": "15s - 20s", "foco": "Interior, Painel de Instrumentos e Vão do Motor"}
         ]
     }
 

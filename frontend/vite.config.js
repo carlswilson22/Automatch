@@ -3,7 +3,8 @@ import react from '@vitejs/plugin-react';
 
 const getBasePath = () => {
   if (process.env.VITE_BASE_PATH) {
-    return process.env.VITE_BASE_PATH.endsWith('/') ? process.env.VITE_BASE_PATH : `${process.env.VITE_BASE_PATH}/`;
+    const trimmed = process.env.VITE_BASE_PATH.trim();
+    return trimmed.endsWith('/') ? trimmed : `${trimmed}/`;
   }
   if (process.env.GITHUB_REPOSITORY) {
     return `/${process.env.GITHUB_REPOSITORY.split('/')[1]}/`;
@@ -55,6 +56,9 @@ export default defineConfig({
             }
             if (id.includes('lucide-react')) {
               return 'vendor-icons';
+            }
+            if (id.includes('gsap')) {
+              return 'vendor-gsap';
             }
             return 'vendor-libs';
           }

@@ -339,7 +339,7 @@ export default function MarketPriceIndicator({
                 </ul>
                 <div className="grid grid-cols-2 gap-2 pt-2">
                   <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-300">
-                    <span className="font-black block text-[11px]">🟢 Super Oportunidade</span>
+                    <span className="font-black block text-[11px]">Super Oportunidade</span>
                     <span className="text-[10px] text-slate-400">Mais de 5% abaixo do IMV justo</span>
                   </div>
                   <div className="p-2 rounded-xl bg-blue-500/10 border border-blue-500/20 text-blue-300">

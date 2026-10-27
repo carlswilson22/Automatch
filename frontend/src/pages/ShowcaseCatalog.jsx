@@ -238,18 +238,19 @@ const ShowcaseCatalog = () => {
         setIsLoading(false);
       })
       .catch(err => {
-        // Fallback garantido: exibe catálogo estático + anúncios locais em qualquer ambiente.
-        // A diferença entre modo demo e produção é apenas a exibição do banner de aviso.
+        // Em modo demo: exibe catálogo estático + anúncios locais.
+        // Em produção: exibe SOMENTE anúncios locais do usuário e o banner de erro.
         const local = getNewCars();
-        const fallback = [
-          ...local.map(mapVehicleToViewModel),
-          ...showcaseCars.map(mapVehicleToViewModel)
-        ].filter(c => !isCarDeleted(c.id));
-        const unique = Array.from(new Map(fallback.map(i => [i.id, i])).values());
+        const fallbackSources = local.map(mapVehicleToViewModel);
+        if (isDemoModeEnabled()) {
+          fallbackSources.push(...showcaseCars.map(mapVehicleToViewModel));
+        }
+        const unique = Array.from(
+          new Map(fallbackSources.filter(c => !isCarDeleted(c.id)).map(i => [i.id, i])).values()
+        );
         setAllCars(unique);
         setTotalItems(unique.length);
         setTotalPages(Math.ceil(unique.length / itemsPerPage) || 1);
-        // Mostra banner de aviso mas não zera o catálogo
         setApiError(err.message || 'Servidor temporariamente indisponível. Exibindo catálogo local.');
         setIsLoading(false);
       });

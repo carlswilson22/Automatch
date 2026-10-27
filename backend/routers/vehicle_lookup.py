@@ -198,7 +198,7 @@ async def lookup_plate(placa: str, db: Session = Depends(get_db)):
                 "status_roubo_furto": "Nada Consta (Regular)",
                 "restricoes_financeiras": "Sem Gravame (Quitado)",
                 "historico_leilao": "Sem Registro de Leilão",
-                "preco_fipe_sugerido": local_car.fipe_price or (local_car.price * 0.98),
+                "preco_fipe_sugerido": float(local_car.fipe_price) if local_car.fipe_price is not None else ((float(local_car.price) * 0.98) if local_car.price else 0.0),
                 "codigo_fipe": local_car.fipe_code or "002165-2",
                 "mes_referencia_fipe": "Setembro de 2024",
                 "is_simulado": False
