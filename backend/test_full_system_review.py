@@ -93,11 +93,16 @@ def run_full_system_review():
     # SUÍTE 3: Perícia Visual de Lataria por IA (YOLOv8 + Gemini)
     # -------------------------------------------------------------------------
     print("\n[SUÍTE 3] Perícia Visual de Lataria com IA...")
-    # Cria imagem de teste JPEG
-    test_img = Image.new("RGB", (320, 240), color=(200, 30, 40))
-    buf = io.BytesIO()
-    test_img.save(buf, format="JPEG")
-    b64_str = "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode("utf-8")
+    # Prepara imagem veicular real em Base64 para teste
+    car_sample_path = "/app/public_images/FotoCorollaCross.jpg"
+    if os.path.exists(car_sample_path):
+        with open(car_sample_path, "rb") as f:
+            b64_str = "data:image/jpeg;base64," + base64.b64encode(f.read()).decode("utf-8")
+    else:
+        test_img = Image.new("RGB", (320, 240), color=(200, 30, 40))
+        buf = io.BytesIO()
+        test_img.save(buf, format="JPEG")
+        b64_str = "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode("utf-8")
 
     vision_resp = client.post("/api/analise-visual", json={
         "imageUrl": b64_str,

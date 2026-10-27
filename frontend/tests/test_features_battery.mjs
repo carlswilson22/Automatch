@@ -892,9 +892,9 @@ describe('BATERIA DE TESTES 22: Selo Preço Baixou - Ausência de Porcentagem e 
     assert.ok(!badgeContent.includes('-{dropPercent}%'), 'A tag de porcentagem não deve constar no JSX');
   });
 
-  test('22.2: PriceDropBadge.jsx deve aceitar prop isFeatured e renderizar ícone de estrela', () => {
-    assert.ok(badgeContent.includes('isFeatured = false') || badgeContent.includes('isFeatured'), 'Deve aceitar prop isFeatured');
-    assert.ok(badgeContent.includes('<Star'), 'Deve renderizar ícone Star quando isFeatured for verdadeiro');
+  test('22.2: PriceDropBadge.jsx NÃO deve renderizar ícone de estrela (ACH-08)', () => {
+    assert.ok(badgeContent.includes('isFeatured'), 'Deve aceitar prop isFeatured');
+    assert.ok(!badgeContent.includes('<Star'), 'NÃO deve renderizar ícone Star dentro do badge de preço');
   });
 
   test('22.3: ShowcaseCatalog.jsx deve passar prop isFeatured={car.featured} ao PriceDropBadge', () => {
@@ -969,13 +969,13 @@ describe('BATERIA DE TESTES 25: Sprint 09 Tarefa 3 - Selo Preço Baixou sem Estr
   const detailsContent = fs.readFileSync(detailsPath, 'utf-8');
   const catalogContent = fs.readFileSync(catalogPath, 'utf-8');
 
-  test('25.1: PriceDropBadge.jsx deve suportar prop showStar com default true', () => {
-    assert.ok(badgeContent.includes('showStar = true'), 'PriceDropBadge deve aceitar showStar');
-    assert.ok(badgeContent.includes('isFeatured && showStar'), 'Só exibe estrela quando showStar for true');
+  test('25.1: PriceDropBadge.jsx NÃO deve conter prop showStar nem ícone Star (ACH-08)', () => {
+    assert.ok(!badgeContent.includes('showStar'), 'showStar foi removido do PriceDropBadge');
+    assert.ok(!badgeContent.includes('<Star'), 'Star não deve aparecer dentro do badge de preço');
   });
 
-  test('25.2: ShowcaseVehicleDetails.jsx deve suprimir a estrela do PriceDropBadge com showStar={false}', () => {
-    assert.ok(detailsContent.includes('showStar={false}'), 'ShowcaseVehicleDetails deve passar showStar={false} para o selo');
+  test('25.2: ShowcaseVehicleDetails.jsx não deve passar showStar ao PriceDropBadge (prop removida)', () => {
+    assert.ok(!detailsContent.includes('showStar'), 'showStar não deve ser passado ao PriceDropBadge');
   });
 
   test('25.3: ShowcaseCatalog.jsx e ShowcaseVehicleDetails.jsx mantêm a estrela de destaque ao lado do nome', () => {
