@@ -1,3 +1,10 @@
+/**
+ * StoreSelector.jsx — Seletor de concessionária parceira para navegação filtrada.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para permitir ao usuário alternar entre o estoque global do portal e o estoque exclusivo
+ *     de uma loja física específica credenciada na rede Automatch.
+ */
 import React from 'react';
 import { ChevronDown, Store } from 'lucide-react';
 import { stores } from '../../data/inventoryData';

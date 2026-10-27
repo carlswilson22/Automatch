@@ -1,3 +1,15 @@
+"""
+alerts.py — Router de alertas de preço e watchlist do Automatch.
+
+Responsabilidades:
+  - CRUD de alertas de variação de preço por veículo (PriceAlert).
+  - Monitoramento de quedas de preço e notificação ao usuário.
+  - Gerenciamento da watchlist de veículos favoritos para acompanhamento.
+
+Criado para implementar o sistema de alerta inteligente que notifica
+compradores quando um veículo atinge o preço-alvo desejado.
+"""
+
 import uuid
 from datetime import datetime
 from typing import Optional, Dict, Any, List

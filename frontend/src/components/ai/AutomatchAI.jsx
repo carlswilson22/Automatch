@@ -1,3 +1,10 @@
+/**
+ * AutomatchAI.jsx — Assistente flutuante de inteligência artificial da plataforma.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para oferecer suporte interativo ao comprador e vendedor, tirando dúvidas sobre carros,
+ *     laudos cautelares, valor de mercado e funcionamento do portal com linguagem natural via Gemini.
+ */
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bot, Send, X, MessageSquare, User } from 'lucide-react';

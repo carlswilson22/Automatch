@@ -1,3 +1,10 @@
+/**
+ * MarketPriceIndicator.jsx — Indicador comparativo entre preço de vitrine, FIPE e Preço Justo.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para fornecer transparência de mercado ao comprador, indicando graficamente
+ *     se o veículo está abaixo, na média ou acima da cotação oficial FIPE e do Preço Justo Automatch.
+ */
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 

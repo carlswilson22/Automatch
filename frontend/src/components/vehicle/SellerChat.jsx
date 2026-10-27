@@ -1,3 +1,10 @@
+/**
+ * SellerChat.jsx — Canal de chat direto e seguro entre o interessado e a loja vendedora.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para viabilizar o contato comercial imediato, agendamento de test-drive e envio de propostas
+ *     de compra mantendo o histórico de conversas registrado na plataforma.
+ */
 import React, { useState, useRef, useEffect } from 'react';
 import { Send } from 'lucide-react';
 

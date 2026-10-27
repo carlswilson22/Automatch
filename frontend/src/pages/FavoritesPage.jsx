@@ -1,3 +1,10 @@
+/**
+ * FavoritesPage.jsx — Página dedicada à visualização dos veículos favoritados pelo cliente.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para permitir que o comprador consulte e gerencie facilmente sua lista de veículos de interesse,
+ *     com acesso rápido à comparação técnica e aos laudos cautelares salvos.
+ */
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';

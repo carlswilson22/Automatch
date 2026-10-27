@@ -1,3 +1,15 @@
+"""
+detran.py — Router de consulta veicular simulada (Detran/DENATRAN).
+
+Responsabilidades:
+  - Consulta de histórico veicular por placa (multas, sinistros, recalls).
+  - Simulação de dados de procedência para ambiente de demonstração.
+  - Validação de formato de placa (padrão Mercosul e antigo).
+
+Criado para demonstrar a integração com serviços de consulta veicular
+sem depender de APIs pagas em ambiente de desenvolvimento.
+"""
+
 import re
 import time
 import logging

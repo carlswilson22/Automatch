@@ -1,3 +1,10 @@
+/**
+ * newCarsManager.js — Gerenciador local de anúncios de veículos recém-cadastrados.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para persistir em memória e localStorage novos anúncios criados pelo usuário
+ *     garantindo que apareçam imediatamente na vitrine e na página de Meus Anúncios.
+ */
 // src/data/newCarsManager.js
 
 const STORAGE_KEY = '@automatch:newCars';

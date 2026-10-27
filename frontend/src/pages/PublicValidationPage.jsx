@@ -1,3 +1,10 @@
+/**
+ * PublicValidationPage.jsx — Página pública de verificação e auditoria de laudos periciais.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para permitir que qualquer interessado ou cartório verifique a autenticidade de um laudo
+ *     cautelar emitido pelo Automatch digitando o código de validação ou escaneando o QR Code do documento.
+ */
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';

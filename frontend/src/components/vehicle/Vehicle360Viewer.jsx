@@ -1,3 +1,10 @@
+/**
+ * Vehicle360Viewer.jsx — Visualizador panorâmico interativo 360 graus do exterior do veículo.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para proporcionar uma experiência imersiva de showroom digital, permitindo ao usuário
+ *     girar o veículo livremente e inspecionar todos os ângulos da carroceria antes da visita física.
+ */
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 

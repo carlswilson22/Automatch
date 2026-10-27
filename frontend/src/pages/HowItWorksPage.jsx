@@ -1,3 +1,10 @@
+/**
+ * HowItWorksPage.jsx — Página explicativa da tecnologia de perícia e compra segura do Automatch.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para esclarecer os 4 passos da jornada do cliente (Busca, Vistoria por IA, Preço Justo e Compra Protegida),
+ *     eliminando a desconfiança comum na compra de veículos seminovos.
+ */
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';

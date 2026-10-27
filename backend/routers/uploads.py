@@ -1,3 +1,11 @@
+"""
+uploads.py — Router de upload assíncrono e gestão de arquivos de mídia (imagens e documentos).
+
+Objetivo e Motivo da Criação:
+  - Criado para processar com segurança uploads de fotos de veículos, laudos escaneados e comprovantes.
+  - Valida tipos MIME permitidos, integridade de imagem (Pillow), sanitiza nomes de arquivos e salva em storage.
+  - Oferece rotas públicas e protegidas de streaming de arquivos estáticos de mídia.
+"""
 import os
 import uuid
 import asyncio

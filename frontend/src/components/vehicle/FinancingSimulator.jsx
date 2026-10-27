@@ -1,3 +1,10 @@
+/**
+ * FinancingSimulator.jsx — Simulador financeiro com cálculo de parcelas e taxas de financiamento.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para permitir ao usuário simular cenários de compra a prazo, variando o valor de entrada,
+ *     número de parcelas (12x a 60x) e visualizando as taxas estimadas dos principais bancos parceiros.
+ */
 import React, { useState } from 'react';
 import { Calculator } from 'lucide-react';
 

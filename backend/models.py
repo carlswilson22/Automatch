@@ -1,3 +1,19 @@
+"""
+models.py — Definição dos modelos ORM (SQLAlchemy) do Automatch.
+
+Entidades mapeadas:
+  - Store: Lojas parceiras / concessionárias.
+  - Car: Veículos do catálogo (anúncios de venda e repasse B2B).
+  - User: Usuários da plataforma (compradores, vendedores, lojistas, admin).
+  - CarReservation: Reservas de veículos na rede B2B.
+  - PartnerMessage: Mensagens trocadas entre parceiros em negociações B2B.
+  - PartnerTransaction: Registro de transações financeiras de repasse.
+  - LaudoProtocol / LaudoWatchlist: Protocolos de laudos periciais e watchlist.
+
+Criado para representar o domínio automotivo completo: catálogo, perícia,
+negociação B2B, chat entre parceiros e rastreabilidade de laudos.
+"""
+
 # pyrefly: ignore [missing-import]
 from sqlalchemy import Column, Integer, String, Text, ForeignKey, Float, Index, Boolean, Numeric
 from sqlalchemy.orm import relationship

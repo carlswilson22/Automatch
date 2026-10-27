@@ -1,3 +1,10 @@
+/**
+ * NewPartnershipInviteCard.jsx — Card de envio de convite para novas parcerias comerciais.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para simplificar o ingresso de novas lojas na rede B2B, enviando convites por e-mail ou link
+ *     com termos de colaboração e compartilhamento de inventário pré-definidos.
+ */
 import React, { useState, useMemo } from 'react';
 import { 
   Building2, 

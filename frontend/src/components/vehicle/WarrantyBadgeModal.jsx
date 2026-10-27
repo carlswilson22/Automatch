@@ -1,3 +1,10 @@
+/**
+ * WarrantyBadgeModal.jsx — Modal de detalhes da cobertura de garantia e certificação Automatch.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para detalhar os itens cobertos pela garantia (câmbio, motor, sistema elétrico) e as regras
+ *     do selo de procedência assegurada, trazendo total respaldo jurídico ao comprador.
+ */
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {

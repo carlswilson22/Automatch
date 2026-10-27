@@ -1,3 +1,10 @@
+/**
+ * AIStudioModal.jsx — Estúdio de tratamento e aprimoramento de imagens de veículos por IA.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para permitir que lojistas e anunciantes removam fundos de fotos, ajustem iluminação
+ *     e apliquem cenários virtuais de showroom para valorizar o anúncio de forma profissional.
+ */
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {

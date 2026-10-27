@@ -1,3 +1,10 @@
+/**
+ * VehicleComparatorModal.jsx — Modal de comparação lado a lado de até 3 veículos do catálogo.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para auxiliar o comprador na decisão entre modelos concorrentes, comparando especificações
+ *     técnicas, pontuação no laudo cautelar, consumo, preço e custo-benefício.
+ */
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';

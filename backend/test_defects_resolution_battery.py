@@ -1,3 +1,10 @@
+"""
+test_defects_resolution_battery.py — Bateria de regressão para verificação de defeitos corrigidos.
+
+Objetivo e Motivo da Criação:
+  - Criado para assegurar que falhas reportadas em sprints anteriores não voltem a ocorrer (anti-regressão).
+  - Cobre validações de tipos em queries de veículos, concorrência de reservas e consistência de esquemas.
+"""
 import unittest
 import asyncio
 from fastapi.testclient import TestClient

@@ -1,3 +1,11 @@
+"""
+pricing_service.py — Algoritmo de precificação inteligente e cálculo do Preço Justo Automatch™.
+
+Objetivo e Motivo da Criação:
+  - Criado para calcular o valor real de mercado de um veículo baseado na Tabela FIPE oficial,
+    quilometragem rodada versus média anual esperada, histórico de avarias e estado de conservação.
+  - Oferece métricas transparentes e parâmetros para o indicador de desconto / bom negócio na vitrine.
+"""
 from datetime import datetime
 from typing import List, Dict, Any
 

@@ -1,3 +1,11 @@
+"""
+test_b2b_and_plate.py — Suíte de testes para fluxos B2B e decodificação de placas veiculares.
+
+Objetivo e Motivo da Criação:
+  - Criado para testar as regras de negócio de repasse B2B entre concessionárias e lojistas parceiros.
+  - Valida a consulta e normalização de placas Mercosul e padrão antigo (detran/lookup).
+  - Garante integridade das rotas de permissões e transações de repasse.
+"""
 import unittest
 import time
 import uuid

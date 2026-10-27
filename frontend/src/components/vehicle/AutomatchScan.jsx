@@ -1,3 +1,10 @@
+/**
+ * AutomatchScan.jsx — Interface visual da perícia cautelar com mapa interativo de avarias.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para apresentar a inspeção estrutural e de lataria em 360 graus, destacando peças originais,
+ *     retoques de pintura e pequenos reparos apontados pela perícia técnica.
+ */
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UploadCloud, Scan, AlertCircle, Wrench, Sparkles, CheckCircle2, ShieldAlert, Image as ImageIcon } from 'lucide-react';

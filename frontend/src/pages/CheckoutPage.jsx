@@ -1,3 +1,10 @@
+/**
+ * CheckoutPage.jsx — Página de finalização de compra e contratação de assinaturas / laudos avulsos.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para processar o checkout de forma segura com suporte a múltiplos métodos de pagamento
+ *     (Cartão de Crédito, PIX instantâneo e Boleto) com confirmação imediata.
+ */
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';

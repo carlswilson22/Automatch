@@ -1,3 +1,10 @@
+/**
+ * favoritesManager.js — Gerenciador de persistência local da lista de veículos favoritos.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para permitir que o usuário salve e consulte seus veículos favoritos no navegador (localStorage)
+ *     de forma síncrona e resiliente, sem exigir login prévio imediato.
+ */
 // src/data/favoritesManager.js
 const STORAGE_KEY = '@automatch:favorites';
 const EVENT_NAME = 'automatch:favorites-updated';

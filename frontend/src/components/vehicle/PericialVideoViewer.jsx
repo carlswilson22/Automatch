@@ -1,3 +1,10 @@
+/**
+ * PericialVideoViewer.jsx — Reprodutor interativo de vídeo da vistoria pericial do veículo.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para oferecer máxima segurança ao comprador que deseja ver o veículo em alta resolução,
+ *     com marcações de tempo nos pontos inspecionados (motor, suspensão, interior e lataria).
+ */
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {

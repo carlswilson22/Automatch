@@ -1,3 +1,10 @@
+/**
+ * ShowcaseCatalog.jsx — Catálogo completo de veículos da vitrine com busca e filtros dinâmicos.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para ser a principal ferramenta de busca do comprador, oferecendo filtros combinados por marca,
+ *     faixa de preço, ano, quilometragem, tipo de câmbio, status de laudo e ordenação personalizada.
+ */
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';

@@ -1,3 +1,10 @@
+/**
+ * ErrorBoundary.jsx — Fronteira de contenção de erros de renderização (React Error Boundary).
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para capturar falhas e exceções em componentes específicos sem derrubar a tela inteira,
+ *     exibindo um estado de fallback elegante e botão para tentar recuperar o estado.
+ */
 import React from 'react';
 import { AlertTriangle, RefreshCw, X } from 'lucide-react';
 

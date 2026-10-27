@@ -1,3 +1,10 @@
+/**
+ * NewCarAdForm.jsx — Formulário em etapas para criação de um novo anúncio de veículo.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para guiar o anunciante no preenchimento automatizado por placa (lookup de dados técnicos),
+ *     upload de fotos com validação por IA, precificação orientada pela FIPE e agendamento de laudo.
+ */
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ShieldCheck, ArrowLeft, Save, CheckCircle, AlertCircle, Loader2, UploadCloud, X, FileText, Copy, ExternalLink, PlusCircle, Bot, Scan, CheckCircle2, AlertTriangle, Car, Sparkles, Search, Lock, Users, Video, Film, Trash2, Image as ImageIcon, Play, Check } from 'lucide-react';

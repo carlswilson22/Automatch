@@ -1,3 +1,10 @@
+/**
+ * MultichannelSyncModal.jsx — Modal de sincronização e publicação multicanal de anúncios.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para permitir que concessionárias e lojistas publiquem o anúncio simultaneamente
+ *     nos maiores portais automotivos do país (Webmotors, OLX, iCarros) com sincronização de estoque.
+ */
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Share2, X, CheckCircle2, RefreshCw, ExternalLink, Globe2, Check } from 'lucide-react';

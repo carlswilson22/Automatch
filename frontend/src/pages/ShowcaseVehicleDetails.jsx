@@ -1,3 +1,10 @@
+/**
+ * ShowcaseVehicleDetails.jsx — Página de detalhes aprofundados e ficha técnica do veículo selecionado.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para reunir todos os dados de decisão em um único lugar: fotos em alta resolução, visualizador 360°,
+ *     laudo pericial completo, histórico de procedência, simulador de financiamento e contato direto com o vendedor.
+ */
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';

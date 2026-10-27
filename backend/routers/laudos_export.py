@@ -1,3 +1,12 @@
+"""
+laudos_export.py — Router de exportação e download de laudos periciais e dossiês veiculares.
+
+Objetivo e Motivo da Criação:
+  - Criado para permitir que compradores, lojistas e administradores exportem laudos
+    cautelares periciais completos em formato PDF e JSON.
+  - Integra-se com o gerador de PDF vetorial (ReportLab) e com o histórico pericial do veículo.
+  - Oferece endpoints de validação pública e download autenticado do Dossiê Cautelar Automatch™.
+"""
 import json
 import uuid
 import random

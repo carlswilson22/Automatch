@@ -1,3 +1,10 @@
+/**
+ * EngineAcousticScanner.jsx — Scanner acústico de diagnóstico da saúde mecânica do motor.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para processar amostras sonoras de funcionamento do motor e identificar anomalias
+ *     de combustão, correias ou válvulas, gerando um índice preventivo de saúde mecânica.
+ */
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Volume2, VolumeX, Mic, Play, Pause, Activity, CheckCircle2, ShieldCheck, AlertCircle, RefreshCw, UploadCloud } from 'lucide-react';

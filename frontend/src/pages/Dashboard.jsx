@@ -1,3 +1,10 @@
+/**
+ * Dashboard.jsx — Painel administrativo e analítico do lojista e concessionária.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para centralizar as operações do lojista: métricas de visualizações, contatos de leads recebidos,
+ *     gestão de estoque ativo, laudos periciais emitidos e módulo de parcerias B2B.
+ */
 import React, { useState, useEffect, useMemo, Suspense, lazy } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 

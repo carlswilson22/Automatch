@@ -1,3 +1,10 @@
+/**
+ * inventoryData.js — Base de dados estruturada de modelos de estoque e histórico de movimentações.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para fornecer dados estruturados de apoio e sementes iniciais para a interface de estoque,
+ *     simulação de repasse B2B e testes unitários de componentes de inventário.
+ */
 export const stores = [
   {
     id: 'store-1',

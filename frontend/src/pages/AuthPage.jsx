@@ -1,3 +1,10 @@
+/**
+ * AuthPage.jsx — Página de autenticação de usuários (Login, Cadastro e Recuperação de Senha).
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para fornecer interface elegante de login com suporte a compradores particulares e lojistas B2B,
+ *     gerenciando tokens JWT e integração direta com o backend FastAPI.
+ */
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';

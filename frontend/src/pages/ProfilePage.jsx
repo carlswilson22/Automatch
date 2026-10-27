@@ -1,3 +1,10 @@
+/**
+ * ProfilePage.jsx — Página de gerenciamento do perfil e configurações do usuário.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para permitir atualização de dados cadastrais, alteração de senha de segurança,
+ *     configuração de preferências de notificação e visualização dos dados da loja/empresa parceira.
+ */
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';

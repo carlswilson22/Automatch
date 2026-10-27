@@ -1,3 +1,10 @@
+/**
+ * OfficialDossierModal.jsx — Modal de visualização e download do Dossiê Cautelar Oficial Automatch™.
+ * 
+ * Objetivo e Motivo da Criação:
+ *   - Criado para exibir a íntegra do laudo técnico pericial autenticado, com histórico veicular,
+ *     score pericial, QR Code de validação pública e download do relatório formal em PDF vetorial.
+ */
 import React, { useEffect, useRef, useState } from 'react';
 import { useScrollLock } from '../../utils/useScrollLock';
 import { motion, AnimatePresence } from 'framer-motion';
