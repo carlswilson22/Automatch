@@ -47,29 +47,6 @@ const Vehicle360Viewer = ({
     return isComplete360Set(effectivePhotos360);
   }, [effectivePhotos360]);
 
-  // Se o conjunto de fotos não cobrir a varredura orbital real de 8 ângulos, exibe estado indisponível
-  if (!hasValid360Set) {
-    return (
-      <div className="rounded-3xl bg-slate-900 border border-slate-800 p-8 sm:p-12 text-center flex flex-col items-center justify-center min-h-[380px] shadow-2xl">
-        <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center mb-4">
-          <RotateCw className="w-7 h-7" />
-        </div>
-        <h3 className="text-lg font-bold text-white mb-2">Varredura 360° indisponível para este veículo</h3>
-        <p className="text-sm text-slate-400 max-w-md mb-6 leading-relaxed">
-          Este veículo ainda não possui a captura orbital completa de 8 ângulos da carroceria. Você pode conferir a foto e os apontamentos periciais na aba Laudo & Lataria.
-        </p>
-        {onOpenLaudo && (
-          <button
-            type="button"
-            onClick={onOpenLaudo}
-            className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold border border-slate-700 transition-colors cursor-pointer"
-          >
-            Ver Laudo Cautelar
-          </button>
-        )}
-      </div>
-    );
-  }
 
   // Pontos de avaria/laudo cautelar mapeados
   const effectiveDamagePoints = useMemo(() => {
@@ -213,6 +190,30 @@ const Vehicle360Viewer = ({
     const match = ANGLES.find((a) => a.angle === angle);
     return match ? match.label : `${angle}°`;
   };
+
+  // Se o conjunto de fotos não cobrir a varredura orbital real de 8 ângulos, exibe estado indisponível
+  if (!hasValid360Set) {
+    return (
+      <div className="rounded-3xl bg-slate-900 border border-slate-800 p-8 sm:p-12 text-center flex flex-col items-center justify-center min-h-[380px] shadow-2xl">
+        <div className="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center mb-4">
+          <RotateCw className="w-7 h-7" />
+        </div>
+        <h3 className="text-lg font-bold text-white mb-2">Varredura 360° indisponível para este veículo</h3>
+        <p className="text-sm text-slate-400 max-w-md mb-6 leading-relaxed">
+          Este veículo ainda não possui a captura orbital completa de 8 ângulos da carroceria. Você pode conferir a foto e os apontamentos periciais na aba Laudo & Lataria.
+        </p>
+        {onOpenLaudo && (
+          <button
+            type="button"
+            onClick={onOpenLaudo}
+            className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white text-xs font-bold border border-slate-700 transition-colors cursor-pointer"
+          >
+            Ver Laudo Cautelar
+          </button>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="bg-slate-900 rounded-3xl border border-slate-800 overflow-hidden flex flex-col shadow-2xl relative">

@@ -55,8 +55,11 @@ describe('AUDITORIA DE SEGURANÇA E MITIGAÇÃO (OWASP TOP 10 & RBAC)', () => {
     assert.ok(hasStrictDelete, 'delete_car deve bloquear exclusão se o veículo não pertencer ao usuário');
 
     // Confirma que os veículos do seed recebem dono explícito (admin)
+    // O seed atribui user_id de duas formas: inline nos dicts ("user_id": admin_id) e no loop de saneamento (car.user_id = admin_id)
+    const hasInlineAssign = seedContent.includes('"user_id": admin_id');
+    const hasSanitizeAssign = seedContent.includes('car.user_id = admin_id');
     assert.ok(
-      seedContent.includes('c["user_id"] = admin_id'),
+      hasInlineAssign || hasSanitizeAssign,
       'seed.py deve associar veículos oficiais explicitamente ao usuário administrador'
     );
   });
