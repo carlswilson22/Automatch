@@ -202,20 +202,28 @@ export default function PericialVideoViewer({
               </motion.div>
             </AnimatePresence>
 
-            {/* Watermark Overlay */}
-            <div className="absolute top-4 left-4 z-20 flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10">
-              <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
-              <span className="text-[11px] font-black uppercase tracking-widest text-slate-200">
-                REC • PERÍCIA AUTOMATCH
-              </span>
-            </div>
-
-            {/* Time Indicator on Video */}
-            <div className="absolute top-4 right-4 z-20 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10 font-mono text-xs text-cyan-400 font-bold">
-              00:{Math.floor(effectiveTime).toString().padStart(2, '0')}:{(Math.floor((effectiveTime % 1) * 60)).toString().padStart(2, '0')}
-            </div>
           </div>
         )}
+
+        {/* Watermark Overlay (ativo tanto no vídeo real quanto na simulação) */}
+        <div className="absolute top-4 left-4 z-20 flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 pointer-events-none">
+          <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse"></span>
+          <span className="text-[11px] font-black uppercase tracking-widest text-slate-200">
+            REC • PERÍCIA AUTOMATCH
+          </span>
+        </div>
+
+        {/* HUD de Checkpoint Ativo */}
+        <div className="absolute top-4 left-1/2 -translate-x-1/2 z-20 pointer-events-none hidden sm:block">
+          <span className="px-3 py-1 rounded-full text-[11px] font-black uppercase tracking-wider bg-black/70 border border-cyan-500/30 text-cyan-300 backdrop-blur-md flex items-center gap-1.5 shadow-lg">
+            <Clock className="w-3 h-3 text-cyan-400" /> {CHECKPOINTS[activeSegment].title} (Fase {activeSegment + 1}/3)
+          </span>
+        </div>
+
+        {/* Time Indicator on Video */}
+        <div className="absolute top-4 right-4 z-20 bg-black/60 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10 font-mono text-xs text-cyan-400 font-bold pointer-events-none">
+          00:{Math.floor(effectiveTime).toString().padStart(2, '0')}:{(Math.floor((effectiveTime % 1) * 60)).toString().padStart(2, '0')}
+        </div>
 
         {/* Center Big Play Button when paused */}
         {!isPlaying && (

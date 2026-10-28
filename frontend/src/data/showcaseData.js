@@ -18,6 +18,7 @@ export const showcaseCars = [
     ],
     color: 'Branco Pérola',
     mileage: 12000, image: '/images/FotoCorollaCross.jpg',
+    video_url: '/videos/pericial/sc-001-pericial.mp4',
     gallery: [
       '/images/cars/sc-001/0.jpg',
       '/images/cars/sc-001/45.jpg',
@@ -59,6 +60,7 @@ Laudo cautelar 100% aprovado, sem qualquer retoque de funilaria ou histórico de
     ],
     color: 'Vermelho',
     mileage: 18500, image: '/images/FotoPoloTSI.jpg',
+    video_url: '/videos/pericial/sc-002-pericial.mp4',
     gallery: [
       '/images/cars/sc-002/0.jpg',
       '/images/cars/sc-002/45.jpg',
@@ -96,6 +98,7 @@ Acompanha laudo pericial cautelar sem apontamentos, manual do proprietário com 
     id: 'sc-003', name: 'Hyundai HB20 Platinum', brand: 'Hyundai', model: 'HB20',
     year: 2024, price: 105000, fipePrice: 110000, color: 'Prata',
     mileage: 5000, image: '/images/FotoHyundaiHB20.jpg',
+    video_url: '/videos/pericial/sc-003-pericial.mp4',
     gallery: [
       '/images/cars/sc-003/0.jpg',
       '/images/cars/sc-003/45.jpg',
@@ -135,6 +138,7 @@ Veículo com procedência certificada de único dono, selo de vistoria cautelar 
     ],
     color: 'Azul Escuro',
     mileage: 8500, image: '/images/FotoChevroletTracker.jpg',
+    video_url: '/videos/pericial/sc-004-pericial.mp4',
     gallery: [
       '/images/cars/sc-004/0.jpg',
       '/images/cars/sc-004/45.jpg',
@@ -184,6 +188,7 @@ Carro de único proprietário, revisado em concessionária, Laudo pericial atest
     id: 'sc-005', name: 'Fiat Pulse Abarth', brand: 'Fiat', model: 'Pulse Abarth',
     year: 2024, price: 145000, fipePrice: 149900, color: 'Vermelho',
     mileage: 3200, image: '/images/FotoFiatPulse.jpg',
+    video_url: '/videos/pericial/sc-005-pericial.mp4',
     gallery: [
       '/images/cars/sc-005/0.jpg',
       '/images/cars/sc-005/45.jpg',
@@ -191,16 +196,7 @@ Carro de único proprietário, revisado em concessionária, Laudo pericial atest
       '/images/cars/sc-005/135.jpg',
       '/images/cars/sc-005/180.jpg'
     ],
-    photos360: {
-      0: '/images/cars/sc-004/0.jpg',
-      45: '/images/cars/sc-004/45.jpg',
-      90: '/images/cars/sc-004/90.jpg',
-      135: '/images/cars/sc-004/135.jpg',
-      180: '/images/cars/sc-004/180.jpg',
-      225: '/images/cars/sc-004/225.jpg',
-      270: '/images/cars/sc-004/270.jpg',
-      315: '/images/cars/sc-004/315.jpg'
-    },
+    photos360: null,
     bodyType: 'SUV',
     icon: Car, featured: true, location: 'Campinas, SP', storeId: 'store-2',
     description: 'O puro esportivo da divisão do escorpião com motor Turbo 270 de 185 cv, modo Poison e escape esportivo duplo.',
