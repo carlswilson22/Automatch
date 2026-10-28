@@ -30,3 +30,4 @@ Implementar autenticação totalmente sem estado (*stateless*):
 - **Documento de Arquitetura**: [docs/arquitetura.md](../arquitetura.md)
 - **Módulo de Segurança**: `backend/routers/auth.py` e `backend/security_guard.py`
 - **Relatório de Sprint 01**: [sprints/sprint-01.md](../../sprints/sprint-01.md)
+

@@ -35,3 +35,4 @@ Este projeto adota um fluxo de trabalho estruturado, com branches temáticas, co
 - **Backend**: FastAPI com tipagem estrita via Pydantic v2, routers desacoplados e logs semânticos.
 - **Documentação**: Arquivos Markdown formatados, títulos concisos, tabelas alinhadas e diagramas Mermaid.
 - **Comentários**: Códigos devem conter comentários explicativos indicando objetivo e motivo de criação, preservando a manutenibilidade.
+

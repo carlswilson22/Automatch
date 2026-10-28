@@ -33,3 +33,4 @@ O visualizador 360° original sofria de duas falhas críticas:
 ## Links Relacionados
 - **Componente**: `frontend/src/components/vehicle/Vehicle360Viewer.jsx`
 - **Relatório de Sprint 06**: [sprints/sprint-06.md](../../sprints/sprint-06.md)
+

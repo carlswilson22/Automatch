@@ -53,3 +53,4 @@ Consolidação das **Sprints 06, 07 e 08** (Milestones `v2.4.0`, `v2.5.0` e `v2.
 
 ## Próximos Passos
 - Apresentação final do Projeto Integrador e submissão aos avaliadores institucionais do CEUB.
+

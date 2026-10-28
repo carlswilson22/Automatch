@@ -48,3 +48,4 @@ Consolidação das **Sprints 03, 04 e 05** (Milestones `v2.1.0`, `v2.2.0` e `v2.
 ## Próximos Passos
 - Refatorar a renderização do visualizador 360° para perspectiva 3D contínua acelerada por hardware na Entrega 03.
 - Aplicar code-splitting dinâmico com `React.lazy()` e realizar auditoria completa de segurança OWASP Top 10.
+

@@ -22,3 +22,4 @@ Caso identifique qualquer brecha de segurança ou exposição acidental de crede
 1. Notifique imediatamente os mantenedores do projeto.
 2. Não abra issues públicas com detalhes de exploits ou senhas expostas.
 3. Proceda com a rotação imediata de credenciais e tokens afetados.
+

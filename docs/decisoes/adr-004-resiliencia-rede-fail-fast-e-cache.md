@@ -32,3 +32,4 @@ Durante testes de estresse em conexões lentas ou com backend momentaneamente in
 ## Links Relacionados
 - **Documento de Arquitetura**: [docs/arquitetura.md](../arquitetura.md)
 - **Relatório de Sprint 04**: [sprints/sprint-04.md](../../sprints/sprint-04.md)
+

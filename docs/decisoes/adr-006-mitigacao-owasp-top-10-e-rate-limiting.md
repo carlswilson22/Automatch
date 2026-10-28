@@ -40,3 +40,4 @@ Implementar um conjunto integrado de medidas de segurança defensiva:
 - **Guia de Segurança**: [SECURITY.md](../../SECURITY.md)
 - **Bateria de Testes de Segurança**: `frontend/tests/test_security_audit.mjs`
 - **Módulo de Proteção**: `backend/security_guard.py`
+

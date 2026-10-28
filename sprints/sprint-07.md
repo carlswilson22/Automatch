@@ -41,3 +41,4 @@ Resolver a exibição fidedigna do ângulo 180° (traseira) na varredura 360°, 
 ## Retrospectiva
 - **Pontos Fortes**: A separação do timer em componente memoizado eliminou totalmente o jitter no modal B2B.
 - **Próximas ações**: Realizar auditoria de comentários em todo o código-fonte, criar catálogo de escopo e homologar os dados periciais do Chevrolet Tracker na Sprint 08.
+

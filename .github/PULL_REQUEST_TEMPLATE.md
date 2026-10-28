@@ -47,3 +47,4 @@ Inclua saídas de terminais, logs de testes, prints de tela ou links de artefato
 - [ ] A compilação em modo de produção (`npm run build`) foi concluída sem erros.
 - [ ] A documentação, changelog e relatórios de sprint foram atualizados.
 - [ ] Caso haja mudança de arquitetura, um novo ADR foi registrado em `docs/decisoes/`.
+

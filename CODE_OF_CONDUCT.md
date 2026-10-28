@@ -26,3 +26,4 @@ Este repositório adota padrões de integridade acadêmica, respeito mútuo, res
 ## 3. Encaminhamento e Governança
 
 Casos de divergência ou violação deste código de conduta devem ser encaminhados aos líderes técnicos do projeto ou à coordenação institucional competente.
+

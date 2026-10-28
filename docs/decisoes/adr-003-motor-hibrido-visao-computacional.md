@@ -31,3 +31,4 @@ Adotar uma arquitetura híbrida e resiliente para o endpoint `/api/analise-visua
 - **Documento de Arquitetura**: [docs/arquitetura.md](../arquitetura.md)
 - **Serviço de IA**: `backend/services/ai_service.py` e `backend/routers/ai_vision.py`
 - **Relatório de Sprint 02**: [sprints/sprint-02.md](../../sprints/sprint-02.md)
+

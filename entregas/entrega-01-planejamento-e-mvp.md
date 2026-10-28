@@ -45,3 +45,4 @@ Consolidação das **Sprints 00, 01 e 02** (Milestones `v1.0.0`, `v1.1.0` e `v2.
 ## Próximos Passos
 - Implementar gerador de Dossiê em PDF vetorial A4 via ReportLab com QR Code público na Entrega 02.
 - Integrar diagnóstico acústico do motor por espectrograma e comparador técnico de veículos.
+

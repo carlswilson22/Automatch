@@ -32,3 +32,4 @@ Adotar Docker Compose como padrão de orquestração local e de implantação, d
 - **Documento de Arquitetura**: [docs/arquitetura.md](../arquitetura.md)
 - **Relatório de Sprint 00**: [sprints/sprint-00-planejamento.md](../../sprints/sprint-00-planejamento.md)
 - **Arquivo Compose**: [docker-compose.yml](../../docker-compose.yml)
+
