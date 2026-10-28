@@ -109,7 +109,6 @@ O projeto **Automatch** é estruturado como uma solução full-stack moderna div
 
 | Arquivo | Objetivo Principal | Motivo da Criação |
 | :--- | :--- | :--- |
-| [`backend/backup_pre_perfis_postgres.sql`](backend/backup_pre_perfis_postgres.sql) | Dump de segurança de tabelas e registros do PostgreSQL. | Garantir restauração imediata do banco em caso de anomalias durante migrações estruturais de perfis de usuário. |
 | [`backend/alembic/env.py`](backend/alembic/env.py) | Script de inicialização do ambiente de migrações Alembic. | Conectar o engine do SQLAlchemy aos metadados dos modelos para geração e execução de migrações. |
 | [`backend/alembic.ini`](backend/alembic.ini) | Arquivo de configuração central do Alembic. | Definir caminhos de scripts, templates de migração e opções de logging do versionamento de schema. |
 | [`backend/alembic/script.py.mako`](backend/alembic/script.py.mako) | Template Mako para geração de novos scripts de migração. | Padronizar cabeçalhos, funções upgrade() e downgrade() nos scripts versionados pelo Alembic. |
