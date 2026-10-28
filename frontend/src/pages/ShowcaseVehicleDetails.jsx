@@ -787,7 +787,7 @@ export default function ShowcaseVehicleDetails() {
               {/* Badges de Procedência */}
               <div className="flex flex-wrap items-center gap-2">
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 uppercase tracking-wider">
-                  <ShieldCheck className="w-3.5 h-3.5" /> Laudo 100% Aprovado
+                  <ShieldCheck className="w-3.5 h-3.5" /> {currentDamagePoints.length > 0 ? 'Laudo Aprovado c/ Apontamento Leve' : 'Laudo 100% Aprovado'}
                 </span>
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-500/15 text-blue-400 border border-blue-500/30 uppercase tracking-wider">
                   <CheckCircle2 className="w-3.5 h-3.5" /> Sem Passagem por Leilão
@@ -967,7 +967,7 @@ export default function ShowcaseVehicleDetails() {
                       <h4 className="font-bold text-sm text-white">Resultado da Perícia Cautelar ({laudoData?.laudo_id})</h4>
                     </div>
                     <span className="text-xs bg-emerald-500/20 text-emerald-400 font-bold px-3 py-1 rounded-full border border-emerald-500/30 flex items-center gap-1.5">
-                      <ShieldCheck className="w-3.5 h-3.5" /> Laudo Pericial: 100% Aprovado
+                      <ShieldCheck className="w-3.5 h-3.5" /> {currentDamagePoints.length > 0 ? 'Laudo Pericial: Aprovado c/ Apontamento' : 'Laudo Pericial: 100% Aprovado'}
                     </span>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">

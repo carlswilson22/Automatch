@@ -243,8 +243,12 @@ async def chat_automatch(payload: ChatRequest, request: Request) -> Dict[str, An
     
     system_prompt = "Você é o assistente virtual da plataforma Automatch. Seja prestativo, rápido e conciso em até 3 frases sobre compra, venda e laudo cautelar de veículos."
     if car_context:
+        damages_ctx = (car_context.get('damages') or car_context.get('damagePoints') or []) if car_context else []
+        damages_str = "; ".join([d.get('desc') or d.get('part', '') for d in damages_ctx if isinstance(d, dict)] or [str(d) for d in damages_ctx]) if damages_ctx else "Nenhuma avaria registrada (100% íntegro)"
         system_prompt = (
             f"Você é um consultor especialista focado no veículo atual do usuário: "
+            f"Avarias registradas na perícia: {damages_str}. Se o usuário perguntar sobre avarias, riscos ou lataria, informe com honestidade e precisão esses dados do laudo. "
+
             f"{car_context.get('brand')} {car_context.get('model')} {car_context.get('year')}, "
             f"cor {car_context.get('color', 'N/A')}, {car_context.get('km')}km rodados, "
             f"preço R${car_context.get('price')}. Responda estritamente sobre este veículo e distinga cada pergunta sem repetição."
@@ -306,6 +310,25 @@ def generate_semantic_reply(user_msg: str, car_context: Optional[Dict[str, Any]]
             f"O {car_name} conta com {motor_desc} e {km_text} originais verificados em laudo pericial, "
             f"com funcionamento impecável e sem apontamentos mecânicos."
         )
+        # Detecção de perguntas sobre avarias, danos e defeitos na lataria
+    has_avarias = any(k in q for k in ["avaria", "avarias", "dano", "danos", "risco", "riscos", "amassado", "amassados", "ralado", "ralados", "defeito", "defeitos", "detalhe", "detalhes", "batida", "batido", "sinistro"])
+    damages_list = (car_context.get('damages') or car_context.get('damagePoints') or []) if car_context else []
+    if isinstance(damages_list, list) and len(damages_list) > 0 and isinstance(damages_list[0], dict):
+        damages_list = [d.get('description') or d.get('desc') or f"{d.get('part', 'Peça')}: {d.get('type', 'Avaria')}" for d in damages_list]
+
+    if has_avarias:
+        if damages_list:
+            detalhes = "; ".join(str(d) for d in damages_list)
+            return (
+                f"O {car_name} possui {len(damages_list)} apontamento(s) estético(s) leve(s) registrado(s) em laudo pericial: {detalhes}. "
+                f"A estrutura de longarinas, colunas e teto, bem como motor e câmbio, estão 100% íntegros e aprovados na vistoria cautelar."
+            )
+        else:
+            return (
+                f"A perícia cautelar oficial atesta que o {car_name} está 100% íntegro e NÃO possui avarias na lataria, "
+                f"riscos, amassados ou peças repintadas. Estrutura e procedência foram aprovadas com excelência."
+            )
+
     # 1. Cor / Pintura / Tonalidade / Estética
     elif any(k in q for k in ["cor", "cores", "pintura", "tonalidade", "verniz", "retoque", "lataria"]):
         return (

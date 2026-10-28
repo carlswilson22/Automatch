@@ -61,6 +61,9 @@ const TOPIC_PATTERNS = {
   laudo: [
     'laudo', 'cautelar', 'pericia', 'pericial', 'vistoria', 'leilao', 'sinistro', 'batida', 'batido', 'colisao', 'estrutura', 'longarina', 'longarinas', 'procedencia', 'chassi'
   ],
+  avarias: [
+    'avaria', 'avarias', 'dano', 'danos', 'risco', 'riscos', 'amassado', 'amassados', 'ralado', 'ralados', 'defeito', 'defeitos', 'detalhe', 'detalhes', 'batida', 'batido', 'sinistro', 'recuperado', 'lataria avariada'
+  ],
   airbags: [
     'airbag', 'airbags', 'bolsa', 'bolsas inflaveis', 'seguranca passiva'
   ],
@@ -256,6 +259,22 @@ export function generateVehicleConsultantAnswer(userMsg, car, history = []) {
   if (topics.includes('documentacao')) {
     const plate = car.plate ? ` (placa final ${car.plate.slice(-1)})` : '';
     answers.push(`A documentação está **100% regular no DETRAN**${plate}: IPVA quitado, licenciamento em dia, livre de restrições financeiras e sem gravame, apto para transferência imediata`);
+  }
+
+    // Tópico: AVARIAS E DANOS NA LATARIA
+  if (topics.includes('avarias')) {
+    const dps = Array.isArray(car.damagePoints) ? car.damagePoints : [];
+    if (dps.length > 0) {
+      const details = dps.map(d => {
+        const part = d.part || d.peca || 'Lataria';
+        const type = d.type || d.tipo || 'Avaria estética';
+        const desc = d.desc || d.description || '';
+        return `${part} (${type}${desc ? ': ' + desc : ''})`;
+      }).join('; ');
+      answers.push(`O **${carName}** possui ${dps.length} apontamento(s) estético(s) leve(s) registrado(s) em perícia técnica: ${details}. A integridade estrutural (longarinas, colunas e teto) e mecânica (motor e câmbio) está 100% aprovada, sem histórico de colisão grave, sinistro ou leilão`);
+    } else {
+      answers.push(`A perícia cautelar oficial atesta que o **${carName}** está 100% íntegro e NÃO possui avarias na lataria, peças repintadas ou amassados. Chassi, pintura de fábrica e estrutura foram aprovados com nota máxima`);
+    }
   }
 
   // Tópico: LAUDO CAUTELAR / LEILÃO / SINISTRO / ESTRUTURA

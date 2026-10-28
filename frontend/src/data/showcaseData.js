@@ -142,7 +142,16 @@ Veículo com procedência certificada de único dono, selo de vistoria cautelar 
       '/images/cars/sc-004/135.jpg',
       '/images/cars/sc-004/180.jpg'
     ],
-    photos360: null,
+    photos360: {
+      0: '/images/cars/sc-004/0.jpg',
+      45: '/images/cars/sc-004/45.jpg',
+      90: '/images/cars/sc-004/90.jpg',
+      135: '/images/cars/sc-004/135.jpg',
+      180: '/images/cars/sc-004/180.jpg',
+      225: '/images/cars/sc-004/225.jpg',
+      270: '/images/cars/sc-004/270.jpg',
+      315: '/images/cars/sc-004/315.jpg'
+    },
     bodyType: 'SUV',
     icon: Car, featured: true, location: 'São Paulo, SP', storeId: 'store-1',
     description: 'SUV Premier com teto solar panorâmico, motor 1.2 Turbo, assistente de estacionamento autônomo e Wi-Fi nativo.',
@@ -152,7 +161,7 @@ Impulsionado pelo potente motor 1.2 Turbo flex de 133 cv acoplado ao câmbio aut
 
 Equipado com o assistente de estacionamento semiautônomo Easy Park (estaciona sozinho em vagas paralelas e perpendiculares), alerta de colisão frontal com frenagem autônoma de emergência, sensor de ponto cego nos retrovisores, ar-condicionado digital automático e Wi-Fi embarcado com conexão para até 7 aparelhos simultâneos.
 
-Carro de único proprietário, revisado em concessionária, sem qualquer avaria ou histórico desabonador. Laudo pericial atesta estrutura 100% íntegra.`,
+Carro de único proprietário, revisado em concessionária, Laudo pericial atesta estrutura e mecânica 100% íntegras, com apontamento estético leve de 1.8cm na carcaça do retrovisor externo direito mapeado no laudo.`,
     tags: ['1.2 Turbo', 'Teto Panorâmico', 'Easy Park', 'Wi-Fi Nativo', 'Alerta Ponto Cego'],
     damagePoints: [
       {
@@ -182,7 +191,16 @@ Carro de único proprietário, revisado em concessionária, sem qualquer avaria 
       '/images/cars/sc-005/135.jpg',
       '/images/cars/sc-005/180.jpg'
     ],
-    photos360: null,
+    photos360: {
+      0: '/images/cars/sc-004/0.jpg',
+      45: '/images/cars/sc-004/45.jpg',
+      90: '/images/cars/sc-004/90.jpg',
+      135: '/images/cars/sc-004/135.jpg',
+      180: '/images/cars/sc-004/180.jpg',
+      225: '/images/cars/sc-004/225.jpg',
+      270: '/images/cars/sc-004/270.jpg',
+      315: '/images/cars/sc-004/315.jpg'
+    },
     bodyType: 'SUV',
     icon: Car, featured: true, location: 'Campinas, SP', storeId: 'store-2',
     description: 'O puro esportivo da divisão do escorpião com motor Turbo 270 de 185 cv, modo Poison e escape esportivo duplo.',

@@ -270,7 +270,9 @@ async def gerar_laudo_cautelar(codigo_fipe: str) -> Dict[str, Any]:
     laudo_pericial = {
         "laudo_id": f"LAUDO-AM-{abs(hash(clean_fipe)) % 100000:05d}",
         "data_emissao": datetime.now().strftime("%d/%m/%Y %H:%M:%S"),
-        "resultado_geral": "APROVADO COM EXCELÊNCIA",
+        "resultado_geral": "APROVADO COM APONTAMENTO (ESTÉTICO)" if clean_fipe == "004512-8" else "APROVADO COM EXCELÊNCIA",
+        "apontamentos_lataria": ["Pequeno Risco Superficial de 1.8cm na carcaça do Retrovisor Externo Direito"] if clean_fipe == "004512-8" else [],
+        "score_integridade": 91 if clean_fipe == "004512-8" else 99,
         "dados_oficiais_fipe": fipe_info,
         "analise_estrutural": {
             "longarinas_dianteiras": "INTACTAS (ORIGINAIS)",
