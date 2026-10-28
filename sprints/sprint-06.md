@@ -20,7 +20,6 @@ Eliminar travamentos e sobrecargas no navegador por meio de code-splitting dinâ
 
 ## Responsáveis
 - **Carlos Wilson, Matheus Porto, Paulo Arthur e Vinicius Aurelio**: Equipe de Desenvolvimento Fullstack e DevOps (CEUB).
-- **Prof. Flávio César**: Orientação técnica e acompanhamento metodológico.
 
 ## Entregas
 - `frontend/src/components/vehicle/Vehicle360Viewer.jsx` (Visualizador 360° fotográfico consistente com perspectiva 3D).
@@ -42,4 +41,4 @@ Eliminar travamentos e sobrecargas no navegador por meio de code-splitting dinâ
 
 ## Retrospectiva
 - **Pontos Fortes**: A adesão estrita ao protocolo VLAEG garantiu diagnósticos precisos e correções de alto impacto na velocidade e fidelidade visual da plataforma.
-- **Próximas ações**: Continuidade do roadmap de produto conforme priorização do backlog acadêmico e orientações do professor.
+- **Próximas ações**: Continuidade do roadmap de produto e consolidação dos relatórios de engenharia na Sprint 07.

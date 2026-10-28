@@ -20,7 +20,6 @@ Implementar o Termômetro Visual de Oportunidade com régua de dispersão frente
 
 ## Responsáveis
 - **Carlos Wilson, Matheus Porto, Paulo Arthur e Vinicius Aurelio**: Equipe de Desenvolvimento Fullstack e DevOps (CEUB).
-- **Prof. Flávio César**: Orientação técnica e acompanhamento metodológico.
 
 ## Entregas
 - `frontend/src/components/vehicle/MarketPriceIndicator.jsx`

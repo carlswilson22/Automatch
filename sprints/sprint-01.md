@@ -19,7 +19,6 @@ Refatorar a visualização de anúncios, implementar persistência de veículos 
 
 ## Responsáveis
 - **Carlos Wilson**: Engenheiro Fullstack & Arquiteto de Software.
-- **Prof. Flávio César**: Orientação técnica e acompanhamento metodológico.
 
 ## Entregas
 - `frontend/src/data/favoritesManager.js` e `frontend/src/pages/FavoritesPage.jsx`.

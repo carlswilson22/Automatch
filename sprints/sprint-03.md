@@ -23,7 +23,6 @@ Implementar a emissão do Dossiê Oficial em PDF Vetorial A4 com QR Code de aute
 
 ## Responsáveis
 - **Carlos Wilson**: Engenheiro Fullstack & Especialista em Segurança/DevOps.
-- **Prof. Flávio César**: Orientação técnica e acompanhamento metodológico.
 
 ## Entregas
 - `backend/services/pdf_generator.py` e `backend/routers/laudos_export.py`.

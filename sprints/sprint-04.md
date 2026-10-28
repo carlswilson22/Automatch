@@ -20,7 +20,6 @@ Resolver gargalos de latência no backend através de connection pooling e cache
 
 ## Responsáveis
 - **Carlos Wilson, Matheus Porto, Paulo Arthur e Vinicius Aurelio**: Equipe de Desenvolvimento Fullstack e DevOps (CEUB).
-- **Prof. Flávio César**: Orientação técnica e acompanhamento metodológico.
 
 ## Entregas
 - `frontend/src/components/vehicle/PericialVideoViewer.jsx` e coluna `video_url` em `backend/models.py`.

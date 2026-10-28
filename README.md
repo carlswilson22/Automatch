@@ -11,6 +11,34 @@ Plataforma automotiva Fullstack que une **marketplace de compra e venda de veíc
 
 ---
 
+## 🏛️ Identificação Institucional
+
+| Campo | Informação |
+| :--- | :--- |
+| **Instituição** | Centro Universitário de Brasília (CEUB) |
+| **Curso** | Análise e Desenvolvimento de Sistemas (ADS) |
+| **Disciplina** | Projeto Integrador / Engenharia de Software |
+| **Organização no GitHub** | `CampusCEUB` |
+| **Repositório Oficial** | `ADS-AUTOMATCH` |
+| **Equipe de Desenvolvimento** | Carlos Wilson, Matheus Porto, Paulo Arthur e Vinicius Aurelio |
+| **ID do Projeto** | `ADS-AUTOMATCH-2026` |
+
+---
+
+## 🧭 Estrutura de Navegação do Repositório
+
+| Seção | Descrição | Link |
+| :--- | :--- | :--- |
+| **Backlog** | Épicos, histórias de usuário e matriz de rastreabilidade | [BACKLOG.md](BACKLOG.md) |
+| **Sprints** | Planejamento, execução e evidências das Sprints 00 a 08 | [sprints/README.md](sprints/README.md) |
+| **Entregas** | Relatórios formais das Entregas 01, 02 e 03 (Final) | [entregas/README.md](entregas/README.md) |
+| **Requisitos** | Especificação dos Requisitos Funcionais e Não Funcionais | [docs/requisitos.md](docs/requisitos.md) |
+| **Arquitetura** | Decisões estruturais, diagramas Mermaid e componentes | [docs/arquitetura.md](docs/arquitetura.md) |
+| **Decisões (ADRs)** | Registros formais de Decisões Arquiteturais (ADR-001 a ADR-007) | [docs/decisoes/README.md](docs/decisoes/README.md) |
+| **Escopo dos Arquivos** | Catálogo técnico com o propósito e objetivo de cada arquivo | [ESCOPO_DOS_ARQUIVOS.md](ESCOPO_DOS_ARQUIVOS.md) |
+
+---
+
 ## 🛠️ Stack Tecnológica
 
 | Camada | Tecnologias |
@@ -56,8 +84,8 @@ Plataforma automotiva Fullstack que une **marketplace de compra e venda de veíc
 
 ### 1. Clonar e configurar
 ```bash
-git clone https://github.com/carlswilson22/Automatch.git
-cd Automatch
+git clone https://github.com/CAMPUSCEUB/ADS-AUTOMATCH.git
+cd ADS-AUTOMATCH
 cp .env.example .env
 ```
 
@@ -93,7 +121,14 @@ docker compose logs -f
 
 ## 🧪 Testes Automatizados
 
-Para executar a suíte completa de testes de integração (visão pericial, ciclo de anúncios, laudos e integrações):
+Para executar a suíte completa de testes no frontend:
+```bash
+cd frontend
+npm test
+```
+*Status esperado:* **100% de aprovação (181/181 testes)**.
+
+Para executar os testes de integração do backend:
 ```bash
 docker compose exec backend python test_vision_and_delete.py
 ```
@@ -101,15 +136,22 @@ docker compose exec backend python test_vision_and_delete.py
 
 ---
 
-## 📚 Documentação Complementar
+## 📚 Documentação & Governança
 
 * [BACKLOG.md](BACKLOG.md) — Backlog de requisitos e histórias de usuário (US).
 * [CHANGELOG.md](CHANGELOG.md) — Histórico cronológico de versões e entregas.
+* [ESCOPO_DOS_ARQUIVOS.md](ESCOPO_DOS_ARQUIVOS.md) — Catálogo de finalidade de todos os arquivos do projeto.
 * [docs/requisitos.md](docs/requisitos.md) — Matriz de requisitos funcionais e não-funcionais.
 * [docs/arquitetura.md](docs/arquitetura.md) — Decisões técnicas e arquitetura do ecossistema.
+* [docs/decisoes/README.md](docs/decisoes/README.md) — Repositório de ADRs (ADR-001 a ADR-007).
+* [sprints/README.md](sprints/README.md) — Relatórios detalhados das Sprints 00 a 08.
+* [entregas/README.md](entregas/README.md) — Relatórios formais das Entregas Avaliativas 01 a 03.
+* [CONTRIBUTING.md](CONTRIBUTING.md) — Guia de contribuição e fluxo de branches.
+* [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) — Código de conduta profissional e acadêmica.
+* [SECURITY.md](SECURITY.md) — Política de segurança e reporte de vulnerabilidades.
 
 ---
 
 ## 📄 Licença
 
-Projeto desenvolvido para fins acadêmicos e de demonstração tecnológica no CEUB. Todos os direitos reservados à equipe **Automatch**.
+Distribuído sob a licença MIT. Consulte o arquivo [LICENSE](LICENSE) para obter mais informações.

@@ -5,7 +5,6 @@ Início do Projeto Integrador no curso de Análise e Desenvolvimento de Sistemas
 
 ## 2. Equipe & Papéis
 - **Carlos Wilson**: Arquiteto de Software, Engenheiro Fullstack e Especialista em IA / Visão Computacional.
-- **Prof. Flávio César**: Professor Orientador da Disciplina de Projeto Integrador.
 - **Equipe Automatch**: Desenvolvimento, testes de integração e documentação técnica.
 
 ## 3. Cadência Escolhida

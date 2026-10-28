@@ -19,7 +19,6 @@ Eliminar a barreira do sinal financeiro online de reserva de veículos, promoven
 
 ## Responsáveis
 - **Carlos Wilson**: Engenheiro Fullstack & Especialista em IA.
-- **Prof. Flávio César**: Orientação técnica e acompanhamento metodológico.
 
 ## Entregas
 - `backend/routers/uploads.py`: Rota de upload de laudos com auditoria IA.
