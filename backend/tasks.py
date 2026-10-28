@@ -1,13 +1,15 @@
 """
 tasks.py — Agendador de tarefas em background do Automatch (APScheduler).
 
+Objetivo e Motivo da Criação:
+  - Criado para gerenciar o agendamento e execução de tarefas assíncronas periódicas em segundo plano,
+    como expiração automática de reservas B2B pendentes e rotinas de manutenção sem bloquear a API REST.
+  - Assegura higienização contínua de registros temporários no ecossistema do marketplace.
+
 Responsabilidades:
   - Limpeza periódica de reservas B2B expiradas (libera veículos bloqueados).
   - Execução de rotinas de manutenção do banco em intervalos configuráveis.
   - Integração com o lifespan do FastAPI (start/shutdown do scheduler).
-
-Criado para automatizar operações recorrentes sem intervenção manual,
-como expiração de reservas e saneamento de dados obsoletos.
 """
 
 import logging

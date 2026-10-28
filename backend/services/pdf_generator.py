@@ -1,6 +1,10 @@
 """
-Automatch™ — Gerador de Dossiê Cautelar Oficial em PDF (ReportLab)
-Gera PDFs vetoriais A4 com texto selecionável, QR Code nativo e layout profissional.
+pdf_generator.py — Gerador de Dossiê Cautelar Oficial em PDF (ReportLab).
+
+Objetivo e Motivo da Criação:
+  - Criado para gerar dinamicamente o Dossiê Cautelar e Laudo Pericial Veicular oficial em formato PDF vetorial A4,
+    incorporando dados de vistoria, pontuação pericial, checklist de lataria, histórico legal e QR Code de autenticidade.
+  - Fornece documento auditável com layout profissional, tipografia institucional e padrão de segurança visual.
 """
 import io
 import datetime

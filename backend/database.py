@@ -1,15 +1,17 @@
 """
 database.py — Configuração da conexão com o banco de dados do Automatch.
 
+Objetivo e Motivo da Criação:
+  - Criado para abstrair a persistência relacional do Automatch, configurando o engine SQLAlchemy,
+    a SessionLocal e fornecendo o gerador get_db() para injeção de dependência nas rotas FastAPI.
+  - Alterna dinamicamente entre SQLite (desenvolvimento local) e PostgreSQL (produção).
+
 Responsabilidades:
   - Detecta automaticamente o ambiente (development/production) via variáveis
     de ambiente para escolher entre SQLite (local) e PostgreSQL (produção).
   - Exporta o engine SQLAlchemy, a SessionLocal e a classe Base para uso
     em models.py, seed.py e todos os routers.
   - Fornece o gerador get_db() como Depends() do FastAPI para injeção de sessão.
-
-Criado para centralizar a lógica de conexão e facilitar troca transparente
-entre banco local (desenvolvimento) e PostgreSQL (deploy em nuvem).
 """
 
 import os

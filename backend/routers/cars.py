@@ -1,6 +1,11 @@
 """
 cars.py — Router principal do catálogo de veículos e lojas do Automatch.
 
+Objetivo e Motivo da Criação:
+  - Criado para gerenciar todas as operações de catálogo de veículos: busca textual, filtros avançados,
+    ordenação, paginação, termômetro FIPE de Preço Justo, simulação de TCO e operações de CRUD.
+  - Implementa controle de propriedade multilocatário (apenas o dono pode editar ou excluir seu anúncio).
+
 Responsabilidades:
   - CRUD completo de veículos: listagem paginada, busca textual, filtros
     combinados (marca, ano, preço, km), criação, edição e exclusão.
@@ -8,10 +13,7 @@ Responsabilidades:
   - Endpoint de indicador de mercado (termômetro de preço vs. FIPE).
   - Calculadora de Custo Total de Posse (TCO) mensal.
   - Controle de propriedade multilocatário (OWASP A01): apenas o dono
-    ou admin pode editar/excluir.
-
-Criado como router central do marketplace — todo o fluxo de navegação
-do catálogo e gestão de anúncios passa por aqui.
+    do veículo (ou admin) pode atualizar ou excluir o anúncio.
 """
 
 import logging

@@ -1,14 +1,16 @@
 """
 security.py — Módulo de criptografia e gestão de tokens JWT/HMAC do Automatch.
 
+Objetivo e Motivo da Criação:
+  - Criado para centralizar as operações criptográficas críticas do Automatch: hashing seguro de senhas
+    com bcrypt, assinatura e validação de tokens JWT (HMAC-SHA256) e verificação de expiração.
+  - Implementa proteção defensiva alinhada aos padrões OWASP Top 10 (A01 - Broken Access Control e A07 - Identification Failures).
+
 Responsabilidades:
   - Geração e verificação de tokens JWT assinados com HMAC-SHA256.
   - Hashing seguro de senhas com bcrypt (ou fallback HMAC para ambientes sem bcrypt).
   - Configuração de chave secreta via variável de ambiente JWT_SECRET_KEY.
   - Funções auxiliares de codificação/decodificação Base64 para payloads.
-
-Criado para centralizar toda a lógica de segurança criptográfica da API,
-isolando-a dos routers e facilitando auditoria de conformidade OWASP A02/A07.
 """
 
 import os

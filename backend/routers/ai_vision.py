@@ -1,14 +1,16 @@
 """
 ai_vision.py — Router de análise visual por IA (Perícia Automatch Vision).
 
+Objetivo e Motivo da Criação:
+  - Criado para orquestrar os endpoints de perícia veicular por visão computacional: recebimento de imagens,
+    execução de inferência de avarias na lataria (via YOLOv8 / Gemini Vision) e geração de laudos técnicos automatizados.
+  - Permite a emissão de pontuações de integridade, cálculo estimado de custos de reparo e descrições automáticas com IA.
+
 Responsabilidades:
   - Endpoint de upload de imagens para scanner de lataria e avarias.
   - Orquestração entre Gemini Vision API (nuvem) e fallback OpenCV local.
   - Geração do laudo pericial com pontos de avaria, score de integridade,
     condição geral e custo estimado de reparo.
-
-Criado para oferecer perícia veicular automatizada por visão computacional,
-diferencial central da plataforma Automatch.
 """
 
 import os

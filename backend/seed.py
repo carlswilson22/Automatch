@@ -1,6 +1,11 @@
 """
 seed.py — Script de carga inicial (seed) idempotente do banco de dados.
 
+Objetivo e Motivo da Criação:
+  - Criado para popular o banco de dados de maneira idempotente com dados essenciais de inicialização:
+    as 3 lojas parceiras oficiais, os 5 veículos canônicos da vitrine (sc-001 a sc-005) e o usuário administrador.
+  - Realiza saneamento automático de referências de imagens para prevenir ativos órfãos no banco.
+
 Responsabilidades:
   - Upsert das 3 lojas oficiais (AutoShop Prime, Motors Campinas, Alpha).
   - Upsert dos 5 veículos canônicos da vitrine (sc-001 a sc-005) com tags,
@@ -8,9 +13,6 @@ Responsabilidades:
   - Saneamento de imagens órfãs: substitui referências a arquivos inexistentes
     pelo placeholder oficial ou pela foto correspondente ao modelo.
   - Atribuição de user_id (admin) a veículos sem dono.
-
-Criado como script executável standalone (python seed.py) e também chamado
-automaticamente no lifespan do FastAPI em main.py.
 """
 
 import os

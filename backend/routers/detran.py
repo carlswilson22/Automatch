@@ -1,13 +1,15 @@
 """
 detran.py — Router de consulta veicular simulada (Detran/DENATRAN).
 
+Objetivo e Motivo da Criação:
+  - Criado para simular integrações oficiais de verificação veicular (DETRAN/DENATRAN) através de consultas por placa,
+    retornando histórico de multas, débitos, sinistros, restrições financeiras e histórico cadastral.
+  - Fornece dados essenciais para o laudo cautelar da vitrine em ambiente de demonstração e homologação.
+
 Responsabilidades:
   - Consulta de histórico veicular por placa (multas, sinistros, recalls).
   - Simulação de dados de procedência para ambiente de demonstração.
   - Validação de formato de placa (padrão Mercosul e antigo).
-
-Criado para demonstrar a integração com serviços de consulta veicular
-sem depender de APIs pagas em ambiente de desenvolvimento.
 """
 
 import re

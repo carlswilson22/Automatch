@@ -1,15 +1,17 @@
 """
 schemas.py — Schemas de validação Pydantic (contratos de entrada/saída da API).
 
+Objetivo e Motivo da Criação:
+  - Criado para definir formalmente os contratos de dados (Request/Response) da API REST do Automatch,
+    assegurando tipagem estrita, sanitização de dados, documentação OpenAPI/Swagger e proteção contra injeções.
+  - Garante sincronia estrutural de entidades entre o backend FastAPI e o frontend React.
+
 Responsabilidades:
   - Define os contratos de request/response para todos os endpoints REST.
   - Aplica validação de campos com field_validator (ano, preço, km) para
     garantir consistência entre frontend e backend.
   - Separa schemas de criação (CarBase), atualização parcial (CarUpdate),
     leitura (CarSchema), autenticação (UserLogin/Register) e B2B.
-
-Criado para desacoplar a camada de transporte (JSON) dos modelos ORM,
-seguindo boas práticas do FastAPI e evitando exposição direta do banco.
 """
 
 from datetime import datetime

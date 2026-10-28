@@ -1,6 +1,11 @@
 """
 main.py — Ponto de entrada principal da API REST do Automatch.
 
+Objetivo e Motivo da Criação:
+  - Criado como ponto central de inicialização da API RESTful FastAPI do Automatch, unificando
+    todos os microserviços, routers, middlewares de segurança e ciclo de vida da aplicação.
+  - Assegura resiliência, compressão de tráfego, controle de CORS e agendamento de tarefas.
+
 Responsabilidades:
   - Inicializa a aplicação FastAPI com middlewares (CORS, GZip, rate-limiting).
   - Registra todos os routers (auth, cars, detran, ai_vision, uploads, alerts,

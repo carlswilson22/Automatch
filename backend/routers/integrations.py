@@ -1,13 +1,15 @@
 """
 integrations.py — Router de integrações externas e multichannel do Automatch.
 
+Objetivo e Motivo da Criação:
+  - Criado para permitir que concessionárias e revendedores parceiros publiquem e sincronizem seus estoques B2B
+    com múltiplos marketplaces automotivos (Webmotors, iCarros, OLX) de forma automatizada e centralizada.
+  - Gera links de compartilhamento seguro, payloads de exportação e QR Codes institucionais.
+
 Responsabilidades:
   - Publicação simultânea de anúncios em múltiplas plataformas (OLX, Webmotors, iCarros).
   - Sincronização de status de anúncios entre plataformas.
   - Geração de links de compartilhamento e QR codes para anúncios.
-
-Criado para implementar a estratégia multichannel de publicação, permitindo
-que vendedores atinjam múltiplos marketplaces a partir de um único anúncio.
 """
 
 import uuid

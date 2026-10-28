@@ -1,14 +1,16 @@
 """
 auth.py — Router de autenticação e autorização do Automatch.
 
+Objetivo e Motivo da Criação:
+  - Criado para fornecer os endpoints REST de gerenciamento de sessão e identidade do Automatch: registro de usuários,
+    autenticação com emissão de token JWT, verificação de perfil (/api/me) e onboarding de parceiros com RBAC.
+  - Assegura segregação estrita de papéis (comprador, vendedor, lojista parceiro e administrador).
+
 Responsabilidades:
   - Login e registro de usuários (compradores, vendedores, lojistas).
   - Emissão de tokens JWT via security.py.
   - Endpoint de onboarding de lojas com guard RBAC (apenas admin/lojista).
   - Verificação de sessão (/api/me) para persistência do estado de login.
-
-Criado para implementar o fluxo completo de autenticação da plataforma,
-com suporte a tokens demo em ambiente de desenvolvimento (OWASP A07).
 """
 
 import logging

@@ -1,13 +1,15 @@
 """
 alerts.py — Router de alertas de preço e watchlist do Automatch.
 
+Objetivo e Motivo da Criação:
+  - Criado para permitir que compradores configurem alertas inteligentes de preço em veículos de interesse,
+    sendo notificados automaticamente quando o valor de venda atingir ou ficar abaixo do preço-alvo desejado.
+  - Aumenta a conversão de vendas e o engajamento de compradores cadastrados na plataforma.
+
 Responsabilidades:
   - CRUD de alertas de variação de preço por veículo (PriceAlert).
   - Monitoramento de quedas de preço e notificação ao usuário.
   - Gerenciamento da watchlist de veículos favoritos para acompanhamento.
-
-Criado para implementar o sistema de alerta inteligente que notifica
-compradores quando um veículo atinge o preço-alvo desejado.
 """
 
 import uuid
