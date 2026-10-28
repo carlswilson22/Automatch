@@ -29,8 +29,7 @@ VALID_MEDIA_FILENAMES = {
     "FotoFiatPulse.jpg",
     "placeholder-carro.jpg",
     "carro_lataria_amassada.jpg",
-    "carro_parachoque_danificado.jpg",
-    "hero-video-poster.jpg"
+    "carro_parachoque_danificado.jpg"
 }
 
 

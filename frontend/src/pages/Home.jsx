@@ -20,7 +20,6 @@ import StoreIdentifier from '../components/ui/StoreIdentifier';
 import AutomatchLogo from '../components/ui/AutomatchLogo';
 import GlowButton from '../components/ui/GlowButton';
 import WipeButton from '../components/ui/WipeButton';
-import HeroVideoScrub from '../components/home/HeroVideoScrub';
 import { getNewCars } from '../data/newCarsManager';
 import { toggleFavorite, isFavorite } from '../data/favoritesManager';
 import { getVehicleImageUrl, handleVehicleImageError } from '../utils/imageHelper';
@@ -187,7 +186,15 @@ const Home = () => {
         )}
       </AnimatePresence>
 
-      <HeroVideoScrub>
+      <section className="relative min-h-[92vh] overflow-hidden bg-slate-900 flex flex-col justify-center">
+        <div className="absolute inset-0 z-0 scale-110">
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-900 via-slate-900/80 to-blue-950/60 z-10" />
+          <div style={{ backgroundImage: 'linear-gradient(#fff 1px, transparent 1px), linear-gradient(90deg, #fff 1px, transparent 1px)', backgroundSize: '60px 60px' }} className="absolute inset-0 z-5 opacity-[0.03]" />
+          <img src="https://images.unsplash.com/photo-1553440569-bcc63803a83d?auto=format&fit=crop&q=80&w=2000" alt="Hero Background" className="w-full h-full object-cover opacity-30" />
+        </div>
+        <div className="absolute top-[35%] left-[-5%] w-[60%] h-[1px] bg-gradient-to-r from-transparent via-blue-500/40 to-transparent rotate-[-12deg] z-10" />
+        <div className="absolute top-[60%] right-[-5%] w-[50%] h-[1px] bg-gradient-to-r from-transparent via-cyan-500/30 to-transparent rotate-[8deg] z-10" />
+
         <div className="max-w-7xl mx-auto px-6 relative z-20 w-full py-20 md:py-28">
           <motion.div variants={staggerContainer} initial="hidden" animate="show" className="max-w-3xl">
             <motion.div variants={fadeUp}>
@@ -221,7 +228,8 @@ const Home = () => {
             </motion.div>
           </motion.div>
         </div>
-      </HeroVideoScrub>
+      
+      </section>
 
 
       <section id="vitrine" className="bg-slate-100 py-20 px-4 sm:px-6 border-t border-slate-200">
@@ -254,19 +262,6 @@ const Home = () => {
           </motion.div>
         </div>
       </section>
-
-      {/* Rodapé com Nota Legal Discreta sobre Recursos e Mídias Geradas por IA */}
-      <footer className="w-full bg-slate-950 border-t border-slate-800/80 py-8 px-6 text-center text-xs text-slate-400">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <AutomatchLogo size="sm" theme="dark" onClick={() => navigate('/')} />
-            <span className="text-slate-500">© {new Date().getFullYear()} Automatch. Todos os direitos reservados.</span>
-          </div>
-          <p className="text-[11px] text-slate-500 font-light">
-            Aviso legal: Imagens e vídeos da loja fictícia e simulações foram gerados por inteligência artificial para fins de demonstração.
-          </p>
-        </div>
-      </footer>
 
       {isChatOpen && (
         <React.Suspense fallback={null}>

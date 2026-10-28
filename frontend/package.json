@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build && node -e \"import('fs').then(fs => fs.copyFileSync('dist/index.html', 'dist/404.html'))\"",
     "lint": "eslint .",
-    "test": "node --test tests/test_features_battery.mjs tests/test_new_features_battery.mjs tests/test_security_audit.mjs tests/test_design_tokens_battery.mjs tests/test_filter_vehicles.mjs tests/test_hero_video_scrub.mjs",
+    "test": "node --test tests/test_features_battery.mjs tests/test_new_features_battery.mjs tests/test_security_audit.mjs tests/test_design_tokens_battery.mjs tests/test_filter_vehicles.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
