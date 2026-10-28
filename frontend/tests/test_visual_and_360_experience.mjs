@@ -235,7 +235,8 @@ describe('MÓDULO 4: Auditoria de Imagens e Integridade de Mídia', () => {
     'FotoFiatPulse.jpg',
     'carro_lataria_amassada.jpg',
     'carro_parachoque_danificado.jpg',
-    'placeholder-carro.jpg'
+    'placeholder-carro.jpg',
+    'hero-video-poster.jpg'
   ]);
 
   test('4.1: Todas as fotos de capa dos 5 carros oficiais existem e possuem tamanho consistente (> 100KB)', () => {
