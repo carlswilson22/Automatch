@@ -280,6 +280,15 @@ describe('BATERIA DE TESTES - NOVAS FUNCIONALIDADES (SPRINT EXPANDIDA)', () => {
 
     test('7.2: ShowcaseCatalog integra VehicleComparatorModal com comparador rápido', () => {
       assert.ok(catalogContent.includes('VehicleComparatorModal'), 'ShowcaseCatalog deve integrar VehicleComparatorModal');
+      assert.strictEqual(
+        catalogContent.includes('filteredAndSortedCars'),
+        false,
+        'ShowcaseCatalog não deve referenciar a variável órfã filteredAndSortedCars'
+      );
+      assert.ok(
+        catalogContent.includes('availableVehicles={results') || catalogContent.includes('availableVehicles={allCars'),
+        'ShowcaseCatalog deve passar a lista real de veículos ao comparador'
+      );
     });
 
     test('7.3: Dashboard integra AIStudioModal e B2BRepassePanel', () => {

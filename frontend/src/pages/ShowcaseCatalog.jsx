@@ -476,7 +476,7 @@ const ShowcaseCatalog = () => {
         <VehicleComparatorModal
           isOpen={isComparatorOpen}
           onClose={() => setIsComparatorOpen(false)}
-          availableVehicles={filteredAndSortedCars}
+          availableVehicles={results && results.length > 0 ? results : allCars}
         />
       )}
     </div>

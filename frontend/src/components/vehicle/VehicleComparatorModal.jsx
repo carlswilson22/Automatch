@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useScrollLock } from '../../utils/useScrollLock';
 import { getVehicleImageUrl, handleVehicleImageError } from '../../utils/imageHelper';
+import { showcaseCars } from '../../data/showcaseData';
 
 const CURRENT_YEAR = 2026;
 
@@ -79,7 +80,7 @@ export default function VehicleComparatorModal({
   const navigate = useNavigate();
 
   const allAvailable = useMemo(() => {
-    const raw = (availableCars && availableCars.length > 0) ? availableCars : (availableVehicles || []);
+    const raw = (availableCars && availableCars.length > 0) ? availableCars : (availableVehicles && availableVehicles.length > 0) ? availableVehicles : showcaseCars;
     return raw.map(normalizeCar).filter(Boolean);
   }, [availableCars, availableVehicles]);
 
