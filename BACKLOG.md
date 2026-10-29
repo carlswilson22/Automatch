@@ -16,7 +16,7 @@ Abaixo está a consolidação fidedigna do quadro de gestão ágil de atividades
 |                                             QUADRO: DESENVOLVIMENTO PI 2                                                |
 +---------------------+-------------------+---------------------+-------------------------+-------------------------------+
 | BACKLOG DO PROJETO  | ITENS ESSENCIAIS  | A FAZER             | FAZENDO                 | FINALIZADO                    |
-| (20 cartões)        | (10 cartões)      | (0 cartões)         | (0 cartões)             | (21 cartões)                  |
+| (20 cartões)        | (10 cartões)      | (1 cartão)         | (0 cartões)             | (21 cartões)                  |
 +---------------------+-------------------+---------------------+-------------------------+-------------------------------+
 | • Front-End         | • Front-end       | • Implementação de  |                         | [x] Front-end                 |
 | • Back-End          | • Back-End        | feedback após anexo |                         | [x] Back-end                  |
