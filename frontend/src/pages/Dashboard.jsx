@@ -550,11 +550,11 @@ export default function Dashboard() {
                 </div>
               </div>
             ) : (
-              <AnimatePresence mode="wait">
-                {viewMode === 'grid' ? (
-                  <motion.div
-                    data-tour="dashboard-tabela-ativos"
-                    key="grid"
+              <div data-tour="dashboard-tabela-ativos" className="space-y-4">
+                <AnimatePresence mode="wait">
+                  {viewMode === 'grid' ? (
+                    <motion.div
+                      key="grid"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -777,7 +777,8 @@ export default function Dashboard() {
                     </div>
                   </motion.div>
                 )}
-              </AnimatePresence>
+                </AnimatePresence>
+              </div>
             )}
 
             {/* Pagination Controls */}
@@ -824,31 +825,29 @@ export default function Dashboard() {
           </DashboardErrorBoundary>
         )}
 
-        {/* Banner Informativo B2B para Compradores */}
-        {!isB2B && (
-          <div className="mt-10 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 sm:p-8 text-white relative overflow-hidden shadow-xl border border-slate-800">
-            <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-radial from-blue-500/10 to-transparent pointer-events-none" />
-            <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-              <div className="space-y-2 max-w-xl">
-                <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/20">
-                  Expansão Comercial Automatch
-                </span>
-                <h3 className="text-xl sm:text-2xl font-black tracking-tight">
-                  Possui uma concessionária ou revenda de veículos?
-                </h3>
-                <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-                  Conheça a <strong>Rede B2B Automatch</strong>: tenha acesso a estoque compartilhado de concessionárias parceiras, radar de repasse com piso inviolável e gestão multi-lojas.
-                </p>
-              </div>
-              <button data-tour="dashboard-rede-parceiros" onClick={() => navigate('/como-funciona')}
-                className="inline-flex items-center gap-2 px-6 py-3.5 bg-white hover:bg-slate-100 text-slate-900 rounded-2xl text-xs font-bold uppercase tracking-wider shadow-lg active:scale-95 transition-all whitespace-nowrap cursor-pointer"
-              >
-                <span>Conhecer a Rede B2B</span>
-                <ArrowUpRight className="w-4 h-4" />
-              </button>
+        {/* Banner Informativo Rede B2B Automatch */}
+        <div data-tour="dashboard-rede-parceiros" className="mt-10 bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl p-6 sm:p-8 text-white relative overflow-hidden shadow-xl border border-slate-800">
+          <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-radial from-blue-500/10 to-transparent pointer-events-none" />
+          <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div className="space-y-2 max-w-xl">
+              <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-1 rounded-full bg-blue-500/20 text-blue-300 border border-blue-400/20">
+                Rede B2B Automatch
+              </span>
+              <h3 className="text-xl sm:text-2xl font-black tracking-tight">
+                Estoque Compartilhado & Concessionárias Parceiras
+              </h3>
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                Conheça a <strong>Rede B2B Automatch</strong>: tenha acesso a estoque compartilhado de concessionárias parceiras, radar de repasse com piso inviolável e gestão multi-lojas.
+              </p>
             </div>
+            <button onClick={() => navigate('/como-funciona')}
+              className="inline-flex items-center gap-2 px-6 py-3.5 bg-white hover:bg-slate-100 text-slate-900 rounded-2xl text-xs font-bold uppercase tracking-wider shadow-lg active:scale-95 transition-all whitespace-nowrap cursor-pointer"
+            >
+              <span>Conhecer a Rede B2B</span>
+              <ArrowUpRight className="w-4 h-4" />
+            </button>
           </div>
-        )}
+        </div>
       </main>
 
       {/* Modal de Configuração do Ativo */}

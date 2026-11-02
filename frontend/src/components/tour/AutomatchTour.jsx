@@ -4,21 +4,22 @@
  * Objetivo e Motivo da Criação:
  *   - Criado para acompanhar o usuário pelas páginas da plataforma com spotlight e pop-up explicativo
  *     das funcionalidades da tela, sem ser destruído durante a navegação entre rotas SPA.
+ *   - Otimizado para alto desempenho (60 FPS): medição contínua com RAF, cobertura total da área (padding 14px)
+ *     e reposicionamento dinâmico sem sobrecarga de blur no navegador.
  */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  Compass, ChevronRight, ChevronLeft, X, CheckCircle2, AlertCircle
+  Compass, ChevronRight, ChevronLeft, X, CheckCircle2
 } from 'lucide-react';
 import { useTour } from '../../contexts/TourContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { getTourById } from '../../data/tourGuideData';
 import { lockScroll, unlockScroll } from '../../utils/scrollLockCore';
 
-const SPOTLIGHT_PADDING = 8;
-const MAX_WAIT_TIMEOUT_MS = 2500;
+const SPOTLIGHT_PADDING = 14;
 
 export default function AutomatchTour() {
   const { demoState, nextStep, prevStep, stopDemo } = useTour();
@@ -28,6 +29,7 @@ export default function AutomatchTour() {
   const [targetRect, setTargetRect] = useState(null);
   const [isCenteredFallback, setIsCenteredFallback] = useState(false);
   const dialogRef = useRef(null);
+  const scrollTimeoutRef = useRef(null);
 
   const tourConfig = getTourById(demoState.tourId, user?.role);
   const steps = tourConfig?.steps || [];
@@ -48,7 +50,7 @@ export default function AutomatchTour() {
   }, [demoState.isRunning]);
 
   // Localiza e mede o elemento-alvo no DOM
-  const measureTarget = useCallback(() => {
+  const measureTarget = useCallback((shouldScroll = true) => {
     if (!currentStep) return;
 
     const element = document.querySelector(`[data-tour="${currentStep.targetAnchor}"]`);
@@ -69,19 +71,35 @@ export default function AutomatchTour() {
       return;
     }
 
-    // Rolagem suave até o elemento
-    if (!prefersReducedMotion) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
-    } else {
-      element.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'center' });
+    // Rolagem suave até o elemento se solicitado
+    if (shouldScroll) {
+      if (!prefersReducedMotion) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+      } else {
+        element.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'center' });
+      }
+
+      // Re-calibra medição após a rolagem suave repousar
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+      scrollTimeoutRef.current = setTimeout(() => {
+        const settledRect = element.getBoundingClientRect();
+        setTargetRect({
+          top: Math.max(8, settledRect.top - SPOTLIGHT_PADDING),
+          left: Math.max(8, settledRect.left - SPOTLIGHT_PADDING),
+          width: Math.min(window.innerWidth - 16, settledRect.width + (SPOTLIGHT_PADDING * 2)),
+          height: settledRect.height + (SPOTLIGHT_PADDING * 2),
+          right: settledRect.right + SPOTLIGHT_PADDING,
+          bottom: settledRect.bottom + SPOTLIGHT_PADDING,
+        });
+      }, 320);
     }
 
-    // Medição calibrada com respiro
+    // Medição calibrada com respiro ampliado (14px) para cobrir a área integral
     const updatedRect = element.getBoundingClientRect();
     setTargetRect({
-      top: updatedRect.top - SPOTLIGHT_PADDING,
-      left: updatedRect.left - SPOTLIGHT_PADDING,
-      width: updatedRect.width + (SPOTLIGHT_PADDING * 2),
+      top: Math.max(8, updatedRect.top - SPOTLIGHT_PADDING),
+      left: Math.max(8, updatedRect.left - SPOTLIGHT_PADDING),
+      width: Math.min(window.innerWidth - 16, updatedRect.width + (SPOTLIGHT_PADDING * 2)),
       height: updatedRect.height + (SPOTLIGHT_PADDING * 2),
       right: updatedRect.right + SPOTLIGHT_PADDING,
       bottom: updatedRect.bottom + SPOTLIGHT_PADDING,
@@ -94,25 +112,40 @@ export default function AutomatchTour() {
     if (!demoState.isRunning || !currentStep) return;
 
     let attempts = 0;
-    const maxAttempts = 25; // 25 x 100ms = 2.5s
+    const maxAttempts = 30; // 30 x 80ms = 2.4s
     const timer = setInterval(() => {
       attempts++;
       const el = document.querySelector(`[data-tour="${currentStep.targetAnchor}"]`);
       if (el || attempts >= maxAttempts) {
         clearInterval(timer);
-        measureTarget();
+        measureTarget(true);
       }
-    }, 100);
+    }, 80);
 
     return () => clearInterval(timer);
   }, [demoState.isRunning, demoState.stepIndex, location.pathname, currentStep, measureTarget]);
 
-  // Recalcula medição no redimensionamento da janela
+  // Recalcula medição no redimensionamento da janela e durante scroll via RAF
   useEffect(() => {
     if (!demoState.isRunning) return;
-    const handleResize = () => measureTarget();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+
+    let rafId = null;
+    const handleScrollOrResize = () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(() => {
+        measureTarget(false);
+      });
+    };
+
+    window.addEventListener('resize', handleScrollOrResize, { passive: true });
+    window.addEventListener('scroll', handleScrollOrResize, { passive: true });
+
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      window.removeEventListener('resize', handleScrollOrResize);
+      window.removeEventListener('scroll', handleScrollOrResize);
+      if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+    };
   }, [demoState.isRunning, measureTarget]);
 
   // Atalhos de teclado acessíveis (Tab Trap, Escape, Setas)
@@ -175,7 +208,7 @@ export default function AutomatchTour() {
     return null;
   }
 
-  // Cálculo da posição do balão pop-up
+  // Cálculo da posição do balão pop-up (com margens seguras e posicionamento inteligente)
   let popoverStyle = {};
   if (isCenteredFallback || !targetRect) {
     popoverStyle = {
@@ -211,7 +244,7 @@ export default function AutomatchTour() {
 
   return createPortal(
     <div className="fixed inset-0 z-[9999] pointer-events-auto" role="presentation">
-      {/* SVG Mask Spotlight Overlay */}
+      {/* SVG Mask Spotlight Overlay — Fundo sem blur pesado */}
       <svg
         className="fixed inset-0 w-full h-full pointer-events-auto"
         style={{ zIndex: 9998 }}
@@ -226,8 +259,8 @@ export default function AutomatchTour() {
                 y={targetRect.top}
                 width={targetRect.width}
                 height={targetRect.height}
-                rx="14"
-                ry="14"
+                rx="18"
+                ry="18"
                 fill="black"
               />
             )}
@@ -243,10 +276,10 @@ export default function AutomatchTour() {
         />
       </svg>
 
-      {/* Anel de Destaque Pulsante ao Redor do Elemento */}
+      {/* Anel de Destaque ao Redor do Elemento — Cobertura Total da Área */}
       {targetRect && !isCenteredFallback && (
         <div
-          className="fixed pointer-events-none rounded-2xl ring-2 ring-cyan-400/80 shadow-[0_0_30px_rgba(34,211,238,0.4)] transition-all duration-300"
+          className="fixed pointer-events-none rounded-2xl ring-2 ring-cyan-400 shadow-[0_0_24px_rgba(34,211,238,0.35)] transition-all duration-150"
           style={{
             top: `${targetRect.top}px`,
             left: `${targetRect.left}px`,
@@ -258,7 +291,7 @@ export default function AutomatchTour() {
         />
       )}
 
-      {/* Pop-up do Tour em Modo Demonstração */}
+      {/* Pop-up do Tour em Modo Demonstração — Renderização Leve a 60 FPS */}
       <div
         ref={dialogRef}
         role="dialog"
@@ -267,7 +300,7 @@ export default function AutomatchTour() {
         aria-describedby="tour-step-desc"
         tabIndex={-1}
         style={{ ...popoverStyle, zIndex: 10000 }}
-        className="w-full bg-slate-900/95 backdrop-blur-2xl border border-slate-700/80 rounded-3xl p-5 sm:p-6 shadow-2xl text-white outline-none focus:ring-2 focus:ring-cyan-400/50"
+        className="w-full bg-slate-900 border border-slate-700/90 rounded-3xl p-5 sm:p-6 shadow-2xl text-white outline-none focus:ring-2 focus:ring-cyan-400/50"
       >
         {/* Barra de Progresso no Topo */}
         <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mb-4">
@@ -275,7 +308,7 @@ export default function AutomatchTour() {
             className="h-full bg-gradient-to-r from-blue-500 to-cyan-400"
             initial={false}
             animate={{ width: `${progressPercent}%` }}
-            transition={{ duration: prefersReducedMotion ? 0 : 0.3 }}
+            transition={{ duration: prefersReducedMotion ? 0 : 0.2 }}
           />
         </div>
 

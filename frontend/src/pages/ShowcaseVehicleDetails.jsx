@@ -548,10 +548,11 @@ export default function ShowcaseVehicleDetails() {
           <div className="space-y-8">
             
             {/* Hub Pericial Multidimensional IA: Abas Seletoras */}
-            <div className="flex items-center gap-2 p-1.5 bg-slate-950/80 rounded-2xl border border-slate-800 overflow-x-auto shadow-lg">
+            <div data-tour="detalhes-varredura-360" id="hub-pericial-container" className="space-y-4">
+              <div className="flex items-center gap-2 p-1.5 bg-slate-950/80 rounded-2xl border border-slate-800 overflow-x-auto shadow-lg">
               <button
                 type="button"
-                id="scanner-ia-tab-btn" data-tour="anuncio-scanner-ia"
+                id="scanner-ia-tab-btn"
                 onClick={() => setInspectionTab('body')}
                 className={`px-3.5 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition-all whitespace-nowrap ${
                   inspectionTab === 'body'
@@ -830,6 +831,8 @@ export default function ShowcaseVehicleDetails() {
                   )}
                 </div>
               </div>
+
+            </div>
 
               {/* Descrição Concisa do Veículo */}
               <div className="bg-slate-950/70 p-4 sm:p-5 rounded-2xl border border-slate-800">

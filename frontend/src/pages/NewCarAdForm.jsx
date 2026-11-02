@@ -1170,6 +1170,16 @@ const NewCarAdForm = () => {
                     </div>
                   </div>
 
+                  <div data-tour="anuncio-scanner-ia" className="flex items-center gap-3 p-3.5 bg-blue-50/80 border border-blue-200/80 rounded-xl text-blue-900 text-xs shadow-sm">
+                    <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                      <Bot className="w-4 h-4" />
+                    </div>
+                    <div>
+                      <p className="font-bold text-slate-900 text-xs">Inspeção e Scanner de Avarias por IA</p>
+                      <p className="text-[11px] text-slate-600">Ao enviar a foto, a inteligência artificial analisa a integridade da lataria e verifica conformidade estrutural.</p>
+                    </div>
+                  </div>
+
 
                 </div>
               ) : (
@@ -1188,7 +1198,7 @@ const NewCarAdForm = () => {
                   </div>
 
                   {/* Botão de Perícia Visual IA da Capa */}
-                  <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                  <div data-tour="anuncio-scanner-ia" className="flex flex-wrap items-center justify-between gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl">
                     <div className="flex items-center gap-2">
                       <Bot className="w-5 h-5 text-blue-600" />
                       <div>
