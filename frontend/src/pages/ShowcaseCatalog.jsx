@@ -103,7 +103,7 @@ const CarCard = React.memo(({ car, index, viewMode }) => {
   }
 
   return (
-    <motion.div initial={{ opacity: 0, y: 25 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: index * 0.06, ease: [0.16, 1, 0.3, 1] }} data-tour={index === 0 ? "vitrine-primeiro-card" : undefined} className="bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-card hover:shadow-card-hover hover:-translate-y-1 transition-all duration-300 group cursor-pointer flex flex-col" onClick={() => navigate(`/encontrar/${car.id}`)}>
+    <div data-tour={index === 0 ? "vitrine-primeiro-card" : undefined} className="bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-card hover:shadow-card-hover hover:-translate-y-1 transition-all duration-300 group cursor-pointer flex flex-col" onClick={() => navigate(`/encontrar/${car.id}`)}>
       <div className="relative aspect-[16/10] overflow-hidden bg-slate-900">
         <img src={getVehicleImageUrl(car.image || 'placeholder-carro.jpg')} alt={car.name} loading="lazy" decoding="async" onError={handleVehicleImageError} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-3 pt-8 flex items-end justify-end"><PriceDropBadge originalPrice={car.originalPrice} currentPrice={car.price} variant="badge" isFeatured={car.featured} /></div>
@@ -128,7 +128,7 @@ const CarCard = React.memo(({ car, index, viewMode }) => {
         <div className="flex flex-wrap gap-1.5 mt-auto mb-4">{car.tags.map(t => <span key={t} className="text-[10px] font-bold text-brand-blue bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-full uppercase tracking-wider">{t}</span>)}</div>
         <button onClick={(e) => { e.stopPropagation(); navigate(`/encontrar/${car.id}`); }} className="w-full py-2.5 bg-brand-blue text-white rounded-xl font-semibold text-sm hover:bg-blue-700 transition-colors flex items-center justify-center gap-1.5"><Eye className="w-4 h-4" /> Ver Detalhes</button>
       </div>
-    </motion.div>
+    </div>
   );
 });
 CarCard.displayName = 'CarCard';

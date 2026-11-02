@@ -27,9 +27,9 @@ const NewCarAdForm = React.lazy(() => import('./pages/NewCarAdForm'));
 const PublicValidationPage = React.lazy(() => import('./pages/PublicValidationPage'));
 const MyAdsPage = React.lazy(() => import('./pages/MyAdsPage'));
 
-// Componentes Globais do Tour e Demonstração
-const TourIntroModal = React.lazy(() => import('./components/tour/TourIntroModal'));
-const AutomatchTour = React.lazy(() => import('./components/tour/AutomatchTour'));
+// Componentes Globais do Tour e Demonstração (import estático — sem latência de chunk)
+import TourIntroModal from './components/tour/TourIntroModal';
+import AutomatchTour from './components/tour/AutomatchTour';
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -105,10 +105,8 @@ function App() {
             </Suspense>
 
             {/* Modal A de Apresentação e Pop-up do Tour em Modo Demonstração Multitelas */}
-            <Suspense fallback={null}>
-              <TourIntroModal />
+            <TourIntroModal />
               <AutomatchTour />
-            </Suspense>
           </TourProvider>
         </Router>
       </AuthProvider>
