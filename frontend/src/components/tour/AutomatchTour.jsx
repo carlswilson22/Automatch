@@ -4,13 +4,12 @@
  * Objetivo e Motivo da Criação:
  *   - Criado para acompanhar o usuário pelas páginas da plataforma com spotlight e pop-up explicativo
  *     das funcionalidades da tela, sem ser destruído durante a navegação entre rotas SPA.
- *   - Otimizado para alto desempenho (60 FPS): medição contínua com RAF, cobertura total da área (padding 14px)
- *     e reposicionamento dinâmico sem sobrecarga de blur no navegador.
+ *   - Renderização instantânea (latência zero): sem animações de transição ou escala, resposta de clique imediata
+ *     e barra de progresso nativa via CSS estático.
  */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import {
   Compass, ChevronRight, ChevronLeft, X, CheckCircle2
 } from 'lucide-react';
@@ -35,7 +34,7 @@ export default function AutomatchTour() {
   const steps = tourConfig?.steps || [];
   const currentStep = steps[demoState.stepIndex];
 
-  // Verifica preferência de movimento reduzido
+  // Verifica preferência de movimento reduzido (mantido para conformidade WCAG AAA)
   const prefersReducedMotion = typeof window !== 'undefined' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
@@ -71,15 +70,11 @@ export default function AutomatchTour() {
       return;
     }
 
-    // Rolagem suave até o elemento se solicitado
+    // Rolagem até o elemento
     if (shouldScroll) {
-      if (!prefersReducedMotion) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
-      } else {
-        element.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'center' });
-      }
+      element.scrollIntoView({ behavior: 'auto', block: 'center', inline: 'center' });
 
-      // Re-calibra medição após a rolagem suave repousar
+      // Re-calibra medição após a rolagem repousar
       if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
       scrollTimeoutRef.current = setTimeout(() => {
         const settledRect = element.getBoundingClientRect();
@@ -91,10 +86,10 @@ export default function AutomatchTour() {
           right: settledRect.right + SPOTLIGHT_PADDING,
           bottom: settledRect.bottom + SPOTLIGHT_PADDING,
         });
-      }, 320);
+      }, 50);
     }
 
-    // Medição calibrada com respiro ampliado (14px) para cobrir a área integral
+    // Medição direta com respiro ampliado (14px) para cobrir a área integral
     const updatedRect = element.getBoundingClientRect();
     setTargetRect({
       top: Math.max(8, updatedRect.top - SPOTLIGHT_PADDING),
@@ -105,14 +100,14 @@ export default function AutomatchTour() {
       bottom: updatedRect.bottom + SPOTLIGHT_PADDING,
     });
     setIsCenteredFallback(false);
-  }, [currentStep, prefersReducedMotion]);
+  }, [currentStep]);
 
   // Aguarda carregamento do DOM ao trocar de tela ou passo
   useEffect(() => {
     if (!demoState.isRunning || !currentStep) return;
 
     let attempts = 0;
-    const maxAttempts = 30; // 30 x 80ms = 2.4s
+    const maxAttempts = 30; // 30 x 60ms = 1.8s
     const timer = setInterval(() => {
       attempts++;
       const el = document.querySelector(`[data-tour="${currentStep.targetAnchor}"]`);
@@ -120,7 +115,7 @@ export default function AutomatchTour() {
         clearInterval(timer);
         measureTarget(true);
       }
-    }, 80);
+    }, 60);
 
     return () => clearInterval(timer);
   }, [demoState.isRunning, demoState.stepIndex, location.pathname, currentStep, measureTarget]);
@@ -276,10 +271,10 @@ export default function AutomatchTour() {
         />
       </svg>
 
-      {/* Anel de Destaque ao Redor do Elemento — Cobertura Total da Área */}
+      {/* Anel de Destaque ao Redor do Elemento — Cobertura Total da Área sem Transições Atrasadas */}
       {targetRect && !isCenteredFallback && (
         <div
-          className="fixed pointer-events-none rounded-2xl ring-2 ring-cyan-400 shadow-[0_0_24px_rgba(34,211,238,0.35)] transition-all duration-150"
+          className="fixed pointer-events-none rounded-2xl ring-2 ring-cyan-400 shadow-[0_0_24px_rgba(34,211,238,0.35)]"
           style={{
             top: `${targetRect.top}px`,
             left: `${targetRect.left}px`,
@@ -291,7 +286,7 @@ export default function AutomatchTour() {
         />
       )}
 
-      {/* Pop-up do Tour em Modo Demonstração — Renderização Leve a 60 FPS */}
+      {/* Pop-up do Tour em Modo Demonstração — Renderização Estática e Imediata */}
       <div
         ref={dialogRef}
         role="dialog"
@@ -302,13 +297,11 @@ export default function AutomatchTour() {
         style={{ ...popoverStyle, zIndex: 10000 }}
         className="w-full bg-slate-900 border border-slate-700/90 rounded-3xl p-5 sm:p-6 shadow-2xl text-white outline-none focus:ring-2 focus:ring-cyan-400/50"
       >
-        {/* Barra de Progresso no Topo */}
+        {/* Barra de Progresso no Topo — Estilo Estático Direto */}
         <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden mb-4">
-          <motion.div
+          <div
             className="h-full bg-gradient-to-r from-blue-500 to-cyan-400"
-            initial={false}
-            animate={{ width: `${progressPercent}%` }}
-            transition={{ duration: prefersReducedMotion ? 0 : 0.2 }}
+            style={{ width: `${progressPercent}%` }}
           />
         </div>
 
@@ -327,7 +320,7 @@ export default function AutomatchTour() {
           <button
             type="button"
             onClick={stopDemo}
-            className="w-11 h-11 -mr-2 -mt-2 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 rounded-full transition-colors cursor-pointer"
+            className="w-11 h-11 -mr-2 -mt-2 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 rounded-full cursor-pointer"
             aria-label="Encerrar demonstração"
             title="Fechar (ESC)"
           >
@@ -356,7 +349,7 @@ export default function AutomatchTour() {
           <button
             type="button"
             onClick={stopDemo}
-            className="min-h-[44px] px-3 text-xs font-semibold text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
+            className="min-h-[44px] px-3 text-xs font-semibold text-slate-400 hover:text-slate-200 cursor-pointer"
           >
             Encerrar
           </button>
@@ -366,7 +359,7 @@ export default function AutomatchTour() {
               <button
                 type="button"
                 onClick={prevStep}
-                className="min-h-[44px] min-w-[44px] px-3.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-1 border border-slate-700 active:scale-95 cursor-pointer"
+                className="min-h-[44px] min-w-[44px] px-3.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-1 border border-slate-700 cursor-pointer"
                 title="Passo anterior (Seta Esquerda)"
                 aria-label="Voltar para a tela anterior"
               >
@@ -378,7 +371,7 @@ export default function AutomatchTour() {
             <button
               type="button"
               onClick={nextStep}
-              className="min-h-[44px] px-4 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-black text-xs rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-cyan-500/20 active:scale-95 cursor-pointer"
+              className="min-h-[44px] px-4 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-black text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-lg shadow-cyan-500/20 cursor-pointer"
               title={demoState.stepIndex === steps.length - 1 ? 'Concluir demonstração (Enter)' : 'Próxima tela (Enter ou Seta Direita)'}
             >
               <span>{demoState.stepIndex === steps.length - 1 ? 'Concluir' : 'Próximo'}</span>
