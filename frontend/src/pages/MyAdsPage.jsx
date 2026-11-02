@@ -224,7 +224,7 @@ export default function MyAdsPage() {
             </div>
 
             {/* Vehicle Cards List */}
-            <div className="grid grid-cols-1 gap-4 sm:gap-5">
+            <div data-tour="meus-anuncios-painel" className="grid grid-cols-1 gap-4 sm:gap-5">
               {ads.map((car, index) => {
                 const carName = `${car.marca || ''} ${car.modelo || ''}`.trim() || 'Veículo Anunciado';
                 const carImg = car.imagem || '/images/placeholder-carro.jpg';

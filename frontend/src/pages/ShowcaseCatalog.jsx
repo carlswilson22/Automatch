@@ -103,7 +103,7 @@ const CarCard = React.memo(({ car, index, viewMode }) => {
   }
 
   return (
-    <motion.div initial={{ opacity: 0, y: 25 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: index * 0.06, ease: [0.16, 1, 0.3, 1] }} className="bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-card hover:shadow-card-hover hover:-translate-y-1 transition-all duration-300 group cursor-pointer flex flex-col" onClick={() => navigate(`/encontrar/${car.id}`)}>
+    <motion.div initial={{ opacity: 0, y: 25 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35, delay: index * 0.06, ease: [0.16, 1, 0.3, 1] }} data-tour={index === 0 ? "vitrine-primeiro-card" : undefined} className="bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-card hover:shadow-card-hover hover:-translate-y-1 transition-all duration-300 group cursor-pointer flex flex-col" onClick={() => navigate(`/encontrar/${car.id}`)}>
       <div className="relative aspect-[16/10] overflow-hidden bg-slate-900">
         <img src={getVehicleImageUrl(car.image || 'placeholder-carro.jpg')} alt={car.name} loading="lazy" decoding="async" onError={handleVehicleImageError} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
         <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-3 pt-8 flex items-end justify-end"><PriceDropBadge originalPrice={car.originalPrice} currentPrice={car.price} variant="badge" isFeatured={car.featured} /></div>
@@ -316,7 +316,7 @@ const ShowcaseCatalog = () => {
           <button onClick={() => navigate('/')} aria-label="Voltar" className="p-2 hover:bg-slate-100 rounded-full transition-colors shrink-0"><ArrowLeft className="w-5 h-5 text-slate-600" /></button>
           <AutomatchLogo size="md" theme="light" onClick={() => navigate('/')} />
           <div className="flex-1 max-w-lg mx-auto hidden md:block">
-            <FocusInput value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Buscar por marca, modelo, versao ou cor..." icon={Search} rightElement={searchQuery ? (<button onClick={() => setSearchQuery('')} aria-label="Limpar" className="p-1 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-colors"><X className="w-4 h-4" /></button>) : null} />
+            <FocusInput data-tour="vitrine-barra-busca" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} placeholder="Buscar por marca, modelo, versao ou cor..." icon={Search} rightElement={searchQuery ? (<button onClick={() => setSearchQuery('')} aria-label="Limpar" className="p-1 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-colors"><X className="w-4 h-4" /></button>) : null} />
           </div>
           <div className="hidden md:flex items-center gap-3">
             <button onClick={() => setIsComparatorOpen(true)} className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-amber-50 hover:bg-amber-100 text-amber-700 text-xs font-bold transition-colors border border-amber-200/60 cursor-pointer active:scale-95" title="Comparar veículos">

@@ -551,7 +551,7 @@ export default function ShowcaseVehicleDetails() {
             <div className="flex items-center gap-2 p-1.5 bg-slate-950/80 rounded-2xl border border-slate-800 overflow-x-auto shadow-lg">
               <button
                 type="button"
-                id="scanner-ia-tab-btn"
+                id="scanner-ia-tab-btn" data-tour="anuncio-scanner-ia"
                 onClick={() => setInspectionTab('body')}
                 className={`px-3.5 py-2 rounded-xl font-bold text-xs flex items-center gap-2 transition-all whitespace-nowrap ${
                   inspectionTab === 'body'
@@ -592,14 +592,14 @@ export default function ShowcaseVehicleDetails() {
 
             {/* Renderização Condicional da Inspeção Selecionada */}
             {inspectionTab === 'video' && (
-              <PericialVideoViewer
+              <div data-tour="detalhes-video-pericial"><PericialVideoViewer
                 videoUrl={car.videoUrl || car.video_url}
                 carName={car.name}
               />
             )}
 
             {inspectionTab === '360' && (
-              <Vehicle360Viewer
+              <div data-tour="detalhes-varredura-360"><Vehicle360Viewer
                 car={car}
                 vehicleImage={car.image || car.imagem}
                 carName={car.name || `${car.brand} ${car.model}`}
@@ -1081,6 +1081,7 @@ export default function ShowcaseVehicleDetails() {
             </div>
 
             {/* Simulador de Custo Mensal */}
+            <div data-tour="detalhes-simulador-tco">
             <div className="bg-slate-900/80 rounded-3xl p-6 sm:p-7 border border-slate-800 shadow-xl">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
@@ -1184,7 +1185,7 @@ export default function ShowcaseVehicleDetails() {
             />
 
             {/* Interactive Live Chat (AI / Seller) */}
-            <div id="chat-section" className="space-y-3 scroll-mt-24">
+            <div id="chat-section" data-tour="detalhes-consultor-ia" className="space-y-3 scroll-mt-24">
               <div className="flex gap-2 p-1.5 bg-slate-900 rounded-2xl border border-slate-800">
                 <button
                   onClick={() => setActiveChat('ai')}
