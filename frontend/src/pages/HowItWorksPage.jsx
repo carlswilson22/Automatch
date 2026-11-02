@@ -5,15 +5,16 @@
  *   - Criado para oferecer uma entrada leve e intuitiva ao sistema, substituindo textos cansativos
  *     por tours guiados interativos por objetivo, pilares essenciais e FAQ enxuto.
  */
-import React, { useState, lazy, Suspense } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, Search, RotateCw, Bot, PlusCircle, ChevronDown,
   CheckCircle2, HelpCircle, Lock, Compass, Sparkles, Car,
-  ShieldCheck, Clock, PlayCircle, Eye, ChevronRight
+  ShieldCheck, Clock, PlayCircle
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useTour } from '../contexts/TourContext';
 import {
   howItWorksSections, b2bSectionNotice,
   generalFaqList, b2bFaqList, quickPillars
@@ -22,8 +23,6 @@ import { getAvailableTours } from '../data/tourGuideData';
 import AutomatchLogo from '../components/ui/AutomatchLogo';
 import GlowButton from '../components/ui/GlowButton';
 import WipeButton from '../components/ui/WipeButton';
-
-const AutomatchTour = lazy(() => import('../components/tour/AutomatchTour'));
 
 const fadeUp = {
   hidden: { opacity: 0, y: 20 },
@@ -37,8 +36,8 @@ const stagger = {
 export default function HowItWorksPage() {
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
+  const { openTourIntro } = useTour();
 
-  const [activeTourId, setActiveTourId] = useState(null);
   const [openFaqIndex, setOpenFaqIndex] = useState(null);
   const [openDetailSectionId, setOpenDetailSectionId] = useState(null);
 
@@ -118,7 +117,7 @@ export default function HowItWorksPage() {
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">na Prática.</span>
           </motion.h1>
           <motion.p variants={fadeUp} className="text-slate-300 text-sm sm:text-base max-w-xl mx-auto leading-relaxed font-light">
-            Sem textos longos ou burocracia. Escolha seu objetivo abaixo e faça um tour guiado de 60 segundos pelas telas reais da plataforma.
+            Sem textos longos ou burocracia. Escolha seu objetivo abaixo e veja a demonstração passo a passo pelas telas reais do sistema.
           </motion.p>
         </motion.div>
       </header>
@@ -174,8 +173,9 @@ export default function HowItWorksPage() {
                   </div>
 
                   <button
-                    onClick={() => setActiveTourId(tour.id)}
-                    className={`w-full py-3.5 px-4 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md ${
+                    type="button"
+                    onClick={() => openTourIntro(tour.id)}
+                    className={`w-full py-3.5 px-4 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md cursor-pointer ${
                       isB2BTour
                         ? 'bg-gradient-to-r from-indigo-500 to-cyan-400 text-slate-950 hover:opacity-95'
                         : 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white hover:from-blue-500 hover:to-cyan-400 shadow-blue-500/20'
@@ -320,8 +320,9 @@ export default function HowItWorksPage() {
                     {b2bSectionNotice.description}
                   </p>
                   <button
-                    onClick={() => setActiveTourId('lojista')}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl transition-all"
+                    type="button"
+                    onClick={() => openTourIntro('lojista')}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl transition-all cursor-pointer"
                   >
                     <PlayCircle className="w-3.5 h-3.5" /> Fazer Tour B2B (50s)
                   </button>
@@ -413,17 +414,6 @@ export default function HowItWorksPage() {
           </div>
         </section>
       </main>
-
-      {/* Componente do Tour Guiado Ativo */}
-      {activeTourId && (
-        <Suspense fallback={null}>
-          <AutomatchTour
-            isOpen={Boolean(activeTourId)}
-            tourId={activeTourId}
-            onClose={() => setActiveTourId(null)}
-          />
-        </Suspense>
-      )}
     </div>
   );
 }

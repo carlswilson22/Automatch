@@ -1,17 +1,18 @@
 /**
- * AutomatchTour.jsx — Componente de Tour Guiado Interativo com Spotlight e Acessibilidade Plena.
+ * AutomatchTour.jsx — Componente de Tour Guiado Interativo com Spotlight e Modo de Demonstração Multitelas.
  * 
  * Objetivo e Motivo da Criação:
- *   - Criado para substituir textos longos da plataforma por uma experiência visual interativa passo a passo,
- *     com destaque visual (spotlight) nos elementos reais, navegação fluida por rotas e total conformidade com WCAG AAA.
+ *   - Criado para acompanhar o usuário pelas páginas da plataforma com spotlight e pop-up explicativo
+ *     das funcionalidades da tela, sem ser destruído durante a navegação entre rotas SPA.
  */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { createPortal } from 'react-dom';
-import { useNavigate, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useLocation } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import {
-  Compass, ChevronRight, ChevronLeft, X, Sparkles, CheckCircle2
+  Compass, ChevronRight, ChevronLeft, X, CheckCircle2, AlertCircle
 } from 'lucide-react';
+import { useTour } from '../../contexts/TourContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { getTourById } from '../../data/tourGuideData';
 import { lockScroll, unlockScroll } from '../../utils/scrollLockCore';
@@ -19,48 +20,32 @@ import { lockScroll, unlockScroll } from '../../utils/scrollLockCore';
 const SPOTLIGHT_PADDING = 8;
 const MAX_WAIT_TIMEOUT_MS = 2500;
 
-export default function AutomatchTour({
-  isOpen,
-  tourId,
-  onClose,
-  initialStepIndex = 0
-}) {
-  const navigate = useNavigate();
-  const location = useLocation();
+export default function AutomatchTour() {
+  const { demoState, nextStep, prevStep, stopDemo } = useTour();
   const { user } = useAuth();
+  const location = useLocation();
 
-  const [stepIndex, setStepIndex] = useState(initialStepIndex);
   const [targetRect, setTargetRect] = useState(null);
   const [isCenteredFallback, setIsCenteredFallback] = useState(false);
-  const [isNavigating, setIsNavigating] = useState(false);
-
   const dialogRef = useRef(null);
-  const triggerElementRef = useRef(null);
-  const tourConfig = getTourById(tourId, user?.role);
+
+  const tourConfig = getTourById(demoState.tourId, user?.role);
   const steps = tourConfig?.steps || [];
-  const currentStep = steps[stepIndex];
+  const currentStep = steps[demoState.stepIndex];
 
   // Verifica preferência de movimento reduzido
   const prefersReducedMotion = typeof window !== 'undefined' &&
     window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  // Salva o elemento que disparou o tour para devolução de foco
-  useEffect(() => {
-    if (isOpen) {
-      triggerElementRef.current = document.activeElement;
-      setStepIndex(initialStepIndex);
-    }
-  }, [isOpen, initialStepIndex]);
-
   // Gestão estrita do bloqueio de rolagem central
   useEffect(() => {
-    if (isOpen) {
+    if (demoState.isRunning) {
       lockScroll();
       return () => {
         unlockScroll();
       };
     }
-  }, [isOpen]);
+  }, [demoState.isRunning]);
 
   // Localiza e mede o elemento-alvo no DOM
   const measureTarget = useCallback(() => {
@@ -84,7 +69,7 @@ export default function AutomatchTour({
       return;
     }
 
-    // Rolagem suave até o elemento se necessário
+    // Rolagem suave até o elemento
     if (!prefersReducedMotion) {
       element.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
     } else {
@@ -104,20 +89,10 @@ export default function AutomatchTour({
     setIsCenteredFallback(false);
   }, [currentStep, prefersReducedMotion]);
 
-  // Monitora transição de rotas e carregamento assíncrono do elemento
+  // Aguarda carregamento do DOM ao trocar de tela ou passo
   useEffect(() => {
-    if (!isOpen || !currentStep) return;
+    if (!demoState.isRunning || !currentStep) return;
 
-    // Se o passo requer outra rota, navega
-    if (currentStep.targetRoute && location.pathname !== currentStep.targetRoute) {
-      setIsNavigating(true);
-      navigate(currentStep.targetRoute);
-      return;
-    }
-
-    setIsNavigating(false);
-
-    // Tenta medir imediatamente ou aguarda até MAX_WAIT_TIMEOUT_MS
     let attempts = 0;
     const maxAttempts = 25; // 25 x 100ms = 2.5s
     const timer = setInterval(() => {
@@ -130,60 +105,34 @@ export default function AutomatchTour({
     }, 100);
 
     return () => clearInterval(timer);
-  }, [isOpen, currentStep, location.pathname, navigate, measureTarget]);
+  }, [demoState.isRunning, demoState.stepIndex, location.pathname, currentStep, measureTarget]);
 
-  // Recalcula medição ao redimensionar a janela
+  // Recalcula medição no redimensionamento da janela
   useEffect(() => {
-    if (!isOpen) return;
+    if (!demoState.isRunning) return;
     const handleResize = () => measureTarget();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
-  }, [isOpen, measureTarget]);
-
-  // Encerramento seguro do tour e devolução de foco
-  const handleClose = useCallback(() => {
-    if (triggerElementRef.current && typeof triggerElementRef.current.focus === 'function') {
-      try {
-        triggerElementRef.current.focus();
-      } catch (_) {}
-    }
-    onClose();
-  }, [onClose]);
-
-  // Navegação para o próximo passo
-  const handleNext = useCallback(() => {
-    if (stepIndex < steps.length - 1) {
-      setStepIndex(prev => prev + 1);
-    } else {
-      handleClose();
-    }
-  }, [stepIndex, steps.length, handleClose]);
-
-  // Navegação para o passo anterior
-  const handlePrev = useCallback(() => {
-    if (stepIndex > 0) {
-      setStepIndex(prev => prev - 1);
-    }
-  }, [stepIndex]);
+  }, [demoState.isRunning, measureTarget]);
 
   // Atalhos de teclado acessíveis (Tab Trap, Escape, Setas)
   useEffect(() => {
-    if (!isOpen) return;
+    if (!demoState.isRunning) return;
 
     const handleKeyDown = (e) => {
       if (e.key === 'Escape') {
         e.preventDefault();
-        handleClose();
+        stopDemo();
         return;
       }
       if (e.key === 'ArrowRight' || (e.key === 'Enter' && e.target.tagName !== 'BUTTON')) {
         e.preventDefault();
-        handleNext();
+        nextStep();
         return;
       }
       if (e.key === 'ArrowLeft') {
         e.preventDefault();
-        handlePrev();
+        prevStep();
         return;
       }
 
@@ -213,20 +162,20 @@ export default function AutomatchTour({
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, handleClose, handleNext, handlePrev]);
+  }, [demoState.isRunning, stopDemo, nextStep, prevStep]);
 
-  // Leva o foco para o diálogo na mudança de passo
+  // Foco no diálogo a cada novo passo
   useEffect(() => {
-    if (isOpen && dialogRef.current) {
+    if (demoState.isRunning && dialogRef.current) {
       dialogRef.current.focus();
     }
-  }, [isOpen, stepIndex]);
+  }, [demoState.isRunning, demoState.stepIndex]);
 
-  if (!isOpen || !tourConfig || steps.length === 0 || !currentStep) {
+  if (!demoState.isRunning || !tourConfig || steps.length === 0 || !currentStep) {
     return null;
   }
 
-  // Cálculo da posição do balão
+  // Cálculo da posição do balão pop-up
   let popoverStyle = {};
   if (isCenteredFallback || !targetRect) {
     popoverStyle = {
@@ -258,7 +207,7 @@ export default function AutomatchTour({
     };
   }
 
-  const progressPercent = ((stepIndex + 1) / steps.length) * 100;
+  const progressPercent = ((demoState.stepIndex + 1) / steps.length) * 100;
 
   return createPortal(
     <div className="fixed inset-0 z-[9999] pointer-events-auto" role="presentation">
@@ -270,9 +219,7 @@ export default function AutomatchTour({
       >
         <defs>
           <mask id="spotlight-mask">
-            {/* Base escura total */}
             <rect x="0" y="0" width="100%" height="100%" fill="white" />
-            {/* Recorte transparente no elemento-alvo */}
             {targetRect && !isCenteredFallback && (
               <rect
                 x={targetRect.left}
@@ -286,7 +233,6 @@ export default function AutomatchTour({
             )}
           </mask>
         </defs>
-        {/* Camada semitransparente escurecedora */}
         <rect
           x="0"
           y="0"
@@ -312,7 +258,7 @@ export default function AutomatchTour({
         />
       )}
 
-      {/* Balão do Tour (Popover Acessível) */}
+      {/* Pop-up do Tour em Modo Demonstração */}
       <div
         ref={dialogRef}
         role="dialog"
@@ -341,22 +287,22 @@ export default function AutomatchTour({
               {tourConfig.badge}
             </span>
             <span className="text-xs text-slate-400 font-semibold" aria-live="polite">
-              Passo {stepIndex + 1} de {steps.length}
+              Passo {demoState.stepIndex + 1} de {steps.length}
             </span>
           </div>
 
           <button
             type="button"
-            onClick={handleClose}
+            onClick={stopDemo}
             className="w-11 h-11 -mr-2 -mt-2 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 rounded-full transition-colors cursor-pointer"
-            aria-label="Pular e fechar o tour"
-            title="Fechar tour (ESC)"
+            aria-label="Encerrar demonstração"
+            title="Fechar (ESC)"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        {/* Conteúdo do Passo */}
+        {/* Conteúdo do Passo na Tela Atual */}
         <div className="mb-6">
           <h3
             id="tour-step-title"
@@ -372,24 +318,24 @@ export default function AutomatchTour({
           </p>
         </div>
 
-        {/* Rodapé de Ações com Alvos Mínimos de 44x44px */}
+        {/* Rodapé com Alvos de Toque Mínimos de 44x44px */}
         <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-800">
           <button
             type="button"
-            onClick={handleClose}
+            onClick={stopDemo}
             className="min-h-[44px] px-3 text-xs font-semibold text-slate-400 hover:text-slate-200 transition-colors cursor-pointer"
           >
-            Pular tour
+            Encerrar
           </button>
 
           <div className="flex items-center gap-2">
-            {stepIndex > 0 && (
+            {demoState.stepIndex > 0 && (
               <button
                 type="button"
-                onClick={handlePrev}
+                onClick={prevStep}
                 className="min-h-[44px] min-w-[44px] px-3.5 bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs rounded-xl transition-all flex items-center justify-center gap-1 border border-slate-700 active:scale-95 cursor-pointer"
                 title="Passo anterior (Seta Esquerda)"
-                aria-label="Voltar para o passo anterior"
+                aria-label="Voltar para a tela anterior"
               >
                 <ChevronLeft className="w-4 h-4" />
                 <span className="hidden sm:inline">Voltar</span>
@@ -398,12 +344,12 @@ export default function AutomatchTour({
 
             <button
               type="button"
-              onClick={handleNext}
+              onClick={nextStep}
               className="min-h-[44px] px-4 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-black text-xs rounded-xl transition-all flex items-center justify-center gap-1.5 shadow-lg shadow-cyan-500/20 active:scale-95 cursor-pointer"
-              title={stepIndex === steps.length - 1 ? 'Concluir tour (Enter)' : 'Próximo passo (Enter ou Seta Direita)'}
+              title={demoState.stepIndex === steps.length - 1 ? 'Concluir demonstração (Enter)' : 'Próxima tela (Enter ou Seta Direita)'}
             >
-              <span>{stepIndex === steps.length - 1 ? 'Concluir' : 'Próximo'}</span>
-              {stepIndex === steps.length - 1 ? (
+              <span>{demoState.stepIndex === steps.length - 1 ? 'Concluir' : 'Próximo'}</span>
+              {demoState.stepIndex === steps.length - 1 ? (
                 <CheckCircle2 className="w-4 h-4" />
               ) : (
                 <ChevronRight className="w-4 h-4" />
@@ -416,4 +362,3 @@ export default function AutomatchTour({
     document.body
   );
 }
-
