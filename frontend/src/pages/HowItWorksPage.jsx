@@ -174,7 +174,7 @@ export default function HowItWorksPage() {
                   <button
                     type="button"
                     onClick={() => openTourIntro(tour.id)}
-                    className={`w-full py-3.5 px-4 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md cursor-pointer ${
+                    className={`w-full py-3.5 px-4 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md cursor-pointer hover:-translate-y-[3px] hover:shadow-lg hover:brightness-110 transition-[transform,box-shadow,filter] duration-200 ${
                       isB2BTour
                         ? 'bg-gradient-to-r from-indigo-500 to-cyan-400 text-slate-950 hover:opacity-90 transition-colors duration-150'
                         : 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white hover:from-blue-500 hover:to-cyan-400 shadow-blue-500/20 transition-colors duration-150'
