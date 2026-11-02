@@ -66,6 +66,31 @@ describe('GAR-02: Motor de Filtragem de Veículos (filterVehicles)', () => {
     assert.strictEqual(res.length, 0);
   });
 
+
+  test('Filtro de Preço: Resiliente a acentos e restringe estritamente veículos acima de R$ 80.000', () => {
+    // Teste com acento canônico
+    const resComAcento = filterVehicles(mockCars, { price: 'Até R$ 80.000' });
+    assert.strictEqual(resComAcento.length, 2, 'Deve encontrar exatamente 2 veículos de até 80k (HB20 78k e Pulse 79k)');
+    assert.ok(resComAcento.every(c => c.price <= 80000), 'Nenhum veículo deve custar mais de 80.000');
+
+    // Teste SEM acento (resiliência de digitação/query)
+    const resSemAcento = filterVehicles(mockCars, { price: 'Ate R$ 80.000' });
+    assert.strictEqual(resSemAcento.length, 2, 'Deve encontrar os mesmos 2 veículos mesmo sem acento');
+    assert.ok(resSemAcento.every(c => c.price <= 80000));
+
+    // Veículos de 95k (Polo), 115k (Tracker) e 180k (Corolla) DEVEM ser excluídos
+    const ids = resComAcento.map(c => c.id);
+    assert.ok(!ids.includes('1'), 'Corolla (180k) não deve estar presente');
+    assert.ok(!ids.includes('2'), 'Polo (95k) não deve estar presente');
+    assert.ok(!ids.includes('4'), 'Tracker (115k) não deve estar presente');
+  });
+
+  test('Filtro de Preço: Nova faixa "Até R$ 100.000" captura veículos de entrada e compactos', () => {
+    const resAte100k = filterVehicles(mockCars, { price: 'Até R$ 100.000' });
+    assert.strictEqual(resAte100k.length, 3, 'Deve encontrar HB20 (78k), Pulse (79k) e Polo (95k)');
+    assert.ok(resAte100k.every(c => c.price <= 100000));
+  });
+
   test('Reset / Limpar Filtros devolve a totalidade dos itens ordenados', () => {
     const res = filterVehicles(mockCars, {
       store: 'Todas',
