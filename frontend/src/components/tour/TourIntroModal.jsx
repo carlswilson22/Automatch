@@ -4,13 +4,13 @@
  * Objetivo e Motivo da Criação:
  *   - Criado para apresentar as instruções e o itinerário de telas antes de iniciar a demonstração,
  *     permanecendo aberto de forma estável até que o usuário decida iniciar ou fechar (sem timer automático).
+ *   - Otimizado para alto desempenho (60 FPS): renderização direta com aceleração de hardware e sem camadas pesadas de blur.
  */
 import React, { useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Compass, X, PlayCircle, Clock, CheckCircle2,
-  MapPin, Sparkles, ArrowRight
+  Compass, X, PlayCircle, Clock, Sparkles, ArrowRight
 } from 'lucide-react';
 import { useTour } from '../../contexts/TourContext';
 import { useAuth } from '../../contexts/AuthContext';
@@ -66,33 +66,32 @@ export default function TourIntroModal() {
   return createPortal(
     <AnimatePresence>
       <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 sm:p-6" role="presentation">
-        {/* Backdrop Escurecedor com Blur */}
+        {/* Backdrop Escurecedor Otimizado (sem blur computacional pesado) */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
           onClick={closeTourIntro}
-          className="fixed inset-0 bg-slate-950/80 backdrop-blur-md"
+          className="fixed inset-0 bg-slate-950/80"
+          style={{ willChange: 'opacity' }}
           aria-hidden="true"
         />
 
-        {/* Card do Modal A */}
+        {/* Card do Modal A — Renderização Fluida em 60 FPS */}
         <motion.div
           ref={modalRef}
           role="dialog"
           aria-modal="true"
           aria-labelledby="tour-intro-title"
           aria-describedby="tour-intro-desc"
-          initial={{ opacity: 0, scale: 0.95, y: 16 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 16 }}
-          transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-          className="relative w-full max-w-lg bg-slate-900/95 backdrop-blur-2xl border border-slate-700/80 rounded-3xl p-6 sm:p-8 text-white shadow-2xl z-10 overflow-hidden"
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 6 }}
+          transition={{ duration: 0.15, ease: 'easeOut' }}
+          style={{ willChange: 'opacity, transform' }}
+          className="relative w-full max-w-lg bg-slate-900 border border-slate-700/90 rounded-3xl p-6 sm:p-8 text-white shadow-2xl z-10 overflow-hidden"
         >
-          {/* Efeito sutil de gradiente de fundo */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-600/10 rounded-full blur-3xl pointer-events-none" />
-
           {/* Header */}
           <div className="relative z-10 flex items-start justify-between gap-4 mb-6">
             <div className="flex items-center gap-3">
@@ -130,7 +129,7 @@ export default function TourIntroModal() {
           </p>
 
           {/* Roteiro das Telas que serão visitadas */}
-          <div className="relative z-10 bg-slate-950/70 rounded-2xl p-4 sm:p-5 border border-slate-800 mb-8 space-y-3">
+          <div className="relative z-10 bg-slate-950/80 rounded-2xl p-4 sm:p-5 border border-slate-800 mb-8 space-y-3">
             <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
               <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
               Itinerário da Demonstração ({tourConfig.steps.length} etapas)
