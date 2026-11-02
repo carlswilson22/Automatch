@@ -27,7 +27,7 @@ import { getVehicleImageUrl, handleVehicleImageError } from '../utils/imageHelpe
 import VehicleCardSkeleton from '../components/common/VehicleCardSkeleton';
 import { api, isDemoModeEnabled } from '../services/apiClient';
 import { mapVehicleToViewModel } from '../utils/vehicleMapper';
-import { filterVehicles } from '../utils/filterVehicles';
+import { filterVehicles, PRICE_RANGES, KM_RANGES, normalizeString } from '../utils/filterVehicles';
 
 export const formatMileage = (val) => {
   if (val === undefined || val === null) return '0 km';
@@ -54,8 +54,7 @@ const showcaseCars = [
 const BRANDS = ['Todas', 'Chevrolet', 'Fiat', 'Ford', 'Honda', 'Hyundai', 'Jeep', 'Nissan', 'Renault', 'Tesla', 'Toyota', 'Volkswagen', 'BMW', 'Porsche'];
 const BODY_TYPES = ['Todos', 'Sedan', 'SUV', 'Hatch', 'Picape'];
 const YEAR_OPTIONS = ['Todos', '2024', '2023', '2022', '2021', '2020'];
-const KM_RANGES = [{ label: 'Qualquer', max: Infinity }, { label: 'Ate 10.000 km', max: 10000 }, { label: 'Ate 30.000 km', max: 30000 }, { label: 'Ate 50.000 km', max: 50000 }];
-const PRICE_RANGES = [{ label: 'Qualquer', min: 0, max: Infinity }, { label: 'Ate R$ 80.000', min: 0, max: 80000 }, { label: 'R$ 80.000 a R$ 150.000', min: 80000, max: 150000 }, { label: 'R$ 150.000 a R$ 200.000', min: 150000, max: 200000 }, { label: 'Acima de R$ 200.000', min: 200000, max: Infinity }];
+// KM_RANGES e PRICE_RANGES são importados de filterVehicles.js (fonte canônica da verdade)
 
 const CarCard = React.memo(({ car, index, viewMode }) => {
   const navigate = useNavigate();
@@ -210,7 +209,8 @@ const ShowcaseCatalog = () => {
     if (filterBrand !== 'Todas') params.set('brand', filterBrand);
     if (filterYear !== 'Todos') { params.set('year_min', filterYear); params.set('year_max', filterYear); }
     if (filterPrice !== 'Qualquer') {
-      const pr = PRICE_RANGES.find(r => r.label === filterPrice);
+      const normPrice = normalizeString(filterPrice);
+      const pr = PRICE_RANGES.find(r => normalizeString(r.label) === normPrice);
       if (pr) {
         if (pr.min > 0) params.set('price_min', pr.min.toString());
         if (pr.max < Infinity) params.set('price_max', pr.max.toString());
@@ -443,11 +443,36 @@ const ShowcaseCatalog = () => {
           )}
 
           {results.length === 0 && !isLoading && (
-            <div className="w-full py-20 flex flex-col items-center justify-center text-slate-500">
-              <Search className="w-12 h-12 mb-4 text-slate-300" />
-              <p className="text-lg font-medium text-slate-600">Nenhum veiculo encontrado.</p>
-              <p className="text-sm mt-1">Tente ajustar seus filtros de busca.</p>
-              <button onClick={resetFilters} className="mt-4 text-brand-blue font-semibold text-sm hover:underline flex items-center gap-1"><RotateCcw className="w-4 h-4" /> Limpar filtros</button>
+            <div className="w-full py-16 px-6 flex flex-col items-center justify-center text-slate-500 bg-white rounded-2xl border border-slate-200/80 shadow-xs text-center my-6">
+              <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+                <Search className="w-8 h-8 text-slate-400" />
+              </div>
+              <h3 className="text-lg font-bold text-slate-800">
+                {filterPrice !== 'Qualquer'
+                  ? `Nenhum veículo encontrado na faixa "${filterPrice}"`
+                  : 'Nenhum veículo encontrado com os filtros selecionados'}
+              </h3>
+              <p className="text-sm text-slate-500 max-w-md mt-1.5 leading-relaxed">
+                {filterPrice !== 'Qualquer'
+                  ? 'No momento não temos veículos nesta faixa de preço. Tente ampliar o limite ou redefinir o filtro para ver todas as opções periciadas.'
+                  : 'Tente ajustar os termos de busca, marcas ou opções de carroceria para encontrar ofertas disponíveis.'}
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-3 mt-6">
+                {filterPrice !== 'Qualquer' && (
+                  <button
+                    onClick={() => setFilterPrice('Qualquer')}
+                    className="px-4 py-2 bg-brand-blue text-white rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors flex items-center gap-2 cursor-pointer shadow-sm"
+                  >
+                    <RotateCcw className="w-4 h-4" /> Ver Todas as Faixas de Preço
+                  </button>
+                )}
+                <button
+                  onClick={resetFilters}
+                  className="px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl text-sm font-semibold transition-colors flex items-center gap-2 cursor-pointer"
+                >
+                  <RotateCcw className="w-4 h-4" /> Redefinir Todos os Filtros
+                </button>
+              </div>
             </div>
           )}
 

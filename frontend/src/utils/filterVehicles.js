@@ -20,7 +20,9 @@ export const KM_RANGES = [
 
 export const PRICE_RANGES = [
   { label: 'Qualquer', min: 0, max: Infinity },
+  { label: 'Até R$ 60.000', min: 0, max: 60000 },
   { label: 'Até R$ 80.000', min: 0, max: 80000 },
+  { label: 'Até R$ 100.000', min: 0, max: 100000 },
   { label: 'R$ 80.000 a R$ 150.000', min: 80000, max: 150000 },
   { label: 'R$ 150.000 a R$ 200.000', min: 150000, max: 200000 },
   { label: 'Acima de R$ 200.000', min: 200000, max: Infinity }
@@ -75,14 +77,16 @@ export function filterVehicles(vehicles, filters = {}) {
   const normalizedBrand = normalizeString(brand);
   const normalizedBodyType = normalizeBodyType(bodyType);
 
-  // Faixas numéricas
-  const priceRange = typeof price === 'object' && price !== null
+  // Faixas numéricas resilientes (suportam objeto {min, max}, label com ou sem acentos)
+  const normalizedPriceInput = normalizeString(typeof price === 'string' ? price : price?.label);
+  const priceRange = typeof price === 'object' && price !== null && 'min' in price
     ? price
-    : (PRICE_RANGES.find(r => r.label === price) || { min: 0, max: Infinity });
+    : (PRICE_RANGES.find(r => normalizeString(r.label) === normalizedPriceInput) || { min: 0, max: Infinity });
 
-  const kmRange = typeof km === 'object' && km !== null
+  const normalizedKmInput = normalizeString(typeof km === 'string' ? km : km?.label);
+  const kmRange = typeof km === 'object' && km !== null && 'max' in km
     ? km
-    : (KM_RANGES.find(r => r.label === km) || { max: Infinity });
+    : (KM_RANGES.find(r => normalizeString(r.label) === normalizedKmInput) || { max: Infinity });
 
   const filtered = vehicles.filter((c) => {
     if (!c) return false;
