@@ -31,6 +31,8 @@ export const formatPrice = (val) => {
 };
 
 const HomeSupportChat = React.lazy(() => import('../components/chat/HomeSupportChat'));
+const TourNotificationToast = React.lazy(() => import('../components/tour/TourNotificationToast'));
+const AutomatchTour = React.lazy(() => import('../components/tour/AutomatchTour'));
 
 const showcaseCars = [
   { id: 'sc-001', name: 'Toyota Corolla Cross XRX', year: 2024, price: 185000, color: 'Branco Perola', mileage: '12.000 km', image: '/images/FotoCorollaCross.jpg', bodyType: 'SUV', description: 'SUV hibrido flex, pacote de seguranca completo e teto solar.', tags: ['Hibrido Flex', 'Teto Solar', 'Safety Sense'], featured: true, storeId: 'store-1' },
@@ -105,6 +107,7 @@ const Home = () => {
   const { user, isAuthenticated, canAccessB2B } = useAuth();
   const [allCars, setAllCars] = useState(showcaseCars);
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [activeTourId, setActiveTourId] = useState(null);
   const [accessDeniedAlert, setAccessDeniedAlert] = useState(false);
 
   useEffect(() => {

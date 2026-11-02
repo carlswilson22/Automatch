@@ -595,7 +595,7 @@ export default function ShowcaseVehicleDetails() {
               <div data-tour="detalhes-video-pericial"><PericialVideoViewer
                 videoUrl={car.videoUrl || car.video_url}
                 carName={car.name}
-              />
+              /></div>
             )}
 
             {inspectionTab === '360' && (
@@ -607,7 +607,7 @@ export default function ShowcaseVehicleDetails() {
                 photos360={car.photos360}
                 damagePoints={car.damagePoints}
                 onOpenLaudo={() => setActiveAccordion('laudo')}
-              />
+              /></div>
             )}
 
 
@@ -938,6 +938,7 @@ export default function ShowcaseVehicleDetails() {
 
                 <button
                   type="button"
+                  data-tour="detalhes-botao-dossie"
                   onClick={() => setIsDossierModalOpen(true)}
                   className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between group cursor-pointer ${
                     isDossierModalOpen
@@ -1081,8 +1082,7 @@ export default function ShowcaseVehicleDetails() {
             </div>
 
             {/* Simulador de Custo Mensal */}
-            <div data-tour="detalhes-simulador-tco">
-            <div className="bg-slate-900/80 rounded-3xl p-6 sm:p-7 border border-slate-800 shadow-xl">
+            <div data-tour="detalhes-simulador-tco" className="bg-slate-900/80 rounded-3xl p-6 sm:p-7 border border-slate-800 shadow-xl">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-3">
                   <div className="p-3 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 shrink-0">

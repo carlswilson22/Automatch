@@ -552,7 +552,8 @@ export default function Dashboard() {
             ) : (
               <AnimatePresence mode="wait">
                 {viewMode === 'grid' ? (
-                  <motion.div 
+                  <motion.div
+                    data-tour="dashboard-tabela-ativos"
                     key="grid"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -839,8 +840,7 @@ export default function Dashboard() {
                   Conheça a <strong>Rede B2B Automatch</strong>: tenha acesso a estoque compartilhado de concessionárias parceiras, radar de repasse com piso inviolável e gestão multi-lojas.
                 </p>
               </div>
-              <button
-                onClick={() => navigate('/como-funciona')}
+              <button data-tour="dashboard-rede-parceiros" onClick={() => navigate('/como-funciona')}
                 className="inline-flex items-center gap-2 px-6 py-3.5 bg-white hover:bg-slate-100 text-slate-900 rounded-2xl text-xs font-bold uppercase tracking-wider shadow-lg active:scale-95 transition-all whitespace-nowrap cursor-pointer"
               >
                 <span>Conhecer a Rede B2B</span>

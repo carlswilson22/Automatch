@@ -180,3 +180,4 @@ export function getTourById(tourId, userRole = null) {
   const isAllowed = Boolean(userRole && tour.allowedRoles.includes(userRole));
   return isAllowed ? tour : null;
 }
+

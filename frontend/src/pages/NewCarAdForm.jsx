@@ -1144,7 +1144,7 @@ const NewCarAdForm = () => {
             </div>
 
             {/* Imagem Upload */}
-            <div className="space-y-3 pt-6 border-t border-slate-100">
+            <div data-tour="anuncio-upload-midia" className="space-y-3 pt-6 border-t border-slate-100">
               <label className="text-sm font-bold text-slate-700">Foto da Capa do Veículo</label>
               
               {!formData.imagem ? (
