@@ -139,10 +139,9 @@ export default function HowItWorksPage() {
             {availableTours.map((tour) => {
               const isB2BTour = tour.id === 'lojista';
               return (
-                <motion.div
+                <div
                   key={tour.id}
-                  whileHover={{ y: -4 }}
-                  className={`rounded-3xl p-6 sm:p-7 border flex flex-col justify-between shadow-card transition-all ${
+                  className={`rounded-3xl p-6 sm:p-7 border flex flex-col justify-between shadow-card ${
                     isB2BTour
                       ? 'bg-gradient-to-br from-indigo-950 via-slate-900 to-indigo-900 border-indigo-500/40 text-white'
                       : 'bg-white border-slate-200/80 text-slate-800'
@@ -175,7 +174,7 @@ export default function HowItWorksPage() {
                   <button
                     type="button"
                     onClick={() => openTourIntro(tour.id)}
-                    className={`w-full py-3.5 px-4 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 transition-all active:scale-95 shadow-md cursor-pointer ${
+                    className={`w-full py-3.5 px-4 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md cursor-pointer ${
                       isB2BTour
                         ? 'bg-gradient-to-r from-indigo-500 to-cyan-400 text-slate-950 hover:opacity-95'
                         : 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white hover:from-blue-500 hover:to-cyan-400 shadow-blue-500/20'
@@ -184,7 +183,7 @@ export default function HowItWorksPage() {
                     <PlayCircle className="w-4 h-4" />
                     Iniciar Tour ({tour.duration})
                   </button>
-                </motion.div>
+                </div>
               );
             })}
           </div>
