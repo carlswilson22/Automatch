@@ -176,8 +176,8 @@ export default function HowItWorksPage() {
                     onClick={() => openTourIntro(tour.id)}
                     className={`w-full py-3.5 px-4 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-md cursor-pointer ${
                       isB2BTour
-                        ? 'bg-gradient-to-r from-indigo-500 to-cyan-400 text-slate-950 hover:opacity-95'
-                        : 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white hover:from-blue-500 hover:to-cyan-400 shadow-blue-500/20'
+                        ? 'bg-gradient-to-r from-indigo-500 to-cyan-400 text-slate-950'
+                        : 'bg-gradient-to-r from-blue-600 to-cyan-500 text-white shadow-blue-500/20'
                     }`}
                   >
                     <PlayCircle className="w-4 h-4" />
@@ -321,7 +321,7 @@ export default function HowItWorksPage() {
                   <button
                     type="button"
                     onClick={() => openTourIntro('lojista')}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl transition-all cursor-pointer"
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white font-bold text-xs rounded-xl cursor-pointer"
                   >
                     <PlayCircle className="w-3.5 h-3.5" /> Fazer Tour B2B (50s)
                   </button>
