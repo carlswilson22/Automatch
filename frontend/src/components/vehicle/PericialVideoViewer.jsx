@@ -6,6 +6,7 @@
  *     com marcações de tempo nos pontos inspecionados (motor, suspensão, interior e lataria).
  */
 import React, { useState, useRef, useEffect } from 'react';
+import { getVideoUrl } from '../../utils/imageHelper';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Play, Pause, RotateCcw, ShieldCheck, CheckCircle2,
@@ -52,6 +53,14 @@ export default function PericialVideoViewer({
   const [simulatedProgress, setSimulatedProgress] = useState(0);
   const [videoError, setVideoError] = useState(false);
   const isSimulated = !videoUrl || videoError;
+
+  // Reseta estado ao alternar de veiculo ou URL
+  useEffect(() => {
+    setVideoError(false);
+    setIsPlaying(false);
+    setCurrentTime(0);
+    setSimulatedProgress(0);
+  }, [videoUrl]);
 
   // Se não houver videoUrl real fornecido ou der erro, usa simulação interativa de 20s de alta fidelidade
   useEffect(() => {
@@ -150,7 +159,7 @@ export default function PericialVideoViewer({
         {videoUrl && !videoError ? (
           <video
             ref={videoRef}
-            src={videoUrl}
+            src={getVideoUrl(videoUrl)}
             className="w-full h-full object-cover"
             muted={isMuted}
             playsInline

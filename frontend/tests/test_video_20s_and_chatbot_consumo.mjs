@@ -41,6 +41,8 @@ assert(videoSrc.includes('Reiniciar vídeo (20s)'), 'Tooltip exibe "20s"');
 assert(!videoSrc.includes('Reiniciar vídeo (15s)'), 'Não existe tooltip "15s"');
 assert(videoSrc.includes('Frente (5s), Linha de Cintura & 4 Pneus (10s), Traseira (5s)'), 'Header exibe divisão 5s / 10s / 5s');
 assert(videoSrc.includes('Fase {activeSegment + 1}/3'), 'Fase X/3');
+assert(videoSrc.includes("import { getVideoUrl } from '../../utils/imageHelper';"), 'Importa getVideoUrl de imageHelper');
+assert(videoSrc.includes('getVideoUrl(videoUrl)'), 'Aplica getVideoUrl no elemento video');
 
 // Verify 3 checkpoints: 0-5s, 5-15s, 15-20s
 const checkpointMatches = videoSrc.match(/start:\s*\d+,\s*\n\s*end:\s*\d+/g);

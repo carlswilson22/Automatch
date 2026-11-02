@@ -84,6 +84,35 @@ export function getVehicleImageUrl(imagePath) {
 }
 
 /**
+ * Normaliza e resolve a URL de um vídeo pericial aplicando o BASE_URL do Vite.
+ * Garante que caminhos como /videos/pericial/sc-001-pericial.mp4 funcionem
+ * perfeitamente tanto em dev local quanto em produção no GitHub Pages (/Automatch/).
+ */
+export function getVideoUrl(videoPath) {
+  if (!videoPath) return null;
+  const trimmed = String(videoPath).trim();
+  if (!trimmed) return null;
+
+  // URLs externas, blob e data URLs já são resolvidas diretamente
+  if (
+    trimmed.startsWith('http://') ||
+    trimmed.startsWith('https://') ||
+    trimmed.startsWith('data:') ||
+    trimmed.startsWith('blob:')
+  ) {
+    return trimmed;
+  }
+
+  // Obtém o BASE_URL configurado no Vite (ex: '/AutoMatch/' ou '/') com fallback seguro
+  const rawBase = (typeof import.meta !== 'undefined' && import.meta?.env?.BASE_URL) || '/';
+  const baseUrl = rawBase.endsWith('/') ? rawBase : `${rawBase}/`;
+
+  // Limpa barras iniciais para evitar duplicidade
+  const cleanPath = trimmed.replace(/^\/+/, '');
+  return `${baseUrl}${cleanPath}`;
+}
+
+/**
  * Manipulador de fallback em caso de erro 404 ou falha de rede ao carregar a imagem.
  * Evita loops de erro e exibe o placeholder estilizado sem quebrar o layout.
  */
