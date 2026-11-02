@@ -164,5 +164,69 @@ describe('BATERIA DE TESTES - TOUR GUIADO INTERATIVO & ACESSIBILIDADE', () => {
       );
     }
   });
-});
 
+  // =========================================================================
+  // MÓDULO 6: Modal A Permanente, TourContext Global e Demonstração Multitelas
+  // =========================================================================
+  test('6.1: TourContext.jsx exporta TourProvider e useTour com gerenciamento de estado unificado', () => {
+    const contextContent = fs.readFileSync(path.join(rootDir, 'src/contexts/TourContext.jsx'), 'utf-8');
+
+    assert.ok(contextContent.includes('export function TourProvider'), 'Deve exportar TourProvider');
+    assert.ok(contextContent.includes('export function useTour'), 'Deve exportar useTour');
+    assert.ok(contextContent.includes('openTourIntro'), 'Deve fornecer openTourIntro');
+    assert.ok(contextContent.includes('closeTourIntro'), 'Deve fornecer closeTourIntro');
+    assert.ok(contextContent.includes('startDemo'), 'Deve fornecer startDemo');
+    assert.ok(contextContent.includes('stopDemo'), 'Deve fornecer stopDemo');
+    assert.ok(contextContent.includes('nextStep'), 'Deve fornecer nextStep');
+    assert.ok(contextContent.includes('prevStep'), 'Deve fornecer prevStep');
+    assert.ok(contextContent.includes('introModal'), 'Deve gerenciar estado de introModal');
+    assert.ok(contextContent.includes('demoState'), 'Deve gerenciar estado de demoState');
+  });
+
+  test('6.2: TourIntroModal.jsx (Modal A) NÃO possui auto-dismiss/timeout e segue acessibilidade WCAG AAA', () => {
+    const modalContent = fs.readFileSync(path.join(rootDir, 'src/components/tour/TourIntroModal.jsx'), 'utf-8');
+
+    // Não deve possuir timers que fecham o modal automaticamente (bug dos 1s corrigido)
+    assert.ok(
+      !modalContent.includes('setTimeout'),
+      'Modal A não deve conter setTimeout para auto-fechamento'
+    );
+    assert.ok(
+      !modalContent.includes('setInterval'),
+      'Modal A não deve conter setInterval para auto-fechamento'
+    );
+
+    // Deve possuir atributos de acessibilidade e bloqueio de rolagem
+    assert.ok(modalContent.includes('role="dialog"'), 'Modal A deve ter role="dialog"');
+    assert.ok(modalContent.includes('aria-modal="true"'), 'Modal A deve ter aria-modal="true"');
+    assert.ok(modalContent.includes('aria-labelledby="tour-intro-title"'), 'Modal A deve ter aria-labelledby');
+    assert.ok(modalContent.includes('aria-describedby="tour-intro-desc"'), 'Modal A deve ter aria-describedby');
+    assert.ok(modalContent.includes('lockScroll()'), 'Modal A deve travar scroll com scrollLockCore');
+    assert.ok(modalContent.includes('unlockScroll()'), 'Modal A deve destravar scroll com scrollLockCore');
+    assert.ok(modalContent.includes('closeTourIntro'), 'Modal A deve permitir fechar explicitamente');
+    assert.ok(modalContent.includes('startDemo'), 'Modal A deve disparar startDemo ao iniciar demonstração');
+  });
+
+  test('6.3: App.jsx integra TourProvider, TourIntroModal e AutomatchTour no nível raiz do Router', () => {
+    const appContent = fs.readFileSync(path.join(rootDir, 'src/App.jsx'), 'utf-8');
+
+    assert.ok(appContent.includes('<TourProvider>'), 'App.jsx deve envolver rotas com TourProvider');
+    assert.ok(appContent.includes('</TourProvider>'), 'App.jsx deve fechar TourProvider');
+    assert.ok(appContent.includes('<TourIntroModal />'), 'App.jsx deve renderizar TourIntroModal globalmente');
+    assert.ok(appContent.includes('<AutomatchTour />'), 'App.jsx deve renderizar AutomatchTour globalmente');
+  });
+
+  test('6.4: HowItWorksPage.jsx e Home.jsx acionam o Modal A através de openTourIntro', () => {
+    const howItWorksContent = fs.readFileSync(path.join(rootDir, 'src/pages/HowItWorksPage.jsx'), 'utf-8');
+    const homeContent = fs.readFileSync(path.join(rootDir, 'src/pages/Home.jsx'), 'utf-8');
+
+    assert.ok(
+      howItWorksContent.includes('openTourIntro('),
+      'HowItWorksPage deve disparar openTourIntro nos botões de tour'
+    );
+    assert.ok(
+      homeContent.includes('openTourIntro('),
+      'Home deve disparar openTourIntro no toast interativo'
+    );
+  });
+});

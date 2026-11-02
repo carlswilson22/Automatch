@@ -15,6 +15,7 @@ import {
   ShieldAlert, X
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useTour } from '../contexts/TourContext';
 import { stores } from '../data/inventoryData';
 import StoreIdentifier from '../components/ui/StoreIdentifier';
 import AutomatchLogo from '../components/ui/AutomatchLogo';
@@ -32,7 +33,6 @@ export const formatPrice = (val) => {
 
 const HomeSupportChat = React.lazy(() => import('../components/chat/HomeSupportChat'));
 const TourNotificationToast = React.lazy(() => import('../components/tour/TourNotificationToast'));
-const AutomatchTour = React.lazy(() => import('../components/tour/AutomatchTour'));
 
 const showcaseCars = [
   { id: 'sc-001', name: 'Toyota Corolla Cross XRX', year: 2024, price: 185000, color: 'Branco Perola', mileage: '12.000 km', image: '/images/FotoCorollaCross.jpg', bodyType: 'SUV', description: 'SUV hibrido flex, pacote de seguranca completo e teto solar.', tags: ['Hibrido Flex', 'Teto Solar', 'Safety Sense'], featured: true, storeId: 'store-1' },
@@ -105,9 +105,9 @@ const Home = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, isAuthenticated, canAccessB2B } = useAuth();
+  const { openTourIntro } = useTour();
   const [allCars, setAllCars] = useState(showcaseCars);
   const [isChatOpen, setIsChatOpen] = useState(false);
-  const [activeTourId, setActiveTourId] = useState(null);
   const [accessDeniedAlert, setAccessDeniedAlert] = useState(false);
 
   useEffect(() => {
@@ -271,6 +271,10 @@ const Home = () => {
           <HomeSupportChat isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
         </React.Suspense>
       )}
+
+      <React.Suspense fallback={null}>
+        <TourNotificationToast onStartTour={(tourId) => openTourIntro(tourId || 'comprar')} />
+      </React.Suspense>
     </div>
   );
 };
