@@ -139,6 +139,16 @@ describe('BATERIA DE TESTES - LOTE 1 (BASE DE TOKENS E MICROINTERAÇÕES CORE)',
     verifyBalancedSyntax(wipeContent, 'WipeButton.jsx');
   });
 
+
+  test('1.7: AuthPage deve renderizar AutomatchLogo com theme="dark" para legibilidade no fundo escuro', () => {
+    const authPath = path.join(rootDir, 'src/pages/AuthPage.jsx');
+    assert.ok(fs.existsSync(authPath), 'AuthPage.jsx deve existir');
+    const content = fs.readFileSync(authPath, 'utf-8');
+    assert.ok(content.includes('<AutomatchLogo theme="dark"'), 'AuthPage deve invocar AutomatchLogo com theme="dark"');
+    assert.ok(!content.includes('<AutomatchLogo theme="light"'), 'AuthPage não deve usar theme="light" em fundo escuro');
+    verifyBalancedSyntax(content, 'AuthPage.jsx');
+  });
+
   test('1.6: tailwind.config.js e index.css devem registrar os tokens de cores, sombras e acessibilidade', () => {
     const tailwindPath = path.join(rootDir, 'tailwind.config.js');
     const cssPath = path.join(rootDir, 'src/index.css');
