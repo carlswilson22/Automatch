@@ -229,4 +229,25 @@ describe('BATERIA DE TESTES - TOUR GUIADO INTERATIVO & ACESSIBILIDADE', () => {
       'Home deve disparar openTourIntro no toast interativo'
     );
   });
+
+  test('6.5: ProtectedRoute implementa bypass de demonstração com isTourDemoActive', () => {
+    const prFile = fs.readFileSync(path.join(rootDir, 'src/components/ProtectedRoute.jsx'), 'utf-8');
+    assert.ok(
+      prFile.includes('isTourDemoActive') && prFile.includes('useTour'),
+      'ProtectedRoute deve importar useTour e declarar isTourDemoActive'
+    );
+    assert.ok(
+      prFile.includes('!isAuthenticated && !isTourDemoActive'),
+      'ProtectedRoute só deve redirecionar para /login se NÃO estiver em tour ativo'
+    );
+  });
+
+  test('6.6: Tour Quero Anunciar aponta passos de scanner e upload para /novo-anuncio', () => {
+    const tourData = fs.readFileSync(path.join(rootDir, 'src/data/tourGuideData.js'), 'utf-8');
+    assert.ok(
+      tourData.includes("id: 'scanner-ia'") && tourData.includes("targetRoute: '/novo-anuncio'"),
+      'Passo de scanner-ia deve apontar para /novo-anuncio'
+    );
+  });
+
 });
