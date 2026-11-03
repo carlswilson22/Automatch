@@ -157,6 +157,8 @@ const NewCarAdForm = () => {
   const [laudoUploadError, setLaudoUploadError] = useState('');
   const [yoloFeedback, setYoloFeedback] = useState(null);
   const [laudoFeedback, setLaudoFeedback] = useState(null);
+  const [iaFeedback, setIaFeedback] = useState(null);
+  const [kmDivergenceAlert, setKmDivergenceAlert] = useState(null);
   const [photoAiScanStatus, setPhotoAiScanStatus] = useState('idle'); // 'idle' | 'scanning' | 'done' | 'error'
   const [photoAiResult, setPhotoAiResult] = useState(null);
 
@@ -390,6 +392,8 @@ const NewCarAdForm = () => {
     setLaudoUploadStatus('uploading');
     setLaudoUploadError('');
     setLaudoFeedback(null);
+    setIaFeedback(null);
+    setKmDivergenceAlert(null);
     try {
       const token = user?.token || JSON.parse(localStorage.getItem('automatch_user') || '{}')?.token;
       const headers = {};
@@ -399,6 +403,13 @@ const NewCarAdForm = () => {
 
       const formDataUpload = new FormData();
       formDataUpload.append('file', file);
+      if (formData.placa) formDataUpload.append('plate', formData.placa);
+      if (formData.chassi) formDataUpload.append('chassi', formData.chassi);
+      if (formData.marca) formDataUpload.append('brand', formData.marca);
+      if (formData.modelo) formDataUpload.append('model', formData.modelo);
+      if (formData.ano) formDataUpload.append('year', formData.ano);
+      if (formData.km) formDataUpload.append('km', formData.km);
+
       const response = await fetch('/api/v1/laudos/upload', {
         method: 'POST',
         headers,
@@ -412,10 +423,35 @@ const NewCarAdForm = () => {
       setLaudoUploadedUrl(data.url);
       setYoloFeedback(data.yolo_feedback || null);
       setLaudoFeedback(data.laudo_feedback || null);
+
+      const iaRes = data.ia_feedback || null;
+      setIaFeedback(iaRes);
       setLaudoUploadStatus('uploaded');
 
+      // Verificação de divergência de quilometragem entre anúncio e laudo (Cross-Check da IA)
+      if (iaRes?.conferencia_dados?.quilometragem && !iaRes.conferencia_dados.quilometragem.match_aproximado) {
+        setKmDivergenceAlert({
+          valorLaudo: iaRes.conferencia_dados.quilometragem.valor_laudo,
+          valorDigitado: formData.km
+        });
+      } else {
+        setKmDivergenceAlert(null);
+      }
+
       // Auto-sincronização inteligente dos campos do formulário com base na IA pericial
-      if (data.laudo_feedback) {
+      if (iaRes) {
+        if (iaRes.classificacao_geral === 'COM_ATENCAO') {
+          setFormData(prev => ({ ...prev, laudo: 'Aprovado com apontamento' }));
+        } else if (iaRes.classificacao_geral === 'COM_RESTRICOES') {
+          setFormData(prev => ({ ...prev, laudo: 'Reprovado' }));
+        } else {
+          setFormData(prev => ({ ...prev, laudo: 'Aprovado' }));
+        }
+
+        if (iaRes.pontos_atencao_riscos?.some(r => r.categoria === 'LEILAO')) {
+          setFormData(prev => ({ ...prev, leilao: 'Sim' }));
+        }
+      } else if (data.laudo_feedback) {
         const lf = data.laudo_feedback;
         if (lf.veredito === 'Aprovado com Apontamento') {
           setFormData(prev => ({ ...prev, laudo: 'Aprovado com apontamento' }));
@@ -507,7 +543,7 @@ const NewCarAdForm = () => {
       : null;
 
     // A1: Combina feedback de laudo PDF ou de análise visual pericial para persistência no banco
-    const activeLaudoFeedback = laudoFeedback || (photoAiResult ? {
+    const activeLaudoFeedback = iaFeedback || laudoFeedback || (photoAiResult ? {
       scanner_ia: true,
       modelo: photoAiResult.modelo,
       tem_avarias: photoAiResult.tem_avarias,
@@ -1065,13 +1101,46 @@ const NewCarAdForm = () => {
 
                   {/* Parecer Pericial do Laudo Cautelar emitido pela IA */}
                   <AnimatePresence>
-                    {laudoFeedback && (
-                      <LaudoFeedbackCard
-                        feedback={laudoFeedback}
-                        pdfUrl={laudoUploadedUrl}
-                        fileName={laudoPdf?.name}
-                        yoloFeedback={yoloFeedback}
-                      />
+                    {(laudoFeedback || iaFeedback) && (
+                      <div className="space-y-4">
+                        {kmDivergenceAlert && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-amber-300"
+                            data-testid="alerta-divergencia-km"
+                          >
+                            <div className="flex items-start gap-2.5">
+                              <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                              <div className="text-xs">
+                                <strong className="text-sm font-bold text-amber-200 block mb-0.5">
+                                  Divergência de Quilometragem Detectada
+                                </strong>
+                                <p className="text-slate-300 leading-relaxed">
+                                  O laudo aponta <strong>{Number(kmDivergenceAlert.valorLaudo).toLocaleString('pt-BR')} km</strong>, enquanto o anúncio está com <strong>{kmDivergenceAlert.valorDigitado} km</strong>. Deseja atualizar o anúncio para obter a classificação correta e manter a transparência?
+                                </p>
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setFormData(prev => ({ ...prev, km: String(kmDivergenceAlert.valorLaudo) }));
+                                setKmDivergenceAlert(null);
+                              }}
+                              className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shrink-0 transition-all cursor-pointer shadow-md active:scale-95"
+                            >
+                              Atualizar para {Number(kmDivergenceAlert.valorLaudo).toLocaleString('pt-BR')} km
+                            </button>
+                          </motion.div>
+                        )}
+                        <LaudoFeedbackCard
+                          feedback={laudoFeedback}
+                          iaFeedback={iaFeedback}
+                          pdfUrl={laudoUploadedUrl}
+                          fileName={laudoPdf?.name}
+                          yoloFeedback={yoloFeedback}
+                        />
+                      </div>
                     )}
                   </AnimatePresence>
 

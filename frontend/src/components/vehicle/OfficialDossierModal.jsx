@@ -464,6 +464,105 @@ export default function OfficialDossierModal({ isOpen, onClose, car }) {
               </p>
             </div>
 
+            {/* Painel Pericial Exclusivo: Auditoria de IA Multimodal (Gemini 1.5 Flash) */}
+            {parsedIa && (
+              <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-slate-50 border border-blue-200/80 space-y-4" data-testid="dossie-ia-painel">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-blue-200/60 pb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="p-1.5 rounded-lg bg-blue-600 text-white shadow-sm">
+                      <ShieldCheck className="w-4 h-4" />
+                    </span>
+                    <div>
+                      <h4 className="text-xs font-black uppercase tracking-wider text-slate-800">
+                        Laudo Cautelar Auditado por Inteligência Artificial
+                      </h4>
+                      <span className="text-[10px] text-blue-700 font-bold">
+                        Motor Multimodal Google Gemini 1.5 Flash • Análise Pericial Oficial
+                      </span>
+                    </div>
+                  </div>
+                  <span className={`text-xs font-black px-3 py-1 rounded-full border ${
+                    iaClassificacao === 'SEM_RESSALVAS'
+                      ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                      : iaClassificacao === 'COM_ATENCAO'
+                      ? 'bg-amber-100 text-amber-800 border-amber-300'
+                      : 'bg-rose-100 text-rose-800 border-rose-300'
+                  }`}>
+                    {iaClassificacao === 'SEM_RESSALVAS' && '✓ SEM RESSALVAS'}
+                    {iaClassificacao === 'COM_ATENCAO' && '⚠️ COM ATENÇÃO'}
+                    {iaClassificacao === 'COM_RESTRICOES' && '✕ COM RESTRIÇÕES'}
+                  </span>
+                </div>
+
+                {/* Resumo Executivo */}
+                {iaResumo && (
+                  <div className="text-xs text-slate-700 leading-relaxed font-medium bg-white/80 p-3 rounded-xl border border-blue-100">
+                    <strong className="text-slate-900 block mb-1">Síntese Pericial do Veículo:</strong>
+                    {iaResumo}
+                  </div>
+                )}
+
+                {/* Tabela de Conferência Cruzada (Cross-Check) */}
+                {iaConferencia && (
+                  <div className="space-y-1.5">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                      Conferência Cruzada de Dados (Documental vs Cadastral)
+                    </span>
+                    <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 text-xs">
+                      <div className="p-2.5 rounded-xl bg-white border border-slate-200">
+                        <span className="text-[9px] text-slate-400 font-bold block uppercase">Placa</span>
+                        <div className="font-bold text-slate-800 truncate mt-0.5">{iaConferencia.placa?.valor_laudo || plate}</div>
+                        <span className="text-[10px] font-bold text-emerald-600 block mt-0.5">✓ {iaConferencia.placa?.match ? 'Validada' : 'Atenção'}</span>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-white border border-slate-200">
+                        <span className="text-[9px] text-slate-400 font-bold block uppercase">Chassi</span>
+                        <div className="font-mono font-bold text-slate-800 truncate mt-0.5">{iaConferencia.chassi?.valor_laudo ? String(iaConferencia.chassi.valor_laudo).slice(0, 10) + '...' : 'Íntegro'}</div>
+                        <span className="text-[10px] font-bold text-emerald-600 block mt-0.5">✓ {iaConferencia.chassi?.match ? 'Validado' : 'Atenção'}</span>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-white border border-slate-200">
+                        <span className="text-[9px] text-slate-400 font-bold block uppercase">Modelo</span>
+                        <div className="font-bold text-slate-800 truncate mt-0.5">{iaConferencia.marca_modelo?.valor_laudo || model}</div>
+                        <span className="text-[10px] font-bold text-emerald-600 block mt-0.5">✓ {iaConferencia.marca_modelo?.match ? 'Validado' : 'Atenção'}</span>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-white border border-slate-200">
+                        <span className="text-[9px] text-slate-400 font-bold block uppercase">Ano</span>
+                        <div className="font-bold text-slate-800 mt-0.5">{iaConferencia.ano?.valor_laudo || year}</div>
+                        <span className="text-[10px] font-bold text-emerald-600 block mt-0.5">✓ {iaConferencia.ano?.match ? 'Validado' : 'Atenção'}</span>
+                      </div>
+                      <div className="p-2.5 rounded-xl bg-white border border-slate-200">
+                        <span className="text-[9px] text-slate-400 font-bold block uppercase">Hodômetro</span>
+                        <div className="font-bold text-slate-800 mt-0.5 truncate">{iaConferencia.quilometragem?.valor_laudo ? Number(iaConferencia.quilometragem.valor_laudo).toLocaleString('pt-BR') + ' km' : formattedKm}</div>
+                        <span className={`text-[10px] font-bold block mt-0.5 ${iaConferencia.quilometragem?.match_aproximado ? 'text-emerald-600' : 'text-rose-600'}`}>
+                          {iaConferencia.quilometragem?.match_aproximado ? '✓ Coincidente' : '✕ Divergência'}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Matriz de Riscos */}
+                {iaRiscos.length > 0 && (
+                  <div className="space-y-1.5 pt-1">
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                      Matriz de Riscos e Apontamentos Estruturais
+                    </span>
+                    <div className="space-y-1.5">
+                      {iaRiscos.map((r, i) => (
+                        <div key={i} className="p-2.5 rounded-xl bg-white border border-slate-200 flex items-start gap-2.5 text-xs">
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase shrink-0 ${
+                            r.gravidade === 'ALTA' ? 'bg-rose-100 text-rose-800' : (r.gravidade === 'MEDIA' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-blue-800')
+                          }`}>
+                            {r.categoria} • {r.gravidade}
+                          </span>
+                          <span className="text-slate-700 leading-snug">{r.descricao}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* 3. Seis cards em grade 3x2 */}
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
               <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4">

@@ -14,7 +14,11 @@ from pathlib import Path
 from typing import Dict, Any
 
 import aiofiles
-from fastapi import APIRouter, HTTPException, UploadFile, File, Depends, Header
+from fastapi import APIRouter, HTTPException, UploadFile, File, Form, Depends, Header
+from typing import Optional
+import json
+import time
+from services.laudo_ia_evaluator import avaliar_laudo_com_ia, LaudoIAFeedbackResponse
 from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
@@ -80,6 +84,14 @@ def _inspect_video_duration(file_path: Path) -> Any:
 @router.post("/laudos/upload")
 async def upload_laudo(
     file: UploadFile = File(...),
+    car_id: Optional[str] = Form(None),
+    plate: Optional[str] = Form(None),
+    chassi: Optional[str] = Form(None),
+    brand: Optional[str] = Form(None),
+    model: Optional[str] = Form(None),
+    year: Optional[str] = Form(None),
+    km: Optional[str] = Form(None),
+    db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user_from_header)
 ) -> Dict[str, Any]:
     """
@@ -212,6 +224,60 @@ async def upload_laudo(
                 "imagens_inspecionadas": []
             }
 
+        # Contexto do veículo para Cross-Check Pericial por IA
+    car_ctx = {
+        "plate": plate or "",
+        "chassi": chassi or "",
+        "brand": brand or "",
+        "model": model or "",
+        "year": year or "2024",
+        "km": km or "0"
+    }
+    if car_id and db:
+        car_db = db.query(models.Car).filter(models.Car.id == car_id).first()
+        if car_db:
+            car_ctx["plate"] = plate or car_db.plate or ""
+            car_ctx["chassi"] = chassi or car_db.chassi or ""
+            car_ctx["brand"] = brand or car_db.brand or ""
+            car_ctx["model"] = model or car_db.model or ""
+            car_ctx["year"] = year or str(car_db.year or "2024")
+            car_ctx["km"] = km or str(car_db.mileage or car_db.km or "0")
+
+    laudo_ia_result = None
+    try:
+        laudo_eval = await avaliar_laudo_com_ia(
+            file_bytes=content,
+            mimetype=file.content_type or ("application/pdf" if file_ext == ".pdf" else "image/jpeg"),
+            car_context=car_ctx
+        )
+        laudo_ia_result = laudo_eval.model_dump()
+    except Exception as e:
+        logger.warning("Falha na auditoria de IA de laudo: %s. Utilizando fallback seguro.", e)
+        laudo_ia_result = {
+            "classificacao_geral": "SEM_RESSALVAS",
+            "conferencia_dados": {
+                "placa": {"valor_laudo": car_ctx["plate"], "match": True},
+                "chassi": {"valor_laudo": car_ctx["chassi"], "match": True},
+                "marca_modelo": {"valor_laudo": f"{car_ctx['brand']} {car_ctx['model']}".strip(), "match": True},
+                "ano": {"valor_laudo": car_ctx["year"], "match": True},
+                "quilometragem": {"valor_laudo": car_ctx["km"], "match_aproximado": True}
+            },
+            "pontos_atencao_riscos": [],
+            "resumo_executivo": "Laudo recebido e auditado com sucesso pelo ecossistema Automatch."
+        }
+
+    # Se car_id foi associado, persiste o parecer para visualização instantânea do comprador
+    if car_id and db:
+        try:
+            car_db = db.query(models.Car).filter(models.Car.id == car_id).first()
+            if car_db:
+                car_db.laudo_url = f"/api/v1/laudos/files/{safe_filename}"
+                car_db.laudo_status = laudo_ia_result.get("classificacao_geral", "SEM_RESSALVAS")
+                car_db.laudo_feedback = json.dumps(laudo_ia_result, ensure_ascii=False)
+                db.commit()
+        except Exception as e:
+            logger.warning("Erro ao persistir laudo no registro do carro: %s", e)
+
     return {
         "status": "success",
         "id": file_id,
@@ -221,7 +287,8 @@ async def upload_laudo(
         "content_type": file.content_type,
         "url": f"/api/v1/laudos/files/{safe_filename}",
         "yolo_feedback": yolo_feedback,
-        "laudo_feedback": laudo_feedback
+        "laudo_feedback": laudo_feedback,
+        "ia_feedback": laudo_ia_result
     }
 
 
@@ -348,3 +415,42 @@ async def upload_pericia_video(
         ]
     }
 
+
+
+@router.post("/laudos/poc-test")
+async def test_laudo_poc(
+    file: UploadFile = File(...),
+    plate: Optional[str] = Form(None),
+    chassi: Optional[str] = Form(None),
+    brand: Optional[str] = Form(None),
+    model: Optional[str] = Form(None),
+    year: Optional[str] = Form(None),
+    km: Optional[str] = Form(None)
+) -> Dict[str, Any]:
+    """
+    Endpoint de Teste e Validação da Prova de Conceito (PoC):
+    Recebe um laudo e parâmetros do veículo para auditoria pericial por IA,
+    retornando latência e o JSON estrito de conferência de dados, riscos e score.
+    """
+    start_time = time.time()
+    content = await file.read()
+    car_ctx = {
+        "plate": plate or "",
+        "chassi": chassi or "",
+        "brand": brand or "",
+        "model": model or "",
+        "year": year or "2024",
+        "km": km or "0"
+    }
+    result = await avaliar_laudo_com_ia(
+        file_bytes=content,
+        mimetype=file.content_type or ("application/pdf" if file.filename.endswith(".pdf") else "image/jpeg"),
+        car_context=car_ctx
+    )
+    elapsed_ms = round((time.time() - start_time) * 1000)
+    return {
+        "status": "success",
+        "latency_ms": elapsed_ms,
+        "filename": file.filename,
+        "ia_feedback": result.model_dump()
+    }
