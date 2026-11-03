@@ -866,8 +866,23 @@ export default function ShowcaseVehicleDetails() {
             <div className="bg-slate-900/80 rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-xl space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-800">
                 <div>
-                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-black uppercase tracking-wider mb-2 border border-emerald-500/20">
-                    <ShieldCheck className="w-4 h-4" /> Procedência 100% Auditada
+                  <div className="flex flex-wrap items-center gap-2 mb-2" data-testid="laudo-ia-badge-container">
+                    <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-black uppercase tracking-wider border border-emerald-500/20">
+                      <ShieldCheck className="w-4 h-4" /> Procedência 100% Auditada
+                    </div>
+                    {String(car.laudoStatus || car.laudo_status || '').toLowerCase().includes('reprovado') || String(car.laudoStatus || car.laudo_status || '').includes('RESTRICOES') ? (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/15 text-rose-400 text-xs font-black uppercase tracking-wider border border-rose-500/30">
+                        <AlertTriangle className="w-3.5 h-3.5" /> Laudo: Restrições Críticas
+                      </span>
+                    ) : String(car.laudoStatus || car.laudo_status || '').toLowerCase().includes('apontamento') || String(car.laudoStatus || car.laudo_status || '').includes('ATENCAO') ? (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 text-amber-400 text-xs font-black uppercase tracking-wider border border-amber-500/30">
+                        <AlertTriangle className="w-3.5 h-3.5" /> Laudo Verificado por IA: Com Apontamento
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/15 text-blue-400 text-xs font-black uppercase tracking-wider border border-blue-500/30">
+                        <ShieldCheck className="w-3.5 h-3.5" /> Laudo Verificado por IA: Sem Ressalvas
+                      </span>
+                    )}
                   </div>
                   <h2 className="text-2xl font-black text-white">Dossiê de Transparência</h2>
                   <p className="text-xs text-slate-400 mt-1">Dados periciais oficiais cruzados com órgãos reguladores em tempo real.</p>

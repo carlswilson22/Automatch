@@ -1,9 +1,12 @@
 /**
- * LaudoFeedbackCard.jsx — Card de feedback e avaliação do laudo pericial pelo usuário.
+ * LaudoFeedbackCard.jsx — Card de feedback e avaliação pericial do laudo por IA (Gemini 1.5 Flash & YOLOv8).
  * 
  * Objetivo e Motivo da Criação:
- *   - Criado para coletar a percepção do usuário sobre a clareza e precisão do laudo emitido,
- *     alimentando o ciclo de melhoria contínua dos modelos de perícia por visão computacional.
+ *   - Processa obrigatoriamente três camadas de informação pericial:
+ *     1. Conferência de Dados (Cross-Check): Placa, Chassi, Marca/Modelo, Ano e Quilometragem.
+ *     2. Matriz de Riscos e Pontos de Atenção: Leilão, Sinistro, Remarcação, Restrição Judicial e Estrutura.
+ *     3. Classificação Geral: Tag semafórica (Sem Ressalvas, Com Atenção, Com Restrições) e Resumo Executivo.
+ *   - Suporta visualização de fotos periciais auditadas por visão computacional (YOLOv8).
  */
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -19,62 +22,82 @@ import {
   Camera,
   ZoomIn,
   X,
-  Eye
+  Eye,
+  Check,
+  Info,
+  AlertOctagon,
+  SearchCheck,
+  ShieldAlert,
+  CheckCheck,
 } from 'lucide-react';
 
-export default function LaudoFeedbackCard({ feedback, pdfUrl, fileName, yoloFeedback }) {
-  if (!feedback) return null;
+export default function LaudoFeedbackCard({ feedback, pdfUrl, fileName, yoloFeedback, iaFeedback: directIaFeedback }) {
+  if (!feedback && !directIaFeedback) return null;
 
   const [selectedImage, setSelectedImage] = useState(null);
 
+  // Normalização do IA Feedback (suporta tanto payload puro quanto aninhado em feedback.ia_feedback)
+  const ia = directIaFeedback || feedback?.ia_feedback || (feedback?.classificacao_geral ? feedback : null);
+
   const {
-    veredito = 'Aprovado',
+    veredito: rawVeredito = 'Aprovado',
     score_procedencia = 95,
-    resumo = '',
+    resumo: rawResumo = '',
     itens_auditados = [],
     alertas = [],
-    modelo_ia = 'Automatch Vision & PDF Engine'
-  } = feedback;
+    modelo_ia = 'Google Gemini 1.5 Flash & Automatch Vision'
+  } = feedback || {};
 
   const activeYolo = yoloFeedback || feedback?.yolo_feedback;
 
-  // Esquema de cores e estilos dinâmicos conforme o veredito
-  const isApproved = veredito === 'Aprovado';
-  const isWarning = veredito === 'Aprovado com Apontamento';
-  const isRejected = veredito === 'Reprovado';
+  // Derivação da classificação geral
+  const classificacaoGeral = ia?.classificacao_geral || (
+    rawVeredito === 'Aprovado' ? 'SEM_RESSALVAS' : (rawVeredito === 'Aprovado com Apontamento' ? 'COM_ATENCAO' : 'COM_RESTRICOES')
+  );
+
+  const isApproved = classificacaoGeral === 'SEM_RESSALVAS';
+  const isWarning = classificacaoGeral === 'COM_ATENCAO';
+  const isRejected = classificacaoGeral === 'COM_RESTRICOES';
 
   const theme = isApproved
     ? {
-        border: 'border-emerald-200/80',
+        border: 'border-emerald-200/90',
         bgGradient: 'from-emerald-950/20 via-slate-900/40 to-emerald-900/10',
-        badgeBg: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20',
+        badgeBg: 'bg-emerald-500/10 text-emerald-600 border-emerald-500/30',
         scoreColor: 'text-emerald-500',
         barColor: 'bg-emerald-500',
         glow: 'shadow-[0_0_25px_rgba(16,185,129,0.15)]',
         Icon: ShieldCheck,
-        badgeText: '✓ Laudo Aprovado sem Restrições',
+        badgeText: '✓ Sem Ressalvas (Aprovado)',
+        label: 'SEM_RESSALVAS'
       }
     : isWarning
     ? {
-        border: 'border-amber-200/80',
+        border: 'border-amber-200/90',
         bgGradient: 'from-amber-950/20 via-slate-900/40 to-amber-900/10',
-        badgeBg: 'bg-amber-500/10 text-amber-600 border-amber-500/20',
+        badgeBg: 'bg-amber-500/10 text-amber-600 border-amber-500/30',
         scoreColor: 'text-amber-500',
         barColor: 'bg-amber-500',
         glow: 'shadow-[0_0_25px_rgba(245,158,11,0.15)]',
         Icon: AlertTriangle,
-        badgeText: '⚠️ Aprovado com Apontamentos',
+        badgeText: '⚠️ Com Atenção (Apontamentos)',
+        label: 'COM_ATENCAO'
       }
     : {
-        border: 'border-rose-200/80',
+        border: 'border-rose-300',
         bgGradient: 'from-rose-950/20 via-slate-900/40 to-rose-900/10',
-        badgeBg: 'bg-rose-500/10 text-rose-600 border-rose-500/20',
+        badgeBg: 'bg-rose-500/10 text-rose-600 border-rose-500/30',
         scoreColor: 'text-rose-500',
         barColor: 'bg-rose-500',
-        glow: 'shadow-[0_0_25px_rgba(244,63,94,0.15)]',
+        glow: 'shadow-[0_0_25px_rgba(244,63,94,0.18)]',
         Icon: XCircle,
-        badgeText: '✕ Inconformidades Críticas',
+        badgeText: '✕ Com Restrições Críticas',
+        label: 'COM_RESTRICOES'
       };
+
+  const finalResumo = ia?.resumo_executivo || rawResumo || 'Auditoria pericial automatizada concluída com sucesso.';
+  const conferencia = ia?.conferencia_dados;
+  const riscos = ia?.pontos_atencao_riscos || [];
 
   return (
     <>
@@ -83,6 +106,7 @@ export default function LaudoFeedbackCard({ feedback, pdfUrl, fileName, yoloFeed
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -10 }}
         transition={{ duration: 0.35, ease: 'easeOut' }}
+        data-testid="laudo-feedback-card"
         className={`relative overflow-hidden rounded-2xl border ${theme.border} bg-white shadow-xl ${theme.glow} p-5 sm:p-6 transition-all`}
       >
         {/* Glow decorativo de fundo */}
@@ -100,137 +124,219 @@ export default function LaudoFeedbackCard({ feedback, pdfUrl, fileName, yoloFeed
                   Auditoria Pericial por IA
                 </span>
                 <span className="inline-flex items-center gap-1 text-[10px] font-semibold bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-full border border-indigo-100">
-                  <Sparkles className="w-2.5 h-2.5" /> {modelo_ia.split(' ')[0]} 1.5
+                  <Sparkles className="w-2.5 h-2.5" /> Gemini 1.5 Flash
                 </span>
               </div>
               <h4 className="text-base font-bold text-slate-900 mt-0.5">
-                Parecer Técnico do Laudo Cautelar
+                Validação Inteligente do Laudo Cautelar
               </h4>
             </div>
           </div>
 
-          {/* Badge do Veredito */}
+          {/* Badge da Classificação Geral */}
           <div className="flex items-center gap-2 self-start sm:self-auto">
-            <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border ${theme.badgeBg}`}>
+            <span 
+              data-testid="badge-classificacao-geral"
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border ${theme.badgeBg}`}
+            >
               <theme.Icon className="w-4 h-4 shrink-0" />
               {theme.badgeText}
             </span>
           </div>
         </div>
 
-        {/* Grid Principal: Score e Resumo */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-5 items-center mb-6">
-          {/* Score Radial / Métrico */}
-          <div className="md:col-span-4 bg-slate-50/80 rounded-xl p-4 border border-slate-100 flex flex-col items-center justify-center text-center">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1">
-              Score de Procedência
-            </span>
-            <div className="flex items-baseline gap-1 my-1">
-              <span className={`text-4xl font-extrabold tracking-tight ${theme.scoreColor}`}>
-                {score_procedencia}
-              </span>
-              <span className="text-sm font-semibold text-slate-400">/100</span>
-            </div>
-            
-            {/* Barra de progresso */}
-            <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden mt-2">
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${score_procedencia}%` }}
-                transition={{ duration: 0.8, ease: 'easeOut' }}
-                className={`h-full ${theme.barColor} rounded-full`}
-              />
-            </div>
-
-            <span className="text-[11px] text-slate-500 font-medium mt-2">
-              Índice de Confiabilidade Documental
+        {/* Resumo Executivo em Destaque */}
+        <div className="mb-6 bg-gradient-to-r from-slate-50 to-indigo-50/30 rounded-xl p-4 border border-slate-100">
+          <div className="flex items-center gap-2 mb-1.5 text-slate-700">
+            <FileCheck2 className="w-4 h-4 text-blue-600" />
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
+              Resumo Executivo da Perícia
             </span>
           </div>
-
-          {/* Resumo Pericial Executivo */}
-          <div className="md:col-span-8 bg-gradient-to-r from-slate-50 to-white rounded-xl p-4 border border-slate-100">
-            <div className="flex items-center gap-2 mb-1.5 text-slate-700">
-              <FileCheck2 className="w-4 h-4 text-blue-600" />
-              <span className="text-xs font-bold uppercase tracking-wider text-slate-600">
-                Síntese da Auditoria
+          <p className="text-sm text-slate-700 leading-relaxed font-normal">
+            {finalResumo}
+          </p>
+          {fileName && (
+            <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-slate-200/60 text-[11px] text-slate-500">
+              <span className="truncate max-w-[280px]">
+                Documento analisado: <strong className="text-slate-700 font-medium">{fileName}</strong>
               </span>
+              {pdfUrl && (
+                <a
+                  href={pdfUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 font-semibold text-blue-600 hover:text-blue-700 transition-colors ml-2 shrink-0"
+                >
+                  Abrir Laudo Original <ExternalLink className="w-3 h-3" />
+                </a>
+              )}
             </div>
-            <p className="text-sm text-slate-700 leading-relaxed font-normal">
-              {resumo}
-            </p>
-            {fileName && (
-              <div className="flex items-center justify-between mt-3 pt-2.5 border-t border-slate-100/80 text-[11px] text-slate-500">
-                <span className="truncate max-w-[220px]">
-                  Arquivo auditado: <strong className="text-slate-700 font-medium">{fileName}</strong>
-                </span>
-                {pdfUrl && (
-                  <a
-                    href={pdfUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1 font-semibold text-blue-600 hover:text-blue-700 transition-colors ml-2 shrink-0"
-                  >
-                    Visualizar PDF <ExternalLink className="w-3 h-3" />
-                  </a>
-                )}
-              </div>
-            )}
-          </div>
+          )}
         </div>
 
-        {/* Checklist dos 4 Pilares Periciais */}
-        {itens_auditados && itens_auditados.length > 0 && (
-          <div className="space-y-2.5 mb-6">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 block mb-2">
-              Conformidade dos Pilares Inspecionados
+        {/* CAMADA 1: CONFERÊNCIA DE DADOS (CROSS-CHECK) */}
+        {conferencia && (
+          <div className="mb-6" data-testid="conferencia-dados-container">
+            <div className="flex items-center justify-between mb-2.5">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+                <SearchCheck className="w-4 h-4 text-indigo-600" />
+                Conferência Cruzada de Dados (Laudo vs Anúncio)
+              </span>
+              <span className="text-[11px] text-slate-500">Validação Cadastral Automatizada</span>
+            </div>
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2.5">
+              {/* Placa */}
+              <div className={`p-3 rounded-xl border ${conferencia.placa?.match ? 'bg-emerald-50/50 border-emerald-200/80' : 'bg-rose-50/80 border-rose-200'}`}>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Placa</span>
+                  {conferencia.placa?.match ? (
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  ) : (
+                    <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
+                  )}
+                </div>
+                <div className="text-xs font-bold text-slate-800 font-mono mt-1 truncate">
+                  {conferencia.placa?.valor_laudo || 'Conferido'}
+                </div>
+                <span className={`text-[10px] font-semibold block mt-0.5 ${conferencia.placa?.match ? 'text-emerald-700' : 'text-rose-700 font-bold'}`}>
+                  {conferencia.placa?.match ? '✓ Placa Válida' : '✕ Divergência'}
+                </span>
+              </div>
+
+              {/* Chassi */}
+              <div className={`p-3 rounded-xl border ${conferencia.chassi?.match ? 'bg-emerald-50/50 border-emerald-200/80' : 'bg-rose-50/80 border-rose-200'}`}>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Chassi</span>
+                  {conferencia.chassi?.match ? (
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  ) : (
+                    <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
+                  )}
+                </div>
+                <div className="text-xs font-bold text-slate-800 font-mono mt-1 truncate" title={conferencia.chassi?.valor_laudo}>
+                  {conferencia.chassi?.valor_laudo ? `${String(conferencia.chassi.valor_laudo).slice(0, 9)}...` : 'Conferido'}
+                </div>
+                <span className={`text-[10px] font-semibold block mt-0.5 ${conferencia.chassi?.match ? 'text-emerald-700' : 'text-rose-700 font-bold'}`}>
+                  {conferencia.chassi?.match ? '✓ Chassi Conforme' : '✕ Inconsistente'}
+                </span>
+              </div>
+
+              {/* Marca / Modelo */}
+              <div className={`p-3 rounded-xl border ${conferencia.marca_modelo?.match ? 'bg-emerald-50/50 border-emerald-200/80' : 'bg-amber-50/80 border-amber-200'}`}>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Modelo</span>
+                  {conferencia.marca_modelo?.match ? (
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  ) : (
+                    <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                  )}
+                </div>
+                <div className="text-xs font-bold text-slate-800 mt-1 truncate" title={conferencia.marca_modelo?.valor_laudo}>
+                  {conferencia.marca_modelo?.valor_laudo || 'Conferido'}
+                </div>
+                <span className={`text-[10px] font-semibold block mt-0.5 ${conferencia.marca_modelo?.match ? 'text-emerald-700' : 'text-amber-700'}`}>
+                  {conferencia.marca_modelo?.match ? '✓ Modelo Correto' : '⚠️ Atenção'}
+                </span>
+              </div>
+
+              {/* Ano */}
+              <div className={`p-3 rounded-xl border ${conferencia.ano?.match ? 'bg-emerald-50/50 border-emerald-200/80' : 'bg-rose-50/80 border-rose-200'}`}>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Ano Fab/Mod</span>
+                  {conferencia.ano?.match ? (
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  ) : (
+                    <AlertTriangle className="w-3.5 h-3.5 text-rose-600" />
+                  )}
+                </div>
+                <div className="text-xs font-bold text-slate-800 mt-1">
+                  {conferencia.ano?.valor_laudo || 'Conferido'}
+                </div>
+                <span className={`text-[10px] font-semibold block mt-0.5 ${conferencia.ano?.match ? 'text-emerald-700' : 'text-rose-700'}`}>
+                  {conferencia.ano?.match ? '✓ Ano Confirmado' : '✕ Divergente'}
+                </span>
+              </div>
+
+              {/* Quilometragem */}
+              <div className={`p-3 rounded-xl border ${conferencia.quilometragem?.match_aproximado ? 'bg-emerald-50/50 border-emerald-200/80' : 'bg-rose-50/80 border-rose-200'}`}>
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Hodômetro</span>
+                  {conferencia.quilometragem?.match_aproximado ? (
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  ) : (
+                    <AlertTriangle className="w-3.5 h-3.5 text-rose-600 animate-pulse" />
+                  )}
+                </div>
+                <div className="text-xs font-bold text-slate-800 mt-1 truncate">
+                  {conferencia.quilometragem?.valor_laudo ? `${Number(conferencia.quilometragem.valor_laudo).toLocaleString('pt-BR')} km` : 'Conferido'}
+                </div>
+                <span className={`text-[10px] font-bold block mt-0.5 ${conferencia.quilometragem?.match_aproximado ? 'text-emerald-700' : 'text-rose-700'}`}>
+                  {conferencia.quilometragem?.match_aproximado ? '✓ Km Coincidente' : '✕ Alerta Hodômetro'}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* CAMADA 2: MATRIZ DE RISCOS E PONTOS DE ATENÇÃO */}
+        <div className="mb-6" data-testid="matriz-riscos-container">
+          <div className="flex items-center justify-between mb-2.5">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
+              <ShieldAlert className="w-4 h-4 text-indigo-600" />
+              Matriz de Riscos & Apontamentos Identificados
             </span>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-              {itens_auditados.map((item, idx) => {
-                const isItemOk = item.status === 'Conforme';
-                const isItemWarn = item.status === 'Atenção';
+            <span className="text-[11px] text-slate-500">Varredura Estrutural, Sinistro & Restrições</span>
+          </div>
+
+          {riscos.length > 0 ? (
+            <div className="space-y-2">
+              {riscos.map((risco, idx) => {
+                const isAlta = risco.gravidade === 'ALTA';
+                const isMedia = risco.gravidade === 'MEDIA';
+                const borderClass = isAlta ? 'border-rose-200 bg-rose-50/60' : (isMedia ? 'border-amber-200 bg-amber-50/60' : 'border-blue-200 bg-blue-50/60');
+                const badgeClass = isAlta ? 'bg-rose-100 text-rose-800 border-rose-300' : (isMedia ? 'bg-amber-100 text-amber-800 border-amber-300' : 'bg-blue-100 text-blue-800 border-blue-300');
+
                 return (
-                  <div
-                    key={idx}
-                    className="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-50/70 border border-slate-100 hover:border-slate-200 transition-colors"
-                  >
-                    {isItemOk ? (
-                      <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                    ) : isItemWarn ? (
-                      <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-                    ) : (
-                      <XCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <div className="flex items-center justify-between gap-1">
-                        <span className="text-xs font-semibold text-slate-800 truncate">
-                          {item.item}
+                  <div key={idx} className={`p-3 rounded-xl border ${borderClass} flex items-start gap-3`}>
+                    <div className="shrink-0 mt-0.5">
+                      {isAlta ? (
+                        <AlertOctagon className="w-4 h-4 text-rose-600" />
+                      ) : isMedia ? (
+                        <AlertTriangle className="w-4 h-4 text-amber-600" />
+                      ) : (
+                        <Info className="w-4 h-4 text-blue-600" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs font-bold text-slate-900 uppercase">
+                          {risco.categoria}
                         </span>
-                        <span
-                          className={`text-[10px] font-bold px-1.5 py-0.2 rounded ${
-                            isItemOk
-                              ? 'bg-emerald-100 text-emerald-800'
-                              : isItemWarn
-                              ? 'bg-amber-100 text-amber-800'
-                              : 'bg-rose-100 text-rose-800'
-                          }`}
-                        >
-                          {item.status}
+                        <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-full border ${badgeClass}`}>
+                          Gravidade {risco.gravidade}
                         </span>
                       </div>
-                      {item.detalhe && (
-                        <p className="text-[11px] text-slate-500 mt-0.5 leading-snug truncate">
-                          {item.detalhe}
-                        </p>
-                      )}
+                      <p className="text-xs text-slate-700 leading-relaxed">
+                        {risco.descricao}
+                      </p>
                     </div>
                   </div>
                 );
               })}
             </div>
-          </div>
-        )}
+          ) : (
+            <div className="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-200/80 flex items-center gap-2.5 text-emerald-800 text-xs">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>
+                <strong>Nenhum risco detectado:</strong> Sem apontamentos de leilão, sinistro, corte de longarina, remarcação de chassi ou restrições judiciais.
+              </span>
+            </div>
+          )}
+        </div>
 
-        {/* SEÇÃO NOVO RECURSO: Evidências Fotográficas do YOLOv8 (ATM-AI-05) */}
+        {/* EVIDÊNCIAS FOTOGRÁFICAS AUDITADAS VIA YOLOV8 (SE HOUVER) */}
         {activeYolo && (
           <div className="mt-5 pt-5 border-t border-slate-100">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
@@ -241,7 +347,6 @@ export default function LaudoFeedbackCard({ feedback, pdfUrl, fileName, yoloFeed
                 </span>
               </div>
 
-              {/* Badge de Cross-Check */}
               {activeYolo.cross_check_status && (
                 <div className="flex items-center gap-1.5">
                   {activeYolo.cross_check_status === 'Concordante' ? (
@@ -259,14 +364,6 @@ export default function LaudoFeedbackCard({ feedback, pdfUrl, fileName, yoloFeed
               )}
             </div>
 
-            {/* Mensagem explicativa do Cross-Check */}
-            {activeYolo.cross_check_mensagem && (
-              <p className="text-xs text-slate-600 bg-slate-50/80 rounded-lg p-2.5 mb-3 border border-slate-100">
-                {activeYolo.cross_check_mensagem}
-              </p>
-            )}
-
-            {/* Grid de Fotos Inspecionadas */}
             {activeYolo.imagens_inspecionadas && activeYolo.imagens_inspecionadas.length > 0 ? (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-3">
                 {activeYolo.imagens_inspecionadas.map((imgItem) => (
@@ -277,7 +374,6 @@ export default function LaudoFeedbackCard({ feedback, pdfUrl, fileName, yoloFeed
                     onClick={() => setSelectedImage(imgItem)}
                     className="group relative cursor-pointer overflow-hidden rounded-xl border border-slate-200 bg-slate-50 hover:border-indigo-300 hover:shadow-md transition-all flex flex-col"
                   >
-                    {/* Thumbnail */}
                     <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-900">
                       {imgItem.thumbnail_b64 ? (
                         <img
@@ -291,18 +387,15 @@ export default function LaudoFeedbackCard({ feedback, pdfUrl, fileName, yoloFeed
                         </div>
                       )}
 
-                      {/* Overlay com Ícone de Lupa */}
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
                         <ZoomIn className="w-5 h-5 drop-shadow-md" />
                       </div>
 
-                      {/* Badge Flutuante de Confiança */}
                       <span className="absolute bottom-1.5 right-1.5 text-[9px] font-bold bg-black/70 backdrop-blur-xs text-white px-1.5 py-0.5 rounded">
                         {imgItem.confianca}
                       </span>
                     </div>
 
-                    {/* Rodapé da Imagem com Status */}
                     <div className="p-2 flex-1 flex flex-col justify-between">
                       <span className="text-[11px] font-bold text-slate-800 line-clamp-1">
                         {imgItem.titulo}
@@ -325,24 +418,9 @@ export default function LaudoFeedbackCard({ feedback, pdfUrl, fileName, yoloFeed
               </div>
             ) : (
               <div className="text-center py-3 bg-slate-50/60 rounded-xl border border-dashed border-slate-200 text-slate-500 text-xs">
-                Auditoria documental concluída. Nenhuma fotografia pericial embutida identificada no arquivo PDF.
+                Auditoria pericial documental concluída. Nenhuma fotografia embutida identificada.
               </div>
             )}
-          </div>
-        )}
-
-        {/* Alertas / Ressalvas (se houver) */}
-        {alertas && alertas.length > 0 && (
-          <div className="mt-4 p-3 rounded-xl bg-amber-50/80 border border-amber-200/80 flex items-start gap-2 text-amber-900">
-            <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-            <div className="text-xs">
-              <strong className="font-semibold block mb-0.5">Apontamentos a verificar:</strong>
-              <ul className="list-disc list-inside space-y-0.5 text-amber-800">
-                {alertas.map((alerta, i) => (
-                  <li key={i}>{alerta}</li>
-                ))}
-              </ul>
-            </div>
           </div>
         )}
       </motion.div>
@@ -364,10 +442,9 @@ export default function LaudoFeedbackCard({ feedback, pdfUrl, fileName, yoloFeed
               onClick={(e) => e.stopPropagation()}
               className="relative max-w-xl w-full bg-white rounded-2xl overflow-hidden shadow-2xl border border-slate-100 p-5"
             >
-              {/* Botão Fechar */}
               <button
                 onClick={() => setSelectedImage(null)}
-                className="absolute top-4 right-4 p-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors"
+                className="absolute top-4 right-4 p-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -379,7 +456,6 @@ export default function LaudoFeedbackCard({ feedback, pdfUrl, fileName, yoloFeed
                 </h3>
               </div>
 
-              {/* Imagem Ampliada */}
               <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-slate-950 flex items-center justify-center mb-4">
                 {selectedImage.thumbnail_b64 ? (
                   <img
@@ -392,7 +468,6 @@ export default function LaudoFeedbackCard({ feedback, pdfUrl, fileName, yoloFeed
                 )}
               </div>
 
-              {/* Detalhes Periciais da Peça */}
               <div className="space-y-2 text-xs">
                 <div className="flex items-center justify-between border-b border-slate-100 pb-2">
                   <span className="text-slate-500 font-medium">Elemento Identificado (YOLOv8):</span>
@@ -425,4 +500,3 @@ export default function LaudoFeedbackCard({ feedback, pdfUrl, fileName, yoloFeed
     </>
   );
 }
-

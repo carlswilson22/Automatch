@@ -303,3 +303,4 @@ async def avaliar_laudo_com_ia(
         pontos_atencao_riscos=riscos,
         resumo_executivo=resumo
     )
+
