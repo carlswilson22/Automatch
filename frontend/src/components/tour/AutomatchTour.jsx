@@ -312,6 +312,11 @@ export default function AutomatchTour() {
               <Compass className="w-3 h-3" />
               {tourConfig.badge}
             </span>
+            {!user && (
+              <span className="text-[10px] font-bold text-amber-300 bg-amber-950/80 border border-amber-800/60 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                Demonstração
+              </span>
+            )}
             <span className="text-xs text-slate-400 font-semibold" aria-live="polite">
               Passo {demoState.stepIndex + 1} de {steps.length}
             </span>
@@ -368,19 +373,31 @@ export default function AutomatchTour() {
               </button>
             )}
 
-            <button
-              type="button"
-              onClick={nextStep}
-              className="min-h-[44px] px-4 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-black text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-lg shadow-cyan-500/20 cursor-pointer"
-              title={demoState.stepIndex === steps.length - 1 ? 'Concluir demonstração (Enter)' : 'Próxima tela (Enter ou Seta Direita)'}
-            >
-              <span>{demoState.stepIndex === steps.length - 1 ? 'Concluir' : 'Próximo'}</span>
-              {demoState.stepIndex === steps.length - 1 ? (
+            {demoState.stepIndex === steps.length - 1 && !user ? (
+              <button
+                type="button"
+                onClick={() => stopDemo({ redirectTo: '/login' })}
+                className="min-h-[44px] px-4 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-black text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-lg shadow-cyan-500/20 cursor-pointer"
+                title="Cadastrar na plataforma"
+              >
+                <span>Cadastrar para Anunciar</span>
                 <CheckCircle2 className="w-4 h-4" />
-              ) : (
-                <ChevronRight className="w-4 h-4" />
-              )}
-            </button>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={nextStep}
+                className="min-h-[44px] px-4 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 text-white font-black text-xs rounded-xl flex items-center justify-center gap-1.5 shadow-lg shadow-cyan-500/20 cursor-pointer"
+                title={demoState.stepIndex === steps.length - 1 ? 'Concluir demonstração (Enter)' : 'Próxima tela (Enter ou Seta Direita)'}
+              >
+                <span>{demoState.stepIndex === steps.length - 1 ? 'Concluir' : 'Próximo'}</span>
+                {demoState.stepIndex === steps.length - 1 ? (
+                  <CheckCircle2 className="w-4 h-4" />
+                ) : (
+                  <ChevronRight className="w-4 h-4" />
+                )}
+              </button>
+            )}
           </div>
         </div>
       </div>

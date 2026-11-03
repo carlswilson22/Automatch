@@ -14,6 +14,7 @@ import {
   ExternalLink, ChevronRight, Fuel, Shield
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useTour } from '../contexts/TourContext';
 import { getNewCars, deleteNewCar } from '../data/newCarsManager';
 import { getVehicleImageUrl, handleVehicleImageError } from '../utils/imageHelper';
 import SpotlightCard from '../components/ui/microkit/SpotlightCard';

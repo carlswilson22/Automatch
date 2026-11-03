@@ -115,7 +115,7 @@ export const TOURS_CONFIG = [
       {
         id: 'scanner-ia',
         targetAnchor: TOUR_ANCHORS.AD_SCAN_AI,
-        targetRoute: '/encontrar/sc-001',
+        targetRoute: '/novo-anuncio',
         title: 'Auditoria de Lataria com IA',
         text: 'A inteligência artificial analisa fotos para identificar pequenos reparos e assegurar confiança no laudo.',
         placement: 'bottom',

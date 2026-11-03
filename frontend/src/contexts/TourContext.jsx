@@ -81,15 +81,27 @@ export function TourProvider({ children }) {
     }
   }, [introModal.tourId, user?.role, location.pathname, navigate, closeTourIntro]);
 
-  // Encerra a Demonstração a qualquer momento
-  const stopDemo = useCallback(() => {
+    // Encerra a Demonstração a qualquer momento (com suporte a redirecionamento seguro)
+  const stopDemo = useCallback((options = {}) => {
     setDemoState({
       isRunning: false,
       tourId: null,
       stepIndex: 0,
     });
     unlockScroll();
-  }, []);
+
+    // Se o visitante deslogado estiver em rota privada, redireciona suavemente
+    const privateRoutes = ['/novo-anuncio', '/meus-anuncios', '/dashboard'];
+    if (!user && privateRoutes.includes(location.pathname)) {
+      if (options?.redirectTo) {
+        navigate(options.redirectTo);
+      } else {
+        navigate('/como-funciona');
+      }
+    } else if (options?.redirectTo) {
+      navigate(options.redirectTo);
+    }
+  }, [user, location.pathname, navigate]);
 
   // Avança para o próximo passo (transitando de rota se necessário)
   const nextStep = useCallback(() => {
