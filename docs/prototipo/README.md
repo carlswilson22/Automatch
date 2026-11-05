@@ -8,8 +8,8 @@ Este documento formaliza o **Protótipo Interativo de Alta Fidelidade (UI/UX)** 
 
 | Artefato | Descrição | Link de Acesso |
 | :--- | :--- | :--- |
-| **Projeto no Figma (Design)** | Arquivo de design com todos os frames, componentes, variantes e design system | [Abrir no Figma](https://www.figma.com/design/O0idlMRlPkxnmLzbPVQjY7/Pr%C3%B3tipo-Automatch?node-id=0-1&p=f&t=rFZQxPaViaihmlcm-0) |
-| **Visualização Interativa (Prototype)** | Modo de apresentação interativo navegável (fluxos clicáveis) | [Executar Protótipo Interativo](https://www.figma.com/proto/O0idlMRlPkxnmLzbPVQjY7/Pr%C3%B3tipo-Automatch?node-id=0-1&scaling=scale-down&starting-point-node-id=0%3A1) |
+| **Projeto no Figma (Design)** | Arquivo de design com todos os frames, componentes, variantes e design system | [Abrir no Figma](https://www.figma.com/design/YLEEDgT0oU5n5SCMLGzZb4/Prot%C3%B3tipo-Automatch?node-id=0-1&p=f&t=RJLh5fXMQIjShtFm-0) |
+| **Visualização Interativa (Prototype)** | Modo de apresentação interativo navegável | [Executar Protótipo Interativo](https://www.figma.com/proto/YLEEDgT0oU5n5SCMLGzZb4/Prot%C3%B3tipo-Automatch?node-id=4-11&p=f&t=RJLh5fXMQIjShtFm-0&scaling=min-zoom&content-scaling=fixed&page-id=0%3A1) |
 
 ---
 
