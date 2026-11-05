@@ -233,7 +233,7 @@ const ShowcaseCatalog = () => {
         let list = [...apiF];
 
         if (apiF.length === 0 && !debouncedSearch.trim() && filterBrand === 'Todas') {
-          list = isDemoModeEnabled() ? [...localF, ...showcaseCars.map(mapVehicleToViewModel)] : [...localF];
+          list = [...localF, ...showcaseCars.map(mapVehicleToViewModel)];
         } else if (currentPage === 1 && localF.length > 0) {
           list = [...localF, ...apiF];
         }
@@ -245,13 +245,12 @@ const ShowcaseCatalog = () => {
         setIsLoading(false);
       })
       .catch(err => {
-        // Em modo demo: exibe catálogo estático + anúncios locais.
-        // Em produção: exibe SOMENTE anúncios locais do usuário e o banner de erro.
+        // Exibe anúncios locais do usuário complementados com o catálogo oficial showcase
         const local = getNewCars();
-        const fallbackSources = local.map(mapVehicleToViewModel);
-        if (isDemoModeEnabled()) {
-          fallbackSources.push(...showcaseCars.map(mapVehicleToViewModel));
-        }
+        const fallbackSources = [
+          ...local.map(mapVehicleToViewModel),
+          ...showcaseCars.map(mapVehicleToViewModel)
+        ];
         const unique = Array.from(
           new Map(fallbackSources.filter(c => !isCarDeleted(c.id)).map(i => [i.id, i])).values()
         );
