@@ -55,7 +55,7 @@ Esta matriz mapeia cada cartão do quadro oficial com a sua implementação fís
 | :--- | :---: | :--- | :---: | :--- |
 | **Front-end** | *Itens Essenciais / Finalizado* | `frontend/src/` (React 18 + Vite + TailwindCSS) | ✅ Concluído | `npm run build` (0 erros, 2241 modules) |
 | **Back-end** | *Itens Essenciais / Finalizado* | `backend/main.py`, `backend/routers/` (FastAPI) | ✅ Concluído | Docker container + Uvicorn na porta 8000 |
-| **Protótipo** | *Itens Essenciais / Finalizado* | `frontend/src/pages/`, `frontend/src/components/` | ✅ Concluído | Vitrine, Detalhes, Dashboard, Comparador |
+| **Protótipo** | *Itens Essenciais / Finalizado* | [docs/prototipo/README.md](docs/prototipo/README.md) • [Figma](https://www.figma.com/design/O0idlMRlPkxnmLzbPVQjY7/Pr%C3%B3tipo-Automatch?node-id=0-1&p=f&t=rFZQxPaViaihmlcm-0) | ✅ Concluído | Protótipo interativo de alta fidelidade e telas do sistema |
 | **Modelagem de Dados** | *Itens Essenciais / Finalizado* | `backend/models.py`, `backend/database.py` | ✅ Concluído | SQLAlchemy ORM (Car, User, Store, Watchlist) |
 | **Consertando Modelos Dados** | *Finalizado* | `backend/models.py` (Índices `compartilhavel`, `status_reserva`) | ✅ Concluído | Migração e testes de integridade relacionais |
 | **Banco de Dados** | *BackLog Do Projeto* | `backend/database.py`, PostgreSQL / SQLite | ✅ Concluído | SessionLocal, Pool de conexões e migrations |

@@ -18,6 +18,7 @@ Consolidação das **Sprints 00, 01 e 02** (Milestones `v1.0.0`, `v1.1.0` e `v2.
 
 ## Links Principais
 - **Repositório**: `CAMPUSCEUB/ADS-AUTOMATCH`
+- **Protótipo de Alta Fidelidade (Figma)**: [docs/prototipo/README.md](../docs/prototipo/README.md) • [Figma Design](https://www.figma.com/design/O0idlMRlPkxnmLzbPVQjY7/Pr%C3%B3tipo-Automatch?node-id=0-1&p=f&t=rFZQxPaViaihmlcm-0)
 - **Requisitos**: [docs/requisitos.md](../docs/requisitos.md)
 - **Arquitetura**: [docs/arquitetura.md](../docs/arquitetura.md)
 - **Relatórios de Sprint**: [sprint-00](../sprints/sprint-00-planejamento.md), [sprint-01](../sprints/sprint-01.md) e [sprint-02](../sprints/sprint-02.md)

@@ -29,6 +29,7 @@ Plataforma automotiva Fullstack que une **marketplace de compra e venda de veíc
 
 | Seção | Descrição | Link |
 | :--- | :--- | :--- |
+| **Protótipo (Figma)** | Protótipo interativo de alta fidelidade e design system | [docs/prototipo/README.md](docs/prototipo/README.md) • [Figma](https://www.figma.com/design/O0idlMRlPkxnmLzbPVQjY7/Pr%C3%B3tipo-Automatch?node-id=0-1&p=f&t=rFZQxPaViaihmlcm-0) |
 | **Backlog** | Épicos, histórias de usuário e matriz de rastreabilidade | [BACKLOG.md](BACKLOG.md) |
 | **Sprints** | Planejamento, execução e evidências das Sprints 00 a 08 | [sprints/README.md](sprints/README.md) |
 | **Entregas** | Relatórios formais das Entregas 01, 02 e 03 (Final) | [entregas/README.md](entregas/README.md) |
