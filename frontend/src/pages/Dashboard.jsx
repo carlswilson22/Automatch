@@ -320,6 +320,7 @@ export default function Dashboard() {
               {/* Botão Rede B2B exclusivo para lojistas/admin */}
               {isB2B && (
                 <button
+                  data-tour="dashboard-btn-rede-b2b"
                   onClick={() => setIsB2BModalOpen(true)}
                   className="px-3.5 py-2.5 bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-900 hover:to-black text-white rounded-2xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-md shadow-slate-900/20 active:scale-95 transition-all whitespace-nowrap cursor-pointer"
                 >
@@ -330,6 +331,7 @@ export default function Dashboard() {
 
               {/* Estúdio IA */}
               <button
+                data-tour="dashboard-estudio-ia"
                 onClick={() => setIsAIStudioOpen(true)}
                 className="px-3.5 py-2.5 bg-gradient-to-r from-violet-600 to-purple-700 hover:from-violet-700 hover:to-purple-800 text-white rounded-2xl text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-md shadow-violet-500/20 active:scale-95 transition-all whitespace-nowrap cursor-pointer"
               >
@@ -376,7 +378,7 @@ export default function Dashboard() {
         </AnimatePresence>
 
         {/* Quick KPI Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8">
+        <div data-tour="dashboard-kpi-cards" className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-8">
           {(isB2B ? [
             { 
               label: 'Total em Estoque', 
@@ -466,6 +468,7 @@ export default function Dashboard() {
             </button>
             {isB2B && (
               <button
+                data-tour="dashboard-radar-b2b"
                 onClick={() => setDashboardTab('b2b-radar')}
                 className={`px-5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all cursor-pointer ${
                   dashboardTab === 'b2b-radar' 
@@ -659,6 +662,7 @@ export default function Dashboard() {
                                 
                                 {isB2B ? (
                                   <button 
+                                    data-tour="dashboard-configurar-ativo"
                                     onClick={() => handleOpenConfigureAsset(item)}
                                     className="inline-flex items-center gap-1.5 px-3.5 py-2 bg-slate-100 hover:bg-blue-600 hover:text-white text-slate-700 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95 cursor-pointer"
                                     title="Configurar ativo e precificação"
