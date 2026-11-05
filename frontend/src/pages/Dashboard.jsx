@@ -36,6 +36,8 @@ import {
 } from 'lucide-react';
 import B2BRepassePanel from '../components/inventory/B2BRepassePanel';
 import { useNavigate } from 'react-router-dom';
+import { useTour } from '../contexts/TourContext';
+import { getTourById } from '../data/tourGuideData';
 import { 
   stores, 
   inventory, 
@@ -143,6 +145,19 @@ export default function Dashboard() {
   const [viewMode, setViewMode] = useState('grid');
   const [isB2BModalOpen, setIsB2BModalOpen] = useState(false);
   const [isAIStudioOpen, setIsAIStudioOpen] = useState(false);
+  const { demoState } = useTour();
+
+  // Sincroniza a abertura da Rede B2B quando o tour estiver nos passos internos do modal
+  useEffect(() => {
+    if (!demoState?.isRunning || demoState?.tourId !== 'lojista') return;
+    const tour = getTourById('lojista', user?.role);
+    const anchor = tour?.steps?.[demoState.stepIndex]?.targetAnchor;
+    if (anchor && anchor.startsWith('b2b-')) {
+      setIsB2BModalOpen(true);
+    } else if (anchor === 'dashboard-btn-rede-b2b') {
+      setIsB2BModalOpen(false);
+    }
+  }, [demoState?.isRunning, demoState?.tourId, demoState?.stepIndex, user?.role]);
   const [currentPage, setCurrentPage] = useState(1);
   const [configuringAsset, setConfiguringAsset] = useState(null);
   const [isConfigModalOpen, setIsConfigModalOpen] = useState(false);

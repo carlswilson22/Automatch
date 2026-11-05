@@ -35,6 +35,7 @@ describe('BATERIA DE TESTES - TOUR GUIADO INTERATIVO & ACESSIBILIDADE', () => {
       'src/pages/NewCarAdForm.jsx',
       'src/pages/MyAdsPage.jsx',
       'src/pages/Dashboard.jsx',
+      'src/components/partners/PartnershipHubModal.jsx',
     ];
 
     const aggregatedContent = filesToScan

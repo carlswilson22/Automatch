@@ -13,6 +13,8 @@ import {
   Star, DollarSign, RefreshCw, PlusCircle, Check, XCircle, ChevronRight, Lock
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTour } from '../../contexts/TourContext';
+import { getTourById, TOUR_ANCHORS } from '../../data/tourGuideData';
 import PartnerChatModal from './PartnerChatModal';
 import NewPartnershipInviteCard from './NewPartnershipInviteCard';
 import B2BInventorySkeleton from './B2BInventorySkeleton';
@@ -169,6 +171,7 @@ const ReservationTimerBadge = memo(function ReservationTimerBadge({ expiresAt, f
 
 export default function PartnershipHubModal({ isOpen, onClose }) {
   const { user } = useAuth();
+  const { demoState } = useTour();
   const isB2BAuthorized = Boolean(
     user?.role === 'lojista' || 
     user?.role === 'admin' || 
@@ -236,6 +239,45 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
     client_name: '',
     duration_minutes: 120
   });
+
+  // Sincronização automática das telas e abas internas durante o Tour Guiado do Lojista
+  useEffect(() => {
+    if (!demoState?.isRunning || demoState?.tourId !== 'lojista') return;
+    const tour = getTourById('lojista', user?.role);
+    const anchor = tour?.steps?.[demoState.stepIndex]?.targetAnchor;
+    if (!anchor) return;
+
+    if (anchor === TOUR_ANCHORS.B2B_SHARED_INVENTORY) {
+      setActiveTab('inventory');
+      setReservingCar(null);
+    } else if (anchor === TOUR_ANCHORS.B2B_HOLD_LOCK_MODAL) {
+      setActiveTab('inventory');
+      const sampleCar = (sharedCars && sharedCars[0]) || {
+        id: 'b2b-sample-polo',
+        brand: 'Volkswagen',
+        model: 'Polo TSI',
+        price: 88200,
+        valor_minimo_repasse: 68200,
+        store_name: 'Motors Campinas'
+      };
+      setReservingCar(sampleCar);
+      setReservationForm({
+        proposed_price: 88200,
+        client_markup: 5000,
+        client_name: 'João da Silva (Financiamento aprovado)',
+        duration_minutes: 120
+      });
+    } else if (anchor === TOUR_ANCHORS.B2B_PARTNERSHIPS_TAB) {
+      setReservingCar(null);
+      setActiveTab('partnerships');
+    } else if (anchor === TOUR_ANCHORS.B2B_RESERVATIONS_TAB) {
+      setReservingCar(null);
+      setActiveTab('reservations');
+    } else if (anchor === TOUR_ANCHORS.B2B_TRANSACTIONS_TAB) {
+      setReservingCar(null);
+      setActiveTab('transactions');
+    }
+  }, [demoState?.isRunning, demoState?.tourId, demoState?.stepIndex, user?.role, sharedCars]);
 
   const [activeChatReservation, setActiveChatReservation] = useState(null);
   const [reviewingTx, setReviewingTx] = useState(null);
@@ -872,7 +914,7 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
         <div className="flex-1 overflow-y-auto p-6 sm:p-8 bg-slate-50/50">
           {/* TAB 1: ESTOQUE COMPARTILHADO */}
           {activeTab === 'inventory' && (
-            <div className="space-y-6">
+            <div data-tour="b2b-estoque-compartilhado" className="space-y-6">
               {/* Search & Intro */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-5 rounded-3xl border border-slate-200 shadow-sm">
                 <div className="relative flex-1 max-w-md">
@@ -944,7 +986,7 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
 
           {/* TAB 2: MINHAS PARCERIAS */}
           {activeTab === 'partnerships' && (
-            <div className="space-y-8">
+            <div data-tour="b2b-minhas-parcerias" className="space-y-8">
               {/* Módulo Proeminente para Enviar Pedido de Parceria */}
               <NewPartnershipInviteCard
                 availableStores={availableStores}
@@ -1037,7 +1079,7 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
 
           {/* TAB 3: MINHAS RESERVAS (TRAVA EXCLUSIVA / HOLD LOCK) */}
           {activeTab === 'reservations' && (
-            <div className="space-y-6">
+            <div data-tour="b2b-minhas-reservas" className="space-y-6">
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-lg font-black text-slate-800 flex items-center gap-2">
@@ -1213,7 +1255,7 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
 
           {/* TAB 4: HISTÓRICO & REPASSES FINALIZADOS */}
           {activeTab === 'transactions' && (
-            <div className="space-y-6">
+            <div data-tour="b2b-repasses-concluidos" className="space-y-6">
               <h3 className="text-lg font-black text-slate-800 flex items-center gap-2">
                 <FileText className="w-5 h-5 text-blue-600" />
                 Histórico de Repasses Concluídos
@@ -1289,6 +1331,7 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
           {reservingCar && (
             <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-sm">
               <motion.div
+                data-tour="b2b-trava-holdlock"
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
