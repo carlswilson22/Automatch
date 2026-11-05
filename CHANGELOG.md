@@ -2,6 +2,29 @@
 
 Registre aqui as mudanças relevantes por sprint ou marco avaliativo.
 
+## Sprint 08 - Auditoria Multimodal de Laudos por IA, Tour Guiado Interativo B2B e Vitrine Resiliente (v2.6.0)
+- **Auditoria Multimodal de Laudos Cautelares por IA (Gemini 1.5 Flash + Cross-Check)**:
+  - Implementação de análise inteligente e conferência pericial automatizada de laudos cautelares (PDF e imagens de alta resolução).
+  - Validação contratual Pydantic com schema rigoroso: `classificacao_geral` (`SEM_RESSALVAS`, `COM_ATENCAO`, `COM_RESTRICOES`), `conferencia_dados` (placa, chassi, marca/modelo, ano e quilometragem), `pontos_atencao_riscos` (leilão, sinistro, remarcação, restrições judiciais e integridade estrutural) e `resumo_executivo`.
+  - PoC isolada validada com amostras periciais sintéticas em `backend/tests/samples_laudos/` e endpoint `/api/v1/laudos/poc-test`.
+  - Componente `LaudoFeedbackCard.jsx` integrado nos fluxos do anunciante (validação no ato do upload) e do comprador (transparência na ficha técnica do veículo).
+- **Tour Guiado Interativo Completo com Cobertura da Rede de Conexão B2B**:
+  - Implementação do sistema de tour por spotlight (`AutomatchTour.jsx`) com acessibilidade WCAG AAA (`role="dialog"`, `aria-modal="true"`, focus trap por teclado e respeito a `prefers-reduced-motion`).
+  - Cobertura integral das 5 telas e sub-modais internos da Rede B2B no tour do lojista:
+    1. **Hub de Parcerias (`dashboard-btn-rede-b2b`)**: Ponto de entrada exclusivo para lojistas no Dashboard.
+    2. **Estoque Compartilhado (`b2b-estoque-compartilhado`)**: Busca, cards com piso de repasse protegido e simulador interativo de markup em tempo real.
+    3. **Trava Exclusiva Hold Lock (`b2b-trava-holdlock`)**: Sub-modal de reserva de veículo com prazo customizável, proposta e margem lojista.
+    4. **Minhas Parcerias (`b2b-minhas-parcerias`)**: Painel de convites, busca de concessionárias e gestão de conexões ativas.
+    5. **Minhas Reservas (`b2b-minhas-reservas`)**: Monitoramento de veículos sob Hold Lock com contagem regressiva e solicitação de fechamento.
+    6. **Repasses Concluídos (`b2b-repasses-concluidos`)**: Histórico de negócios formalizados com protocolos auditados.
+  - Sincronização reativa bidirecional entre `TourContext`, `Dashboard.jsx` e `PartnershipHubModal.jsx`: o modal abre automaticamente e troca de aba conforme o passo do tour.
+- **Vitrine Digital Resiliente e Compatibilização de Dados**:
+  - Correção de inconsistência de tipo booleano no campo `compartilhavel` nos seeds e migrações do banco de dados relacional.
+  - Mecanismo de contingência de alta disponibilidade na vitrine (`ShowcaseCatalog.jsx`): se o backend estiver vazio ou inacessível, o catálogo oficial (`showcaseData.js`) e os anúncios do usuário (`newCarsManager.js`) são recuperados com integridade garantida.
+- **Consolidação de Governança de Branches**:
+  - Unificação de todas as frentes de desenvolvimento na branch `main`.
+  - Limpeza de branches remotas finalizadas no repositório principal (`origin`), com manutenção de histórico no repositório institucional (`campusceub`).
+
 ## Sprint 07 - Aprimoramento Orbital 360°, Desempenho B2B, Fechamento Resiliente e Unificação de Lojas (v2.5.0)
 - **Varredura 360° Fotográfica Fidedigna & Correção do Quadrante 180°**:
   - Resolução definitiva do bug de perspectiva: o clique em "Traseira 180°" exibe a imagem traseira autêntica (`/images/carro_360_traseira.jpg`), eliminando a exibição frontal incorreta.

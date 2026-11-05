@@ -16,11 +16,11 @@ Abaixo está a consolidação fidedigna do quadro de gestão ágil de atividades
 |                                             QUADRO: DESENVOLVIMENTO PI 2                                                |
 +---------------------+-------------------+---------------------+-------------------------+-------------------------------+
 | BACKLOG DO PROJETO  | ITENS ESSENCIAIS  | A FAZER             | FAZENDO                 | FINALIZADO                    |
-| (20 cartões)        | (10 cartões)      | (0 cartões)         | (1 cartões)             | (21 cartões)                  |
+| (22 cartões)        | (10 cartões)      | (0 cartões)         | (0 cartões)             | (24 cartões)                  |
 +---------------------+-------------------+---------------------+-------------------------+-------------------------------+
-| • Front-End         | • Front-end       |                     | • Implementação         | [x] Front-end                 |
-| • Back-End          | • Back-End        |                     | feedback após anexo     | [x] Back-end                  |
-| • Protótipo         | • Protótipo       |                     | de laudo cautelar       | [x] Modelagem de dados        |
+| • Front-End         | • Front-end       |                     |                         | [x] Front-end                 |
+| • Back-End          | • Back-End        |                     |                         | [x] Back-end                  |
+| • Protótipo         | • Protótipo       |                     |                         | [x] Modelagem de dados        |
 | • Modelagem Dados   | • Modelagem Dados |                     |                         | [x] Protótipo                 |
 | • Diagrama Caso Uso | • Impl. IA Gemini |                     |                         | [x] Impl. da IA do gemini     |
 | • Diagrama Sequenc. | • Doc. Completa   |                     |                         | [x] Impl. upload laudos       |
@@ -38,7 +38,10 @@ Abaixo está a consolidação fidedigna do quadro de gestão ágil de atividades
 | • Impl. de TCO      |                   |                     |                         | [x] Implementação de TCO      |
 | • Comparador Multid.|                   |                     |                         | [x] Comparador Multidimens.   |
 | • Conexão B2B lojas |                   |                     |                         | [x] Conexão B2B lojas         |
-|                     |                   |                     |                         | [x] Feedback YOLOv8 pós-laudo |
+| • Feedback laudo IA |                   |                     |                         | [x] Feedback YOLOv8 pós-laudo |
+| • Tour Guiado B2B   |                   |                     |                         | [x] Auditoria Laudo Gemini IA |
+| • Vitrine Resiliente|                   |                     |                         | [x] Tour Guiado Interativo B2B|
+|                     |                   |                     |                         | [x] Vitrine Resiliente Fallbk |
 +---------------------+-------------------+---------------------+-------------------------+-------------------------------+
 ```
 
@@ -74,6 +77,9 @@ Esta matriz mapeia cada cartão do quadro oficial com a sua implementação fís
 | **Planilha Excel Backlog** | *BackLog Do Projeto* | `BACKLOG.md` (Exportável para XLSX/CSV) | ✅ Concluído | Estrutura MoSCoW com Story Points e RICE |
 | **Conexão B2B com lojas parceiras**| *Fazendo ➔ Finalizado* | `backend/routers/partnerships.py`, `PartnershipHubModal.jsx` | ✅ Concluído | Paginação server-side, cache TTL 60s, skeleton shimmer |
 | **Feedback do YOLOv8 pós-laudo** | *Finalizado* | `backend/services/ai_service.py` (`extrair_imagens_pdf`, `analisar_fotos_periciais_pdf_yolo`, `executar_cross_check_laudo`) + `LaudoFeedbackCard.jsx` | ✅ Concluído | `test_laudo_yolo_feedback.py` (6 testes: extração PDF, inferência YOLO, cross-check e integração API) |
+| **Auditoria Multimodal Laudos IA** | *Finalizado* | `backend/services/ai_service.py`, `backend/routers/laudos.py`, `LaudoFeedbackCard.jsx` | ✅ Concluído | PoC rigorosa Gemini 1.5 Flash, Cross-Check (Placa, Chassi, Ano, KM) e matriz de riscos |
+| **Tour Guiado Interativo B2B** | *Finalizado* | `frontend/src/components/tour/AutomatchTour.jsx`, `tourGuideData.js`, `PartnershipHubModal.jsx` | ✅ Concluído | 233 testes unitários e de integração (WCAG AAA, 6 telas B2B com sincronização reativa) |
+| **Vitrine Resiliente e Fallback** | *Finalizado* | `frontend/src/pages/ShowcaseCatalog.jsx`, `backend/database.py`, `002_fix_compartilhavel_boolean.py` | ✅ Concluído | Fallback de alta disponibilidade garantindo catálogo oficial na vitrine digital |
 
 ---
 
@@ -84,7 +90,7 @@ O **Automatch** tem como missão eliminar a assimetria de informações e fraude
 ### Objetivos Principais (OKRs):
 * **OKR 1 (Confiabilidade):** Garantir 100% de rastreabilidade e integridade nos laudos periciais e certidões veiculares emitidas com QR Code.
 * **OKR 2 (Experiência do Usuário):** Tempo de resposta de inferência pericial de IA inferior a 2,0 segundos por imagem e zero engasgos no catálogo.
-* **OKR 3 (Maturidade de Engenharia):** Arquitetura 100% conteinerizada com Docker Compose, CI/CD no GitHub Actions e suíte com mais de 40 testes automatizados.
+* **OKR 3 (Maturidade de Engenharia):** Arquitetura 100% conteinerizada com Docker Compose, CI/CD no GitHub Actions e suíte com mais de 230 testes automatizados.
 
 ---
 
@@ -94,7 +100,7 @@ O **Automatch** tem como missão eliminar a assimetria de informações e fraude
 
 ### ✅ Todos os Itens Concluídos
 
-> Não há itens na coluna "A Fazer" ou "Fazendo". Todos os 21 cartões do backlog foram implementados e validados com sucesso.
+> Não há itens na coluna "A Fazer" ou "Fazendo". Todos os 24 cartões do backlog foram implementados e validados com sucesso.
 
 ---
 

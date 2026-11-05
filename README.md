@@ -64,16 +64,23 @@ Plataforma automotiva Fullstack que une **marketplace de compra e venda de veíc
    - Comparação simultânea de 2 a 3 veículos em 5 dimensões (FIPE vs Preço, KM/ano, Integridade de Laudo, Débitos DETRAN e Ficha Técnica), com carregamento sob demanda por acordeão.
 4. **Calculadora TCO & Termômetro de Mercado:**
    - Custo Total de Posse mensal detalhado (IPVA proporcional por UF, seguro, combustível e depreciação) e indicador de dispersão frente à FIPE.
-5. **Painel B2B do Lojista & Sincronização Multicanal:**
-   - Gestão de estoque, valor imobilizado e publicação multicanal integrada com **AutoCerto DMS**, **AutoAvaliar** e **OLX Autos**.
-6. **Segurança & Resiliência:**
+5. **Painel B2B do Lojista, Rede de Conexão & Trava Exclusiva (Hold Lock):**
+   - Gestão de estoque multi-lojas, valor imobilizado e publicação multicanal.
+   - Ecossistema de Rede B2B com estoque compartilhado, simulador de margem em tempo real, propostas de parcerias entre concessionárias, Trava de Reserva Exclusiva (Hold Lock) e histórico de repasses formalizados.
+6. **Auditoria Multimodal de Laudos Cautelares por IA:**
+   - Extração pericial automática de dados de laudos cautelares (PDF/imagem) via Gemini 1.5 Flash.
+   - Cross-check em tempo real (Placa, Chassi, Marca/Modelo, Ano e KM), identificação de histórico de sinistro/leilão e classificação automática em três níveis (Sem Ressalvas, Com Atenção, Com Restrições).
+7. **Tour Guiado Interativo com Acessibilidade WCAG AAA:**
+   - Sistema de spotlight interativo nativo (`AutomatchTour.jsx`) cobrindo as jornadas do Comprador, Vendedor e Lojista.
+   - Sincronização automática com as 5 telas da Rede B2B e sub-modal de Hold Lock, com navegação fluida por teclado e leitor de tela.
+8. **Segurança & Resiliência:**
    - Controle estrito de acesso na exclusão de veículos (OWASP A01).
    - Validação binária de Magic Bytes (JPEG, PNG e PDF) antes de alocar buffer de upload.
    - Compressão client-side em Canvas HTML5 eliminando estouro de memória no navegador.
-7. **Performance & Otimização SPA (Core Web Vitals):**
+9. **Performance & Otimização SPA (Core Web Vitals):**
    - Code-splitting dinâmico com `React.lazy()` para todos os modais pesados, reduzindo o bundle inicial em até 40%.
    - Pipeline de imagens com `loading="lazy"`, decodificação assíncrona (`decoding="async"`) e desoneração da GPU pela remoção de filtros gaussianos contínuos.
-   - Proteção de rede com timeout fail-fast de 1.2s via `AbortSignal.timeout` e fallback instantâneo para dados locais.
+   - Proteção de rede com timeout fail-fast de 1.2s via `AbortSignal.timeout` e fallback de alta disponibilidade garantindo catálogo na vitrine digital.
 
 ---
 
