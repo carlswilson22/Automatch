@@ -114,7 +114,7 @@ async def lifespan(app: FastAPI):
                 ("original_price", "FLOAT"),
                 ("price_history", "TEXT"),
                 ("user_id", "VARCHAR(36)"),
-                ("compartilhavel", "INTEGER DEFAULT 0"),
+                ("compartilhavel", "BOOLEAN DEFAULT false"),
                 ("valor_minimo_repasse", "FLOAT"),
                 ("comissao_fixa", "FLOAT"),
                 ("observacoes_repasse", "TEXT"),
