@@ -17,7 +17,7 @@ Plataforma automotiva Fullstack que une **marketplace de compra e venda de veíc
 | :--- | :--- |
 | **Instituição** | Centro Universitário de Brasília (CEUB) |
 | **Curso** | Análise e Desenvolvimento de Sistemas (ADS) |
-| **Disciplina** | Projeto Integrador / Engenharia de Software |
+| **Disciplina** | Projeto Integrador |
 | **Organização no GitHub** | `CampusCEUB` |
 | **Repositório Oficial** | `ADS-AUTOMATCH` |
 | **Equipe de Desenvolvimento** | Carlos Wilson, Matheus Porto, Paulo Arthur e Vinicius Aurelio |
