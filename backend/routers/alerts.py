@@ -16,50 +16,37 @@ import uuid
 from datetime import datetime
 from typing import Optional, Dict, Any, List
 from fastapi import APIRouter, Depends, Header
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, ConfigDict
+from sqlalchemy.orm import Session
+from database import get_db
 
 import models
 from routers.auth import get_current_user_from_header
 
 router = APIRouter(prefix="/api/alerts", tags=["Radar de Oportunidades & Alertas"])
 
-# Armazenamento em memória para alertas ativos
-ALERTS_DB: List[Dict[str, Any]] = [
-    {
-        "id": "alt-1",
-        "car_id": "1",
-        "car_name": "Volkswagen Golf GTI 2.0 TSI",
-        "current_price": 142000.0,
-        "target_price": 138000.0,
-        "contact_type": "whatsapp",
-        "contact_value": "(11) 98765-4321",
-        "notify_below_fipe": True,
-        "created_at": "2024-04-10T14:30:00Z",
-        "status": "ativo"
-    }
-]
-
-
 class AlertCreateRequest(BaseModel):
+    model_config = ConfigDict(allow_inf_nan=False)
     car_id: Optional[str] = None
     car_name: Optional[str] = "Veículo"
-    current_price: Optional[float] = 0.0
-    target_price: Optional[float] = None
+    current_price: float = Field(default=0.0, ge=0)
+    target_price: Optional[float] = Field(default=None, gt=0)
     contact_type: str = "whatsapp"  # "whatsapp" | "email"
-    contact_value: str
+    contact_value: str = Field(min_length=1, max_length=320)
     notify_below_fipe: Optional[bool] = True
 
 
 @router.get("")
 async def listar_alertas(
-    current_user: models.User = Depends(get_current_user_from_header)
+    current_user: models.User = Depends(get_current_user_from_header),
+    db: Session = Depends(get_db)
 ) -> Dict[str, Any]:
     """Lista os alertas de preço. Usuários comuns visualizam apenas seus próprios alertas; administradores visualizam todos."""
-    is_admin = (current_user.email == "admin@automatch.com")
-    if is_admin:
-        user_alerts = ALERTS_DB
-    else:
-        user_alerts = [a for a in ALERTS_DB if a.get("user_id") == current_user.id]
+    is_admin = current_user.role == "admin"
+    query = db.query(models.PriceAlert)
+    if not is_admin:
+        query = query.filter(models.PriceAlert.user_id == current_user.id)
+    user_alerts = [_serialize_alert(alert) for alert in query.order_by(models.PriceAlert.created_at.desc()).all()]
 
     return {
         "status": "success",
@@ -71,7 +58,8 @@ async def listar_alertas(
 @router.post("")
 async def criar_alerta(
     payload: AlertCreateRequest,
-    current_user: models.User = Depends(get_current_user_from_header)
+    current_user: models.User = Depends(get_current_user_from_header),
+    db: Session = Depends(get_db)
 ) -> Dict[str, Any]:
     """
     Cadastra um novo Alerta de Queda de Preço ou Radar de Oportunidades.
@@ -96,7 +84,8 @@ async def criar_alerta(
         "created_at": datetime.utcnow().isoformat() + "Z",
         "status": "ativo"
     }
-    ALERTS_DB.insert(0, novo_alerta)
+    db.add(models.PriceAlert(**novo_alerta))
+    db.commit()
 
     canal_formatado = "WhatsApp" if sanitized_contact_type == "whatsapp" else "E-mail"
     return {
@@ -105,3 +94,10 @@ async def criar_alerta(
         "mensagem": f"Radar ativado com sucesso! Você será avisado via {canal_formatado} ({payload.contact_value}) assim que o preço atingir R$ {target:,.2f}.",
         "alerta": novo_alerta
     }
+
+
+def _serialize_alert(alert):
+    result = {column.name: getattr(alert, column.name) for column in models.PriceAlert.__table__.columns}
+    for field in ("current_price", "target_price"):
+        result[field] = float(result[field])
+    return result

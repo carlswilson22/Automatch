@@ -1,3 +1,4 @@
+import { api, isDemoModeEnabled } from '../services/apiClient';
 /**
  * MyAdsPage.jsx — Página de gestão dos anúncios criados pelo usuário anunciante.
  * 
@@ -47,20 +48,31 @@ export default function MyAdsPage() {
 
   useEffect(() => {
     window.scrollTo(0, 0);
-    loadUserAds();
-  }, [user]);
-
-  const loadUserAds = () => {
-    const all = getNewCars();
-    // Exibe anúncios do usuário logado (ou criados localmente nesta sessão/dispositivo)
-    const userAds = all.filter(c => {
-      if (c.userEmail && user?.email) {
-        return c.userEmail.toLowerCase() === user.email.toLowerCase();
-      }
-      return true; // Se não tem email explícito, exibe anúncios criados no navegador
-    });
-    setAds(userAds);
-  };
+    const controller = new AbortController();
+    const local = getNewCars().filter(car =>
+      (car.user_id && String(car.user_id) === String(user?.id)) ||
+      (car.userEmail && user?.email && car.userEmail.toLowerCase() === user.email.toLowerCase())
+    );
+    setAds(local);
+    api.get('/api/cars/mine', { signal: controller.signal })
+      .then(cars => {
+        if (controller.signal.aborted) return;
+        const normalized = cars.map(car => ({
+          ...car, marca: car.brand, modelo: car.model, ano: car.year,
+          preco: car.price, imagem: car.image, cor: car.color,
+          localizacao: car.location, laudo: car.laudo_status
+        }));
+        const combined = new Map(local.map(car => [String(car.id), car]));
+        normalized.forEach(car => combined.set(String(car.id), car));
+        setAds([...combined.values()]);
+      })
+      .catch(error => {
+        if (!controller.signal.aborted && !isDemoModeEnabled()) {
+          setFeedbackMessage({ type: 'error', text: error.message });
+        }
+      });
+    return () => controller.abort();
+  }, [user?.id, user?.email]);
 
   const handleConfirmDelete = async () => {
     if (!carToDelete) return;

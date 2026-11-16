@@ -1,3 +1,6 @@
+import { isDemoModeEnabled } from '../../services/apiClient';
+import { canUseOfflineFallback } from '../../services/sessionStorage';
+import { readSessionToken } from '../../services/sessionStorage';
 /**
  * MultichannelSyncModal.jsx — Modal de sincronização e publicação multicanal de anúncios.
  * 
@@ -19,6 +22,7 @@ const CHANNELS_CONFIG = [
 
 const MultichannelSyncModal = ({ isOpen, onClose, car }) => {
   useScrollLock(isOpen);
+  const [requestError, setRequestError] = useState('');
   const [channelsStatus, setChannelsStatus] = useState(
     CHANNELS_CONFIG.map(c => ({ ...c, status: 'sincronizado', lastSync: 'Há 5 min' }))
   );
@@ -28,17 +32,17 @@ const MultichannelSyncModal = ({ isOpen, onClose, car }) => {
   if (!isOpen) return null;
 
   const handleRunSync = async () => {
+    setRequestError('');
     setIsSyncing(true);
     try {
-      const storedUser = JSON.parse(localStorage.getItem('automatch_user') || '{}');
-      const token = storedUser?.token;
+      const token = readSessionToken();
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
       const resp = await axios.post('/api/integrations/sync', {
         car_id: car?.id || '1',
         car_name: car?.name || 'Veículo',
         channels: ['autocerto', 'autoavaliar', 'olx']
-      }, { headers });
+      }, { headers, timeout: 10000 });
 
       if (resp.data && resp.data.status === 'success') {
         setSyncProtocol(resp.data.protocolo);
@@ -47,6 +51,10 @@ const MultichannelSyncModal = ({ isOpen, onClose, car }) => {
         );
       }
     } catch (err) {
+      if (!canUseOfflineFallback({ status: err.response?.status || 0 }, isDemoModeEnabled())) {
+        setRequestError(err.response?.data?.detail || 'Não foi possível concluir. Tente novamente.');
+        return;
+      }
       console.warn('Fallback sync multicanal:', err);
       setSyncProtocol(`SYNC-${Math.random().toString(36).substring(2, 9).toUpperCase()}`);
       setChannelsStatus(
@@ -89,6 +97,7 @@ const MultichannelSyncModal = ({ isOpen, onClose, car }) => {
           Com 1 clique, o <strong>{car?.name}</strong> é sincronizado simultaneamente com preço FIPE e laudo pericial em todas as plataformas parceiras.
         </p>
 
+        {requestError && <p role="alert" className="text-sm text-rose-300 mb-3">{requestError}</p>}
         {/* Channels List */}
         <div className="space-y-2.5 mb-6">
           {channelsStatus.map((ch) => (

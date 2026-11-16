@@ -5,7 +5,7 @@
 #   - Executa testes automatizados de backend e frontend a cada push ou pull request,
 #     garantindo que código com defeitos não seja integrado à branch principal.
 # ==============================================================================
-name: ProjetoPI CI & Quality Gate
+name: Automatch CI & Quality Gate
 
 # Ativado em push direto e Pull Requests para as branches principais e de homologação
 on:
@@ -14,6 +14,9 @@ on:
   pull_request:
     branches: [ "main", "master" ]
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 jobs:
   # 1. VERIFICAÇÃO DO BACKEND (PYTHON & AUDITORIA DE REGRESSÃO)
@@ -40,10 +43,14 @@ jobs:
         working-directory: ./backend
         env:
           DATABASE_URL: "sqlite:////tmp/ci_audit_test.db"
+          DATABASE_MODE: sqlite
+          ENVIRONMENT: testing
+          ALLOW_DEMO_TOKENS: 'false'
+          PYTHON_DOTENV_DISABLED: '1'
+          PYTHONUTF8: '1'
+          GEMINI_API_KEY: ''
         run: |
-          python -m unittest test_audit_full_battery.py
-          python -m unittest test_improvements_battery.py
-          python -m unittest test_health_probes.py
+          python run_tests.py
 
   # 2. VERIFICAÇÃO DO FRONTEND (REACT + VITE + TAILWIND)
   testar-frontend:
@@ -62,7 +69,7 @@ jobs:
 
       - name: Instalar dependências
         working-directory: ./frontend
-        run: npm ci || npm install
+        run: npm ci
 
       - name: Testar o Build de Produção do Vite
         working-directory: ./frontend
@@ -71,14 +78,54 @@ jobs:
       - name: Executar Bateria de Testes do Frontend (Visual, 360°, IA e Segurança)
         working-directory: ./frontend
         run: |
-          node tests/test_visual_and_360_experience.mjs
-          node tests/test_security_audit.mjs
+          npm run lint
+          npm test
+
+  testar-migracoes:
+    name: Migrações PostgreSQL e SQLite
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_DB: automatch_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d automatch_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      PYTHON_DOTENV_DISABLED: '1'
+      ENVIRONMENT: testing
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/automatch_test
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install sqlalchemy psycopg2-binary python-dotenv alembic
+      - name: Aplicar e repetir migrações PostgreSQL sem recriar tabelas
+        run: |
+          python migrate.py
+          python migrate.py
+      - name: Aplicar e repetir migrações SQLite
+        env:
+          DATABASE_MODE: sqlite
+          DATABASE_URL: sqlite:////tmp/automatch_migration_test.db
+        run: |
+          python migrate.py
+          python migrate.py
 
   # 3. VERIFICAÇÃO DO DOCKER
   testar-docker:
     name: Validação de Build do Container Docker
     runs-on: ubuntu-latest
-    needs: [testar-backend, testar-frontend]
+    needs: [testar-backend, testar-frontend, testar-migracoes]
     steps:
       - name: Baixar o repositório
         uses: actions/checkout@v4
@@ -86,3 +133,4 @@ jobs:
       - name: Validar Build da Imagem Backend
         run: |
           docker build -t automatch-backend:ci ./backend
+          docker build -f frontend/Dockerfile.prod -t automatch-frontend:ci ./frontend

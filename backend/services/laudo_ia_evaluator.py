@@ -9,6 +9,7 @@ Objetivo e Motivo da Criação:
 """
 import os
 import re
+import unicodedata
 import io
 import json
 import base64
@@ -84,7 +85,7 @@ def extrair_texto_pdf_basico(pdf_bytes: bytes) -> str:
             if t:
                 chunks.append(t)
         if chunks:
-            return " ".join(chunks)
+            return "\n".join(chunks)
     except Exception as e:
         logger.debug("Tentativa pypdf falhou: %s", e)
 
@@ -93,7 +94,7 @@ def extrair_texto_pdf_basico(pdf_bytes: bytes) -> str:
         content = pdf_bytes.decode("latin1", errors="ignore")
         matches = re.findall(r"\(([^)]+)\)\s*Tj", content)
         if matches:
-            return " ".join(matches)
+            return "\n".join(matches)
     except Exception:
         pass
 
@@ -188,23 +189,33 @@ async def avaliar_laudo_com_ia(
 
     # Fallback Heurístico Resiliente (Offline)
     raw_text = extrair_texto_pdf_basico(file_bytes) if mimetype == "application/pdf" else ""
-    upper_text = raw_text.upper()
+    upper_text = unicodedata.normalize("NFKD", raw_text).encode("ascii", "ignore").decode().upper()
+
+    def has_positive_record(*terms):
+        for line in upper_text.splitlines():
+            if not any(term in line for term in terms):
+                continue
+            status = line.split(":", 1)[-1].strip()
+            if re.search(r"NADA CONSTA|NAO CONSTA|NAO POSSUI|NAO HA|SEM APONTAMENTO|SEM REGISTRO|SEM RESTRIC|SEM REMARCACAO|AUSENTE|INEXISTENTE|NENHUM", status) or status == "NAO":
+                continue
+            return True
+        return False
 
     plate_m = re.search(r"PLACA:\s*([A-Z0-9]{7})", upper_text)
     valor_placa = plate_m.group(1) if plate_m else ad_plate
-    match_placa = re.sub(r"[^A-Z0-9]", "", valor_placa) == re.sub(r"[^A-Z0-9]", "", ad_plate)
+    match_placa = bool(plate_m) and re.sub(r"[^A-Z0-9]", "", valor_placa) == re.sub(r"[^A-Z0-9]", "", ad_plate)
 
     chassi_m = re.search(r"CHASSI:\s*([A-HJ-NPR-Z0-9]{17})", upper_text)
     valor_chassi = chassi_m.group(1) if chassi_m else ad_chassi
-    match_chassi = valor_chassi == ad_chassi
+    match_chassi = bool(chassi_m) and valor_chassi == ad_chassi
 
     modelo_m = re.search(r"MARCA\s*/\s*MODELO:\s*([A-Za-z0-9.\s]+?)(?=\s*(?:ANO|QUILOMETRAGEM|COR|COMBUSTIVEL|-|$))", raw_text, re.IGNORECASE)
     valor_modelo = modelo_m.group(1).strip() if modelo_m else f"{ad_brand} {ad_model}"
-    match_modelo = ad_brand.lower() in valor_modelo.lower()
+    match_modelo = bool(modelo_m) and ad_brand.lower() in valor_modelo.lower()
 
     ano_m = re.search(r"ANO\s*FABRICACAO\s*/\s*MODELO:\s*(\d{4})", raw_text, re.IGNORECASE)
     valor_ano = ano_m.group(1) if ano_m else ad_year
-    match_ano = ad_year in str(valor_ano)
+    match_ano = bool(ano_m) and ad_year in str(valor_ano)
 
     km_m = re.search(r"QUILOMETRAGEM\s*(?:NO\s*HODOMETRO)?:\s*([\d.]+)", raw_text, re.IGNORECASE)
     valor_km = ad_km
@@ -214,12 +225,12 @@ async def avaliar_laudo_com_ia(
         except Exception:
             pass
     delta_km = abs(valor_km - ad_km)
-    match_km = delta_km <= 2000
+    match_km = bool(km_m) and delta_km <= 2000
 
     riscos: List[PontoAtencaoRisco] = []
 
     # Leilão
-    tem_leilao = "LEILAO" in upper_text and "LEILAO: NADA CONSTA" not in upper_text and "PASSAGEM POR LEILAO: NAO" not in upper_text
+    tem_leilao = has_positive_record("LEILAO")
     if tem_leilao:
         is_seguradora = "LEILAO DE SEGURADORA" in upper_text or "SALVADO" in upper_text
         riscos.append(PontoAtencaoRisco(
@@ -258,7 +269,7 @@ async def avaliar_laudo_com_ia(
         ))
 
     # Restrição Judicial
-    tem_renajud = any(k in upper_text for k in ["RENAJUD", "BLOQUEIO JUDICIAL"])
+    tem_renajud = has_positive_record("RENAJUD", "BLOQUEIO JUDICIAL")
     if tem_renajud:
         riscos.append(PontoAtencaoRisco(
             categoria=CategoriaRiscoEnum.RESTRICAO_JUDICIAL,
@@ -268,7 +279,7 @@ async def avaliar_laudo_com_ia(
         ))
 
     # Remarcação
-    tem_remarcacao = "REMARCADO" in upper_text and "SEM REMARCACAO" not in upper_text and "ORIGINAL" not in upper_text
+    tem_remarcacao = has_positive_record("REMARCADO")
     if tem_remarcacao:
         riscos.append(PontoAtencaoRisco(
             categoria=CategoriaRiscoEnum.REMARCACAO,
@@ -277,13 +288,19 @@ async def avaliar_laudo_com_ia(
             gravidade=GravidadeEnum.ALTA
         ))
 
-    tem_alta = any(r.gravidade == GravidadeEnum.ALTA for r in riscos) or not match_km
+    tem_alta = any(r.gravidade == GravidadeEnum.ALTA for r in riscos) or any(
+        found and not matches for found, matches in ((km_m, match_km), (plate_m, match_placa), (chassi_m, match_chassi), (ano_m, match_ano), (modelo_m, match_modelo))
+    )
+    dados_incompletos = not all((km_m, plate_m, chassi_m, ano_m, modelo_m))
     tem_media = any(r.gravidade == GravidadeEnum.MEDIA for r in riscos)
     tem_baixa = any(r.gravidade == GravidadeEnum.BAIXA for r in riscos)
 
     if tem_alta:
         classificacao = ClassificacaoGeralEnum.COM_RESTRICOES
         resumo = "Reprovado com restrições críticas: inconformidades estruturais, histórico de sinistro ou divergência cadastral. Não recomendado sem vistoria presencial."
+    elif dados_incompletos:
+        classificacao = ClassificacaoGeralEnum.COM_ATENCAO
+        resumo = "Dados insuficientes para concluir a auditoria automática. Solicite conferência manual do documento original."
     elif tem_media or tem_baixa:
         classificacao = ClassificacaoGeralEnum.COM_ATENCAO
         resumo = "Aprovado com apontamento de leilão financeiro ou repintura estética; estrutura principal preservada."

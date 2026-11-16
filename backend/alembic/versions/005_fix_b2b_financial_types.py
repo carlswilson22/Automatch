@@ -38,6 +38,13 @@ _MONETARY_COLUMNS = [
 
 
 def upgrade() -> None:
+    if op.get_bind().dialect.name == "sqlite":
+        for table in dict.fromkeys(row[0] for row in _MONETARY_COLUMNS):
+            with op.batch_alter_table(table) as batch:
+                for row_table, column, new_type, _ in _MONETARY_COLUMNS:
+                    if row_table == table:
+                        batch.alter_column(column, existing_type=sa.Float(), type_=sa.Numeric(5 if "5, 2" in new_type else 12, 2))
+        return
     for table, column, new_type, _old_type in _MONETARY_COLUMNS:
         op.execute(
             f'ALTER TABLE {table} ALTER COLUMN {column} '

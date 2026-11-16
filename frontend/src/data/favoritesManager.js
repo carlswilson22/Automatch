@@ -17,10 +17,9 @@ const notifyListeners = (favs) => {
 
 export const getFavorites = () => {
   if (typeof window === 'undefined') return [];
-  const data = localStorage.getItem(STORAGE_KEY);
-  if (!data) return [];
   try {
-    return JSON.parse(data);
+    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    return Array.isArray(parsed) ? [...new Set(parsed.filter(id => typeof id === 'string' || typeof id === 'number').map(String))] : [];
   } catch (e) {
     console.error('Error parsing favorites from localStorage', e);
     return [];

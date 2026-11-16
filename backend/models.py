@@ -98,12 +98,13 @@ class User(Base):
     name = Column(String, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
     hashed_password = Column(String, nullable=False)
+    token_version = Column(Integer, nullable=False, default=0, server_default="0")
     photo = Column(String, nullable=True)
     member_since = Column(String, default="Março 2024")
     
     # Papéis e vinculação B2B à Concessionária
     role = Column(String(32), default="comum") # comum, lojista, admin
-    sub_role = Column(String(32), default="owner") # owner, manager, seller
+    sub_role = Column(String(32), nullable=True) # owner, manager, seller
     store_id = Column(Integer, ForeignKey("stores.id"), nullable=True, index=True)
     store = relationship("Store", foreign_keys=[store_id])
 
@@ -257,3 +258,18 @@ class PartnershipAuditLog(Base):
 Index("idx_cars_brand_price", Car.brand, Car.price)
 
 
+
+
+class PriceAlert(Base):
+    __tablename__ = "price_alerts"
+    id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = Column(String(36), ForeignKey("users.id"), nullable=False, index=True)
+    car_id = Column(String(36), nullable=True)
+    car_name = Column(String, nullable=True)
+    current_price = Column(Numeric(12, 2), nullable=False)
+    target_price = Column(Numeric(12, 2), nullable=False)
+    contact_type = Column(String(16), nullable=False)
+    contact_value = Column(String, nullable=False)
+    notify_below_fipe = Column(Boolean, default=True)
+    created_at = Column(String, nullable=False)
+    status = Column(String(16), default="ativo")

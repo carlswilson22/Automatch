@@ -107,17 +107,19 @@ def seed_db():
                 db.flush()
                 store_map[s_data["id"]] = new_store
             else:
-                existing_store.name = s_data["name"]
-                existing_store.slug = s_data["slug"]
-                existing_store.logo = s_data["logo"]
-                existing_store.description = s_data["description"]
                 store_map[s_data["id"]] = existing_store
 
         db.commit()
 
+        if db.bind.dialect.name == "postgresql":
+            from sqlalchemy import text
+            db.execute(text("SELECT setval(pg_get_serial_sequence('stores', 'id'), GREATEST((SELECT COALESCE(MAX(id), 1) FROM stores), 1), true)"))
+
         # 2. Resolução do Usuário Admin
         admin_user = db.query(models.User).filter(models.User.email == "admin@automatch.com").first()
-        admin_id = admin_user.id if admin_user else "user-1"
+        admin_id = admin_user.id if admin_user else None
+        if admin_user and admin_user.store_id is None:
+            admin_user.store_id = store_map[1].id
 
         # 3. Upsert dos 5 Veículos Canônicos da Vitrine (sc-001 a sc-005)
         cars_data = [
@@ -262,27 +264,9 @@ def seed_db():
             existing_car = db.query(models.Car).filter(models.Car.id == c_data["id"]).first()
             if not existing_car:
                 db.add(models.Car(**c_data))
-            else:
-                for k, v in c_data.items():
-                    setattr(existing_car, k, v)
-
         db.commit()
+        logger.info("Seed concluído: exemplos ausentes criados; cadastros existentes preservados.")
 
-        # 4. Saneamento de Imagens Inexistentes em Todos os Carros (ACH-12)
-        all_cars = db.query(models.Car).all()
-        sanitized_count = 0
-        for car in all_cars:
-            clean_img = sanitize_car_image(car.image, car.brand, car.model)
-            if car.image != clean_img:
-                car.image = clean_img
-                sanitized_count += 1
-            if not car.user_id:
-                car.user_id = admin_id
-            if not car.store_id:
-                car.store_id = store_map[1].id
-
-        db.commit()
-        print(f"Seed concluído com sucesso: 3 lojas, 5 carros canônicos atualizados e {sanitized_count} imagens saneadas!")
     except Exception as e:
         print(f"Erro na execução do seed: {e}")
         db.rollback()

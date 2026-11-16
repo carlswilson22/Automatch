@@ -24,6 +24,12 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
+    if op.get_bind().dialect.name == "sqlite":
+        with op.batch_alter_table("cars") as batch:
+            batch.alter_column("compartilhavel", existing_type=sa.Integer(), type_=sa.Boolean(), server_default=sa.text("0"))
+            for column in ("price", "original_price", "fipe_price", "auto_price", "valor_minimo_repasse", "comissao_fixa"):
+                batch.alter_column(column, existing_type=sa.Float(), type_=sa.Numeric(12, 2))
+        return
     # 1. cars.compartilhavel: Integer -> Boolean
     # No PostgreSQL, deve-se remover o default numérico anterior antes de converter para booleano
     op.execute("ALTER TABLE cars ALTER COLUMN compartilhavel DROP DEFAULT")

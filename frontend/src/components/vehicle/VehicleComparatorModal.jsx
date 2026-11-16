@@ -183,6 +183,17 @@ export default function VehicleComparatorModal({
     };
   }, [selectedVehicles]);
 
+  // Suporte a fechamento pelo teclado (Esc)
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
+
   if (!isOpen) return null;
 
   const handleSelectCarForSlot = (car, slotIndex) => {
@@ -205,15 +216,6 @@ export default function VehicleComparatorModal({
     setSelectorSearch('');
   };
 
-  // Suporte a fechamento pelo teclado (Esc)
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleKeyDown = (e) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
 
   return (
     <AnimatePresence>

@@ -54,8 +54,8 @@ describe('AUDITORIA DE SEGURANÇA E MITIGAÇÃO (OWASP TOP 10 & RBAC)', () => {
     const seedContent = fs.readFileSync(seedPyPath, 'utf-8');
 
     // Confirma que veículos sem user_id ou de outro usuário não podem ser editados/excluídos por não-admins
-    const hasStrictUpdate = carsContent.includes('if not is_admin and (not car.user_id or car.user_id != current_user.id):');
-    const hasStrictDelete = carsContent.includes('if not is_admin and (not car.user_id or car.user_id != current_user.id):');
+    const hasStrictUpdate = carsContent.includes('if not is_owner_or_admin(current_user, car.user_id):');
+    const hasStrictDelete = carsContent.includes('if not is_owner_or_admin(current_user, car.user_id):');
 
     assert.ok(hasStrictUpdate, 'update_car deve bloquear edição se o veículo não pertencer ao usuário');
     assert.ok(hasStrictDelete, 'delete_car deve bloquear exclusão se o veículo não pertencer ao usuário');

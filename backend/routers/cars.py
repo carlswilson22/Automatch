@@ -28,7 +28,7 @@ import models
 import schemas
 from database import get_db
 # Guard centralizado (dependencies.py) — alias de retrocompatibilidade mantido
-from dependencies import get_current_user as get_current_user_from_header
+from dependencies import get_current_user as get_current_user_from_header, is_owner_or_admin
 
 logger = logging.getLogger("automatch")
 router = APIRouter(prefix="/api", tags=["Cars & Stores"])
@@ -118,6 +118,11 @@ def get_cars(
     }
 
 
+@router.get("/cars/mine", response_model=List[schemas.CarSchema])
+def get_my_cars(db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user_from_header)):
+    return db.query(models.Car).filter(models.Car.user_id == current_user.id).order_by(models.Car.id).all()
+
+
 @router.get("/cars/{car_id}", response_model=schemas.CarSchema)
 def get_car_by_id(car_id: str, db: Session = Depends(get_db)) -> schemas.CarSchema:
     car = db.query(models.Car).filter(models.Car.id == car_id).first()
@@ -151,16 +156,18 @@ def create_car(
         car_data["store_id"] = None
     else:
         target_store_id = car_data.get("store_id")
-        if target_store_id is not None:
-            store_exists = db.query(models.Store).filter(models.Store.id == target_store_id).first()
-            if not store_exists:
-                if getattr(current_user, "store_id", None):
-                    car_data["store_id"] = current_user.store_id
-                else:
-                    first_store = db.query(models.Store).first()
-                    car_data["store_id"] = first_store.id if first_store else None
-        elif getattr(current_user, "store_id", None):
+        if current_user.role != "admin":
+            if target_store_id is not None and target_store_id != current_user.store_id:
+                raise HTTPException(status_code=403, detail="Você só pode publicar veículos na sua loja.")
             car_data["store_id"] = current_user.store_id
+        elif target_store_id is None:
+            car_data["store_id"] = current_user.store_id
+        if car_data.get("store_id") is not None and not db.get(models.Store, car_data["store_id"]):
+            raise HTTPException(status_code=400, detail="Loja não encontrada.")
+
+    if (car_data.get("valor_minimo_repasse") is not None
+            and Decimal(str(car_data["valor_minimo_repasse"])) > Decimal(str(car_data["price"]))):
+        raise HTTPException(status_code=400, detail="O piso de repasse não pode superar o preço do veículo.")
 
     db_car = models.Car(**car_data)
     db.add(db_car)
@@ -184,8 +191,7 @@ def update_car(
     if not car:
         raise HTTPException(status_code=404, detail="Veículo não encontrado.")
 
-    is_admin = (current_user.email == "admin@automatch.com" or getattr(current_user, "role", "") == "admin")
-    if not is_admin and (not car.user_id or car.user_id != current_user.id):
+    if not is_owner_or_admin(current_user, car.user_id):
         raise HTTPException(
             status_code=403,
             detail="Permissão negada. Você só pode editar veículos da sua própria conta."
@@ -194,13 +200,19 @@ def update_car(
     update_data = payload.model_dump(exclude_unset=True)
 
 
+    if current_user.role not in ("lojista", "admin") and any(
+        update_data.get(field) for field in ("compartilhavel", "valor_minimo_repasse", "comissao_fixa", "observacoes_repasse")
+    ):
+        raise HTTPException(status_code=403, detail="Repasse B2B é restrito a lojistas.")
+
     # Validação de piso inviolável de repasse B2B
     target_price = update_data.get("price") if update_data.get("price") is not None else car.price
-    if update_data.get("valor_minimo_repasse") is not None and target_price is not None:
-        if Decimal(str(update_data["valor_minimo_repasse"])) > Decimal(str(target_price)):
+    target_floor = update_data.get("valor_minimo_repasse", car.valor_minimo_repasse)
+    if target_floor is not None and target_price is not None:
+        if Decimal(str(target_floor)) > Decimal(str(target_price)):
             raise HTTPException(
                 status_code=400,
-                detail=f"O valor mínimo de repasse (R$ {update_data['valor_minimo_repasse']:,.2f}) não pode ser superior ao preço do veículo (R$ {target_price:,.2f})."
+                detail=f"O valor mínimo de repasse (R$ {target_floor:,.2f}) não pode ser superior ao preço do veículo (R$ {target_price:,.2f})."
             )
 
     for field, val in update_data.items():
@@ -228,8 +240,7 @@ def delete_car(
         # Confirma idempotência caso já excluído
         return {"status": "success", "message": "Anúncio removido ou inexistente no banco de dados.", "deleted_id": car_id}
     
-    is_admin = (current_user.email == "admin@automatch.com" or getattr(current_user, "role", "") == "admin")
-    if not is_admin and (not car.user_id or car.user_id != current_user.id):
+    if not is_owner_or_admin(current_user, car.user_id):
         raise HTTPException(
             status_code=403,
             detail="Permissão negada. Você só pode excluir anúncios cadastrados pela sua conta."
@@ -237,20 +248,25 @@ def delete_car(
 
     # Remove dependências em cascata para evitar violação de integridade referencial (FK)
     try:
+        db.query(models.PartnerReview).filter(
+            models.PartnerReview.transaction_id.in_(db.query(models.PartnerTransaction.id).filter(models.PartnerTransaction.car_id == car_id))
+        ).delete(synchronize_session=False)
+        db.query(models.PartnerTransaction).filter(models.PartnerTransaction.car_id == car_id).delete()
+
         # 1. Mensagens e reservas B2B associadas
         reservations = db.query(models.CarReservation).filter(models.CarReservation.car_id == car_id).all()
         for res in reservations:
             db.query(models.PartnerMessage).filter(models.PartnerMessage.reservation_id == res.id).delete()
         db.query(models.CarReservation).filter(models.CarReservation.car_id == car_id).delete()
 
-        # 2. Transações B2B associadas
-        db.query(models.PartnerTransaction).filter(models.PartnerTransaction.car_id == car_id).delete()
 
         # 3. Laudos e Watchlist
         db.query(models.LaudoProtocol).filter(models.LaudoProtocol.car_id == car_id).delete()
         db.query(models.LaudoWatchlist).filter(models.LaudoWatchlist.car_id == car_id).delete()
     except Exception as e:
-        logger.warning("Erro ao remover dependências associadas ao carro %s: %s", car_id, e)
+        db.rollback()
+        logger.exception("Falha ao remover dependências do veículo %s", car_id)
+        raise HTTPException(status_code=500, detail="Não foi possível excluir o anúncio. Nenhum dado foi removido.") from e
 
     db.delete(car)
     db.commit()

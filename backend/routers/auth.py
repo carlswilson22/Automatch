@@ -17,6 +17,7 @@ import logging
 import os
 import time
 import random
+import uuid
 import hashlib
 import re
 from typing import Dict, Any, List
@@ -30,7 +31,8 @@ import models
 import schemas
 import security
 from database import get_db
-from security_guard import login_rate_limiter, mask_email
+from security_guard import login_rate_limiter, mask_email, RateLimiter
+from services import recovery_mail
 # get_current_user centralizado — importado de dependencies para evitar duplicidade
 from dependencies import get_current_user, require_lojista_or_admin
 
@@ -47,6 +49,7 @@ get_current_user_from_header = get_current_user
 # Rate limiting em memória para recuperação de senha
 _reset_attempts: Dict[str, List[float]] = {}
 RATE_LIMIT_WINDOW = 3600  # 1 hora
+reset_rate_limiter = RateLimiter(max_requests=5, window_seconds=900, block_duration_seconds=900)
 RATE_LIMIT_MAX = 3         # máx 3 tentativas por hora
 
 
@@ -137,7 +140,7 @@ def register(request: schemas.UserCreate, db: Session = Depends(get_db)) -> Dict
     db.commit()
     db.refresh(user)
 
-    token = security.create_access_token({"sub": user.id, "email": user.email, "role": user.role})
+    token = security.create_access_token({"sub": user.id, "email": user.email, "role": user.role, "ver": user.token_version or 0})
     logger.info(
         "Novo usuário cadastrado: %s | role=%s | store_id=%s",
         mask_email(email), requested_role, new_store_id
@@ -185,7 +188,7 @@ def login(request: schemas.UserLogin, db: Session = Depends(get_db)) -> Dict[str
     if effective_role in ("comprador", "vendedor"):
         effective_role = "comum"
 
-    token = security.create_access_token({"sub": user.id, "email": user.email, "role": effective_role})
+    token = security.create_access_token({"sub": user.id, "email": user.email, "role": effective_role, "ver": user.token_version or 0})
     return {
         "id": user.id,
         "name": user.name,
@@ -262,9 +265,9 @@ def update_profile(
         "email": current_user.email,
         "memberSince": current_user.member_since,
         "photo": current_user.photo,
-        "role": getattr(current_user, 'role', 'lojista') or 'lojista',
-        "sub_role": getattr(current_user, 'sub_role', 'owner') or 'owner',
-        "store_id": getattr(current_user, 'store_id', 1) or 1,
+        "role": current_user.role or "comum",
+        "sub_role": current_user.sub_role,
+        "store_id": current_user.store_id,
         "token": None
     }
 
@@ -280,6 +283,10 @@ def forgot_password(request: schemas.ForgotPasswordRequest, db: Session = Depend
     email = request.email.strip().lower()
     now = time.time()
 
+    production = os.getenv("ENVIRONMENT", "development").strip().lower() == "production"
+    if production and not recovery_mail.is_configured():
+        raise HTTPException(status_code=503, detail="Recuperação por e-mail indisponível. Entre em contato com o suporte.")
+
     # Rate limiting
     if email in _reset_attempts:
         _reset_attempts[email] = [t for t in _reset_attempts[email] if now - t < RATE_LIMIT_WINDOW]
@@ -290,6 +297,8 @@ def forgot_password(request: schemas.ForgotPasswordRequest, db: Session = Depend
             )
     else:
         _reset_attempts[email] = []
+
+    _reset_attempts[email].append(now)
 
     # Verificar se o e-mail existe
     user = db.query(models.User).filter(models.User.email == email).first()
@@ -312,7 +321,7 @@ def forgot_password(request: schemas.ForgotPasswordRequest, db: Session = Depend
     reset_token = models.PasswordResetToken(
         user_id=user.id,
         token_hash=token_hash,
-        otp_code=otp_code,
+        otp_code="",  # Compatibilidade de esquema; apenas token_hash guarda a credencial.
         expires_at=expires_at,
         used=0,
         created_at=datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -320,8 +329,15 @@ def forgot_password(request: schemas.ForgotPasswordRequest, db: Session = Depend
     db.add(reset_token)
     db.commit()
 
-    # Registrar tentativa de rate limiting
-    _reset_attempts[email].append(now)
+    if production:
+        try:
+            recovery_mail.send_recovery_code(email, otp_code)
+        except Exception:
+            reset_token.used = 1
+            db.commit()
+            logger.error("Falha ao enviar recuperação por SMTP.")
+            raise HTTPException(status_code=503, detail="Não foi possível enviar a recuperação. Tente novamente mais tarde.")
+        return {"message": "Se o e-mail estiver cadastrado, você receberá um código de recuperação.", "expires_in": 900}
 
     # Simulação de envio de e-mail — loga com proteção LGPD de PII
     logger.info("=" * 60)
@@ -347,10 +363,14 @@ def reset_password(request: schemas.ResetPasswordRequest, db: Session = Depends(
     otp = request.otp.strip()
     now = time.time()
 
+    allowed, remaining = reset_rate_limiter.is_allowed(email)
+    if not allowed:
+        raise HTTPException(status_code=429, detail="Muitas tentativas de recuperação. Aguarde e tente novamente.", headers={"Retry-After": str(remaining)})
+
     # Buscar usuário
     user = db.query(models.User).filter(models.User.email == email).first()
     if not user:
-        raise HTTPException(status_code=400, detail="E-mail não encontrado no sistema.")
+        raise HTTPException(status_code=400, detail="Código OTP inválido ou já utilizado.")
 
     # Buscar token OTP válido
     token_hash = hashlib.sha256(f"{otp}:{email}".encode()).hexdigest()
@@ -374,10 +394,12 @@ def reset_password(request: schemas.ResetPasswordRequest, db: Session = Depends(
 
     # Redefinir senha
     user.hashed_password = security.hash_password(request.new_password)
+    user.token_version = (user.token_version or 0) + 1
     reset_token.used = 1
     db.commit()
 
-    logger.info(f"Senha redefinida com sucesso para o usuário: {email}")
+    reset_rate_limiter.reset(email)
+    logger.info("Senha redefinida com sucesso para: %s", mask_email(email))
 
     return {"message": "Senha redefinida com sucesso! Faça login com sua nova senha."}
 
@@ -388,7 +410,9 @@ def checkout(
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user_from_header)
 ) -> Dict[str, Any]:
-    protocol = f"ATM-{int(datetime.now().timestamp()) % 1000000:06d}"
+    if os.getenv("ENVIRONMENT", "development").strip().lower() == "production":
+        raise HTTPException(status_code=503, detail="Pagamento indisponível: provedor de pagamento ainda não configurado.")
+    protocol = f"ATM-{uuid.uuid4().hex[:16].upper()}"
     now_str = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
     
     order = models.PaymentOrder(
@@ -484,6 +508,12 @@ def delete_or_anonymize_user_account(
     current_user.email = f"{anonymized_id}@anonimizado.automatch.local"
     current_user.photo = None
     current_user.hashed_password = "ANONYMIZED_LGPD_INACTIVE"
+    current_user.token_version = (current_user.token_version or 0) + 1
+    current_user.role = "comum"
+    current_user.sub_role = None
+    current_user.store_id = None
+
+    db.query(models.PriceAlert).filter(models.PriceAlert.user_id == user_id).delete()
 
     # Desvincula anúncios
     db.query(models.Car).filter(models.Car.user_id == user_id).update({"user_id": None})

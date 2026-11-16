@@ -32,9 +32,9 @@ import {
 } from 'lucide-react';
 
 export default function LaudoFeedbackCard({ feedback, pdfUrl, fileName, yoloFeedback, iaFeedback: directIaFeedback }) {
-  if (!feedback && !directIaFeedback) return null;
-
   const [selectedImage, setSelectedImage] = useState(null);
+
+  if (!feedback && !directIaFeedback) return null;
 
   // Normalização do IA Feedback (suporta tanto payload puro quanto aninhado em feedback.ia_feedback)
   const ia = directIaFeedback || feedback?.ia_feedback || (feedback?.classificacao_geral ? feedback : null);

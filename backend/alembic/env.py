@@ -19,7 +19,7 @@ import models
 config = context.config
 
 # Garante uso da DATABASE_URL do ambiente ou fallback canônico
-config.set_main_option("sqlalchemy.url", DATABASE_URL)
+config.set_main_option("sqlalchemy.url", DATABASE_URL.replace("%", "%%"))
 
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)

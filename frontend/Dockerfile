@@ -4,13 +4,13 @@
 # Objetivo e Motivo da Criação:
 #   - Provê ambiente isolado com Node.js para rodar o servidor de desenvolvimento local.
 # ==============================================================================
-FROM node:20-alpine
+FROM node:22-alpine
 
 WORKDIR /app
 
 # Install dependencies first for better layer caching
 COPY package.json package-lock.json ./
-RUN npm install
+RUN npm ci
 
 # Copy application files
 COPY . .

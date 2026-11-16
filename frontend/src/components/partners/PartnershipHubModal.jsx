@@ -1,3 +1,4 @@
+import { readSessionToken } from '../../services/sessionStorage';
 /**
  * PartnershipHubModal.jsx — Hub central de gestão de parcerias entre concessionárias.
  * 
@@ -285,10 +286,7 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
 
   // Helper de token resiliente e unificado
   const getAuthHeaders = useCallback(() => {
-    const token = user?.token || 
-                  localStorage.getItem('automatch_token') || 
-                  localStorage.getItem('token') ||
-                  JSON.parse(localStorage.getItem('automatch_user') || '{}')?.token;
+    const token = readSessionToken();
     return {
       'Content-Type': 'application/json',
       'Authorization': token ? `Bearer ${token}` : ''
@@ -748,7 +746,7 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
         const next = prev.filter(r => r.id !== reservationId);
         try {
           localStorage.setItem('automatch_b2b_reservations', JSON.stringify(next));
-        } catch {}
+        } catch  { /* O recurso opcional mantém seu estado anterior. */ }
         if (target) {
           setSharedCars(cars => cars.map(c => c.id === target.car_id ? { ...c, status_reserva: 'disponivel' } : c));
         }

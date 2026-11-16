@@ -55,6 +55,9 @@ else:
             )
 
 # SQLAlchemy 2.0: Assegura compatibilidade com psycopg2 quando a URL inicia com postgresql:// ou postgres://
+if ENVIRONMENT == "production" and DATABASE_URL.lower().startswith("sqlite"):
+    raise RuntimeError("SQLite não é permitido em produção. Configure um PostgreSQL.")
+
 if DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg2://", 1)
 elif DATABASE_URL.startswith("postgresql://"):

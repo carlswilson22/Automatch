@@ -134,7 +134,8 @@ async def lifespan(app: FastAPI):
             user_cols_to_add = [
                 ("role", "VARCHAR(32) DEFAULT 'lojista'"),
                 ("sub_role", "VARCHAR(32) DEFAULT 'owner'"),
-                ("store_id", "INTEGER")
+                ("store_id", "INTEGER"),
+                ("token_version", "INTEGER NOT NULL DEFAULT 0")
             ]
             with engine.connect() as conn:
                 for col_name, col_type in user_cols_to_add:
@@ -181,7 +182,7 @@ async def lifespan(app: FastAPI):
                 photo="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200",
                 role="admin",
                 sub_role="owner",
-                store_id=1
+                store_id=None
             )
             db.add(admin_user)
             db.commit()
@@ -197,7 +198,8 @@ async def lifespan(app: FastAPI):
     # Auto-seed stores e 5 carros oficiais se ainda não existirem
     try:
         from seed import seed_db
-        seed_db()
+        if os.getenv("ENVIRONMENT", "development").strip().lower() != "production":
+            seed_db()
     except Exception as e:
         logger.warning("Aviso no seed inicial de lojas e carros: %s", e)
 
@@ -262,8 +264,8 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
     for err in exc.errors():
         clean_err = {}
         for k, v in err.items():
-            if k == "input" and isinstance(v, (bytes, bytearray)):
-                clean_err[k] = "<binary data>"
+            if k == "input":
+                clean_err[k] = "<binary data>" if isinstance(v, (bytes, bytearray)) else "<redacted>"
             elif k == "ctx" and isinstance(v, dict):
                 clean_err[k] = {ck: str(cv) if isinstance(cv, Exception) else cv for ck, cv in v.items()}
             else:
@@ -332,6 +334,7 @@ from fastapi.staticfiles import StaticFiles
 possible_images_paths = [
     os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend", "public", "images")),
     os.path.abspath(os.path.join(os.path.dirname(__file__), "public", "images")),
+    os.path.abspath(os.path.join(os.path.dirname(__file__), "public_images")),
     "/app/frontend/public/images"
 ]
 for p in possible_images_paths:

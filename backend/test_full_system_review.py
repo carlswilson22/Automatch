@@ -179,7 +179,7 @@ def run_full_system_review():
     # SUÍTE 6: Emissão de Laudo PDF Vetorial A4 e QR Code 300 DPI
     # -------------------------------------------------------------------------
     print("\n[SUÍTE 6] Emissão de Laudo Cautelar em PDF Vetorial A4 com QR Code...")
-    pdf_resp = client.get("/api/v1/laudos/1/pdf")
+    pdf_resp = client.get("/api/v1/laudos/sc-001/pdf")
     assert pdf_resp.status_code == 200, f"Falha ao gerar PDF: {pdf_resp.status_code}"
     assert pdf_resp.headers.get("content-type") == "application/pdf"
     assert pdf_resp.content.startswith(b"%PDF-"), "Header de PDF inválido"

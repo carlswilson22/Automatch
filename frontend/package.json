@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "vite build && node -e \"import('fs').then(fs => fs.copyFileSync('dist/index.html', 'dist/404.html'))\"",
     "lint": "eslint .",
-    "test": "node --test tests/test_features_battery.mjs tests/test_new_features_battery.mjs tests/test_security_audit.mjs tests/test_design_tokens_battery.mjs tests/test_filter_vehicles.mjs tests/test_tour_guide_battery.mjs tests/test_laudo_ia_battery.mjs",
+    "test": "node --test tests/*.mjs",
     "preview": "vite preview"
   },
   "dependencies": {
@@ -33,7 +33,8 @@
     "eslint-plugin-react-refresh": "^0.4.14",
     "globals": "^15.11.0",
     "postcss": "^8.5.8",
+    "react-test-renderer": "^18.3.1",
     "tailwindcss": "^3.4.19",
-    "vite": "^8.3.2"
+    "vite": "^8.3.8"
   }
 }

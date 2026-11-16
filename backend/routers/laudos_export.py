@@ -29,8 +29,7 @@ router = APIRouter(prefix="/api/v1/laudos", tags=["Exportação & Validação de
 
 def _generate_protocol() -> str:
     """Gera um protocolo exclusivo no padrão ATM-2026-XXXX."""
-    chars = "".join(random.choices(string.ascii_uppercase + string.digits, k=4))
-    return f"ATM-2026-{chars}"
+    return f"ATM-{datetime.datetime.now().year}-{uuid.uuid4().hex[:16].upper()}"
 
 
 from pydantic import BaseModel
@@ -86,6 +85,31 @@ class CarDossiePayload(BaseModel):
 
 
 def _build_car_dict(car_id: str, db: Session, payload: Optional[CarDossiePayload] = None, **query_params) -> Dict[str, Any]:
+    # 3. Busca no banco de dados Postgres
+    car = db.query(models.Car).filter(models.Car.id == car_id).first()
+    if car:
+        return {
+            "id": car.id,
+            "brand": car.brand or "Não informado",
+            "model": car.model or "Não informado",
+            "year": car.year or 2024,
+            "km": car.km or 0,
+            "price": float(car.price) if car.price is not None else 0.0,
+            "color": car.color or "Prata",
+            "fuel": car.fuel or "Flex",
+            "plate": car.plate or "ATM2026",
+            "chassi": "9BRBL42EXN8192841",
+            "fipe_price": float(car.fipe_price) if car.fipe_price is not None else ((float(car.price) * 1.04) if car.price else 100000.0),
+            "fipe_code": car.fipe_code or "005391-0",
+            "debt_status": car.debt_status or "Sem débitos",
+            "auction_history": car.auction_history or "Não"
+        }
+
+    # Pré-visualização local, sem registro, apenas fora de produção.
+    import os
+    if os.getenv("ENVIRONMENT", "development").strip().lower() == "production":
+        raise HTTPException(status_code=404, detail="Veículo não encontrado.")
+
     # 1. Se veio payload com dados explícitos, prioriza
     if payload:
         brand = payload.brand or query_params.get("brand")
@@ -127,49 +151,13 @@ def _build_car_dict(car_id: str, db: Session, payload: Optional[CarDossiePayload
             "auction_history": "Não"
         }
 
-    # 3. Busca no banco de dados Postgres
-    car = db.query(models.Car).filter(models.Car.id == car_id).first()
-    if car:
-        return {
-            "id": car.id,
-            "brand": car.brand or "Não informado",
-            "model": car.model or "Não informado",
-            "year": car.year or 2024,
-            "km": car.km or 0,
-            "price": float(car.price) if car.price is not None else 0.0,
-            "color": car.color or "Prata",
-            "fuel": car.fuel or "Flex",
-            "plate": car.plate or "ATM2026",
-            "chassi": "9BRBL42EXN8192841",
-            "fipe_price": float(car.fipe_price) if car.fipe_price is not None else ((float(car.price) * 1.04) if car.price else 100000.0),
-            "fipe_code": car.fipe_code or "005391-0",
-            "debt_status": car.debt_status or "Sem débitos",
-            "auction_history": car.auction_history or "Não"
-        }
-
     # 4. Verifica se pertence aos carros estáticos da vitrine (sc-001 a sc-005)
     if car_id in SHOWCASE_CARS_MAP:
         data = SHOWCASE_CARS_MAP[car_id].copy()
         data["id"] = car_id
         return data
 
-    # 5. Fallback padrão
-    return {
-        "id": car_id,
-        "brand": "Toyota",
-        "model": "Corolla Altis Hybrid",
-        "year": 2023,
-        "km": 42000,
-        "price": 165000.0,
-        "color": "Branco Perolizado",
-        "fuel": "Híbrido / Flex",
-        "plate": "BRA2E19",
-        "chassi": "9BRBL42EXN8192841",
-        "fipe_price": 172000.0,
-        "fipe_code": "005523-9",
-        "debt_status": "Sem débitos",
-        "auction_history": "Não"
-    }
+    raise HTTPException(status_code=404, detail="Veículo não encontrado.")
 
 
 @router.post("/{car_id}/pdf")
@@ -207,7 +195,9 @@ def exportar_laudo_pdf(
 
 
 def _render_pdf_response(car_id: str, car_dict: Dict[str, Any], db: Session):
-    existing_protocol = db.query(models.LaudoProtocol).filter(models.LaudoProtocol.car_id == car_id).first()
+    snapshot_json = json.dumps(car_dict, sort_keys=True)
+    records = db.query(models.LaudoProtocol).filter(models.LaudoProtocol.car_id == car_id).all()
+    existing_protocol = next((record for record in records if json.loads(record.snapshot_data) == car_dict), None)
     if existing_protocol:
         protocol = existing_protocol.protocol
     else:
@@ -217,11 +207,12 @@ def _render_pdf_response(car_id: str, car_dict: Dict[str, Any], db: Session):
             protocol=protocol,
             car_id=car_id,
             created_at=now_str,
-            snapshot_data=json.dumps(car_dict)
+            snapshot_data=snapshot_json
         )
         try:
-            db.add(new_proto)
-            db.commit()
+            if db.get(models.Car, car_id):
+                db.add(new_proto)
+                db.commit()
         except Exception as e:
             db.rollback()
             logger.warning("Falha ao persistir protocolo no banco: %s", e)
@@ -232,7 +223,7 @@ def _render_pdf_response(car_id: str, car_dict: Dict[str, Any], db: Session):
         logger.error("Erro na geração do PDF: %s", e)
         raise HTTPException(status_code=500, detail="Erro interno ao gerar o PDF do laudo.")
 
-    safe_plate = car_dict.get("plate", "VEICULO").replace("-", "").upper()
+    safe_plate = "".join(c for c in str(car_dict.get("plate") or "VEICULO").upper() if c.isascii() and c.isalnum())
     filename = f"Laudo_Automatch_{safe_plate}_{protocol}.pdf"
 
     return Response(
@@ -255,30 +246,6 @@ def validar_laudo_publico(protocolo: str, db: Session = Depends(get_db)) -> Dict
     record = db.query(models.LaudoProtocol).filter(models.LaudoProtocol.protocol == clean_proto).first()
 
     if not record:
-        # Fallback de demonstração para protocolos no padrão ATM-2026-
-        if clean_proto.startswith("ATM-2026-"):
-            return {
-                "valido": True,
-                "protocolo": clean_proto,
-                "data_emissao": "14/09/2026 às 18:20",
-                "veiculo": {
-                    "marca": "Toyota",
-                    "modelo": "Corolla Altis Hybrid",
-                    "ano": 2023,
-                    "placa": "BRA2E19",
-                    "chassi_mascarado": "9BR************41"
-                },
-                "dados_fipe": {
-                    "codigo_fipe": "005523-9",
-                    "valor_referencia": "R$ 172.000,00"
-                },
-                "dados_detran": {
-                    "situacao_cadastral": "REGULAR (Em circulação)",
-                    "debitos": "Sem débitos ativos",
-                    "gravame": "Nenhum gravame registrado"
-                },
-                "situacao": "Documento Autêntico e Registrado com Sucesso"
-            }
         raise HTTPException(status_code=404, detail="Protocolo não localizado na base de autenticidade da Automatch.")
 
     try:

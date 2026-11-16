@@ -51,33 +51,8 @@ export default function PublicValidationPage() {
         const json = await res.json();
         setData(json);
       } catch (err) {
-        // Fallback representativo para demonstração de links rápidos
-        if (protocolo && protocolo.toUpperCase().startsWith('ATM-')) {
-          setData({
-            valido: true,
-            protocolo: protocolo.toUpperCase(),
-            data_emissao: new Date().toLocaleDateString('pt-BR') + ' às ' + new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-            veiculo: {
-              marca: 'Toyota',
-              modelo: 'Corolla Altis Hybrid',
-              ano: 2023,
-              placa: 'BRA2E19',
-              chassi_mascarado: '9BR************41'
-            },
-            dados_fipe: {
-              codigo_fipe: '005523-9',
-              valor_referencia: 'R$ 172.000,00'
-            },
-            dados_detran: {
-              situacao_cadastral: 'REGULAR (Em circulação)',
-              debitos: 'Sem débitos ativos',
-              gravame: 'Nenhuma alienação registrada'
-            },
-            situacao: 'Documento Autêntico e Registrado com Sucesso'
-          });
-        } else {
-          setError(err.message || 'Não foi possível validar o laudo.');
-        }
+        setData(null);
+        setError(err.message || 'Não foi possível validar o laudo.');
       } finally {
         setLoading(false);
       }

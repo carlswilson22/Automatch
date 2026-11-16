@@ -17,13 +17,14 @@ Responsabilidades:
 from datetime import datetime
 from typing import List, Optional
 # pyrefly: ignore [missing-import]
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, field_validator, Field, model_validator
 
 class CarBase(BaseModel):
-    brand: str
-    model: str
+    model_config = ConfigDict(allow_inf_nan=False)
+    brand: str = Field(min_length=1)
+    model: str = Field(min_length=1)
     year: int
-    km: int
+    km: int = Field(ge=0)
     price: float
 
     # DEF-03: Validação de intervalos — garante consistência entre frontend e backend
@@ -75,6 +76,23 @@ class CarSchema(CarBase):
     model_config = ConfigDict(from_attributes=True)
 
 class CarUpdate(BaseModel):
+    model_config = ConfigDict(allow_inf_nan=False)
+
+    @model_validator(mode="after")
+    def validate_update(self):
+        for field in ("brand", "model", "year", "km", "price"):
+            if field in self.model_fields_set and getattr(self, field) is None:
+                raise ValueError(f"{field} não pode ser nulo.")
+        if self.year is not None:
+            CarBase.validate_year(self.year)
+        if self.price is not None:
+            CarBase.validate_price(self.price)
+        if self.km is not None and self.km < 0:
+            raise ValueError("Quilometragem não pode ser negativa.")
+        if any(value is not None and value < 0 for value in (self.valor_minimo_repasse, self.comissao_fixa)):
+            raise ValueError("Valores de repasse não podem ser negativos.")
+        return self
+
     brand: Optional[str] = None
     model: Optional[str] = None
     year: Optional[int] = None
@@ -154,10 +172,11 @@ class StoreOnboardingRequest(BaseModel):
     logo: Optional[str] = None
 
 class CheckoutRequest(BaseModel):
+    model_config = ConfigDict(allow_inf_nan=False)
     customer_name: str
     customer_email: Optional[str] = None
     item_description: str
-    amount: float
+    amount: float = Field(gt=0)
     payment_method: str
 
 class CheckoutResponse(BaseModel):
@@ -205,7 +224,7 @@ class PaginatedCarsResponse(BaseModel):
 
 class PartnershipInviteRequest(BaseModel):
     receiver_store_id: int
-    commission_rate: Optional[float] = 3.0
+    commission_rate: Optional[float] = Field(default=3.0, ge=0, le=100, allow_inf_nan=False)
     notes: Optional[str] = None
 
 class PartnershipResponse(BaseModel):
@@ -246,10 +265,11 @@ class SharedCarResponse(BaseModel):
 
 class ReservationCreateRequest(BaseModel):
     car_id: str
-    proposed_price: float
-    client_markup: Optional[float] = 0.0
+    model_config = ConfigDict(allow_inf_nan=False)
+    proposed_price: float = Field(gt=0)
+    client_markup: Optional[float] = Field(default=0.0, ge=0)
     client_name: Optional[str] = None
-    duration_minutes: Optional[int] = 120
+    duration_minutes: Optional[int] = Field(default=120, ge=1, le=1440)
 
 class ReservationResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)

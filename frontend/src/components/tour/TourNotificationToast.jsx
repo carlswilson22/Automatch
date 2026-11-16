@@ -41,7 +41,7 @@ export default function TourNotificationToast({ onStartTour }) {
           STORAGE_KEY,
           JSON.stringify({ dismissedOnboardingSuggestion: true })
         );
-      } catch (_) {}
+      } catch (_) { /* O recurso opcional mantém seu estado anterior. */ }
     }
   };
 

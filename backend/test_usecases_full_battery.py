@@ -229,7 +229,7 @@ def run_full_battery_usecases():
     print(f"  -> Catálogo Paginado: Encontrados {cat_json['total']} veículos com filtro por marca.")
 
     # Exclusão segura do veículo de teste
-    resp_del = client.delete(f"/api/cars/{car_id}", headers={"Authorization": "Bearer demo-admin-token"})
+    resp_del = client.delete(f"/api/cars/{car_id}", headers=admin_headers)
     assert resp_del.status_code == 200
 
     assert resp_del.json().get("status") == "success"

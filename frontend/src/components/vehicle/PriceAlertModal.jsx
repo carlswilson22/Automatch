@@ -1,3 +1,6 @@
+import { isDemoModeEnabled } from '../../services/apiClient';
+import { canUseOfflineFallback } from '../../services/sessionStorage';
+import { readSessionToken } from '../../services/sessionStorage';
 /**
  * PriceAlertModal.jsx — Modal para cadastro de alertas de variação e queda de preço.
  * 
@@ -13,6 +16,7 @@ import axios from 'axios';
 
 const PriceAlertModal = ({ isOpen, onClose, car }) => {
   useScrollLock(isOpen);
+  const [requestError, setRequestError] = useState('');
   const [targetPrice, setTargetPrice] = useState(car?.price ? Math.round(car.price * 0.95) : 135000);
   const [channel, setChannel] = useState('whatsapp'); // 'whatsapp' | 'email'
   const [contactValue, setContactValue] = useState('');
@@ -27,10 +31,10 @@ const PriceAlertModal = ({ isOpen, onClose, car }) => {
     e.preventDefault();
     if (!contactValue) return;
 
+    setRequestError('');
     setIsSubmitting(true);
     try {
-      const storedUser = JSON.parse(localStorage.getItem('automatch_user') || '{}');
-      const token = storedUser?.token;
+      const token = readSessionToken();
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
 
       const resp = await axios.post('/api/alerts', {
@@ -41,13 +45,17 @@ const PriceAlertModal = ({ isOpen, onClose, car }) => {
         contact_type: channel,
         contact_value: contactValue,
         notify_below_fipe: notifyBelowFipe
-      }, { headers });
+      }, { headers, timeout: 10000 });
 
       if (resp.data && resp.data.status === 'success') {
         setSubmitted(true);
         setSuccessMessage(resp.data.mensagem);
       }
     } catch (err) {
+      if (!canUseOfflineFallback({ status: err.response?.status || 0 }, isDemoModeEnabled())) {
+        setRequestError(err.response?.data?.detail || 'Não foi possível concluir. Tente novamente.');
+        return;
+      }
       console.warn('Erro ao registrar alerta:', err);
       // Fallback local
       setSubmitted(true);
@@ -96,6 +104,7 @@ const PriceAlertModal = ({ isOpen, onClose, car }) => {
               Monitore o <strong>{car?.name}</strong>. Avisamos no instante em que o proprietário baixar o preço ou quando surgir uma unidade similar com valor abaixo da FIPE.
             </p>
 
+            {requestError && <p role="alert" className="text-sm text-rose-300 mb-3">{requestError}</p>}
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Preço Atual vs Alvo */}
               <div className="p-3.5 bg-slate-950 rounded-2xl border border-slate-800 flex items-center justify-between">

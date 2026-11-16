@@ -1,3 +1,4 @@
+import { readSessionToken } from '../../services/sessionStorage';
 /**
  * PartnerChatModal.jsx — Modal de negociação direta e chat em tempo real entre lojistas.
  * 
@@ -21,10 +22,7 @@ export default function PartnerChatModal({ isOpen, onClose, reservation }) {
   const messagesEndRef = useRef(null);
 
   const resolveToken = () => {
-    return user?.token || 
-           localStorage.getItem('automatch_token') || 
-           localStorage.getItem('token') ||
-           JSON.parse(localStorage.getItem('automatch_user') || '{}')?.token;
+    return readSessionToken();
   };
 
   const fetchMessages = async (isMounted = true) => {

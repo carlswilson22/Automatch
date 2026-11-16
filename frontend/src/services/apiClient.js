@@ -1,3 +1,4 @@
+import { readSessionToken } from './sessionStorage.js';
 /**
  * apiClient.js — Cliente HTTP centralizado para requisições à API REST do backend.
  * 
@@ -95,17 +96,16 @@ export async function apiRequest(endpoint, options = {}, config = {}) {
     }
 
     try {
+      const headers = new Headers(options.headers);
+      if (!headers.has('Accept')) headers.set('Accept', 'application/json');
+      const isLocalApi = typeof endpoint === 'string' && endpoint.startsWith('/api/');
+      const token = isLocalApi ? readSessionToken() : null;
+      if (token && !headers.has('Authorization')) headers.set('Authorization', 'Bearer ' + token);
       const response = await fetch(endpoint, {
         ...options,
         signal: controller.signal,
-        headers: {
-          'Accept': 'application/json',
-          ...(options.headers || {})
-        }
+        headers
       });
-
-      clearTimeout(timer);
-      if (cleanupSignalListener) cleanupSignalListener();
 
       if (!response.ok) {
         let errData = null;
@@ -171,6 +171,9 @@ export async function apiRequest(endpoint, options = {}, config = {}) {
       }
 
       throw new ApiError('Não foi possível conectar ao servidor. Verifique sua conexão.', 0);
+    } finally {
+      clearTimeout(timer);
+      if (cleanupSignalListener) cleanupSignalListener();
     }
   }
 }

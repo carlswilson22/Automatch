@@ -1,3 +1,4 @@
+import { parseVehicleNumber } from './vehicleNumbers.js';
 /**
  * vehicleNormalizer.js — Normalizador de dados de cadastro e consulta veicular.
  * 
@@ -16,19 +17,13 @@ export function normalizeVehicle(rawCar) {
   if (!rawCar) return null;
 
   const rawPrice = rawCar.price ?? rawCar.preco ?? 0;
-  const numPrice = typeof rawPrice === 'number' 
-    ? rawPrice 
-    : (Number(String(rawPrice).replace(/[^0-9.-]+/g, '')) || 0);
+  const numPrice = parseVehicleNumber(rawPrice);
 
   const rawFipe = rawCar.fipePrice ?? rawCar.fipe_price ?? (numPrice > 0 ? numPrice * 1.04 : 0);
-  const numFipe = typeof rawFipe === 'number' 
-    ? rawFipe 
-    : (Number(String(rawFipe).replace(/[^0-9.-]+/g, '')) || (numPrice * 1.04));
+  const numFipe = parseVehicleNumber(rawFipe, numPrice * 1.04);
 
   const rawKm = rawCar.km ?? rawCar.mileage ?? 0;
-  const numKm = typeof rawKm === 'number' 
-    ? rawKm 
-    : (Number(String(rawKm).replace(/\D/g, '')) || 0);
+  const numKm = parseVehicleNumber(rawKm);
 
   const brand = (rawCar.brand || rawCar.marca || '').trim();
   const model = (rawCar.model || rawCar.modelo || '').trim();

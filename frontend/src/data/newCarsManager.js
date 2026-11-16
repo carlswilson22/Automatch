@@ -1,3 +1,6 @@
+import { api } from '../services/apiClient.js';
+import { canUseOfflineFallback } from '../services/sessionStorage.js';
+import { isDemoModeEnabled } from '../services/apiClient.js';
 /**
  * newCarsManager.js — Gerenciador local de anúncios de veículos recém-cadastrados.
  * 
@@ -10,10 +13,9 @@
 const STORAGE_KEY = '@automatch:newCars';
 
 export const getNewCars = () => {
-  const data = localStorage.getItem(STORAGE_KEY);
-  if (!data) return [];
   try {
-    return JSON.parse(data);
+    const parsed = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+    return Array.isArray(parsed) ? parsed.filter(car => car && typeof car === 'object') : [];
   } catch (e) {
     console.error('Error parsing cars from localStorage', e);
     return [];
@@ -22,17 +24,19 @@ export const getNewCars = () => {
 
 export const getNewCarById = (id) => {
   const cars = getNewCars();
-  return cars.find(car => car.id === id);
+  return cars.find(car => String(car.id) === String(id));
 };
 
 export const addNewCar = (carData) => {
   const cars = getNewCars();
   const newCar = {
     ...carData,
-    id: Date.now().toString(), // simple unique id
+    id: carData.id != null ? String(carData.id) : crypto.randomUUID(),
     createdAt: new Date().toISOString()
   };
-  cars.push(newCar);
+  const existing = cars.findIndex(car => String(car.id) === newCar.id);
+  if (existing >= 0) cars[existing] = { ...cars[existing], ...newCar };
+  else cars.push(newCar);
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(cars));
   } catch (e) {
@@ -68,30 +72,11 @@ export const isCarDeleted = (id) => {
 export const deleteNewCar = async (id) => {
   if (!id) return false;
   
-  // 1. Consulta o backend para verificação estrita de autorização (OWASP A01)
-  let token = null;
+  // Nenhum dado local é removido antes da confirmação da API.
   try {
-    const storedUser = JSON.parse(localStorage.getItem('automatch_user') || '{}');
-    token = storedUser?.token || localStorage.getItem('automatch_token') || null;
-  } catch (_) {}
-
-  const headers = {};
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  try {
-    const res = await fetch(`/api/cars/${id}`, { method: 'DELETE', headers });
-    if (res.status === 403) {
-      const errData = await res.json().catch(() => ({}));
-      throw new Error(errData.detail || 'Permissão negada. Você só pode excluir anúncios cadastrados pela sua conta.');
-    }
-  } catch (err) {
-    // Propaga erro de autorização 403 explicitamente para a UI
-    if (err.message && err.message.includes('Permissão negada')) {
-      throw err;
-    }
-    console.warn('Aviso na exclusão de backend (modo contingência ou offline):', err);
+    await api.delete('/api/cars/' + encodeURIComponent(id));
+  } catch (error) {
+    if (!canUseOfflineFallback(error, isDemoModeEnabled())) throw error;
   }
 
   // 2. Se autorizado (ou offline), remove do catálogo local de anúncios

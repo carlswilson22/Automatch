@@ -163,3 +163,7 @@ docker compose exec backend python test_vision_and_delete.py
 ## 📄 Licença
 
 Distribuído sob a licença MIT. Consulte o arquivo [LICENSE](LICENSE) para obter mais informações.
+
+## Revisão de código e testes isolados
+
+A [auditoria de 16/11/2026](docs/auditoria-2026-11-16.md) registra correções, verificações e limites. Para testar a API sem usar o banco local, execute `python run_tests.py` dentro de `backend`. No frontend, `npm test` executa todas as baterias.

@@ -1,3 +1,5 @@
+import { api, isDemoModeEnabled } from '../services/apiClient';
+import { canUseOfflineFallback } from '../services/sessionStorage';
 /**
  * CheckoutPage.jsx — Página de finalização de compra e contratação de assinaturas / laudos avulsos.
  * 
@@ -51,6 +53,7 @@ const CheckoutPage = () => {
   // Form & Method states
   const [paymentMethod, setPaymentMethod] = useState('pix'); // 'pix' | 'card' | 'boleto'
   const [isProcessing, setIsProcessing] = useState(false);
+  const [paymentError, setPaymentError] = useState('');
   const [isSuccess, setIsSuccess] = useState(false);
   const [orderReceipt, setOrderReceipt] = useState(null);
   const [copiedPix, setCopiedPix] = useState(false);
@@ -104,37 +107,30 @@ const CheckoutPage = () => {
 
   const handlePay = async (e) => {
     e.preventDefault();
+    setPaymentError('');
     setIsProcessing(true);
 
     const itemDesc = isVehicle ? `Reserva de Veículo: ${selectedVehicle.name}` : `Assinatura Plano ${selectedPlan.name}`;
     const customer = cardData.name || user?.name || 'Cliente Automatch';
 
     try {
-      const token = user?.token || JSON.parse(localStorage.getItem('automatch_user') || '{}')?.token;
-      const response = await fetch('/api/checkout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify({
-          customer_name: customer,
-          customer_email: user?.email || 'cliente@automatch.com',
-          item_description: itemDesc,
-          amount: totalPrice,
-          payment_method: paymentMethod
-        })
+      const receipt = await api.post('/api/checkout', {
+        customer_name: customer,
+        customer_email: user?.email,
+        item_description: itemDesc,
+        amount: totalPrice,
+        payment_method: paymentMethod
       });
-
-      if (response.ok) {
-        const receipt = await response.json();
-        setOrderReceipt(receipt);
-        setIsSuccess(true);
+      setOrderReceipt(receipt);
+      setIsSuccess(true);
+      setIsProcessing(false);
+      return;
+    } catch (error) {
+      if (!canUseOfflineFallback(error, isDemoModeEnabled())) {
+        setPaymentError(error.message);
         setIsProcessing(false);
         return;
       }
-    } catch (err) {
-      console.warn('Fallback para checkout:', err);
     }
 
     // Fallback gracioso caso necessário
@@ -154,6 +150,7 @@ const CheckoutPage = () => {
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-blue-600 selection:text-white relative overflow-hidden">
+      {paymentError && <p role="alert" className="relative z-10 bg-rose-950 text-rose-100 p-4 text-center">{paymentError}</p>}
       {/* Background Ambient Accents */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-gradient-to-b from-blue-600/15 via-indigo-600/5 to-transparent rounded-full blur-3xl pointer-events-none -z-0" />
       <div className="absolute top-1/2 right-0 w-[400px] h-[400px] bg-cyan-500/10 rounded-full blur-3xl pointer-events-none -z-0" />

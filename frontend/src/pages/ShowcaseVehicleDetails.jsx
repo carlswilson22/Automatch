@@ -94,6 +94,9 @@ export default function ShowcaseVehicleDetails() {
   // Hydrate vehicle from local sources & PostgreSQL API
   useEffect(() => {
     if (!id) return;
+    const controller = new AbortController();
+    setCar(null);
+    setIsLoadingCar(true);
 
     setLiked(isFavorite(id));
     const unsubFav = subscribeFavorites((favs) => {
@@ -101,17 +104,17 @@ export default function ShowcaseVehicleDetails() {
     });
 
     // Carrega inventário para alimentar o comparador
-    api.get('/api/cars?limit=30')
+    api.get('/api/cars?limit=30', { signal: controller.signal })
       .then(data => {
         const items = Array.isArray(data) ? data : (data?.items || []);
-        setAllInventoryCars(items.map(mapVehicleToViewModel).filter(Boolean));
+        if (!controller.signal.aborted) setAllInventoryCars(items.map(mapVehicleToViewModel).filter(Boolean));
       })
       .catch(() => {});
 
     if (isCarDeleted(id)) {
       setCar(null);
       setIsLoadingCar(false);
-      return unsubFav;
+      return () => { unsubFav(); controller.abort(); };
     }
 
     // 1. Tenta carregar dos mocks estáticos ou localStorage imediatamente
@@ -227,9 +230,9 @@ export default function ShowcaseVehicleDetails() {
     }
 
     // 2. Busca no banco de dados PostgreSQL via API
-    api.get(`/api/cars/${id}`)
+    api.get(`/api/cars/${id}`, { signal: controller.signal })
       .then(dbCar => {
-        if (dbCar) {
+        if (dbCar && !controller.signal.aborted) {
           const formatted = mapVehicleToViewModel(dbCar);
           if (formatted) {
             setCar(formatted);
@@ -238,10 +241,10 @@ export default function ShowcaseVehicleDetails() {
       })
       .catch(() => {})
       .finally(() => {
-        setIsLoadingCar(false);
+        if (!controller.signal.aborted) setIsLoadingCar(false);
       });
 
-    return unsubFav;
+    return () => { unsubFav(); controller.abort(); };
   }, [id]);
 
   // Fallback defaults for missing sub-objects

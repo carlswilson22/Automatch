@@ -57,6 +57,8 @@ export function getVehicleImageUrl(imagePath) {
     return DEFAULT_CAR_SVG_DATA_URI;
   }
 
+  if (trimmed.startsWith('/api/')) return trimmed;
+
   // URLs externas ou Base64 / Blob já são absolutas e completas
   if (
     trimmed.startsWith('http://') ||
@@ -68,7 +70,7 @@ export function getVehicleImageUrl(imagePath) {
   }
 
   // Obtém o BASE_URL configurado no Vite (ex: '/AutoMatch/' ou '/') com fallback seguro
-  const rawBase = (typeof import.meta !== 'undefined' && import.meta?.env?.BASE_URL) || '/';
+  const rawBase = (import.meta.env ? import.meta.env.BASE_URL : '/') || '/';
   const baseUrl = rawBase.endsWith('/') ? rawBase : `${rawBase}/`;
 
   // Limpa as barras iniciais
@@ -104,7 +106,7 @@ export function getVideoUrl(videoPath) {
   }
 
   // Obtém o BASE_URL configurado no Vite (ex: '/AutoMatch/' ou '/') com fallback seguro
-  const rawBase = (typeof import.meta !== 'undefined' && import.meta?.env?.BASE_URL) || '/';
+  const rawBase = (import.meta.env ? import.meta.env.BASE_URL : '/') || '/';
   const baseUrl = rawBase.endsWith('/') ? rawBase : `${rawBase}/`;
 
   // Limpa barras iniciais para evitar duplicidade

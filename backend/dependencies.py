@@ -41,7 +41,7 @@ def _demo_tokens_allowed() -> bool:
     """Tokens demo NUNCA são permitidos em produção (R1)."""
     if _is_production():
         return False
-    return os.getenv("ALLOW_DEMO_TOKENS", "true").strip().lower() in ("true", "1")
+    return os.getenv("ALLOW_DEMO_TOKENS", "false").strip().lower() in ("true", "1")
 
 
 # ==============================================================================
@@ -90,6 +90,10 @@ def get_current_user(
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="Usuário não encontrado.")
+
+    if (user.hashed_password == "ANONYMIZED_LGPD_INACTIVE"
+            or payload.get("ver", 0) != (user.token_version or 0)):
+        raise HTTPException(status_code=401, detail="Sessão revogada. Faça login novamente.")
 
     # Normalização em runtime para papéis legados
     if getattr(user, "role", None) in ("comprador", "vendedor") or not getattr(user, "role", None):
@@ -150,6 +154,5 @@ def is_owner_or_admin(current_user: models.User, resource_owner_id: str) -> bool
     """Retorna True se o usuário é dono do recurso ou administrador."""
     is_admin = (
         getattr(current_user, "role", "") == "admin"
-        or current_user.email == "admin@automatch.com"
     )
     return is_admin or (bool(resource_owner_id) and current_user.id == resource_owner_id)

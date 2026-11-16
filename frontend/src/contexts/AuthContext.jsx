@@ -1,3 +1,5 @@
+import { api, isDemoModeEnabled } from '../services/apiClient';
+import { readSessionToken, canUseOfflineFallback } from '../services/sessionStorage';
 /**
  * AuthContext.jsx — Provedor de contexto global de autenticação e sessão do usuário.
  * 
@@ -14,20 +16,6 @@ const AuthContext = createContext({});
 // ===========================================================================
 
 /**
- * isDemoModeEnabled — retorna true quando o sistema está em modo demonstração.
- * Critérios (consistentes com apiClient.js):
- *   1. VITE_DEMO_MODE=true  OU  VITE_ENABLE_DEMO_DATA=true  → ativa em qualquer build
- *   2. import.meta.env.DEV === true (dev server) → ativa automaticamente no desenvolvimento
- */
-const isDemoModeEnabled = () => {
-  return (
-    import.meta.env.VITE_DEMO_MODE === 'true' ||
-    import.meta.env.VITE_ENABLE_DEMO_DATA === 'true' ||
-    import.meta.env.DEV === true
-  );
-};
-
-/**
  * Hash unidirecional para credenciais locais (fallback offline).
  * Evita exposição de senhas em plaintext no sessionStorage.
  */
@@ -38,7 +26,7 @@ const hashPasswordLocal = async (plainPassword) => {
       const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
       const hashArray = Array.from(new Uint8Array(hashBuffer));
       return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    } catch (_) {}
+    } catch (_) { /* O recurso opcional mantém seu estado anterior. */ }
   }
   let hash = 0;
   for (let i = 0; i < plainPassword.length; i++) {
@@ -86,6 +74,8 @@ export const AuthProvider = ({ children }) => {
     sessionStorage.setItem('automatch_user', JSON.stringify(userData));
     if (userData?.token) {
       sessionStorage.setItem('automatch_token', userData.token);
+    } else {
+      sessionStorage.removeItem('automatch_token');
     }
   };
 
@@ -101,18 +91,7 @@ export const AuthProvider = ({ children }) => {
     const cleanEmail = (rawEmail || '').trim().replace(/^@+/, '').toLowerCase();
 
     try {
-      const response = await fetch('/api/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: cleanEmail, password })
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.detail || 'E-mail ou senha incorretos.');
-      }
-
-      const userData = await response.json();
+      const userData = await api.post('/api/login', { email: cleanEmail, password });
       // Reconcilia role: usa o que o backend retorna (fonte da verdade)
       const rawRole = userData.role || 'comum';
       const effectiveRole = (rawRole === 'comprador' || rawRole === 'vendedor') ? 'comum' : rawRole;
@@ -127,6 +106,7 @@ export const AuthProvider = ({ children }) => {
       return resolvedUser;
 
     } catch (error) {
+      if (!canUseOfflineFallback(error, isDemoModeEnabled())) throw error;
       // Fallback demo — APENAS em ambiente de desenvolvimento com VITE_ENABLE_DEMO_DATA=true
       if (isDemoModeEnabled() && cleanEmail === 'admin@automatch.com' && password === 'admin123') {
         const demoAdmin = {
@@ -186,25 +166,10 @@ export const AuthProvider = ({ children }) => {
     const mappedRole = roleMap[extraData.accountType] || 'comum';
 
     try {
-      const response = await fetch('/api/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: name.trim(),
-          email: cleanEmail,
-          password,
-          role: mappedRole,
-          store_name: extraData.storeName || null
-        })
+      const userData = await api.post('/api/register', {
+        name: name.trim(), email: cleanEmail, password,
+        role: mappedRole, store_name: extraData.storeName || null
       });
-
-      let userData;
-      if (response.ok) {
-        userData = await response.json();
-      } else {
-        const errData = await response.json().catch(() => ({}));
-        throw new Error(errData.detail || 'Erro ao realizar cadastro.');
-      }
 
       const rawRole = userData.role || mappedRole;
       const effectiveRole = (rawRole === 'comprador' || rawRole === 'vendedor') ? 'comum' : rawRole;
@@ -232,15 +197,17 @@ export const AuthProvider = ({ children }) => {
           const passwordHash = await hashPasswordLocal(password);
           updated.push({ ...safeUser, passwordHash });
           localStorage.setItem('@automatch:registered_users', JSON.stringify(updated));
-        } catch (e) {}
+        } catch (e) { /* O recurso opcional mantém seu estado anterior. */ }
       }
 
       return fullUser;
 
     } catch (error) {
       // Fallback local resiliente (apenas em modo demo)
-      if (!isDemoModeEnabled()) {
-        throw error;
+      if (!canUseOfflineFallback(error, isDemoModeEnabled())) throw error;
+      const accounts = JSON.parse(localStorage.getItem('@automatch:registered_users') || '[]');
+      if (accounts.some(account => account.email.toLowerCase() === cleanEmail)) {
+        throw new Error('Este e-mail já está cadastrado no sistema.');
       }
 
       console.warn('Modo cadastro local resiliente (demo):', error.message);
@@ -267,7 +234,7 @@ export const AuthProvider = ({ children }) => {
         const passwordHash = await hashPasswordLocal(password);
         updated.push({ ...fallbackUser, passwordHash });
         localStorage.setItem('@automatch:registered_users', JSON.stringify(updated));
-      } catch (e) {}
+      } catch (e) { /* O recurso opcional mantém seu estado anterior. */ }
 
       setUser(fallbackUser);
       _persistSession(fallbackUser);
@@ -288,40 +255,21 @@ export const AuthProvider = ({ children }) => {
   // ---------------------------------------------------------------------------
   const updateProfile = async (updates) => {
     try {
-      const token = user?.token || sessionStorage.getItem('automatch_token');
-      const headers = { 'Content-Type': 'application/json' };
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      const response = await fetch('/api/users/profile', {
-        method: 'PUT',
-        headers,
-        body: JSON.stringify(updates)
-      });
-
-      // Sessão expirada — força logout
-      if (response.status === 401) {
-        logout();
-        throw new Error('Sessão expirada. Faça login novamente.');
-      }
-
-      if (response.ok) {
-        const updated = await response.json();
-        const merged = { ...user, ...updated };
-        setUser(merged);
-        _persistSession(merged);
-        return merged;
-      }
-    } catch (e) {
-      if (e.message?.includes('Sessão expirada')) throw e;
-      // Continua com atualização local se a chamada de rede falhar
+      const updated = await api.put('/api/users/profile', updates);
+      // Respostas de perfil não renovam o JWT. Não sobrescrever a sessão com token:null.
+      const merged = { ...user, ...updated, token: updated.token || readSessionToken() };
+      setUser(merged);
+      _persistSession(merged);
+      return merged;
+    } catch (error) {
+      if (error.status === 401) logout();
+      if (!canUseOfflineFallback(error, isDemoModeEnabled())) throw error;
+      const safeUpdates = Object.fromEntries(Object.entries(updates).filter(([key]) => ['name', 'email', 'photo'].includes(key)));
+      const merged = { ...user, ...safeUpdates };
+      setUser(merged);
+      _persistSession(merged);
+      return merged;
     }
-
-    const newUser = { ...user, ...updates };
-    setUser(newUser);
-    _persistSession(newUser);
-    return newUser;
   };
 
   // ---------------------------------------------------------------------------
@@ -334,7 +282,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   /** Retorna o token da sessão atual. */
-  const getToken = () => sessionStorage.getItem('automatch_token') || user?.token || null;
+  const getToken = readSessionToken;
 
   return (
     <AuthContext.Provider value={{

@@ -39,7 +39,13 @@ jobs:
 
       - name: Install dependencies
         working-directory: ./frontend
-        run: npm ci || npm install
+        run: npm ci
+
+      - name: Validar frontend antes da publicação
+        working-directory: ./frontend
+        run: |
+          npm run lint
+          npm test
 
       - name: Setup Pages
         id: pages
@@ -53,7 +59,6 @@ jobs:
           VITE_DEMO_MODE: "true"
         run: |
           npm run build
-          cp -n dist/index.html dist/404.html || true
 
       - name: Upload Pages Artifact
         if: github.repository == 'carlswilson22/Automatch'

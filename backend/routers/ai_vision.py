@@ -36,6 +36,7 @@ from services.ai_service import (
     compilar_laudo_360
 )
 from services.pricing_service import calcular_preco_justo
+from services.image_sources import is_allowed_image_url
 
 logger = logging.getLogger("automatch")
 router = APIRouter(tags=["IA & Precificação"])
@@ -151,13 +152,22 @@ async def analisar_avarias_veiculo(request: Request) -> Dict[str, Any]:
 
         # Caso seja URL HTTP remota
         elif url_str.startswith("http://") or url_str.startswith("https://"):
+            if not is_allowed_image_url(url_str):
+                raise HTTPException(status_code=400, detail="Origem de imagem não permitida. Envie a imagem como arquivo.")
             try:
                 async with httpx.AsyncClient(timeout=6.0) as client:
-                    resp = await client.get(url_str)
-                    if resp.status_code == 200:
-                        image_bytes = preprocess_and_compress_image(resp.content)
+                    async with client.stream("GET", url_str, follow_redirects=False) as resp:
+                        if resp.status_code == 200:
+                            chunks = bytearray()
+                            async for chunk in resp.aiter_bytes():
+                                chunks.extend(chunk)
+                                if len(chunks) > 15 * 1024 * 1024:
+                                    raise HTTPException(status_code=413, detail="Imagem excede o limite de 15 MB.")
+                            image_bytes = preprocess_and_compress_image(bytes(chunks))
+            except HTTPException:
+                raise
             except Exception as e:
-                logger.warning("Falha ao baixar imagem remota: %s", e)
+                logger.warning("Falha ao baixar imagem remota: %s", type(e).__name__)
 
         # Caso seja caminho relativo de imagens públicas da vitrine/anúncios
         elif url_str.startswith("/images/") or "/images/" in url_str:

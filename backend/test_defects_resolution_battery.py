@@ -170,7 +170,6 @@ class TestDefectsResolutionBattery(unittest.TestCase):
             "year": 2023,
             "km": 18000,
             "price": 115000.0,
-            "store_id": 1,
             "description": "Bateria-Defeitos - Teste A1",
             "laudo_feedback": feedback_str
         }

@@ -47,7 +47,10 @@ def check_production_secrets() -> None:
     Chame esta função em main.py durante o lifespan, ANTES de aceitar tráfego.
     """
     env = os.getenv("ENVIRONMENT", "").strip().lower()
-    if env == "production" and SECRET_KEY == _DEFAULT_SECRET:
+    if env == "production" and (
+        len(SECRET_KEY.strip()) < 32 or SECRET_KEY == _DEFAULT_SECRET
+        or any(marker in SECRET_KEY.lower() for marker in ("changeme", "change_me", "substitua", "automatch_dev"))
+    ):
         raise RuntimeError(
             "[SEGURANÇA CRÍTICA] JWT_SECRET não definido no ambiente de produção. "
             "Defina a variável JWT_SECRET com um valor secreto exclusivo antes de iniciar."
@@ -120,6 +123,9 @@ def decode_access_token(token: str) -> Optional[Dict[str, Any]]:
         if len(parts) != 3:
             return None
         header_b64, payload_b64, signature_b64 = parts
+        header = json.loads(_b64url_decode(header_b64).decode("utf-8"))
+        if not isinstance(header, dict) or header.get("alg") != ALGORITHM:
+            return None
         
         signing_input = f"{header_b64}.{payload_b64}".encode('utf-8')
         expected_sig = hmac.new(SECRET_KEY.encode('utf-8'), signing_input, hashlib.sha256).digest()
@@ -130,7 +136,8 @@ def decode_access_token(token: str) -> Optional[Dict[str, Any]]:
         payload = json.loads(_b64url_decode(payload_b64).decode('utf-8'))
         
         # Validar expiração
-        if "exp" in payload and payload["exp"] < int(time.time()):
+        if (not isinstance(payload, dict) or not isinstance(payload.get("exp"), (int, float))
+                or payload["exp"] <= time.time()):
             return None
             
         return payload

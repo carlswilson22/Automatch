@@ -55,7 +55,8 @@ def run_tests():
         "name": "Lojista Sync Test",
         "email": "sync_test@automatch.com",
         "password": "Password123!",
-        "role": "lojista"
+        "role": "lojista",
+        "store_name": "Loja de Testes"
     })
     token = reg_resp.json().get("token") or "demo-admin-token"
     auth_headers = {"Authorization": f"Bearer {token}"}

@@ -1,3 +1,4 @@
+import { readSessionToken } from '../services/sessionStorage';
 /**
  * NewCarAdForm.jsx — Formulário em etapas para criação de um novo anúncio de veículo.
  * 
@@ -180,7 +181,7 @@ const NewCarAdForm = () => {
     setVideoUploadStatus('uploading');
     setVideoUploadError('');
     try {
-      const token = user?.token || JSON.parse(localStorage.getItem('automatch_user') || '{}')?.token;
+      const token = readSessionToken();
       const headers = {};
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
@@ -237,7 +238,7 @@ const NewCarAdForm = () => {
 
   const handleClearVideo = () => {
     if (videoPreviewUrl && videoPreviewUrl.startsWith('blob:')) {
-      try { URL.revokeObjectURL(videoPreviewUrl); } catch (e) {}
+      try { URL.revokeObjectURL(videoPreviewUrl); } catch (e) { /* O recurso opcional mantém seu estado anterior. */ }
     }
     setVideoFile(null);
     setVideoPreviewUrl(null);
@@ -395,7 +396,7 @@ const NewCarAdForm = () => {
     setIaFeedback(null);
     setKmDivergenceAlert(null);
     try {
-      const token = user?.token || JSON.parse(localStorage.getItem('automatch_user') || '{}')?.token;
+      const token = readSessionToken();
       const headers = {};
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
@@ -580,7 +581,7 @@ const NewCarAdForm = () => {
       plate: plateInput.replace(/[^A-Za-z0-9]/g, '').toUpperCase() || null
     };
 
-    const token = user?.token || JSON.parse(localStorage.getItem('automatch_user') || '{}')?.token;
+    const token = readSessionToken();
     const authHeaders = {
       'Content-Type': 'application/json',
       ...(token ? { 'Authorization': `Bearer ${token}` } : {})

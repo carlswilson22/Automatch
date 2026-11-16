@@ -1,3 +1,4 @@
+import { parseVehicleNumber } from './vehicleNumbers.js';
 /**
  * vehicleMapper.js — Mapeador de contratos de dados de veículos (Backend -> Frontend).
  * 
@@ -108,8 +109,8 @@ export function mapVehicleToViewModel(raw) {
   const model = raw.model || raw.modelo || '';
   const name = raw.name || `${brand} ${model}`.trim();
   const year = Number(raw.year || raw.ano || new Date().getFullYear());
-  const price = typeof raw.price === 'number' ? raw.price : (parseFloat(String(raw.price || raw.preco || 0).replace(/[^\d.-]/g, '')) || 0);
-  const mileage = raw.km !== undefined && raw.km !== null ? Number(raw.km) : (Number(raw.mileage) || 0);
+  const price = parseVehicleNumber(raw.price ?? raw.preco);
+  const mileage = parseVehicleNumber(raw.km ?? raw.mileage);
   const image = raw.image || raw.imagem || '/images/placeholder-carro.jpg';
   const color = raw.color || raw.cor || 'Prata';
   const rawBody = raw.body_type || raw.bodyType || 'Particular';
@@ -120,7 +121,7 @@ export function mapVehicleToViewModel(raw) {
 
   const rawOriginal = raw.original_price ?? raw.originalPrice ?? null;
   const originalPrice = (rawOriginal !== null && Number(rawOriginal) > price) ? Number(rawOriginal) : null;
-  const fipePrice = raw.fipe_price || raw.fipePrice || null;
+  const fipePrice = parseVehicleNumber(raw.fipe_price ?? raw.fipePrice, null);
   const autoPrice = raw.auto_price || raw.autoPrice || null;
 
   let priceHistory = [];
@@ -154,7 +155,7 @@ export function mapVehicleToViewModel(raw) {
     icon: Car,
     featured: Boolean(raw.featured ?? true),
     storeId,
-    plate: raw.plate || raw.placa || 'ABC1234',
+    plate: raw.plate || raw.placa || '',
     fipeCode: raw.fipe_code || raw.fipeCode || '004487-3',
     laudoUrl: raw.laudo_url || raw.laudoUrl || null,
     laudoFeedback: raw.laudo_feedback || raw.laudoFeedback || null,

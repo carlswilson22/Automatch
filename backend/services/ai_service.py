@@ -9,6 +9,7 @@ Objetivo e Motivo da Criação:
 """
 import os
 import io
+import tempfile
 import json
 import logging
 import base64
@@ -400,7 +401,8 @@ def analyze_vehicle_damage_cv(
 
     if model:
         try:
-            temp_path = "/tmp/temp_scan_car.jpg" if os.name != "nt" else os.path.join(os.getenv("TEMP", "."), "temp_scan_car.jpg")
+            with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
+                temp_path = temp_file.name
             img.save(temp_path, format="JPEG", quality=85)
             yolo_res = model.predict(source=temp_path, conf=0.15, verbose=False)
             if yolo_res and len(yolo_res) > 0:
@@ -1248,11 +1250,8 @@ def analisar_fotos_periciais_pdf_yolo(
 
         if model:
             try:
-                temp_path = (
-                    f"/tmp/temp_yolo_pdf_{idx}.jpg"
-                    if os.name != "nt"
-                    else os.path.join(os.getenv("TEMP", "."), f"temp_yolo_pdf_{idx}.jpg")
-                )
+                with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
+                    temp_path = temp_file.name
                 with open(temp_path, "wb") as f:
                     f.write(img_bytes)
                 results = model.predict(source=temp_path, conf=0.18, verbose=False)

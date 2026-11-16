@@ -99,6 +99,14 @@ async def upload_laudo(
     Recebe arquivos PDF ou imagens (JPG/PNG), valida extensão, magic bytes e tamanho,
     salva com nome único (UUID) na pasta uploads/laudos/, executa auditoria por IA e retorna a URL.
     """
+    if car_id:
+        car_db = db.get(models.Car, car_id)
+        if not car_db:
+            raise HTTPException(status_code=404, detail="Veículo não encontrado.")
+        from dependencies import is_owner_or_admin
+        if not is_owner_or_admin(current_user, car_db.user_id):
+            raise HTTPException(status_code=403, detail="Você só pode anexar laudos aos seus veículos.")
+
     if not file.filename:
         raise HTTPException(status_code=400, detail="Nome do arquivo não informado.")
 
@@ -130,7 +138,7 @@ async def upload_laudo(
         )
 
     # Agora lê o restante do arquivo
-    rest = await file.read()
+    rest = await file.read(MAX_LAUDO_SIZE_BYTES + 1)
     content = magic_bytes + rest
 
     if len(content) > MAX_LAUDO_SIZE_BYTES:
@@ -254,16 +262,16 @@ async def upload_laudo(
     except Exception as e:
         logger.warning("Falha na auditoria de IA de laudo: %s. Utilizando fallback seguro.", e)
         laudo_ia_result = {
-            "classificacao_geral": "SEM_RESSALVAS",
+            "classificacao_geral": "COM_ATENCAO",
             "conferencia_dados": {
-                "placa": {"valor_laudo": car_ctx["plate"], "match": True},
-                "chassi": {"valor_laudo": car_ctx["chassi"], "match": True},
-                "marca_modelo": {"valor_laudo": f"{car_ctx['brand']} {car_ctx['model']}".strip(), "match": True},
-                "ano": {"valor_laudo": car_ctx["year"], "match": True},
-                "quilometragem": {"valor_laudo": car_ctx["km"], "match_aproximado": True}
+                "placa": {"valor_laudo": car_ctx["plate"], "match": False},
+                "chassi": {"valor_laudo": car_ctx["chassi"], "match": False},
+                "marca_modelo": {"valor_laudo": f"{car_ctx['brand']} {car_ctx['model']}".strip(), "match": False},
+                "ano": {"valor_laudo": car_ctx["year"], "match": False},
+                "quilometragem": {"valor_laudo": car_ctx["km"], "match_aproximado": False}
             },
             "pontos_atencao_riscos": [],
-            "resumo_executivo": "Laudo recebido e auditado com sucesso pelo ecossistema Automatch."
+            "resumo_executivo": "Auditoria automática indisponível. O documento requer conferência manual."
         }
 
     # Se car_id foi associado, persiste o parecer para visualização instantânea do comprador
@@ -276,7 +284,9 @@ async def upload_laudo(
                 car_db.laudo_feedback = json.dumps(laudo_ia_result, ensure_ascii=False)
                 db.commit()
         except Exception as e:
+            db.rollback()
             logger.warning("Erro ao persistir laudo no registro do carro: %s", e)
+            raise HTTPException(status_code=500, detail="Não foi possível vincular o laudo ao veículo.") from e
 
     return {
         "status": "success",

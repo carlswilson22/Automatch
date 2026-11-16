@@ -521,10 +521,15 @@ def create_car_reservation(
     )
     db.add(reservation)
 
-    # Atualiza status do veículo
-    car.status_reserva = "reservado"
-    db.commit()
-    db.refresh(reservation)
+    # Compare-and-set impede duas reservas simultâneas, inclusive em SQLite.
+    claimed = db.query(models.Car).filter(
+        models.Car.id == car.id,
+        or_(models.Car.status_reserva == "disponivel", models.Car.status_reserva.is_(None))
+    ).update({"status_reserva": "reservado"}, synchronize_session=False)
+    if claimed != 1:
+        db.rollback()
+        raise HTTPException(status_code=409, detail="Este veículo já está reservado.")
+    db.flush()
 
     # Mensagem inicial automática no chat B2B
     init_msg = models.PartnerMessage(
@@ -626,8 +631,9 @@ def request_reservation_closing(
     current_user: models.User = Depends(get_current_b2b_user)
 ):
     """Lojista solicitante solicita formalmente o consentimento da loja dona para fechar o negócio."""
+    refresh_expired_reservations(db)
     my_store_id = current_user.store_id or 1
-    res = db.query(models.CarReservation).filter(models.CarReservation.id == reservation_id).first()
+    res = db.query(models.CarReservation).filter(models.CarReservation.id == reservation_id).with_for_update().first()
 
     if not res:
         raise HTTPException(status_code=404, detail="Reserva não encontrada.")
@@ -667,8 +673,9 @@ def give_reservation_consent(
     Loja proprietária concede ou recusa consentimento para fechar a transação.
     Se aprovado, emite protocolo formal de repasse (REP-YYYY-XXXXX) e grava PartnerTransaction.
     """
+    refresh_expired_reservations(db)
     my_store_id = current_user.store_id or 1
-    res = db.query(models.CarReservation).filter(models.CarReservation.id == reservation_id).first()
+    res = db.query(models.CarReservation).filter(models.CarReservation.id == reservation_id).with_for_update().first()
 
     if not res:
         raise HTTPException(status_code=404, detail="Reserva não encontrada.")
@@ -676,7 +683,9 @@ def give_reservation_consent(
     if res.owner_store_id != my_store_id and current_user.role != 'admin':
         raise HTTPException(status_code=403, detail="Apenas a loja proprietária do veículo pode conceder consentimento.")
 
-    car = db.query(models.Car).filter(models.Car.id == res.car_id).first()
+    if res.status != "ativa":
+        raise HTTPException(status_code=409, detail="A reserva não está ativa para fechamento.")
+    car = db.query(models.Car).filter(models.Car.id == res.car_id).with_for_update().first()
     res.consent_notes = payload.notes
 
     if not payload.approved:
@@ -771,6 +780,8 @@ def cancel_reservation(
     if res.requesting_store_id != my_store_id and res.owner_store_id != my_store_id and current_user.role != 'admin':
         raise HTTPException(status_code=403, detail="Você não tem permissão para cancelar esta reserva.")
 
+    if res.status != "ativa":
+        raise HTTPException(status_code=409, detail="Apenas reservas ativas podem ser canceladas.")
     res.status = "cancelada"
     car = db.query(models.Car).filter(models.Car.id == res.car_id).first()
     if car and car.status_reserva == "reservado":

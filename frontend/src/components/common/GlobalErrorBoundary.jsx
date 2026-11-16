@@ -34,7 +34,7 @@ export default class GlobalErrorBoundary extends React.Component {
 
   handleGoHome = () => {
     this.setState({ hasError: false, error: null, errorInfo: null });
-    window.location.href = '/';
+    window.location.href = import.meta.env.BASE_URL || '/';
   };
 
   render() {

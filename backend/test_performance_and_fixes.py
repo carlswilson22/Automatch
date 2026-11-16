@@ -32,7 +32,8 @@ def run_tests():
         "name": "Lojista Perf Test",
         "email": "lojista_perf@automatch.com",
         "password": "Password123!",
-        "role": "lojista"
+        "role": "lojista",
+        "store_name": "Loja de Testes"
     })
     token = reg_resp.json().get("token")
     headers = {"Authorization": f"Bearer {token}"} if token else {}

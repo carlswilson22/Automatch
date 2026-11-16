@@ -5,6 +5,7 @@
  *   - Criado para exibir a íntegra do laudo técnico pericial autenticado, com histórico veicular,
  *     score pericial, QR Code de validação pública e download do relatório formal em PDF vetorial.
  */
+import { parseInspectionFeedback, escapeHtml } from '../../utils/inspectionData';
 import React, { useEffect, useRef, useState } from 'react';
 import { useScrollLock } from '../../utils/useScrollLock';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -41,7 +42,6 @@ export default function OfficialDossierModal({ isOpen, onClose, car }) {
     };
 
     window.addEventListener('keydown', handleKeyDown);
-    document.body.style.overflow = 'hidden';
 
     const timer = setTimeout(() => {
       if (modalRef.current) {
@@ -52,7 +52,6 @@ export default function OfficialDossierModal({ isOpen, onClose, car }) {
     return () => {
       clearTimeout(timer);
       window.removeEventListener('keydown', handleKeyDown);
-      document.body.style.overflow = 'unset';
       if (previousActiveElement && typeof previousActiveElement.focus === 'function') {
         previousActiveElement.focus();
       }
@@ -60,6 +59,12 @@ export default function OfficialDossierModal({ isOpen, onClose, car }) {
   }, [isOpen, onClose]);
 
   if (!isOpen || !car) return null;
+
+  const parsedIa = parseInspectionFeedback(car.laudoFeedback ?? car.laudo_feedback);
+  const iaClassificacao = parsedIa?.classificacao_geral;
+  const iaResumo = parsedIa?.resumo_executivo;
+  const iaConferencia = parsedIa?.conferencia_dados;
+  const iaRiscos = Array.isArray(parsedIa?.pontos_atencao_riscos) ? parsedIa.pontos_atencao_riscos : [];
 
   // Normalização e extração segura dos dados do anúncio (sem inventar dados)
   const brand = car.brand || car.marca || car.name?.split(' ')[0] || 'Não informado';
@@ -100,14 +105,14 @@ export default function OfficialDossierModal({ isOpen, onClose, car }) {
 
   // Checagem pericial orientada aos dados reais do anúncio
   const auctionText = String(car.auctionHistory || car.leilao || car.auction_history || '').toLowerCase();
-  const hasAuction = auctionText.includes('sim') || auctionText.includes('consta');
+  const hasAuction = /^(sim|consta|com registro)/.test(auctionText);
 
   const debtText = String(car.debtStatus || car.debitos || car.debt_status || '').toLowerCase();
   const hasDebt = debtText.includes('com') || debtText.includes('pend');
 
   const laudoText = String(car.laudoStatus || car.laudo || car.laudo_status || '').toLowerCase();
-  const isReproved = laudoText.includes('reprovado');
-  const hasAppointment = laudoText.includes('apontamento');
+  const isReproved = laudoText.includes('reprovado') || iaClassificacao === 'COM_RESTRICOES';
+  const hasAppointment = laudoText.includes('apontamento') || iaClassificacao === 'COM_ATENCAO';
 
   const inspectionItems = [
     {
@@ -155,7 +160,7 @@ export default function OfficialDossierModal({ isOpen, onClose, car }) {
 <html lang="pt-BR">
 <head>
   <meta charset="utf-8">
-  <title>Dossiê Oficial Automatch — ${brand} ${model} (${protocol})</title>
+  <title>Dossiê Oficial Automatch — ${escapeHtml(brand)} ${escapeHtml(model)} (${escapeHtml(protocol)})</title>
   <style>
     @page { size: A4; margin: 16mm 14mm 16mm 14mm; }
     * { box-sizing: border-box; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
@@ -190,40 +195,40 @@ export default function OfficialDossierModal({ isOpen, onClose, car }) {
   <div class="header">
     <div class="logo-box">
       <h2><span class="logo-dark">AUTO</span><span class="logo-blue">MATCH™</span></h2>
-      <div class="meta-protocol">Protocolo Oficial: ${protocol} • Emissão: ${emissionDate}</div>
+      <div class="meta-protocol">Protocolo Oficial: ${escapeHtml(protocol)} • Emissão: ${escapeHtml(emissionDate)}</div>
     </div>
     <div class="stamp ${allApproved ? 'stamp-ok' : 'stamp-warn'}">
       ${allApproved ? '✓ LAUDO 100% APROVADO' : '⚠ AUDITORIA COM APONTAMENTO'}
     </div>
   </div>
 
-  <h1 class="main-title">${brand} ${model} (${year})</h1>
+  <h1 class="main-title">${escapeHtml(brand)} ${escapeHtml(model)} (${escapeHtml(year)})</h1>
   <div class="main-sub">Dossiê Pericial e Histórico de Autenticidade Veicular Automatch</div>
 
   <div class="grid">
     <div class="card">
       <div class="card-label">Preço Anunciado</div>
-      <div class="card-val card-val-price">${formattedPrice}</div>
+      <div class="card-val card-val-price">${escapeHtml(formattedPrice)}</div>
     </div>
     <div class="card">
       <div class="card-label">Referência Tabela FIPE</div>
-      <div class="card-val">${formattedFipe}</div>
+      <div class="card-val">${escapeHtml(formattedFipe)}</div>
     </div>
     <div class="card">
       <div class="card-label">Quilometragem</div>
-      <div class="card-val">${formattedKm}</div>
+      <div class="card-val">${escapeHtml(formattedKm)}</div>
     </div>
     <div class="card">
       <div class="card-label">Cor / Acabamento</div>
-      <div class="card-val">${color}</div>
+      <div class="card-val">${escapeHtml(color)}</div>
     </div>
     <div class="card">
       <div class="card-label">Combustível</div>
-      <div class="card-val">${fuel}</div>
+      <div class="card-val">${escapeHtml(fuel)}</div>
     </div>
     <div class="card">
       <div class="card-label">Placa / Registro</div>
-      <div class="card-val">${plate}</div>
+      <div class="card-val">${escapeHtml(plate)}</div>
     </div>
   </div>
 
@@ -239,9 +244,9 @@ export default function OfficialDossierModal({ isOpen, onClose, car }) {
     <tbody>
       ${inspectionItems.map(i => `
         <tr>
-          <td><strong>${i.item}</strong></td>
-          <td><span class="status-badge ${i.approved ? 'status-ok' : 'status-warn'}">${i.result}</span></td>
-          <td>${i.observation}</td>
+          <td><strong>${escapeHtml(i.item)}</strong></td>
+          <td><span class="status-badge ${i.approved ? 'status-ok' : 'status-warn'}">${escapeHtml(i.result)}</span></td>
+          <td>${escapeHtml(i.observation)}</td>
         </tr>
       `).join('')}
     </tbody>
@@ -249,11 +254,11 @@ export default function OfficialDossierModal({ isOpen, onClose, car }) {
 
   <div class="sec-title">Termo de Conformidade</div>
   <div class="terms">
-    Certificamos que o veículo <strong>${brand} ${model}</strong>, ano <strong>${year}</strong>, foi periciado e auditado segundo os rigorosos padrões de transparência radical da plataforma Automatch. Este documento consolida checagens estruturais, micragem de pintura, consultas a bases de leilão, histórico de débitos e varredura mecânica, com autenticidade eletrônica verificável.
+    Certificamos que o veículo <strong>${escapeHtml(brand)} ${escapeHtml(model)}</strong>, ano <strong>${escapeHtml(year)}</strong>, foi periciado e auditado segundo os rigorosos padrões de transparência radical da plataforma Automatch. Este documento consolida checagens estruturais, micragem de pintura, consultas a bases de leilão, histórico de débitos e varredura mecânica, com autenticidade eletrônica verificável.
   </div>
 
   <div class="footer">
-    Documento emitido digitalmente pela plataforma Automatch — www.automatch.com.br — Autenticidade: ${protocol}
+    Documento emitido digitalmente pela plataforma Automatch — www.automatch.com.br — Autenticidade: ${escapeHtml(protocol)}
   </div>
 </body>
 </html>`;
@@ -329,7 +334,7 @@ export default function OfficialDossierModal({ isOpen, onClose, car }) {
       const win = window.open(blobUrl, '_blank');
       if (win) {
         setTimeout(() => {
-          try { win.print(); } catch (e) {}
+          try { win.print(); } catch (e) { /* O recurso opcional mantém seu estado anterior. */ }
         }, 500);
       }
       setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
