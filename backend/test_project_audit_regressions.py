@@ -183,4 +183,27 @@ class TestProjectAudit(unittest.TestCase):
         self.assertEqual(result.classificacao_geral.value,"COM_ATENCAO")
         self.assertFalse(result.conferencia_dados.placa.match)
 
+    def test_scanner_reads_uploaded_and_nested_image_sources(self):
+        import tempfile
+        from pathlib import Path
+        from io import BytesIO
+        from PIL import Image
+        image=BytesIO();Image.new("RGB",(16,16),"red").save(image,format="JPEG")
+        expected=[image.getvalue(), (Path(__file__).resolve().parent / "public_images" / "cars" / "sc-001" / "180.jpg").read_bytes()]
+        async def analyze(*args, **kwargs):
+            self.assertEqual(kwargs.get("image_bytes", args[0] if args else b""), expected.pop(0))
+            return {"status":"success","score_lataria":100}
+        with tempfile.TemporaryDirectory() as directory:
+            Path(directory,"uploaded.jpg").write_bytes(image.getvalue())
+            with patch("routers.ai_vision.UPLOADS_DIR",Path(directory)), patch("routers.ai_vision.preprocess_and_compress_image",side_effect=lambda value:value), patch("routers.ai_vision.executar_pericia_visual_completa",side_effect=analyze) as analysis:
+                response=self.client.post("/api/analise-visual",json={"imageUrl":"/api/v1/laudos/files/uploaded.jpg"})
+                self.assertEqual(response.status_code,200)
+                analysis.assert_called_once()
+                response=self.client.post("/api/analise-visual",json={"imageUrl":"/images/cars/sc-001/180.jpg"})
+                self.assertEqual(response.status_code,200)
+                self.assertEqual(analysis.call_count,2)
+                self.assertEqual(expected,[])
+        response=self.client.post("/api/analise-visual",json={"imageUrl":"/images/../../database.py"})
+        self.assertEqual(response.status_code,400)
+
 if __name__ == "__main__":unittest.main()

@@ -94,17 +94,9 @@ def run_tests():
     # -------------------------------------------------------------------------
     print("\n[TESTE 2] Perícia Visual IA com Imagem em Base64...")
     # Prepara imagem veicular real em Base64 para teste
-    car_sample_path = "/app/public_images/FotoCorollaCross.jpg"
-    if os.path.exists(car_sample_path):
-        with open(car_sample_path, "rb") as f:
-            b64_str = "data:image/jpeg;base64," + base64.b64encode(f.read()).decode("utf-8")
-    else:
-        from PIL import Image
-        import io
-        test_img = Image.new("RGB", (300, 200), color=(180, 20, 30))
-        buf = io.BytesIO()
-        test_img.save(buf, format="JPEG")
-        b64_str = "data:image/jpeg;base64," + base64.b64encode(buf.getvalue()).decode("utf-8")
+    car_sample_path = os.path.join(os.path.dirname(__file__), "public_images", "FotoCorollaCross.jpg")
+    with open(car_sample_path, "rb") as f:
+        b64_str = "data:image/jpeg;base64," + base64.b64encode(f.read()).decode("utf-8")
 
     resp2 = client.post("/api/analise-visual", json={
         "imageUrl": b64_str,

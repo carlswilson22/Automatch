@@ -37,6 +37,8 @@ from services.ai_service import (
 )
 from services.pricing_service import calcular_preco_justo
 from services.image_sources import is_allowed_image_url
+from media_storage import UPLOADS_DIR
+from pathlib import Path
 
 logger = logging.getLogger("automatch")
 router = APIRouter(tags=["IA & Precificação"])
@@ -169,15 +171,30 @@ async def analisar_avarias_veiculo(request: Request) -> Dict[str, Any]:
             except Exception as e:
                 logger.warning("Falha ao baixar imagem remota: %s", type(e).__name__)
 
+        elif url_str.startswith("/api/v1/laudos/files/"):
+            filename = url_str.split("/api/v1/laudos/files/", 1)[1]
+            if filename != os.path.basename(filename) or filename in (".", ".."):
+                raise HTTPException(status_code=400, detail="Caminho de imagem inválido.")
+            source = UPLOADS_DIR / filename
+            if source.is_file():
+                image_bytes = preprocess_and_compress_image(source.read_bytes())
+
         # Caso seja caminho relativo de imagens públicas da vitrine/anúncios
         elif url_str.startswith("/images/") or "/images/" in url_str:
-            filename = os.path.basename(url_str)
-            candidate_paths = [
-                os.path.join("/app", "public_images", filename),
-                os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "public", "images", filename),
-                os.path.join(os.path.dirname(__file__), "..", "uploads", filename),
-                os.path.join(os.path.dirname(__file__), "..", "uploads", "laudos", filename)
+            relative = url_str.split("/images/", 1)[1].split("?", 1)[0]
+            filename = relative
+            image_roots = [
+                Path(__file__).resolve().parent.parent / "public_images",
+                Path(__file__).resolve().parent.parent.parent / "frontend" / "public" / "images",
+                Path("/app/public_images")
             ]
+            candidate_paths = []
+            for image_root in image_roots:
+                image_root = image_root.resolve()
+                candidate = (image_root / relative).resolve()
+                if not candidate.is_relative_to(image_root):
+                    raise HTTPException(status_code=400, detail="Caminho de imagem inválido.")
+                candidate_paths.append(candidate)
             for cpath in candidate_paths:
                 if os.path.exists(cpath):
                     try:

@@ -38,20 +38,8 @@ import security
 logger = logging.getLogger("automatch")
 
 # Diretório de uploads de laudos e vídeos
-def _resolve_uploads_dir() -> Path:
-    env_dir = os.getenv("UPLOADS_DIR")
-    if env_dir:
-        p = Path(env_dir)
-    else:
-        docker_path = Path("/app/uploads/laudos")
-        if docker_path.parent.exists() and os.name != "nt":
-            p = docker_path
-        else:
-            p = Path(__file__).resolve().parent / "uploads" / "laudos"
-    p.mkdir(parents=True, exist_ok=True)
-    return p
+from media_storage import UPLOADS_DIR
 
-UPLOADS_DIR = _resolve_uploads_dir()
 
 
 async def _prewarm_yolo():

@@ -29,7 +29,7 @@ Nenhum banco ou arquivo de configuração secreto do ambiente local foi usado no
 | Validação | Atualização parcial aceitava valores negativos/nulos; NaN podia causar erro 500 | Validação de preço, ano, km e reservas; entradas inválidas retornam 422 sem ecoar dados do corpo |
 | Laudos | Protocolo inexistente era certificado; payload substituía o cadastro | Validação exige registro real; dados do banco prevalecem e mudanças geram snapshot correspondente |
 | Leitura pericial | Negação de Renajud era interpretada como restrição; dados ausentes eram aprovados | Negativas são respeitadas e informação insuficiente exige conferência manual |
-| Imagens | URLs de upload recebiam prefixo estático incorreto | Rotas /api permanecem no gateway; fallback do backend encontra public_images |
+| Imagens | URLs de upload recebiam prefixo estático incorreto | Rotas /api permanecem no gateway; scanner lê uploads e subpastas, valida caminhos e compartilha o diretório de mídia |
 | Downloads remotos | Scanner aceitava endereços arbitrários | Downloads limitados a hosts HTTPS configurados, sem redirects e com limite de tamanho |
 | Concorrência | Análises compartilhavam nomes fixos de arquivos temporários | Arquivos temporários exclusivos por análise |
 | Migrações | Índices/FKs já presentes eram criados novamente; migrate.py apagava tabelas | Migrações incrementais preservam tabelas e lidam com baseline consolidada; upgrades SQLite suportados |
@@ -46,7 +46,7 @@ Os reexports de logo e outros componentes no microkit mantêm compatibilidade de
 ## Validação
 
 - Frontend: 248 testes aprovados, incluindo renderização React, transições de hooks, sessão, cache, exclusão, cancelamento, números e correspondência das mídias.
-- Backend: 94 testes unittest aprovados e cinco roteiros de jornada completos, todos em bancos descartáveis pelo comando python run_tests.py.
+- Backend: 95 testes unittest aprovados e cinco roteiros de jornada completos, todos em bancos descartáveis pelo comando python run_tests.py.
 - Migrações: aplicação integral até 007_persist_price_alerts em SQLite vazio e segunda execução sem recriar tabelas.
 - Frontend: build de produção, fallback 404.html, npm audit e ESLint sem erros bloqueantes.
 - Python: verificação de nomes indefinidos e diff sem erros de espaços.
@@ -62,6 +62,8 @@ Os reexports de logo e outros componentes no microkit mantêm compatibilidade de
 - ALLOWED_IMAGE_HOSTS pode listar provedores de mídia HTTPS autorizados. Upload direto continua disponível.
 - Produção usa um worker enquanto rate limiting e scheduler residirem no processo. Escala horizontal requer coordenação compartilhada.
 - Antes de atualizar um banco existente, faça backup e confira sua versão Alembic. Bancos antigos sem histórico de migração precisam de conferência da baseline; não há stamp nem reset automático de dados.
+
+A primeira execução ampliada no CI identificou dois roteiros que procuravam fotos somente em /app e geravam retângulos como substituição fora do Docker. As fixtures agora usam as fotos reais versionadas por caminho relativo ao arquivo, preservando a validação de classe veicular do YOLO.
 
 ## Como repetir
 
