@@ -118,7 +118,10 @@ for (const [id, expectedKmL] of Object.entries(consumoMap)) {
 }
 
 // Verifica que a lógica de fallback genérico ainda existe
-assert(aiCoreSrc.includes('excelente rendimento energético'), 'Fallback genérico preservado para veículos sem dados');
+const { generateVehicleConsultantAnswer } = await import('../src/utils/aiConsultantCore.js');
+const unknownConsumption = generateVehicleConsultantAnswer('consumo', {id:'sem-consumo'});
+assert(unknownConsumption.includes('não informado'), 'Consumo ausente deve permanecer não informado');
+assert(!unknownConsumption.includes('excelente rendimento'), 'Não inventar avaliação energética');
 
 // =====================================================
 // RESUMO

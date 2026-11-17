@@ -63,10 +63,10 @@ describe('BATERIA DE TESTES — CHEVROLET TRACKER, SCANNER IA & CONSULTOR', () =
     }
   });
 
-  test('4. Consultor IA confirma integridade 100% sem avarias para veículo impecável (Corolla Cross)', () => {
+  test('4. Consultor IA não certifica integridade sem apontamentos cadastrados', () => {
     const respostaCorolla = generateVehicleConsultantAnswer('o veículo tem avarias?', corolla);
     assert.ok(
-      respostaCorolla.toLowerCase().includes('não possui avarias') || respostaCorolla.toLowerCase().includes('100% íntegro'),
+      respostaCorolla.toLowerCase().includes('não comprova ausência de avarias'),
       `Resposta para Corolla deve atestar 100% integridade. Resposta recebida: ${respostaCorolla}`
     );
   });

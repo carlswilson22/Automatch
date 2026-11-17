@@ -238,7 +238,7 @@ def run_full_system_review():
         "channels": ["autoavaliar", "olx"]
     }, headers=auth_headers)
     assert sync_resp.status_code == 200
-    assert sync_resp.json().get("total_sincronizados") == 2
+    assert sync_resp.json().get("total_simulados") == 2
 
     # Feed XML
     feed_resp = client.get("/api/integrations/feed.xml")

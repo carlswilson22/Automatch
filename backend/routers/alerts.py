@@ -63,7 +63,7 @@ async def criar_alerta(
 ) -> Dict[str, Any]:
     """
     Cadastra um novo Alerta de Queda de Preço ou Radar de Oportunidades.
-    Dispara notificações quando o preço cair ou entrar oferta similar abaixo da FIPE.
+    Registra interesse; não dispara mensagens externas.
     """
     alerta_id = f"alt-{uuid.uuid4().hex[:8]}"
     target = payload.target_price or round(payload.current_price * 0.95, 2)
@@ -87,11 +87,12 @@ async def criar_alerta(
     db.add(models.PriceAlert(**novo_alerta))
     db.commit()
 
-    canal_formatado = "WhatsApp" if sanitized_contact_type == "whatsapp" else "E-mail"
+
     return {
         "status": "success",
         "alerta_id": alerta_id,
-        "mensagem": f"Radar ativado com sucesso! Você será avisado via {canal_formatado} ({payload.contact_value}) assim que o preço atingir R$ {target:,.2f}.",
+        "envio_externo": False,
+        "mensagem": "Interesse registrado. A demonstração permite visualizar uma amostra do aviso no site.",
         "alerta": novo_alerta
     }
 

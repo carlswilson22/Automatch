@@ -1,9 +1,17 @@
 # Estado atual do Automatch
 
-Atualizado em **17/11/2026**, sobre o código `1b7d094`.
+Atualizado em **17/11/2026**, melhorias demonstrativas sobre a base `444bc09`.
 Fonte: rotas e componentes versionados, manifests, Compose, migrações e
 [auditoria anterior](auditoria-2026-11-16.md). Esta revisão não refez uma
 homologação integral nem mediu precisão de IA ou desempenho em aparelhos reais.
+
+## Escopo desta etapa
+
+Somente demonstração, sem deploy. Pages passou a acionamento manual; nenhum
+workflow de publicação foi iniciado. A reformulação do banco para a futura
+execução local aguarda autorização; ORM e migrações existentes foram preservados.
+Os consultores locais e o PDF não certificam integridade ou regularidade a partir
+de ausência de dados. Diálogos de alerta/multicanal têm teclado e foco gerenciados.
 
 ## Modos de execução
 
@@ -35,7 +43,7 @@ homologação integral nem mediu precisão de IA ou desempenho em aparelhos reai
 | Parcerias/reservas | Proposta, aceite/encerramento, reserva temporária, pedido de fechamento e repasse com confirmação da API |
 | Sessão | JWT com versão de conta; troca de senha e anonimização invalidam tokens anteriores |
 | Recuperação | OTP com hash e expiração; código demonstrado só fora de produção, entrega real depende de SMTP TLS |
-| Alertas | Cadastro em banco vinculado à conta; isso não implementa monitoramento e envio externo |
+| Alertas | Cadastro por conta na API ou no navegador em demo; prévia interativa de queda de preço no site, sem envio externo |
 
 Papel principal da conta é `comum`, `lojista` ou `admin`; `sub_role` registra
 subperfil comercial. Não presumir que subperfis tenham uma matriz completa de
@@ -48,10 +56,10 @@ permissões em todos os endpoints apenas porque o campo existe.
 | Gemini | Integração opcional de visão/chat/laudos; sem chave ou em falha há caminhos locais. Não homologada nesta revisão com credenciais reais |
 | YOLO/OpenCV | Processamento local e bibliotecas declaradas; resultados dependem de modelo/imagem/ambiente e não certificam veículo |
 | DETRAN/placa | Registros conhecidos e respostas simuladas; não são certidões ou consultas oficiais |
-| FIPE | `detran.py` consulta BrasilAPI por código, com cache de 24h e alternativa fixa se falhar. Outros dados vêm do cadastro/seed |
-| Multicanal | AutoCerto DMS, AutoAvaliar e OLX Autos no código atual; status e links são simulados, sem chamada de publicação aos provedores |
-| Feed XML | Documento de exemplo, sem geração comprovada a partir de todo o estoque |
-| Alertas WhatsApp/e-mail/Web Push | Cadastro existe; serviço de envio/monitoramento ainda pendente |
+| FIPE | `detran.py` consulta BrasilAPI por código, com cache por código/ano de 24h; falha permanece indisponível. Outros dados vêm do cadastro/seed |
+| Multicanal | AutoCerto DMS, AutoAvaliar e OLX Autos no código atual; seleção, prévia e histórico demonstrativos, sem URL falsa ou chamada de publicação aos provedores |
+| Feed XML | API gera XML do catálogo atual, com filtro de loja e somente campos públicos; demo exporta o veículo escolhido |
+| Alertas WhatsApp/e-mail/Web Push | Cadastro e prévia no site; sem serviço de envio/monitoramento |
 | Checkout | Pedidos simulados em desenvolvimento; produção bloqueia cobrança sem provedor |
 | SMTP | Serviço implementado para recuperação de senha; entrega exige credenciais e teste operacional |
 
@@ -75,7 +83,7 @@ homologação nas condições de uso.
 
 ## Pendências antes de operação real
 
-- Substituir consultas cadastrais, multicanal e feed de exemplo por integrações contratadas.
+- Conectar consultas cadastrais e multicanal a integrações contratadas; homologar o feed com o importador escolhido.
 - Implementar monitoramento/entrega de alertas e eventual pagamento real.
 - Homologar SMTP, IA, privacidade, políticas de acesso e tratamento de erros externos.
 - Definir domínio/HTTPS, segredos, backups, restauração, monitoramento e retenção.

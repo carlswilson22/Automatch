@@ -1,6 +1,6 @@
 /**
  * ShowcaseVehicleDetails.jsx — Página de detalhes aprofundados e ficha técnica do veículo selecionado.
- * 
+ *
  * Objetivo e Motivo da Criação:
  *   - Criado para reunir todos os dados de decisão em um único lugar: fotos em alta resolução, visualizador 360°,
  *     laudo pericial completo, histórico de procedência, simulador de financiamento e contato direto com o vendedor.
@@ -8,22 +8,14 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  ShieldCheck, ArrowLeft, Calendar, Gauge, Palette, MapPin, Heart,
-  Phone, MessageCircle, Send, Bot, User, Star, ChevronRight, ChevronDown,
-  TrendingDown, TrendingUp, Minus, Car, Truck, Battery, Share2,
-  CheckCircle2, AlertTriangle, Clock, Fuel, Settings, Award, Zap, X, 
-  UserPlus, LogIn, DollarSign, Calculator, Lock, Check, Scan, Wrench, Tag,
-  RotateCw, Bell, Globe2, FileText, Video, Scale, Loader2,
-  Sparkles
-} from 'lucide-react';
+import { ShieldCheck, ArrowLeft, Calendar, Gauge, Palette, MapPin, Heart, MessageCircle, Bot, Star, ChevronRight, ChevronDown, Car, CheckCircle2, AlertTriangle, Fuel, Settings, Award, X, Calculator, Scan, Tag, RotateCw, Bell, Globe2, FileText, Video, Scale, Loader2 } from 'lucide-react';
 import StoreIdentifier from '../components/ui/StoreIdentifier';
 import AutomatchLogo from '../components/ui/AutomatchLogo';
 import { showcaseCars } from '../data/showcaseData';
 import { mockCars } from '../data/mockData';
-import { getNewCarById, deleteNewCar, isCarDeleted } from '../data/newCarsManager';
+import { getNewCarById, isCarDeleted } from '../data/newCarsManager';
 import { toggleFavorite, isFavorite, subscribeFavorites } from '../data/favoritesManager';
-import AutomatchScan from '../components/vehicle/AutomatchScan';
+
 import AIChatBox from '../components/vehicle/AIChatBox';
 import SellerChat from '../components/vehicle/SellerChat';
 import TradeInSimulator from '../components/vehicle/TradeInSimulator';
@@ -42,7 +34,9 @@ import { useAuth } from '../contexts/AuthContext';
 import { getVehicleImageUrl, handleVehicleImageError } from '../utils/imageHelper';
 import ErrorBoundary from '../components/common/ErrorBoundary';
 import AccordionPanel from '../components/vehicle/AccordionPanel';
-import { api } from '../services/apiClient';
+import { api, isDemoModeEnabled } from '../services/apiClient';
+import { demoDossier, demoRegistration } from '../utils/demoTools';
+import VehicleReferencePanel from '../components/vehicle/VehicleReferencePanel';
 import { mapVehicleToViewModel } from '../utils/vehicleMapper';
 
 export const formatMileage = (val) => {
@@ -64,7 +58,7 @@ export const formatPrice = (val) => {
 export default function ShowcaseVehicleDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user, isAuthenticated } = useAuth();
+  const { isAuthenticated } = useAuth();
   const [car, setCar] = useState(null);
   const [isLoadingCar, setIsLoadingCar] = useState(true);
   const [allInventoryCars, setAllInventoryCars] = useState([]);
@@ -79,12 +73,10 @@ export default function ShowcaseVehicleDetails() {
   const laudoCacheRef = useRef(null);
   const detranCacheRef = useRef(null);
   const analysisScopeRef = useRef(null);
-  const [isDeleting, setIsDeleting] = useState(false);
   const [inspectionTab, setInspectionTab] = useState('body'); // 'body' | '360' | 'video'
   const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
   const [isSyncModalOpen, setIsSyncModalOpen] = useState(false);
   const [isDossierModalOpen, setIsDossierModalOpen] = useState(false);
-  const [inspectionImage, setInspectionImage] = useState(null);
   const [isTcoOpen, setIsTcoOpen] = useState(false);
 
   // Scroll to top on mount & initialize favorite state
@@ -248,20 +240,6 @@ export default function ShowcaseVehicleDetails() {
     return () => { unsubFav(); controller.abort(); };
   }, [id]);
 
-  // Fallback defaults for missing sub-objects
-  const vehicleTimeline = car?.timeline || [
-    { id: 't1', type: 'laudo', status: 'approved', title: 'Laudo Cautelar', description: 'Aprovado 100%. Pintura e estrutura íntegras.' },
-    { id: 't2', type: 'leilao', status: 'approved', title: 'Histórico de Leilão', description: 'Sem registros de leilão ou sinistro.' },
-    { id: 't3', type: 'debitos', status: 'approved', title: 'Débitos e Multas', description: 'IPVA quitado e sem restrições.' },
-  ];
-
-  const vehicleOpinions = car?.opinions || {
-    owner: { text: car?.description || "Carro espetacular, muito econômico e confortável.", rating: 4.9, avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Owner1" },
-    inspector: { text: "Inspeção de 120 itens realizada sem apontamentos mecânicos graves.", rating: 4.8, avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Inspector1" }
-  };
-
-  const vehicleSpec = car?.specs || {};
-
   const [aiDamageData, setAiDamageData] = useState(null);
   const [currentDamagePoints, setCurrentDamagePoints] = useState(car?.damagePoints || []);
 
@@ -306,13 +284,13 @@ export default function ShowcaseVehicleDetails() {
             ctx.drawImage(img, 0, 0, width, height);
             const dataUrl = canvas.toDataURL('image/jpeg', quality);
             resolve(dataUrl);
-          } catch (canvasErr) {
+          } catch {
             resolve(null);
           }
         };
         img.onerror = () => resolve(null);
         img.src = src;
-      } catch (err) {
+      } catch {
         resolve(null);
       }
     });
@@ -354,11 +332,12 @@ export default function ShowcaseVehicleDetails() {
     if (tipo === 'laudo' && !laudoCacheRef.current) {
       setIsLaudoLoading(true);
       try {
-        const fipeCode = car?.fipeCode || '004487-3';
-        const data = await api.get(`/api/v1/integracoes/laudo-cautelar/${fipeCode}`, { signal: scope.controller.signal });
+        const fipeCode = car?.fipeCode;
+        if (!isDemoModeEnabled() && !fipeCode) throw new Error('Código FIPE não informado.');
+        const data = isDemoModeEnabled() ? demoDossier(car) : await api.get(`/api/v1/integracoes/laudo-cautelar/${encodeURIComponent(fipeCode)}${car.year ? `?ano=${car.year}` : ''}`, { signal: scope.controller.signal });
         if (!scope.active) return;
         laudoCacheRef.current = data;
-        setLaudoData(data);
+        setLaudoData({ ...(data.laudo || data), sample: data.is_simulado });
       } catch {
         if (!scope.active) return;
         setIntegrationError({ type: 'laudo', message: 'Não foi possível consultar o laudo cautelar. Tente novamente.' });
@@ -368,11 +347,12 @@ export default function ShowcaseVehicleDetails() {
     } else if (tipo === 'detran' && !detranCacheRef.current) {
       setIsDetranLoading(true);
       try {
-        const plate = car?.plate || 'ABC1234';
-        const data = await api.get(`/api/v1/integracoes/detran/${plate}`, { signal: scope.controller.signal });
+        const plate = car?.plate;
+        if (!isDemoModeEnabled() && !plate) throw new Error('Placa não informada.');
+        const data = isDemoModeEnabled() ? demoRegistration(car) : await api.get(`/api/v1/integracoes/detran/${encodeURIComponent(plate)}`, { signal: scope.controller.signal });
         if (!scope.active) return;
         detranCacheRef.current = data;
-        setDetranData(data);
+        setDetranData({ ...(data.dados_veiculo || data), sample: data.is_simulado });
       } catch {
         if (!scope.active) return;
         setIntegrationError({ type: 'detran', message: 'Não foi possível consultar os dados do DETRAN. Tente novamente.' });
@@ -389,9 +369,9 @@ export default function ShowcaseVehicleDetails() {
     setIsAnalyzing(true);
     setAiDamageData(null);
     setAnalysisResult('');
-    
+
     try {
-      const vehicleImg = inspectionImage || car.image || car.imagem || '/images/carro_lataria_amassada.jpg';
+      const vehicleImg = car.image || car.imagem || '/images/carro_lataria_amassada.jpg';
       // 1. Pré-compressão rápida client-side
       const compressedB64 = await compressImage(vehicleImg, 1024, 0.8);
       if (!scope.active) return;
@@ -401,7 +381,7 @@ export default function ShowcaseVehicleDetails() {
         method: 'POST',
         signal: scope.controller.signal,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           imageUrl: vehicleImg,
           imageBase64: compressedB64,
           car_context: {
@@ -416,7 +396,7 @@ export default function ShowcaseVehicleDetails() {
       const data = await response.json();
       if (!scope.active) return;
       if (!response.ok) throw new Error(data.error || 'Erro ao conectar à IA.');
-      
+
       setAnalysisResult(data.resposta || 'Análise pericial concluída com sucesso.');
       setAiDamageData(data);
 
@@ -481,12 +461,12 @@ export default function ShowcaseVehicleDetails() {
           </div>
 
           <div className="flex items-center gap-2">
-            <button 
-              onClick={() => { const newVal = !liked; setLiked(newVal); toggleFavorite(id); }} 
+            <button
+              onClick={() => { const newVal = !liked; setLiked(newVal); toggleFavorite(id); }}
               title="Curtir veículo"
               className={`p-2.5 rounded-full border transition-all ${
-                liked 
-                  ? 'bg-red-500/20 border-red-500/40 text-red-400' 
+                liked
+                  ? 'bg-red-500/20 border-red-500/40 text-red-400'
                   : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-white'
               }`}
             >
@@ -548,10 +528,10 @@ export default function ShowcaseVehicleDetails() {
 
         {/* Grid Principal do Anúncio */}
         <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-8">
-          
+
           {/* ── LEFT COLUMN: Gallery/Scanner, Dossiê, Veículo + Ficha Técnica, TCO ── */}
           <div className="space-y-8">
-            
+
             {/* Hub Pericial Multidimensional IA: Abas Seletoras */}
             <div data-tour="detalhes-varredura-360" id="hub-pericial-container" className="space-y-4">
               <div className="flex items-center gap-2 p-1.5 bg-slate-950/80 rounded-2xl border border-slate-800 overflow-x-auto shadow-lg">
@@ -637,8 +617,8 @@ export default function ShowcaseVehicleDetails() {
                         </span>
                       ) : aiDamageData ? (
                         <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border flex items-center gap-1.5 ${
-                          aiDamageData.tem_avarias 
-                            ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' 
+                          aiDamageData.tem_avarias
+                            ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
                             : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
                         }`}>
                           {aiDamageData.tem_avarias ? (
@@ -666,25 +646,25 @@ export default function ShowcaseVehicleDetails() {
                 </div>
 
                 {/* Single Unified Action Button */}
-                <button 
+                <button
                   type="button"
                   id="scanner-ia-action-btn"
                   onClick={analisarFotoDoCarro}
                   disabled={isAnalyzing}
                   className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 shadow-lg shadow-blue-900/30 transition-all transform active:scale-95 disabled:opacity-50"
                 >
-                  <Bot className={`w-4 h-4 text-cyan-200 ${isAnalyzing ? 'animate-spin' : ''}`} /> 
+                  <Bot className={`w-4 h-4 text-cyan-200 ${isAnalyzing ? 'animate-spin' : ''}`} />
                   <span>{isAnalyzing ? "Escanando Imagem..." : (analysisResult ? "Refazer Scanner de IA" : "Scanner de IA")}</span>
                 </button>
               </div>
 
               {/* Photo Canvas with Integrated Scanner & Hotspots */}
               <div className="relative aspect-[16/10] bg-slate-950 overflow-hidden select-none">
-                <img 
-                  src={getVehicleImageUrl(inspectionImage || car.image || car.imagem || 'placeholder-carro.jpg')} 
-                  alt={car.name} 
+                <img
+                  src={getVehicleImageUrl(car.image || car.imagem || 'placeholder-carro.jpg')}
+                  alt={car.name}
                   onError={handleVehicleImageError}
-                  className="w-full h-full object-cover" 
+                  className="w-full h-full object-cover"
                 />
 
                 {/* Laser Scan Animation Overlay during inspection */}
@@ -715,7 +695,7 @@ export default function ShowcaseVehicleDetails() {
 
                 {/* Damage Hotspots Plotted Directly on the HD photo */}
                 {!isAnalyzing && currentDamagePoints.map((point) => (
-                  <div 
+                  <div
                     key={point.id}
                     style={{ left: `${point.x}%`, top: `${point.y}%` }}
                     className="absolute -translate-x-1/2 -translate-y-1/2 z-20 cursor-pointer group"
@@ -754,9 +734,9 @@ export default function ShowcaseVehicleDetails() {
               {/* Perícia AI Result Details Box */}
               <AnimatePresence>
                 {analysisResult && (
-                  <motion.div 
-                    initial={{ opacity: 0, height: 0 }} 
-                    animate={{ opacity: 1, height: 'auto' }} 
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
                     className="p-5 bg-slate-950 border-t border-slate-800 space-y-3"
                   >
                     <div className="flex items-start justify-between gap-3">
@@ -916,7 +896,7 @@ export default function ShowcaseVehicleDetails() {
                   </div>
                   <div>
                     <h4 className="text-sm font-bold text-white">Laudo Cautelar</h4>
-                    <p className="text-[11px] text-slate-400">{isLaudoLoading ? 'Consultando FIPE...' : 'Verificar estrutura e pintura'}</p>
+                    <p className="text-[11px] text-slate-400">{isLaudoLoading ? 'Consultando FIPE...' : 'Ver dados e documento informado'}</p>
                   </div>
                 </button>
 
@@ -936,7 +916,7 @@ export default function ShowcaseVehicleDetails() {
                   </div>
                   <div>
                     <h4 className="text-sm font-bold text-white">Certidão DETRAN</h4>
-                    <p className="text-[11px] text-slate-400">{isDetranLoading ? 'Consultando órgão...' : 'Checar chassi, débitos e gravame'}</p>
+                    <p className="text-[11px] text-slate-400">{isDetranLoading ? 'Preparando informações...' : 'Checar chassi, débitos e gravame'}</p>
                   </div>
                 </button>
 
@@ -944,18 +924,18 @@ export default function ShowcaseVehicleDetails() {
                   type="button"
                   onClick={() => toggleAccordion('fipe')}
                   className={`p-3.5 rounded-2xl border text-left transition-all flex flex-col justify-between group ${
-                    activeAccordion === 'fipe' 
-                      ? 'bg-cyan-950/70 border-cyan-500 shadow-lg shadow-cyan-900/30 scale-[1.01]' 
+                    activeAccordion === 'fipe'
+                      ? 'bg-cyan-950/70 border-cyan-500 shadow-lg shadow-cyan-900/30 scale-[1.01]'
                       : 'bg-slate-950/60 hover:bg-slate-900/80 border-slate-800'
                   }`}
                 >
                   <div className="flex items-center justify-between mb-2">
                     <Tag className="w-5 h-5 text-cyan-400 group-hover:scale-110 transition-transform" />
-                    <span className="text-[10px] bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded-full font-bold">FIPE Oficial</span>
+                    <span className="text-[10px] bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded-full font-bold">Referência FIPE</span>
                   </div>
                   <div>
                     <h4 className="text-sm font-bold text-white">Preço FIPE</h4>
-                    <p className="text-[11px] text-slate-400">Referência oficial de mercado</p>
+                    <p className="text-[11px] text-slate-400">Referência informada no anúncio</p>
                   </div>
                 </button>
 
@@ -987,126 +967,15 @@ export default function ShowcaseVehicleDetails() {
                 <p role="alert" className="p-4 rounded-2xl bg-amber-950/30 border border-amber-700/40 text-sm text-amber-300">{integrationError.message}</p>
               )}
               <AccordionPanel isOpen={activeAccordion === 'laudo' && !!laudoData}>
-                <div className="p-5 rounded-3xl bg-slate-950 border border-blue-900/50 shadow-2xl space-y-4">
-                  <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                    <div className="flex items-center gap-2">
-                      <Award className="w-5 h-5 text-blue-400" />
-                      <h4 className="font-bold text-sm text-white">Resultado da Perícia Cautelar ({laudoData?.laudo_id})</h4>
-                    </div>
-                    <span className="text-xs bg-emerald-500/20 text-emerald-400 font-bold px-3 py-1 rounded-full border border-emerald-500/30 flex items-center gap-1.5">
-                      <ShieldCheck className="w-3.5 h-3.5" /> {currentDamagePoints.length > 0 ? 'Laudo Pericial: Aprovado c/ Apontamento' : 'Laudo Pericial: 100% Aprovado'}
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                    <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
-                      <span className="text-slate-400 block mb-1 font-semibold">Integridade Estrutural:</span>
-                      <span className="text-emerald-400 font-bold block">{laudoData?.analise_estrutural?.longarinas_dianteiras}</span>
-                      <span className="text-slate-300 mt-1 block">Espessura de tinta: {laudoData?.analise_estrutural?.espessura_media_tinta_micras} micras (Padrão de fábrica)</span>
-                    </div>
-                    <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
-                      <span className="text-slate-400 block mb-1 font-semibold">Referência FIPE Oficial:</span>
-                      <span className="text-white font-bold block">{laudoData?.dados_oficiais_fipe?.valor || 'R$ 165.000,00'}</span>
-                      <span className="text-slate-400 mt-1 block">Código: {laudoData?.dados_oficiais_fipe?.codigoFipe} ({laudoData?.dados_oficiais_fipe?.mesReferencia})</span>
-                    </div>
-                  </div>
-
-                  {car.laudoUrl && (
-                    <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between">
-                      <span className="text-xs text-slate-400">Documento oficial anexado pelo anunciante:</span>
-                      <a
-                        href={car.laudoUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-400 hover:text-blue-300 bg-blue-500/10 hover:bg-blue-500/20 px-3 py-1.5 rounded-xl border border-blue-500/30 transition-all"
-                      >
-                        <FileText className="w-3.5 h-3.5" /> Acessar Laudo em PDF
-                      </a>
-                    </div>
-                  )}
-                </div>
+                <VehicleReferencePanel type="laudo" car={car} data={laudoData} />
               </AccordionPanel>
-
-              {/* Resultado: DETRAN com AccordionPanel */}
               <AccordionPanel isOpen={activeAccordion === 'detran' && !!detranData}>
-                <div className="p-5 rounded-3xl bg-slate-950 border border-emerald-900/50 shadow-2xl space-y-4">
-                  <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                    <div className="flex items-center gap-2">
-                      <ShieldCheck className="w-5 h-5 text-emerald-400" />
-                      <h4 className="font-bold text-sm text-white">Certidão Cadastral - DETRAN ({detranData?.uf})</h4>
-                    </div>
-                    <span className="text-xs bg-emerald-500/20 text-emerald-400 font-bold px-3 py-1 rounded-full border border-emerald-500/30">
-                      {detranData?.situacao_veiculo}
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-                    <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
-                      <span className="text-slate-400 block mb-0.5">Placa / Chassi:</span>
-                      <span className="text-white font-bold">{detranData?.placa}</span>
-                      <span className="text-[10px] text-slate-500 block truncate">{detranData?.chassi}</span>
-                    </div>
-                    <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
-                      <span className="text-slate-400 block mb-0.5">IPVA / Licenciamento:</span>
-                      <span className="text-emerald-400 font-bold">{detranData?.debitos?.ipva}</span>
-                      <span className="text-[10px] text-slate-400 block">{detranData?.debitos?.licenciamento_exercicio}: {detranData?.debitos?.licenciamento_status}</span>
-                    </div>
-                    <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
-                      <span className="text-slate-400 block mb-0.5">Gravame / Alienação:</span>
-                      <span className="text-white font-bold">{detranData?.restricoes?.gravame}</span>
-                    </div>
-                    <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
-                      <span className="text-slate-400 block mb-0.5">Multas Ativas:</span>
-                      <span className="text-emerald-400 font-bold">R$ {detranData?.debitos?.total_multas?.toFixed(2)}</span>
-                      <span className="text-[10px] text-slate-500 block">Nenhuma infração</span>
-                    </div>
-                  </div>
-                </div>
+                <VehicleReferencePanel type="detran" car={car} data={detranData} />
               </AccordionPanel>
-
-              {/* Resultado: Preço FIPE com AccordionPanel */}
               <AccordionPanel isOpen={activeAccordion === 'fipe'}>
-                <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
-                  <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                    <div className="flex items-center gap-2">
-                      <Tag className="w-5 h-5 text-cyan-400" />
-                      <h4 className="font-bold text-sm text-white">Tabela FIPE Oficial</h4>
-                    </div>
-                    <span className="text-xs bg-cyan-500/20 text-cyan-300 font-bold px-3 py-1 rounded-full border border-cyan-500/30">
-                      Código FIPE: {car.fipeCode || '004487-3'}
-                    </span>
-                  </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                    <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
-                      <span className="text-slate-400 block mb-0.5">Preço Médio FIPE:</span>
-                      <span className="text-base font-black text-white">
-                        R$ {(car.fipePrice || (car.price * 1.04)).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
-                      </span>
-                      <span className="text-[10px] text-slate-500 block mt-0.5">Mês ref.: Setembro/2026</span>
-                    </div>
-                    <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800">
-                      <span className="text-slate-400 block mb-0.5">Preço deste Anúncio:</span>
-                      <span className="text-base font-black text-emerald-400">
-                        R$ {typeof car.price === 'number' ? car.price.toLocaleString('pt-BR', { minimumFractionDigits: 2 }) : car.price}
-                      </span>
-                      <span className="text-[10px] text-slate-500 block mt-0.5">Valor do veículo</span>
-                    </div>
-                    <div className="bg-slate-900/90 p-3 rounded-xl border border-slate-800 flex flex-col justify-center">
-                      <span className="text-slate-400 block mb-1">Comparativo FIPE:</span>
-                      {(car.fipePrice || car.price * 1.04) > car.price ? (
-                        <span className="text-xs font-bold text-emerald-400 flex items-center gap-1">
-                          <TrendingDown className="w-3.5 h-3.5" />
-                          R$ {Math.round((car.fipePrice || car.price * 1.04) - car.price).toLocaleString('pt-BR')} abaixo da FIPE
-                        </span>
-                      ) : (
-                        <span className="text-xs font-bold text-slate-300">
-                          No valor de mercado da Tabela FIPE
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
+                <VehicleReferencePanel type="fipe" car={car} />
               </AccordionPanel>
             </div>
-
             {/* Simulador de Custo Mensal */}
             <div data-tour="detalhes-simulador-tco" className="bg-slate-900/80 rounded-3xl p-6 sm:p-7 border border-slate-800 shadow-xl">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -1155,7 +1024,7 @@ export default function ShowcaseVehicleDetails() {
 
           {/* ── RIGHT COLUMN: Pricing Card, Perícia Cautelar, Simulator, Chats ── */}
           <div className="space-y-6">
-            
+
             {/* Price Card & Action Limpo */}
             <div className="bg-slate-900/90 backdrop-blur-md rounded-3xl p-6 sm:p-8 border border-slate-800/80 shadow-card hover:shadow-card-hover transition-all duration-300 space-y-6">
               <div>
@@ -1205,9 +1074,9 @@ export default function ShowcaseVehicleDetails() {
             />
 
             {/* Simulador Inteligente: Financiamento Multi-Bancos + Troca com Troco */}
-            <TradeInSimulator 
-              price={typeof car.price === 'number' ? car.price : 142000} 
-              carName={car.name} 
+            <TradeInSimulator
+              price={typeof car.price === 'number' ? car.price : 142000}
+              carName={car.name}
             />
 
             {/* Interactive Live Chat (AI / Seller) */}

@@ -121,15 +121,14 @@ class TestDefectsResolutionBattery(unittest.TestCase):
         self.assertEqual(res_price.status_code, 422)
 
     def test_def04_plate_lookup_simulado_flag(self):
-        """DEF-04: Placa gerada sinteticamente deve retornar is_simulado = True e conhecida False."""
-        # Placa conhecida
+        """Amostra conhecida é simulada; desconhecida não inventa identificação."""
         r_known = asyncio.run(lookup_plate("ABC1234", self.db))
-        self.assertFalse(r_known.is_simulado)
-
-        # Placa aleatória sintetizada
-        r_synthetic = asyncio.run(lookup_plate("KPL9B88", self.db))
-        self.assertTrue(r_synthetic.is_simulado)
-
+        self.assertTrue(r_known.is_simulado)
+        self.assertFalse(r_known.consulta_oficial)
+        from fastapi import HTTPException
+        with self.assertRaises(HTTPException) as error:
+            asyncio.run(lookup_plate("KPL9B88", self.db))
+        self.assertEqual(error.exception.status_code, 404)
     def test_def02_non_car_image_rejected(self):
         """DEF-02 (CT-C06): Imagem sem veículos deve ser rejeitada sem fabricar avarias."""
         path_landscape = "/app/test_evidencias/06-nao-e-carro.jpg"

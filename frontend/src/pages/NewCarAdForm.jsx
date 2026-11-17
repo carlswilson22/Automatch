@@ -1,14 +1,16 @@
 import { readSessionToken } from '../services/sessionStorage';
+import { api, isDemoModeEnabled } from '../services/apiClient';
+import { demoPlateLookup } from '../utils/demoTools';
 /**
  * NewCarAdForm.jsx — Formulário em etapas para criação de um novo anúncio de veículo.
- * 
+ *
  * Objetivo e Motivo da Criação:
  *   - Criado para guiar o anunciante no preenchimento automatizado por placa (lookup de dados técnicos),
  *     upload de fotos com validação por IA, precificação orientada pela FIPE e agendamento de laudo.
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck, ArrowLeft, Save, CheckCircle, AlertCircle, Loader2, UploadCloud, X, FileText, Copy, ExternalLink, PlusCircle, Bot, Scan, CheckCircle2, AlertTriangle, Car, Sparkles, Search, Lock, Users, Video, Film, Trash2, Image as ImageIcon, Play, Check } from 'lucide-react';
+import { ShieldCheck, ArrowLeft, Save, CheckCircle, AlertCircle, Loader2, UploadCloud, X, FileText, Copy, ExternalLink, PlusCircle, Bot, Scan, CheckCircle2, AlertTriangle, Car, Sparkles, Search, Lock, Users, Video, Film, Trash2, Image as ImageIcon, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { stores as defaultStores } from '../data/inventoryData';
 import { addNewCar } from '../data/newCarsManager';
@@ -85,44 +87,46 @@ const NewCarAdForm = () => {
   const [isLookingUpPlate, setIsLookingUpPlate] = useState(false);
   const [plateLookupResult, setPlateLookupResult] = useState(null);
   const [plateLookupError, setPlateLookupError] = useState('');
-  const [plateAutoFilled, setPlateAutoFilled] = useState(false);
 
+
+  const plateRequest = useRef(null);
+  useEffect(() => () => plateRequest.current?.abort(), []);
+  const changePlate = value => {
+    plateRequest.current?.abort();
+    plateRequest.current = null;
+    setIsLookingUpPlate(false);
+    setPlateInput(value.toUpperCase());
+    setPlateLookupResult(null);
+    setPlateLookupError('');
+
+  };
   const handleLookupPlate = async () => {
-    if (!plateInput.trim()) return;
+    if (plateRequest.current) return;
     const cleanPlate = plateInput.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
-    if (cleanPlate.length < 7) {
-      setPlateLookupError('Placa incompleta. Informe 7 caracteres (ex: ABC1D23 ou ABC1234).');
+    if (!/^[A-Z]{3}[0-9][A-Z0-9][0-9]{2}$/.test(cleanPlate)) {
+      setPlateLookupError('Informe uma placa válida (ex: ABC1D23 ou ABC1234).');
       return;
     }
+    const controller = new AbortController();
+    plateRequest.current = controller;
+    setPlateLookupResult(null);
     setPlateLookupError('');
     setIsLookingUpPlate(true);
     try {
-      const res = await fetch(`/api/vehicles/lookup-plate/${cleanPlate}`);
-      if (res.ok) {
-        const data = await res.json();
-        setPlateLookupResult(data);
-        setFormData(prev => ({
-          ...prev,
-          marca: data.marca || prev.marca,
-          modelo: data.modelo || prev.modelo,
-          ano: data.ano_fabricacao ? String(data.ano_fabricacao) : prev.ano,
-          cor: data.cor || prev.cor,
-          combustivel: data.combustivel || 'Flex',
-          localizacao: (data.municipio && data.uf) ? `${data.municipio}, ${data.uf}` : prev.localizacao
-        }));
-        setPlateAutoFilled(true);
-        setTimeout(() => setPlateAutoFilled(false), 3000);
-      } else {
-        const err = await res.json().catch(() => ({}));
-        setPlateLookupError(err.detail || 'Veículo não localizado na base automática. Você pode preencher os campos manualmente abaixo.');
-      }
-    } catch (e) {
-      setPlateLookupError('Não foi possível conectar ao serviço de consulta. Preencha os campos manualmente.');
+      const data = isDemoModeEnabled() ? demoPlateLookup(cleanPlate) : await api.get(`/api/vehicles/lookup-plate/${cleanPlate}`, { signal: controller.signal });
+      if (controller.signal.aborted) return;
+      setPlateLookupResult(data);
+      setFormData(prev => ({ ...prev, marca: data.marca || prev.marca, modelo: data.modelo || prev.modelo,
+        ano: data.ano_fabricacao ? String(data.ano_fabricacao) : prev.ano, cor: data.cor || prev.cor,
+        combustivel: data.combustivel || prev.combustivel,
+        localizacao: data.municipio && data.uf ? `${data.municipio}, ${data.uf}` : prev.localizacao }));
+
+    } catch (error) {
+      if (!controller.signal.aborted) setPlateLookupError(error.message || 'Preencha os campos manualmente.');
     } finally {
-      setIsLookingUpPlate(false);
+      if (plateRequest.current === controller) { plateRequest.current = null; setIsLookingUpPlate(false); }
     }
   };
-
   const applyFipePrice = () => {
     if (plateLookupResult?.preco_fipe_sugerido) {
       const formatted = Number(plateLookupResult.preco_fipe_sugerido).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -174,7 +178,7 @@ const NewCarAdForm = () => {
   // ── ESTADOS DE UPLOAD DE MÚLTIPLAS FOTOS / GALERIA (TAREFA 1) ─────────────
   const [galleryPhotos, setGalleryPhotos] = useState([]);
   const [isDraggingGallery, setIsDraggingGallery] = useState(false);
-  const [galleryUploadStatus, setGalleryUploadStatus] = useState('idle'); // 'idle' | 'processing' | 'error'
+  const [, setGalleryUploadStatus] = useState('idle'); // 'idle' | 'processing' | 'error'
   const [galleryUploadError, setGalleryUploadError] = useState('');
 
   const uploadVideoFile = async (file) => {
@@ -238,7 +242,7 @@ const NewCarAdForm = () => {
 
   const handleClearVideo = () => {
     if (videoPreviewUrl && videoPreviewUrl.startsWith('blob:')) {
-      try { URL.revokeObjectURL(videoPreviewUrl); } catch (e) { /* O recurso opcional mantém seu estado anterior. */ }
+      try { URL.revokeObjectURL(videoPreviewUrl); } catch { /* O recurso opcional mantém seu estado anterior. */ }
     }
     setVideoFile(null);
     setVideoPreviewUrl(null);
@@ -325,7 +329,7 @@ const NewCarAdForm = () => {
       } else {
         setPhotoAiScanStatus('error');
       }
-    } catch (err) {
+    } catch {
       setPhotoAiScanStatus('error');
     }
   };
@@ -492,10 +496,10 @@ const NewCarAdForm = () => {
 
   // Validations
   const isValidYear = formData.ano.length === 4 && Number(formData.ano) >= 1900 && Number(formData.ano) <= new Date().getFullYear() + 1;
-  const isValidImageExt = formData.imagem === '' || 
-    /\.(jpg|jpeg|png)(\?.*)?$/i.test(formData.imagem) || 
+  const isValidImageExt = formData.imagem === '' ||
+    /\.(jpg|jpeg|png)(\?.*)?$/i.test(formData.imagem) ||
     /^data:image\//.test(formData.imagem);
-  const isFormValid = 
+  const isFormValid =
     formData.marca.trim() !== '' &&
     formData.modelo.trim() !== '' &&
     isValidYear &&
@@ -535,7 +539,7 @@ const NewCarAdForm = () => {
 
     setStatus('loading');
     setErrorMessage('');
-    
+
     // Convert price back to number
     const numericPrice = Number(formData.preco.replace(/[^0-9,-]+/g,"").replace(",", ".")) || 0;
 
@@ -643,9 +647,9 @@ const NewCarAdForm = () => {
   };
 
   return (
-    <motion.div 
-      initial={{ opacity: 0 }} 
-      animate={{ opacity: 1 }} 
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       className="min-h-screen bg-slate-50/70 text-slate-800 flex flex-col font-sans relative overflow-hidden"
     >
@@ -655,8 +659,8 @@ const NewCarAdForm = () => {
       {/* Header */}
       <nav className="w-full px-4 sm:px-6 py-4 flex justify-between items-center bg-white/85 backdrop-blur-xl border-b border-slate-200/80 sticky top-0 z-40 shadow-sm">
         <div className="flex items-center gap-4">
-          <button 
-            onClick={() => navigate(-1)} 
+          <button
+            onClick={() => navigate(-1)}
             className="p-2 hover:bg-slate-100 rounded-2xl text-slate-600 transition-colors border border-slate-200/60 cursor-pointer active:scale-95"
             aria-label="Voltar"
           >
@@ -676,7 +680,7 @@ const NewCarAdForm = () => {
 
       <div className="flex-1 max-w-4xl mx-auto w-full px-4 py-10 relative z-10">
         <div className="bg-white rounded-3xl shadow-xl shadow-slate-200/40 border border-slate-200/90 p-6 sm:p-10 relative overflow-hidden">
-          
+
           <AnimatePresence>
             {status === 'success' && createdCar && (
               <motion.div
@@ -764,7 +768,7 @@ const NewCarAdForm = () => {
             )}
 
             {status === 'error' && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
@@ -808,9 +812,9 @@ const NewCarAdForm = () => {
                     <input
                       type="text"
                       maxLength={8}
-                      placeholder="ABC1D23"
+                      placeholder="Exemplo: ABC1234"
                       value={plateInput}
-                      onChange={(e) => setPlateInput(e.target.value.toUpperCase())}
+                      onChange={(e) => changePlate(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleLookupPlate())}
                       className="w-full px-3 py-2.5 font-mono text-base font-black text-slate-800 uppercase tracking-widest focus:outline-none bg-transparent"
                     />
@@ -826,7 +830,7 @@ const NewCarAdForm = () => {
                   {isLookingUpPlate ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      <span>Consultando Bases...</span>
+                      <span>Buscando cadastro...</span>
                     </>
                   ) : (
                     <>
@@ -860,18 +864,18 @@ const NewCarAdForm = () => {
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">
                       <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                      {plateLookupResult.status_roubo_furto}
+                      Roubo/furto: não consultado
                     </span>
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800 border border-blue-200">
                       <CheckCircle2 className="w-3.5 h-3.5 text-blue-600" />
-                      {plateLookupResult.restricoes_financeiras}
+                      Restrições: não consultado
                     </span>
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-100 text-slate-700 border border-slate-200">
-                      🏷️ {plateLookupResult.historico_leilao}
+                      🏷️ Leilão: não consultado
                     </span>
-                    {plateLookupResult.is_simulado && (
+                    {(
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-200" title="Dados cadastrais gerados preliminarmente para fins de demonstração">
-                        ⚠️ Dados Simulados (Demonstração)
+                        {plateLookupResult.is_simulado ? 'Amostra de demonstração' : 'Cadastro do anúncio · sem consulta oficial'}
                       </span>
                     )}
                     {plateLookupResult.cache_hit && (
@@ -887,7 +891,7 @@ const NewCarAdForm = () => {
                       <div className="flex items-center gap-2.5">
                         <span className="text-lg">📊</span>
                         <div>
-                          <p className="text-[10px] font-black uppercase text-slate-400">Referência Oficial FIPE</p>
+                          <p className="text-[10px] font-black uppercase text-slate-400">Referência informada de preço</p>
                           <p className="text-sm font-black text-slate-800">
                             R$ {Number(plateLookupResult.preco_fipe_sugerido).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                             <span className="text-xs font-normal text-slate-500 ml-1.5">({plateLookupResult.mes_referencia_fipe || 'Mês atual'})</span>
@@ -912,7 +916,7 @@ const NewCarAdForm = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              
+
               {/* Loja Parceira */}
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-700">Loja Parceira *</label>
@@ -929,7 +933,7 @@ const NewCarAdForm = () => {
                 <label className="text-sm font-bold text-slate-700">Marca *</label>
                 <input required type="text" name="marca" value={formData.marca} onChange={handleChange} className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all shadow-sm" placeholder="Ex: Honda" />
               </div>
-              
+
               {/* Modelo */}
               <div className="space-y-2">
                 <label className="text-sm font-bold text-slate-700">Modelo *</label>
@@ -982,7 +986,7 @@ const NewCarAdForm = () => {
             <div className="space-y-6 pt-6 border-t border-slate-100">
               <h2 className="text-xl font-bold text-slate-800">Histórico e Procedência</h2>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                
+
                 {/* Laudo Cautelar */}
                 <div className="space-y-3">
                   <label className="text-sm font-bold text-slate-700">Laudo Cautelar *</label>
@@ -998,21 +1002,21 @@ const NewCarAdForm = () => {
                   {/* Upload do Laudo PDF (Condicional) */}
                   <AnimatePresence>
                     {(formData.laudo === 'Aprovado' || formData.laudo === 'Aprovado com Apontamentos') && (
-                      <motion.div 
+                      <motion.div
                         initial={{ opacity: 0, height: 0, marginTop: 0 }}
                         animate={{ opacity: 1, height: 'auto', marginTop: 12 }}
                         exit={{ opacity: 0, height: 0, marginTop: 0 }}
                         className="overflow-hidden"
                       >
                         {!laudoPdf ? (
-                          <div 
+                          <div
                             className={`relative flex flex-col items-center justify-center w-full h-32 rounded-xl border-2 border-dashed transition-all cursor-pointer ${isDraggingPdf ? 'border-blue-500 bg-blue-50' : 'border-slate-300 bg-slate-50 hover:bg-slate-100'}`}
                             onDragOver={(e) => { e.preventDefault(); setIsDraggingPdf(true); }}
                             onDragLeave={() => setIsDraggingPdf(false)}
                             onDrop={handleDropPdf}
                           >
-                            <input 
-                              type="file" 
+                            <input
+                              type="file"
                               accept=".pdf,.jpg,.jpeg,.png"
                               onChange={(e) => processPdfFile(e.target.files?.[0])}
                               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
@@ -1055,14 +1059,14 @@ const NewCarAdForm = () => {
                                 )}
                               </div>
                             </div>
-                            <button 
-                              type="button" 
-                              onClick={() => { 
-                                setLaudoPdf(null); 
-                                setLaudoUploadStatus('idle'); 
-                                setLaudoUploadedUrl(null); 
-                                setLaudoUploadError(''); 
-                                setYoloFeedback(null); 
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setLaudoPdf(null);
+                                setLaudoUploadStatus('idle');
+                                setLaudoUploadedUrl(null);
+                                setLaudoUploadError('');
+                                setYoloFeedback(null);
                                 setLaudoFeedback(null);
                               }}
                               className="p-1 hover:bg-slate-200/60 rounded-lg text-slate-500 transition-colors shrink-0 ml-2"
@@ -1216,17 +1220,17 @@ const NewCarAdForm = () => {
             {/* Imagem Upload */}
             <div data-tour="anuncio-upload-midia" className="space-y-3 pt-6 border-t border-slate-100">
               <label className="text-sm font-bold text-slate-700">Foto da Capa do Veículo</label>
-              
+
               {!formData.imagem ? (
                 <div className="space-y-5">
-                  <div 
+                  <div
                     className={`relative flex flex-col items-center justify-center w-full h-48 rounded-xl border-2 border-dashed transition-all cursor-pointer overflow-hidden ${isDragging ? 'border-blue-500 bg-blue-50' : 'border-slate-300 bg-slate-50 hover:bg-slate-100'}`}
                     onDragOver={(e) => { e.preventDefault(); setIsDragging(true); }}
                     onDragLeave={() => setIsDragging(false)}
                     onDrop={handleDrop}
                   >
-                    <input 
-                      type="file" 
+                    <input
+                      type="file"
                       accept=".jpg,.jpeg,.png"
                       onChange={(e) => processFile(e.target.files?.[0])}
                       className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
@@ -1257,7 +1261,7 @@ const NewCarAdForm = () => {
                   <div className="rounded-xl overflow-hidden border border-slate-200 aspect-[21/9] max-w-full bg-slate-100 relative group">
                     <img src={formData.imagem} alt="Preview" className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
                     <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
-                      <button 
+                      <button
                         type="button"
                         onClick={() => { setFormData(p => ({ ...p, imagem: '' })); setPhotoAiResult(null); setPhotoAiScanStatus('idle'); }}
                         className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition-colors flex items-center gap-2"
@@ -1365,7 +1369,7 @@ const NewCarAdForm = () => {
               )}
 
               {/* Área de Seleção / Dropzone para Múltiplas Fotos */}
-              <div 
+              <div
                 className={`relative flex flex-col items-center justify-center w-full py-8 px-4 rounded-xl border-2 border-dashed transition-all cursor-pointer overflow-hidden ${
                   isDraggingGallery ? 'border-blue-500 bg-blue-50/80' : 'border-slate-300 bg-slate-50/70 hover:bg-slate-100/80'
                 }`}
@@ -1380,8 +1384,8 @@ const NewCarAdForm = () => {
                   }
                 }}
               >
-                <input 
-                  type="file" 
+                <input
+                  type="file"
                   multiple
                   accept=".jpg,.jpeg,.png,.webp"
                   onChange={(e) => {
@@ -1411,15 +1415,15 @@ const NewCarAdForm = () => {
                   {galleryPhotos.map((photo, idx) => {
                     const isCover = formData.imagem === photo.url;
                     return (
-                      <div 
+                      <div
                         key={photo.id || idx}
                         className={`group relative rounded-xl overflow-hidden border-2 aspect-[4/3] bg-slate-100 transition-all ${
                           isCover ? 'border-blue-600 shadow-md shadow-blue-500/20' : 'border-slate-200 hover:border-slate-300'
                         }`}
                       >
-                        <img 
-                          src={photo.url} 
-                          alt={`Foto ${idx + 1}`} 
+                        <img
+                          src={photo.url}
+                          alt={`Foto ${idx + 1}`}
                           className="w-full h-full object-cover"
                         />
                         {isCover && (
@@ -1485,7 +1489,7 @@ const NewCarAdForm = () => {
 
               {/* Se nenhum vídeo foi selecionado: Dropzone de Upload */}
               {!videoPreviewUrl ? (
-                <div 
+                <div
                   className={`relative flex flex-col items-center justify-center w-full py-8 px-4 rounded-xl border-2 border-dashed transition-all cursor-pointer overflow-hidden ${
                     isDraggingVideo ? 'border-purple-500 bg-purple-50/80' : 'border-slate-300 bg-slate-50/70 hover:bg-slate-100/80'
                   }`}
@@ -1499,8 +1503,8 @@ const NewCarAdForm = () => {
                     if (file) handleProcessVideoFile(file);
                   }}
                 >
-                  <input 
-                    type="file" 
+                  <input
+                    type="file"
                     accept="video/mp4,video/webm,video/quicktime,video/x-m4v"
                     onChange={(e) => {
                       const file = e.target.files?.[0];
@@ -1522,9 +1526,9 @@ const NewCarAdForm = () => {
                 /* Pré-visualização do Vídeo com Player HTML5 e Remoção */
                 <div className="space-y-3">
                   <div className="rounded-2xl overflow-hidden border border-slate-200 bg-slate-950 aspect-video max-w-full relative shadow-md">
-                    <video 
-                      src={videoPreviewUrl} 
-                      controls 
+                    <video
+                      src={videoPreviewUrl}
+                      controls
                       className="w-full h-full object-contain"
                       playsInline
                     />
@@ -1688,8 +1692,8 @@ const NewCarAdForm = () => {
               <button type="button" onClick={() => navigate(-1)} className="w-full sm:w-1/3 px-6 py-4 rounded-xl font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors">
                 Cancelar
               </button>
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 disabled={!isFormValid || status === 'loading' || status === 'success'}
                 className="w-full sm:w-2/3 px-6 py-4 rounded-xl font-bold text-white bg-blue-600 hover:bg-blue-700 transition-all transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 flex justify-center items-center gap-3 shadow-md shadow-blue-500/20"
               >

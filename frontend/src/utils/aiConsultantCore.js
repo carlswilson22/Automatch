@@ -153,206 +153,44 @@ function searchInDescription(car, keywords) {
  * 2. Laudo (laudo cautelar, pintura, leilão, DETRAN)
  * 3. Descrição (description, fullDescription)
  */
-export function generateVehicleConsultantAnswer(userMsg, car, history = []) {
-  if (!car) {
-    return 'Por favor, selecione um veículo na Vitrine Digital para que eu possa apresentar os dados periciais e técnicos completos!';
-  }
-
-  const rawNormalized = normalizeText(userMsg);
-  const topics = identifyTopics(rawNormalized);
-  const carName = car.name || `${car.brand || ''} ${car.model || ''}`.trim() || 'veículo';
+export function generateVehicleConsultantAnswer(userMsg, car) {
+  if (!car) return 'Selecione um veículo para consultar as informações do anúncio.';
+  const message = normalizeText(userMsg);
+  const topics = identifyTopics(message);
+  const name = car.name || [car.brand, car.model].filter(Boolean).join(' ') || 'veículo';
   const specs = car.specs || {};
-  const description = `${car.description || ''} ${car.fullDescription || ''}`;
-
-  // Se a mensagem for apenas uma saudação inicial simples sem perguntas
-  if (['ola', 'oi', 'bom dia', 'boa tarde', 'boa noite', 'e ai', 'opa'].includes(rawNormalized)) {
-    return `Olá! Sou o consultor IA da Automatch especializado no ${carName}. Estou pronto para tirar dúvidas sobre motor, direção, freios, quilometragem, laudo pericial, documentação no DETRAN e financiamento. O que deseja saber?`;
-  }
-
-  // Se nenhum tópico foi identificado por palavras-chave
-  if (topics.length === 0) {
-    // 1. Tenta buscar ocorrência direta dos termos na descrição completa do carro
-    const words = rawNormalized.split(/\s+/).filter(w => w.length > 3 && !['qual', 'como', 'onde', 'este', 'esse', 'para', 'tem', 'voce', 'veiculo', 'carro'].includes(w));
-    const foundSnippet = words.length > 0 ? searchInDescription(car, words) : null;
-
-    if (foundSnippet) {
-      return `De acordo com a descrição oficial do ${carName}: "${foundSnippet}."`;
+  const value = input => input == null || input === '' ? 'não informado' : String(input);
+  const fields = {
+    direcao: ['Direção', specs.direcao], freios: ['Freios', specs.freios], motor: ['Motor', specs.motor || car.motor],
+    quilometragem: ['Quilometragem', typeof (car.mileage ?? car.km) === 'number' ? (car.mileage ?? car.km).toLocaleString('pt-BR') + ' km' : car.mileage ?? car.km], cambio: ['Transmissão', specs.cambio || car.transmission],
+    consumo: ['Combustível e consumo informado (INMETRO, quando cadastrado)', [specs.combustivel || car.fuel, specs.consumoInmetro || specs.consumo].filter(Boolean).join(' · ')],
+    cor: ['Cor', car.color || car.cor], ano: ['Ano/modelo', car.year || car.ano],
+    airbags: ['Airbags', specs.airbags], tracao: ['Tração', specs.tracao], portas_espaco: ['Portas', specs.portas],
+    preco: ['Preço anunciado', typeof car.price === 'number' ? car.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : car.price],
+    laudo: ['Situação do laudo informada', car.laudoStatus || car.laudo_status],
+    equipamentos: ['Equipamentos', searchInDescription(car, ['teto', 'multimidia', 'couro', 'carplay', 'camera', 'sensor'])],
+    garantia: ['Garantia', searchInDescription(car, ['garantia'])],
+  };
+  const answers = topics.map(topic => {
+    if (topic === 'avarias') {
+      const damages = car.damagePoints || car.damages;
+      const details = Array.isArray(damages) ? damages.map(d => typeof d === 'string' ? d : [d.part, d.type, d.desc || d.description].filter(Boolean).join(': ')).join('; ') : '';
+      return details ? `Apontamentos informados no cadastro: ${details}. A gravidade e a estrutura exigem avaliação.` : 'Não há apontamentos informados no cadastro. Isso não comprova ausência de avarias; confira a vistoria.';
     }
-
-    // 2. Regra de Ausência Honesta de Dados:
-    // Nunca inventar dados e nunca cuspir a saudação de boas-vindas
-    const termSnippet = words.length > 0 ? `sobre "${words.join(' ')}"` : 'sobre esse item específico';
-    return `Não constam registros ${termSnippet} no anúncio oficial, no laudo pericial ou na ficha descritiva deste ${carName}. Para confirmar esse detalhe com precisão técnica ou verificar acessórios instalados, recomendamos falar diretamente com o vendedor através do botão de contato.`;
+    if (topic === 'documentacao') return 'DETRAN, IPVA, multas e gravames não foram consultados. Confira os documentos com o anunciante.';
+    if (topic === 'financiamento') return 'Experimente o simulador do anúncio. Parcelas são estimativas; taxas, condições e aprovação dependem da instituição.';
+    if (topic === 'troca') return 'Experimente o simulador de troca. A aceitação e o valor dependem da avaliação da loja.';
+    if (topic === 'seguranca') return `Segurança: ${value(searchInDescription(car, ['safety sense', 'ponto cego', 'faixa', 'acc', 'frenagem']))}.`;
+    const field = fields[topic];
+    return field ? `${field[0]}: **${value(field[1])}**.` : '';
+  }).filter(Boolean);
+  if (!answers.length) {
+    const words = message.split(' ').filter(word => word.length > 3);
+    const snippet = searchInDescription(car, words);
+    return snippet ? `Segundo a descrição do anunciante: ${snippet}.` : `Não há informação sobre esse item no cadastro de ${name}. Consulte o vendedor para confirmar.`;
   }
-
-  // Construtor modular de respostas por tópico identificado
-  const answers = [];
-
-  // Tópico: DIREÇÃO
-  if (topics.includes('direcao')) {
-    const val = specs.direcao || 'Elétrica Progressiva';
-    answers.push(`A direção é **${val}**, garantindo respostas precisas em curvas e conforto com leveza nas manobras urbanas`);
-  }
-
-  // Tópico: FREIOS
-  if (topics.includes('freios')) {
-    const val = specs.freios || 'ABS com EBD nas 4 rodas';
-    const safetyNote = description.toLowerCase().includes('frenagem') ? ' com assistência de frenagem autônoma de emergência' : '';
-    answers.push(`Os freios são **${val}**${safetyNote}, inspecionados no laudo técnico com pastilhas e discos em perfeito estado de funcionamento`);
-  }
-
-  // Tópico: MOTOR
-  if (topics.includes('motor')) {
-    const val = specs.motor || car.motor || '1.8 Híbrido Flex';
-    const pot = specs.potencia ? ` (${specs.potencia})` : '';
-    answers.push(`O motor é **${val}**${pot}, com conjunto mecânico e componentes eletrônicos 100% auditados pela perícia técnica, sem vazamentos ou anomalias`);
-  }
-
-  // Tópico: QUILOMETRAGEM
-  if (topics.includes('quilometragem')) {
-    const kmStr = typeof car.mileage === 'number' ? `${car.mileage.toLocaleString('pt-BR')} km` : (car.mileage || '12.000 km');
-    answers.push(`O veículo possui **${kmStr} originais**, com hodômetro conferido e histórico de revisões periódicas documentado`);
-  }
-
-  // Tópico: CÂMBIO
-  if (topics.includes('cambio')) {
-    const val = specs.cambio || car.transmission || 'Automático CVT';
-    answers.push(`A transmissão é **${val}**, com trocas de marchas suaves e atestada em teste de rodagem sem trancos`);
-  }
-
-  // Tópico: CONSUMO / COMBUSTÍVEL
-  if (topics.includes('consumo')) {
-    const fuel = specs.combustivel || car.fuel || 'Flex / Elétrico';
-    let consumoInfo = '';
-
-    // 1. Prioridade máxima: dados INMETRO cadastrados nos specs
-    if (specs.consumoInmetro) {
-      consumoInfo = `com médias homologadas pelo INMETRO de **${specs.consumoInmetro}**`;
-    }
-    // 2. Fallback: extrair da descrição completa
-    else if (description.includes('km/l')) {
-      const match = description.match(/(\d+[\s,.]*\d*\s*km\/l[^.\n]*)/i);
-      if (match) consumoInfo = `com médias de ${match[1]}`;
-    }
-
-    // 3. Genérico caso não haja nenhum dado
-    if (!consumoInfo) {
-      consumoInfo = 'apresentando excelente rendimento energético tanto em circuito urbano quanto rodoviário';
-    }
-
-    answers.push(`O veículo roda com combustível **${fuel}**, ${consumoInfo}`);
-  }
-
-  // Tópico: COR / PINTURA / MICRAGEM
-  if (topics.includes('cor')) {
-    const cor = car.color || car.cor || 'Branco Pérola';
-    answers.push(`A cor oficial é **${cor}**, com laudo pericial que atestou pintura original e espessura uniforme em conformidade com o padrão de fábrica (115 micras), sem retoques ou avarias`);
-  }
-
-  // Tópico: ANO / MODELO
-  if (topics.includes('ano')) {
-    const ano = car.year || car.ano || '2024';
-    answers.push(`O modelo é ano **${ano}**, com procedência cadastral e ano de fabricação verificados perante os registros do DETRAN`);
-  }
-
-  // Tópico: DOCUMENTAÇÃO / DETRAN / IPVA / DÉBITOS
-  if (topics.includes('documentacao')) {
-    const plate = car.plate ? ` (placa final ${car.plate.slice(-1)})` : '';
-    answers.push(`A documentação está **100% regular no DETRAN**${plate}: IPVA quitado, licenciamento em dia, livre de restrições financeiras e sem gravame, apto para transferência imediata`);
-  }
-
-    // Tópico: AVARIAS E DANOS NA LATARIA
-  if (topics.includes('avarias')) {
-    const dps = Array.isArray(car.damagePoints) ? car.damagePoints : [];
-    if (dps.length > 0) {
-      const details = dps.map(d => {
-        const part = d.part || d.peca || 'Lataria';
-        const type = d.type || d.tipo || 'Avaria estética';
-        const desc = d.desc || d.description || '';
-        return `${part} (${type}${desc ? ': ' + desc : ''})`;
-      }).join('; ');
-      answers.push(`O **${carName}** possui ${dps.length} apontamento(s) estético(s) leve(s) registrado(s) em perícia técnica: ${details}. A integridade estrutural (longarinas, colunas e teto) e mecânica (motor e câmbio) está 100% aprovada, sem histórico de colisão grave, sinistro ou leilão`);
-    } else {
-      answers.push(`A perícia cautelar oficial atesta que o **${carName}** está 100% íntegro e NÃO possui avarias na lataria, peças repintadas ou amassados. Chassi, pintura de fábrica e estrutura foram aprovados com nota máxima`);
-    }
-  }
-
-  // Tópico: LAUDO CAUTELAR / LEILÃO / SINISTRO / ESTRUTURA
-  if (topics.includes('laudo')) {
-    answers.push(`O **Laudo Cautelar está 100% Aprovado**: chassi, colunas e longarinas íntegros, sem apontamentos estruturais e sem nenhum registro de leilão ou sinistro`);
-  }
-
-  // Tópico: AIRBAGS / SEGURANÇA
-  if (topics.includes('airbags') || topics.includes('seguranca')) {
-    const airbags = specs.airbags || 'Airbags frontais e laterais';
-    const safetySnippet = searchInDescription(car, ['safety sense', 'ponto cego', 'faixa', 'acc', 'frenagem']);
-    const extraSafety = safetySnippet ? `. Destaque para os recursos de segurança ativa: ${safetySnippet}` : '';
-    answers.push(`Conta com **${airbags}**${extraSafety}`);
-  }
-
-  // Tópico: TRAÇÃO
-  if (topics.includes('tracao')) {
-    const val = specs.tracao || 'Dianteira';
-    answers.push(`A tração é **${val}**, proporcionando aderência e controle estável em diferentes tipos de piso`);
-  }
-
-  // Tópico: PORTAS E ESPAÇO
-  if (topics.includes('portas_espaco')) {
-    const portas = specs.portas || '4 portas';
-    answers.push(`Possui configuração de **${portas}**, com excelente espaço interno e acabamento refinado para todos os ocupantes`);
-  }
-
-  // Tópico: EQUIPAMENTOS / CONFORTO / OPCIONAIS
-  if (topics.includes('equipamentos')) {
-    const equipSnippet = searchInDescription(car, ['teto', 'multimidia', 'couro', 'carplay', 'ar', 'camera', 'sensor', 'chave']);
-    if (equipSnippet) {
-      answers.push(`Em relação aos equipamentos: ${equipSnippet}`);
-    } else {
-      answers.push(`Equipado com pacote completo de conveniência, incluindo central multimídia moderna, climatização digital e acabamento de alto padrão`);
-    }
-  }
-
-  // Tópico: PREÇO / FIPE
-  if (topics.includes('preco')) {
-    const preco = typeof car.price === 'number' ? car.price.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : car.price;
-    const fipe = car.fipePrice ? ` (FIPE de referência: R$ ${Math.round(car.fipePrice).toLocaleString('pt-BR')})` : '';
-    answers.push(`O valor anunciado é de **${preco}**${fipe}, rigorosamente alinhado ao estado de conservação comprovado em perícia`);
-  }
-
-  // Tópico: FINANCIAMENTO
-  if (topics.includes('financiamento')) {
-    answers.push(`A Automatch disponibiliza simulação de financiamento com taxas competitivas a partir de 1,29% ao mês com os maiores bancos parceiros, podendo parcelar a entrada e financiar o saldo em até 60x`);
-  }
-
-  // Tópico: TROCA
-  if (topics.includes('troca')) {
-    answers.push(`Aceitamos seu carro usado na troca com avaliação técnica justa baseada na Tabela FIPE. Você também pode experimentar nosso Simulador de Troca nesta tela`);
-  }
-
-  // Tópico: GARANTIA
-  if (topics.includes('garantia')) {
-    const garSnippet = searchInDescription(car, ['garantia', 'revisao', 'revisoes', 'concessionaria']);
-    const descGar = garSnippet || 'Garantia técnica de procedência e conformidade pericial Automatch';
-    answers.push(`Oferece **${descGar}**`);
-  }
-
-  // Se por alguma razão tópicos foram identificados mas nenhum bloco respondeu
-  if (answers.length === 0) {
-    return `Sobre o **${carName}**: todas as informações técnicas foram validadas no laudo pericial 100% aprovado. Posso detalhar motor, direção, freios, quilometragem, documentação no DETRAN ou valores!`;
-  }
-
-  // Formatação fluida com pontuação e conectivos
-  if (answers.length === 1) {
-    return `${answers[0]}.`;
-  }
-
-  // Resposta multi-tópico consolidada (ex: motor e quilometragem, ou direção e freios)
-  return answers.map(a => `• ${a}.`).join('\n\n');
+  return `${answers.join('\n\n')}\n\nInformações do anúncio, sem certificação ou consulta oficial.`;
 }
-
-/**
- * Respostas do Consultor de Suporte para a aba principal (HomeSupportChat)
- */
 export function generateGeneralSupportAnswer(userMsg, availableCars = []) {
   const norm = normalizeText(userMsg);
   const topics = identifyTopics(norm);
@@ -365,12 +203,12 @@ export function generateGeneralSupportAnswer(userMsg, availableCars = []) {
     const found = availableCars.find(c => normalizeText(c.name || c.model).includes(requestedModel));
     if (found) {
       const preco = typeof found.price === 'number' ? `R$ ${found.price.toLocaleString('pt-BR')}` : found.price;
-      return `Temos o **${found.name}** na Vitrine Digital por **${preco}**, com quilometragem de ${found.mileage?.toLocaleString('pt-BR') || 'baixa'} km e Laudo Cautelar 100% Aprovado. Acesse a aba Vitrine para ver fotos em 360°, laudo e simulação!`;
+      return `Temos o **${found.name}** na Vitrine Digital por **${preco}**, com quilometragem informada de ${found.mileage?.toLocaleString('pt-BR') || 'não informada'} km. Acesse a aba Vitrine para ver fotos em 360°, laudo e simulação!`;
     }
   }
 
   if (topics.includes('laudo') || norm.includes('vistoria') || norm.includes('cautelar')) {
-    return 'Na Automatch, 100% dos veículos possuem **Laudo Cautelar Aprovado** e Dossiê de Transparência auditado. Cobrimos chassi, integridade de longarinas, espessura de pintura em micras, histórico de leilão/sinistro e certidão no DETRAN.';
+    return 'A demonstração permite visualizar os dados e documentos dos anúncios. Confira a vistoria e a procedência; o cadastro não comprova aprovação pericial.';
   }
 
   if (topics.includes('financiamento') || norm.includes('parcela') || norm.includes('banco') || norm.includes('juros')) {
@@ -382,7 +220,7 @@ export function generateGeneralSupportAnswer(userMsg, availableCars = []) {
   }
 
   if (topics.includes('preco') || norm.includes('fipe')) {
-    return 'Nossos anúncios contam com comparativo oficial em tempo real com a Tabela FIPE. A grande maioria dos carros está anunciada com valor na média ou abaixo da FIPE.';
+    return 'Os anúncios podem informar uma referência FIPE. Confira código e mês antes de comparar os preços; não há consulta oficial em tempo real na demonstração.';
   }
 
   if (topics.includes('garantia') || norm.includes('seguro') || norm.includes('devolucao')) {

@@ -1,6 +1,6 @@
 # Documentação do Automatch
 
-Revisão documental: **17/11/2026**. Código de referência: `1b7d094`.
+Revisão documental: **17/11/2026**. Melhorias demonstrativas sobre a base `444bc09`.
 O principal é [carlswilson22/Automatch](https://github.com/carlswilson22/Automatch);
 o secundário é [CAMPUSCEUB/ADS-AUTOMATCH](https://github.com/CAMPUSCEUB/ADS-AUTOMATCH).
 Ambos devem receber a mesma atualização na `main`; outras branches do secundário
@@ -42,7 +42,9 @@ arquitetura/banco se afetados e registrar a mudança no changelog. Relatórios
 históricos recebem complementos datados, sem reescrever evidências anteriores.
 Resultados de testes devem informar comando, commit, ambiente e limitações.
 
-A revisão de 17/11 é documental: não implementou serviços externos, scanner de
-pneus, diagnóstico acústico, pagamentos ou novas rotinas da aplicação. As
+A primeira revisão de 17/11 foi documental; a etapa seguinte corrigiu os exemplos
+interativos e os comportamentos descritos no backlog, sem deploy ou reformulação
+do banco. Não implementou serviços externos, scanner de
+pneus, diagnóstico acústico ou pagamentos reais. As
 licenças e as mídias de teste foram preservadas. Veja os
 [critérios de evidência](testes-e-evidencias.md).

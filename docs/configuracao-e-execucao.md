@@ -106,9 +106,29 @@ A configuração atual de Nginx de produção escuta HTTP em 80; publicação da
 porta 443 não instala certificado nem configura TLS. Definir HTTPS na
 infraestrutura. Um worker é usado porque scheduler e limitadores são locais.
 
+## Demonstração sem reformular o banco
+
+Na pasta `frontend`, com dependências instaladas, no PowerShell:
+
+```powershell
+$env:VITE_DEMO_MODE='true'
+npm.cmd run dev
+```
+
+A flag vale para esse processo e não exige criar outro arquivo `.env`.
+Alertas e multicanal usam amostras locais por conta; a consulta de placa tem o
+exemplo `ABC1234`. Placas sem amostra permitem preenchimento manual.
+Os exemplos ficam neste navegador; não confirmam publicação ou envio externo.
+
+Não executar migração, seed, reset ou remodelagem do banco real nesta etapa.
+A reformulação para a futura operação local depende de autorização. Os comandos
+de instalação/operação acima permanecem referência técnica para a etapa futura.
+
 ## GitHub Pages e verificações
 
-Pages do principal compila somente frontend com base do repositório e modo
+O workflow de Pages é exclusivamente manual e não deve ser acionado nesta etapa.
+Enviar commits não faz deploy. Quando autorizado, Pages do principal compila somente frontend com base do
+repositório e modo
 demo explícito. Sem API hospedada, não usar esse ambiente como prova de login,
 IA, laudo persistido, pagamento ou reserva operacional em servidor.
 

@@ -3,13 +3,11 @@
 #
 # Objetivo e Motivo da Criação:
 #   - Compila o frontend do Automatch e faz o deploy automatizado para a visualização pública
-#     estática no GitHub Pages a cada publicação na branch principal do repositório primário.
+#     estática no GitHub Pages somente por acionamento manual autorizado.
 # ==============================================================================
-name: Deploy static content to Pages
+name: Publicar demonstracao no Pages (manual)
 
 on:
-  push:
-    branches: ["main"]
   workflow_dispatch:
 
 permissions:

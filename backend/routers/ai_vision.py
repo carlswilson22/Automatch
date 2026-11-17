@@ -273,14 +273,14 @@ async def chat_automatch(payload: ChatRequest, request: Request) -> Dict[str, An
     system_prompt = "Você é o assistente virtual da plataforma Automatch. Seja prestativo, rápido e conciso em até 3 frases sobre compra, venda e laudo cautelar de veículos."
     if car_context:
         damages_ctx = (car_context.get('damages') or car_context.get('damagePoints') or []) if car_context else []
-        damages_str = "; ".join([d.get('desc') or d.get('part', '') for d in damages_ctx if isinstance(d, dict)] or [str(d) for d in damages_ctx]) if damages_ctx else "Nenhuma avaria registrada (100% íntegro)"
+        damages_str = "; ".join([d.get('desc') or d.get('part', '') for d in damages_ctx if isinstance(d, dict)] or [str(d) for d in damages_ctx]) if damages_ctx else "Sem apontamentos informados; isso não comprova integridade"
         system_prompt = (
             f"Você é um consultor especialista focado no veículo atual do usuário: "
             f"Avarias registradas na perícia: {damages_str}. Se o usuário perguntar sobre avarias, riscos ou lataria, informe com honestidade e precisão esses dados do laudo. "
 
             f"{car_context.get('brand')} {car_context.get('model')} {car_context.get('year')}, "
             f"cor {car_context.get('color', 'N/A')}, {car_context.get('km')}km rodados, "
-            f"preço R${car_context.get('price')}. Responda estritamente sobre este veículo e distinga cada pergunta sem repetição."
+            f"preço R${car_context.get('price')}. Responda sobre o cadastro deste veículo. Não certifique procedência, regularidade, garantia ou integridade sem evidência; informe ausência de dados. Não prometa condições bancárias ou consultas oficiais."
         )
 
     if api_key:
@@ -294,188 +294,52 @@ async def chat_automatch(payload: ChatRequest, request: Request) -> Dict[str, An
             return {"status": "success", "modelo": "gemini-1.5-flash", "resposta": result}
 
     reply = generate_semantic_reply(user_msg, car_context)
-    return {"status": "success", "modelo": "automatch-consultor-ai", "resposta": reply}
+    return {"status": "success", "modelo": "resposta-local-cadastro", "origem": "cadastro", "is_simulado": True, "resposta": reply}
 
 
 def generate_semantic_reply(user_msg: str, car_context: Optional[Dict[str, Any]] = None) -> str:
-    """
-    Motor semântico determinístico de respostas técnicas e consultivas do Automatch.
-    Utilizado como fallback transparente e para respostas ultrarrápidas contextuais.
-    """
-    q = user_msg.lower().strip()
-    car_name = f"{car_context.get('brand', '')} {car_context.get('model', '')}".strip() if car_context else "Veículo"
-    year_text = str(car_context.get('year', '2024')) if car_context else "2024"
-    color_val = (car_context.get('color') or car_context.get('cor') or "Prata") if car_context else "Prata"
-    fuel_val = (car_context.get('fuel') or car_context.get('combustivel') or "Flex") if car_context else "Flex"
-    transmission_val = (car_context.get('transmission') or car_context.get('cambio') or "Automático") if car_context else "Automático"
-    km_val = car_context.get('km', 0) if car_context else 0
-    km_text = f"{km_val:,} km".replace(',', '.') if isinstance(km_val, int) else str(km_val or "baixa km")
-    price_val = car_context.get('price') if car_context else None
-    price_text = f"R$ {price_val:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.') if isinstance(price_val, (int, float)) else str(price_val or 'sob consulta')
-
-    specs = (car_context.get('specs') or {}) if car_context else {}
-    motor_val = (specs.get('motor') or specs.get('motorizacao') or car_context.get('motor')) if car_context else None
-    direcao_val = specs.get('direcao') or specs.get('direção') or "Elétrica progressiva"
-    freios_val = specs.get('freios') or specs.get('freio') or "ABS com EBD nas 4 rodas"
-    suspensao_val = specs.get('suspensao') or specs.get('suspensão') or "Independente calibrada para conforto e estabilidade"
-    airbags_val = specs.get('airbags') or specs.get('airbag') or "Frontais e de cortina com sistema de retenção suplementar"
-    pneus_val = specs.get('pneus') or specs.get('pneu') or "Em excelente estado de conservação e sulcos dentro das normas"
-    cambio_val = specs.get('cambio') or specs.get('câmbio') or transmission_val
-
-    # Multi-tópicos frequentes
-    has_direcao = any(k in q for k in ["direcao", "direção", "volante", "assistida"])
-    has_freios = any(k in q for k in ["freio", "freios", "abs", "disco", "frenagem"])
-    has_motor = any(k in q for k in ["motor", "cilindrada", "potencia", "potência", "cv", "cavalos", "torque", "mecanica", "mecânica"])
-    has_km = any(k in q for k in ["km", "quilometragem", "rodados", "hodometro", "hodômetro"])
-
-    if has_direcao and has_freios:
-        return (
-            f"O {car_name} possui direção {direcao_val} e sistema de freios com {freios_val}, "
-            f"proporcionando máxima precisão ao volante e frenagens seguras e controladas."
-        )
-    elif has_motor and has_km:
-        motor_desc = f"motorização {motor_val}" if motor_val else "trem de força inspecionado"
-        return (
-            f"O {car_name} conta com {motor_desc} e {km_text} originais verificados em laudo pericial, "
-            f"com funcionamento impecável e sem apontamentos mecânicos."
-        )
-        # Detecção de perguntas sobre avarias, danos e defeitos na lataria
-    has_avarias = any(k in q for k in ["avaria", "avarias", "dano", "danos", "risco", "riscos", "amassado", "amassados", "ralado", "ralados", "defeito", "defeitos", "detalhe", "detalhes", "batida", "batido", "sinistro"])
-    damages_list = (car_context.get('damages') or car_context.get('damagePoints') or []) if car_context else []
-    if isinstance(damages_list, list) and len(damages_list) > 0 and isinstance(damages_list[0], dict):
-        damages_list = [d.get('description') or d.get('desc') or f"{d.get('part', 'Peça')}: {d.get('type', 'Avaria')}" for d in damages_list]
-
-    if has_avarias:
-        if damages_list:
-            detalhes = "; ".join(str(d) for d in damages_list)
-            return (
-                f"O {car_name} possui {len(damages_list)} apontamento(s) estético(s) leve(s) registrado(s) em laudo pericial: {detalhes}. "
-                f"A estrutura de longarinas, colunas e teto, bem como motor e câmbio, estão 100% íntegros e aprovados na vistoria cautelar."
-            )
-        else:
-            return (
-                f"A perícia cautelar oficial atesta que o {car_name} está 100% íntegro e NÃO possui avarias na lataria, "
-                f"riscos, amassados ou peças repintadas. Estrutura e procedência foram aprovadas com excelência."
-            )
-
-    # 1. Cor / Pintura / Tonalidade / Estética
-    elif any(k in q for k in ["cor", "cores", "pintura", "tonalidade", "verniz", "retoque", "lataria"]):
-        return (
-            f"O {car_name} possui a cor oficial {color_val}. A perícia técnica atestou pintura com espessura uniforme "
-            f"(padrão de fábrica de 115 micras), sem peças repintadas, manchas ou avarias estéticas na lataria."
-        )
-    # 2. Ano / Modelo / Fabricação
-    elif any(k in q for k in ["ano", "modelo", "ano/modelo", "fabricacao", "fabricação"]):
-        return (
-            f"O {car_name} é ano/modelo {year_text}, com histórico de fabricação e procedência confirmados no sistema oficial."
-        )
-    # 3. Documentação / DETRAN / IPVA / Débitos
-    elif any(k in q for k in ["documento", "documentos", "documentacao", "documentação", "detran", "ipva", "licenciamento", "multa", "multas", "debito", "débito", "debitos", "débitos", "gravame"]):
-        return (
-            f"A documentação do {car_name} está 100% regular perante o DETRAN: IPVA quitado, licenciamento em dia, "
-            f"sem multas pendentes e sem restrição financeira ou gravame, pronto para transferência imediata."
-        )
-    # 4. Direção
-    elif has_direcao:
-        return (
-            f"O {car_name} é equipado com direção {direcao_val}, oferecendo leveza nas manobras e precisão em rodovias."
-        )
-    # 5. Freios
-    elif has_freios:
-        return (
-            f"O sistema de freios do {car_name} conta com {freios_val}, inspecionado na perícia técnica e com resposta imediata."
-        )
-    # 6. Suspensão
-    elif any(k in q for k in ["suspensao", "suspensão", "amortecedor", "amortecedores", "molas"]):
-        return (
-            f"A suspensão do {car_name} é {suspensao_val}, revisada e com absorção de impacto aprovada em laudo."
-        )
-    # 7. Airbags / Segurança Ativa
-    elif any(k in q for k in ["airbag", "airbags", "seguranca", "segurança", "esp"]):
-        return (
-            f"No quesito segurança, o {car_name} dispõe de airbags {airbags_val}, além de cintos com pré-tensionador e controles eletrônicos."
-        )
-    # 8. Pneus
-    elif any(k in q for k in ["pneu", "pneus", "borracha", "estepe", "rodas"]):
-        return (
-            f"Os pneus do {car_name} estão {pneus_val}, com banda de rodagem e alinhamento inspecionados."
-        )
-    # 9. Motor / Câmbio / Transmissão / Mecânica
-    elif any(k in q for k in ["cambio", "câmbio", "marcha", "transmissao", "transmissão", "automatico", "automático", "manual", "cvt", "dsg"]):
-        return (
-            f"Equipado com transmissão {cambio_val}, o {car_name} passou por inspeção técnica especializada, "
-            f"apresentando engates suaves, respostas rápidas e funcionamento impecável sem retenção de marchas."
-        )
-    elif has_motor:
-        motor_desc = f"motor {motor_val}" if motor_val else "trem de força inspecionado e revisado pela perícia técnica"
-        return (
-            f"O {car_name} ({year_text}) conta com {motor_desc}. "
-            f"Motor e componentes eletrônicos operam em estrita conformidade, sem apontamentos mecânicos."
-        )
-    # 10. Consumo / Combustível / Eficiência
-    elif any(k in q for k in ["consumo", "combustivel", "combustível", "gasolina", "etanol", "flex", "diesel", "km/l", "gasta", "autonomia", "tanque"]):
-        is_eletrico = any(e in fuel_val.lower() for e in ["elétrico", "eletrico", "electric"])
-        if is_eletrico:
-            return (
-                f"O {car_name} é um veículo 100% elétrico, portanto não consome combustíveis fósseis e possui emissão zero. "
-                f"Sua eficiência é avaliada pela autonomia por recarga da bateria e modo de condução."
-            )
-        consumo_val = (specs.get('consumo') or specs.get('consumo_urbano') or car_context.get('consumo') or car_context.get('consumoInmetro')) if car_context else None
-        if consumo_val:
-            return f"O {car_name} é movido a {fuel_val} e apresenta consumo oficial homologado de {consumo_val}."
-        return (
-            f"O {car_name} é movido a {fuel_val}. Não constam dados específicos de consumo médio no cadastro deste anúncio. "
-            f"Recomendamos consultar a tabela oficial do Programa Brasileiro de Etiquetagem Veicular (PBEV/Inmetro) para esta motorização."
-        )
-    # 11. Preço / Tabela FIPE / Desconto / Valor
-    elif any(k in q for k in ["fipe", "tabela", "desconto", "a vista", "avista", "preco", "preço", "valor", "quanto custa"]):
-        return (
-            f"O valor anunciado deste {car_name} é de {price_text}, compatível com a Tabela FIPE Oficial "
-            f"e refletindo o excelente padrão de conservação e procedência do veículo."
-        )
-    # 12. KM / Hodômetro / Rodagem
-    elif has_km:
-        return (
-            f"O {car_name} possui {km_text} originais comprovados em laudo pericial, com hodômetro verificado "
-            f"e histórico de revisões em dia."
-        )
-    # 13. Garantia / Revisão / Cobertura
-    elif any(k in q for k in ["garantia", "revisao", "revisão", "revisoes", "revisões", "cobertura"]):
-        return (
-            f"O {car_name} possui procedência certificada pela Perícia Automatch, histórico comprovado de revisões "
-            f"e garantia técnica de motor e câmbio fornecida pela loja parceira."
-        )
-    # 14. Laudo Cautelar / Perícia / Histórico / Sinistro / Leilão / Procedência
-    elif any(k in q for k in ["laudo", "cautelar", "procedencia", "procedência", "leilao", "leilão", "sinistro", "batida", "batido", "estrutura", "pericia", "perícia"]):
-        return (
-            f"Este {car_name} conta com procedência comprovada em Laudo Cautelar 100% Aprovado e Certidão DETRAN limpa: "
-            f"estrutura, chassi e longarinas íntegras, sem histórico de leilão, sinistro ou apontamentos desabonadores."
-        )
-    # 15. Financiamento / Parcelamento / Entrada
-    elif any(k in q for k in ["financiamento", "parcela", "parcelas", "taxa", "banco", "entrada", "financiar", "juros", "simular"]):
-        return (
-            f"Simulamos financiamento em tempo real com taxas competitivas a partir de 1,29% ao mês. "
-            f"Você pode parcelar a entrada e financiar o saldo em até 60 meses com os maiores bancos parceiros."
-        )
-    # 16. Troca / Veículo Usado
-    elif any(k in q for k in ["troca", "troco", "usado", "meu carro", "avaliar meu"]):
-        return (
-            f"Aceitamos seu veículo usado na troca com avaliação técnica justa pela Tabela FIPE. "
-            f"Você também pode utilizar nosso simulador no anúncio!"
-        )
-    # 17. Apresentação geral do carro
-    elif car_context and any(k in q for k in ["este carro", "esse carro", "sobre o carro", "detalhes do veiculo", "detalhes do veículo"]):
-        return (
-            f"O {car_name} ({year_text}, cor {color_val}) está disponível por {price_text} com {km_text} e laudo 100% aprovado. "
-            f"Deseja agendar uma visita ou simular financiamento?"
-        )
-    else:
-        return (
-            f"Olá! Como consultor IA da Automatch, verifiquei os dados oficiais do {car_name}, mas não encontrei menção específica a esse item no anúncio ou no laudo. "
-            f"Recomendamos falar diretamente com o vendedor pelo chat ou consultar sobre motor, direção, freios, quilometragem, laudo pericial ou financiamento!"
-        )
-
-
+    """Resposta local apoiada somente no cadastro, sem certificar perícia."""
+    import unicodedata
+    q = ''.join(c for c in unicodedata.normalize('NFD', user_msg.lower()) if unicodedata.category(c) != 'Mn')
+    car = car_context or {}
+    specs = car.get('specs') or {}
+    answers = []
+    if any(word in q for word in ['avaria', 'dano', 'risco', 'amassado', 'defeito', 'sinistro', 'batida', 'batido']):
+        damages = car.get('damages') or car.get('damagePoints') or []
+        details = '; '.join(str(d.get('description') or d.get('desc') or d.get('part') or 'Apontamento') if isinstance(d, dict) else str(d) for d in damages)
+        answers.append(f'Apontamentos informados: {details}. A gravidade e a estrutura exigem avaliação.' if details else 'Não há apontamentos no cadastro. Isso não comprova ausência de avarias; confira a vistoria.')
+    if any(word in q for word in ['document', 'detran', 'ipva', 'licenciamento', 'multa', 'debito', 'gravame']):
+        answers.append('DETRAN, IPVA, multas e gravames não foram consultados. Confira os documentos com o anunciante.')
+    fields = [
+        (['cor', 'pintura', 'lataria'], 'Cor', car.get('color') or car.get('cor')),
+        (['ano', 'modelo', 'fabricacao'], 'Ano/modelo', car.get('year')),
+        (['direcao', 'volante'], 'Direção', specs.get('direcao')),
+        (['freio', 'abs', 'frenagem'], 'Freios', specs.get('freios')),
+        (['motor', 'potencia', 'torque', 'cilindrada'], 'Motor', specs.get('motor') or car.get('motor')),
+        (['km', 'quilometragem', 'rodado', 'hodometro'], 'Quilometragem', car.get('km', car.get('mileage'))),
+        (['cambio', 'transmissao', 'marcha'], 'Transmissão', specs.get('cambio') or car.get('transmission')),
+        (['combustivel', 'consumo', 'gasolina', 'flex', 'diesel', 'autonomia'], 'Combustível/consumo', specs.get('combustivel') or car.get('fuel')),
+        (['airbag', 'seguranca'], 'Airbags', specs.get('airbags')),
+        (['suspensao', 'amortecedor'], 'Suspensão', specs.get('suspensao')),
+        (['pneu', 'estepe'], 'Pneus', specs.get('pneus')),
+        (['laudo', 'cautelar', 'leilao', 'estrutura', 'procedencia', 'pericia'], 'Situação do laudo informada', car.get('laudoStatus') or car.get('laudo_status')),
+    ]
+    for words, label, value in fields:
+        if any(word in q for word in words):
+            if label == 'Quilometragem' and isinstance(value, (int, float)):
+                value = f'{value:,.0f} km'.replace(',', '.')
+            answers.append(f'{label}: {value if value is not None and value != "" else "não informado"}.')
+    if any(word in q for word in ['preco', 'valor', 'fipe', 'quanto custa']):
+        price = car.get('price')
+        text = f'R$ {price:,.2f}'.replace(',', 'X').replace('.', ',').replace('X', '.') if isinstance(price, (int, float)) else str(price or 'não informado')
+        answers.append(f'Preço anunciado: {text}. Confira código e mês da referência FIPE, se informada.')
+    if any(word in q for word in ['financ', 'parcela', 'taxa', 'banco', 'entrada', 'juros', 'simular']):
+        answers.append('Experimente o simulador do anúncio. Parcelas são estimativas; taxas, condições e aprovação dependem da instituição.')
+    if any(word in q for word in ['garantia', 'revisao', 'cobertura']):
+        answers.append('Garantia e revisões: confira os documentos e condições com a loja; o cadastro não comprova cobertura.')
+    if 'troca' in q:
+        answers.append('Experimente o simulador de troca; a aceitação e o valor dependem da avaliação da loja.')
+    return ('\n\n'.join(answers) if answers else 'Não há informação específica no cadastro. Consulte o vendedor para confirmar.') + '\n\nInformações do anúncio, sem certificação ou consulta oficial.'
 
 @router.post("/api/chat/stream")
 async def chat_stream(payload: ChatRequest, request: Request):
@@ -502,7 +366,7 @@ async def chat_stream(payload: ChatRequest, request: Request):
             f"Você é um consultor especialista focado no veículo atual do usuário: "
             f"{car_context.get('brand')} {car_context.get('model')} {car_context.get('year')}, "
             f"cor {car_context.get('color', 'N/A')}, {car_context.get('km')}km rodados, "
-            f"preço R${car_context.get('price')}. Responda estritamente sobre este veículo e distinga cada pergunta sem repetição."
+            f"preço R${car_context.get('price')}. Responda sobre o cadastro deste veículo. Não certifique procedência, regularidade, garantia ou integridade sem evidência; informe ausência de dados. Não prometa condições bancárias ou consultas oficiais."
         )
 
     async def event_generator():

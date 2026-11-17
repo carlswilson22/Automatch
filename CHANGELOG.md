@@ -1,5 +1,22 @@
 # Histórico de mudanças
 
+## 17/11/2026 — Melhorias para a demonstração
+
+- Alertas com registro e prévia de queda no site; multicanal com seleção,
+  prévia/histórico por conta e XML, sem alegar mensagens ou publicações externas.
+- Feed da API baseado no catálogo atual, filtro por loja e somente campos públicos.
+- Placa/DETRAN distinguem amostra, cadastro e ausência de consulta; cadastro editado
+  prevalece sobre amostra em cache. FIPE considera código/ano e não inventa preço.
+- Consultores, informações do anúncio e dossiê/PDF não transformam ausência de dados
+  em aprovação, quitação, garantia ou certificação. QR referencia apenas o exemplo.
+- Diálogos de alerta/multicanal com foco, teclado, Escape e cancelamento ao fechar.
+- Removidos imports/estados sem uso das telas alteradas; backlog e referências atualizados.
+- Validação: 275 testes frontend, 103 unittest backend e cinco jornadas com bancos
+  descartáveis; build local; lint com zero erros e 163 avisos (antes: 209).
+  Limites de IA e inspeção manual em [testes/evidências](docs/testes-e-evidencias.md).
+- Pages passou a acionamento exclusivamente manual. Não houve deploy, reformulação
+  do banco, alteração de `.env` privado ou execução contra dados reais.
+- Mesma atualização destinada às duas `main`; demais branches secundárias preservadas.
 ## 17/11/2026 — Revisão das pendências do backlog
 
 - Removidos da lista os três itens de prioridade indefinida, por solicitação

@@ -305,7 +305,7 @@ def run_tests():
     data10_sync = resp10_sync.json()
     print(f"Protocolo: {data10_sync.get('protocolo')} | Sincronizados: {data10_sync.get('total_sincronizados')} canais")
     assert data10_sync.get("status") == "success"
-    assert data10_sync.get("total_sincronizados") == 2
+    assert data10_sync.get("total_simulados") == 2
     print("✅ TESTE 10 PASSOU COM SUCESSO!")
 
     print("\n" + "=" * 70)

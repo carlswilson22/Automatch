@@ -116,7 +116,7 @@ class TestB2BAndVehicleLookup(unittest.TestCase):
         self.assertEqual(res1.ano_fabricacao, 2023)
         self.assertFalse(res1.cache_hit)
         self.assertIsNotNone(res1.preco_fipe_sugerido)
-        self.assertEqual(res1.status_roubo_furto, "Nada Consta (Regular)")
+        self.assertEqual(res1.status_roubo_furto, "Não consultado")
 
         # 2. Segunda consulta (deve ser cache hit)
         res2 = asyncio.run(lookup_plate("ABC1234", self.db))

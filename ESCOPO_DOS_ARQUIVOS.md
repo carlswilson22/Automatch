@@ -1,12 +1,12 @@
 # Catálogo dos arquivos técnicos do Automatch
 
-Atualizado em **17/11/2026**, código `1b7d094`. Inventário obtido dos caminhos
+Atualizado em **17/11/2026**, melhorias demonstrativas sobre a base `444bc09`. Inventário obtido dos caminhos
 versionados, sem contar dependências instaladas, builds ou arquivos privados.
 Não é uma medição de cobertura, precisão ou qualidade de cada módulo.
 
 ## Organização
 
-O catálogo contém 199 arquivos de código/configuração presentes na base
+O catálogo contém 206 arquivos de código/configuração presentes na base
 examinada. Imagens, vídeos, fixtures binárias, lockfile, licença e documentação
 são tratados separadamente; `git ls-files` é o inventário completo do checkout.
 Novos documentos desta revisão estão no [índice](docs/README.md).
@@ -28,7 +28,7 @@ têm função de empacotamento, e reexports de UI não devem ser removidos pelo 
 | [.github/ISSUE_TEMPLATE/pesquisa.yml](.github/ISSUE_TEMPLATE/pesquisa.yml) | Arquivo técnico/configuração; consultar o conteúdo e seus consumidores. |
 | [.github/ISSUE_TEMPLATE/requisito.yml](.github/ISSUE_TEMPLATE/requisito.yml) | Arquivo técnico/configuração; consultar o conteúdo e seus consumidores. |
 | [.github/workflows/ci.yml](.github/workflows/ci.yml) | Testes frontend/backend, migrações PostgreSQL/SQLite e builds Docker. |
-| [.github/workflows/static.yml](.github/workflows/static.yml) | Build/testes e Pages restrito ao repositório principal. |
+| [.github/workflows/static.yml](.github/workflows/static.yml) | Build/testes e Pages manual, restrito ao repositório principal; não executar nesta etapa. |
 | [.gitignore](.gitignore) | Arquivo técnico/configuração; consultar o conteúdo e seus consumidores. |
 | [.markdownlint.json](.markdownlint.json) | Arquivo técnico/configuração; consultar o conteúdo e seus consumidores. |
 | [docker-compose.prod.yml](docker-compose.prod.yml) | Serviços de produção, volumes, PostgreSQL e um worker backend. |
@@ -254,3 +254,15 @@ têm função de empacotamento, e reexports de UI não devem ser removidos pelo 
 - [Arquitetura](docs/arquitetura.md) e [banco](DOCUMENTACAO_BANCO_DE_DADOS.md).
 - [Estado atual](docs/estado-atual.md), [testes](docs/testes-e-evidencias.md) e [configuração](docs/configuracao-e-execucao.md).
 - [LICENSE](LICENSE) e [NOTICE](NOTICE): direitos e atribuições preservados.
+
+## Suporte às melhorias demonstrativas
+
+| Arquivo | Responsabilidade / limite |
+| --- | --- |
+| [backend/test_demo_tools.py](backend/test_demo_tools.py) | Regressões com dados isolados: placa/cache, FIPE, multicanal, XML, consultor e PDF. |
+| [frontend/src/components/vehicle/VehicleReferencePanel.jsx](frontend/src/components/vehicle/VehicleReferencePanel.jsx) | Apresentação comum de referências e informações não consultadas. |
+| [frontend/src/utils/demoTools.js](frontend/src/utils/demoTools.js) | Exemplos, persistência por conta, prévia de alerta e geração de XML; sem entrega externa. |
+| [frontend/src/utils/dialogFocus.js](frontend/src/utils/dialogFocus.js) | Gerenciamento de foco e teclado para o diálogo superior. |
+| [frontend/src/utils/useDialog.js](frontend/src/utils/useDialog.js) | Integra foco, fechamento e bloqueio de rolagem ao ciclo React. |
+| [frontend/tests/test_demo_tools.mjs](frontend/tests/test_demo_tools.mjs) | Regressões de dados e componentes dos exemplos interativos. |
+| [frontend/tests/test_dialog_focus.mjs](frontend/tests/test_dialog_focus.mjs) | Teclado, foco inicial/retorno e diálogos aninhados. |

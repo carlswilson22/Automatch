@@ -1,3 +1,4 @@
+import { dossierInspectionItems, vehicleReference, formatBrl } from '../../utils/demoTools';
 /**
  * OfficialDossierModal.jsx — Modal de visualização e download do Dossiê Cautelar Oficial Automatch™.
  * 
@@ -9,19 +10,7 @@ import { parseInspectionFeedback, escapeHtml } from '../../utils/inspectionData'
 import React, { useEffect, useRef, useState } from 'react';
 import { useScrollLock } from '../../utils/useScrollLock';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  X, 
-  Download, 
-  Printer, 
-  ShieldCheck, 
-  CheckCircle2, 
-  AlertTriangle, 
-  FileText, 
-  Loader2, 
-  ExternalLink,
-  Award,
-  Check
-} from 'lucide-react';
+import { X, Download, Printer, ShieldCheck, FileText, Loader2, Check } from 'lucide-react';
 
 export default function OfficialDossierModal({ isOpen, onClose, car }) {
   useScrollLock(isOpen);
@@ -78,14 +67,8 @@ export default function OfficialDossierModal({ isOpen, onClose, car }) {
         ? `R$ ${rawPrice.toLocaleString('pt-BR')}` 
         : (rawPrice ? `R$ ${rawPrice}` : 'Não informado'));
 
-  const rawFipe = car.fipePrice ?? car.fipe_price;
-  const formattedFipe = car.formattedFipePrice 
-    ? car.formattedFipePrice 
-    : (typeof rawFipe === 'number' && rawFipe > 0 
-        ? `R$ ${Math.round(rawFipe).toLocaleString('pt-BR')}` 
-        : (typeof rawPrice === 'number' && rawPrice > 0 
-            ? `R$ ${Math.round(rawPrice * 1.04).toLocaleString('pt-BR')}` 
-            : 'Não informado'));
+  const rawFipe = vehicleReference(car).value;
+  const formattedFipe = formatBrl(rawFipe);
 
   const rawKm = car.mileage ?? car.km;
   const formattedKm = car.formattedMileage 
@@ -103,57 +86,8 @@ export default function OfficialDossierModal({ isOpen, onClose, car }) {
   const protocol = `ATM-2026-${cleanId || '0001'}`;
   const emissionDate = new Date().toLocaleDateString('pt-BR');
 
-  // Checagem pericial orientada aos dados reais do anúncio
-  const auctionText = String(car.auctionHistory || car.leilao || car.auction_history || '').toLowerCase();
-  const hasAuction = /^(sim|consta|com registro)/.test(auctionText);
-
-  const debtText = String(car.debtStatus || car.debitos || car.debt_status || '').toLowerCase();
-  const hasDebt = debtText.includes('com') || debtText.includes('pend');
-
-  const laudoText = String(car.laudoStatus || car.laudo || car.laudo_status || '').toLowerCase();
-  const isReproved = laudoText.includes('reprovado') || iaClassificacao === 'COM_RESTRICOES';
-  const hasAppointment = laudoText.includes('apontamento') || iaClassificacao === 'COM_ATENCAO';
-
-  const inspectionItems = [
-    {
-      item: 'Estrutura e Longarinas',
-      approved: !isReproved && !hasAppointment,
-      result: isReproved ? 'Reprovado' : (hasAppointment ? 'Apontamento Leve' : 'Aprovado 100%'),
-      observation: isReproved 
-        ? 'Dano estrutural identificado nas longarinas' 
-        : (hasAppointment ? 'Reparo localizado em painel, estrutura preservada' : 'Sem deformações, soldas ou recuperação estrutural')
-    },
-    {
-      item: 'Pintura e Micragem',
-      approved: !isReproved,
-      result: isReproved ? 'Não Conforme' : 'Conforme',
-      observation: 'Espessura de micragem de tinta em conformidade com padrão original'
-    },
-    {
-      item: 'Histórico de Leilão / Sinistro',
-      approved: !hasAuction,
-      result: hasAuction ? 'Consta Registro' : 'Sem Registros',
-      observation: hasAuction 
-        ? 'Registro de leilão ou sinistro localizado nos órgãos reguladores' 
-        : 'Não possui passagem por leilão ou histórico de perda total'
-    },
-    {
-      item: 'Débitos e Restrições DETRAN',
-      approved: !hasDebt,
-      result: hasDebt ? 'Com Débitos' : 'Regular',
-      observation: hasDebt 
-        ? 'Constam pendências de IPVA, multas ou taxas a regularizar' 
-        : 'IPVA e licenciamento conferidos, sem restrições ou gravames'
-    },
-    {
-      item: 'Motor e Transmissão',
-      approved: true,
-      result: 'Inspecionado',
-      observation: 'Varredura eletrônica sem códigos de falha grave na ECU'
-    }
-  ];
-
-  const allApproved = inspectionItems.every(i => i.approved);
+  const inspectionItems = dossierInspectionItems(car);
+  const allApproved = false;
 
   // Construtor HTML do Dossiê para Impressão e Fallback de Arquivo
   const buildDossierHtml = () => `<!DOCTYPE html>
@@ -195,15 +129,15 @@ export default function OfficialDossierModal({ isOpen, onClose, car }) {
   <div class="header">
     <div class="logo-box">
       <h2><span class="logo-dark">AUTO</span><span class="logo-blue">MATCH™</span></h2>
-      <div class="meta-protocol">Protocolo Oficial: ${escapeHtml(protocol)} • Emissão: ${escapeHtml(emissionDate)}</div>
+      <div class="meta-protocol">Referência do exemplo: ${escapeHtml(protocol)} • Emissão: ${escapeHtml(emissionDate)}</div>
     </div>
     <div class="stamp ${allApproved ? 'stamp-ok' : 'stamp-warn'}">
-      ${allApproved ? '✓ LAUDO 100% APROVADO' : '⚠ AUDITORIA COM APONTAMENTO'}
+      ${allApproved ? 'AMOSTRA DO ANÚNCIO' : 'SEM CERTIFICAÇÃO PERICIAL'}
     </div>
   </div>
 
   <h1 class="main-title">${escapeHtml(brand)} ${escapeHtml(model)} (${escapeHtml(year)})</h1>
-  <div class="main-sub">Dossiê Pericial e Histórico de Autenticidade Veicular Automatch</div>
+  <div class="main-sub">Resumo dos dados informados no anúncio</div>
 
   <div class="grid">
     <div class="card">
@@ -254,7 +188,7 @@ export default function OfficialDossierModal({ isOpen, onClose, car }) {
 
   <div class="sec-title">Termo de Conformidade</div>
   <div class="terms">
-    Certificamos que o veículo <strong>${escapeHtml(brand)} ${escapeHtml(model)}</strong>, ano <strong>${escapeHtml(year)}</strong>, foi periciado e auditado segundo os rigorosos padrões de transparência radical da plataforma Automatch. Este documento consolida checagens estruturais, micragem de pintura, consultas a bases de leilão, histórico de débitos e varredura mecânica, com autenticidade eletrônica verificável.
+    Este é um exemplo de relatório com informações do anunciante. Não certifica integridade, situação cadastral, micragem ou procedência. Confira documentos e realize uma vistoria antes de decidir.
   </div>
 
   <div class="footer">
@@ -286,8 +220,8 @@ export default function OfficialDossierModal({ isOpen, onClose, car }) {
           fipe_code: car.fipeCode || car.fipe_code || 'ATM-FIPE',
           fuel,
           plate,
-          debt_status: hasDebt ? 'Com débitos' : 'Sem débitos',
-          auction_history: hasAuction ? 'Sim' : 'Não'
+          debt_status: car.debtStatus || car.debt_status || 'Não informado',
+          auction_history: car.auctionHistory || car.auction_history || 'Não informado'
         })
       });
 
@@ -317,7 +251,7 @@ export default function OfficialDossierModal({ isOpen, onClose, car }) {
         a.click();
         a.remove();
         setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
-      } catch (clientErr) {
+      } catch {
         setPdfError('Não foi possível realizar o download. Verifique a conexão e tente novamente.');
       }
     } finally {
@@ -334,7 +268,7 @@ export default function OfficialDossierModal({ isOpen, onClose, car }) {
       const win = window.open(blobUrl, '_blank');
       if (win) {
         setTimeout(() => {
-          try { win.print(); } catch (e) { /* O recurso opcional mantém seu estado anterior. */ }
+          try { win.print(); } catch { /* O recurso opcional mantém seu estado anterior. */ }
         }, 500);
       }
       setTimeout(() => URL.revokeObjectURL(blobUrl), 10000);
@@ -443,7 +377,7 @@ export default function OfficialDossierModal({ isOpen, onClose, car }) {
                   <span className="text-blue-600">MATCH™</span>
                 </h2>
                 <p className="text-xs text-slate-500 font-mono mt-1">
-                  Protocolo Oficial: <strong className="text-slate-800">{protocol}</strong> • Emissão: {emissionDate}
+                  Referência do exemplo: <strong className="text-slate-800">{protocol}</strong> • Emissão: {emissionDate}
                 </p>
               </div>
 
@@ -454,7 +388,7 @@ export default function OfficialDossierModal({ isOpen, onClose, car }) {
                     : 'bg-amber-50 text-amber-700 border-amber-300'
                 }`}>
                   <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                  {allApproved ? '✓ LAUDO 100% APROVADO' : '⚠ LAUDO COM APONTAMENTO'}
+                  {allApproved ? 'AMOSTRA DO ANÚNCIO' : 'SEM CERTIFICAÇÃO PERICIAL'}
                 </span>
               </div>
             </div>
@@ -465,7 +399,7 @@ export default function OfficialDossierModal({ isOpen, onClose, car }) {
                 {brand} {model} ({year})
               </h1>
               <p className="text-xs font-bold text-blue-600 uppercase tracking-wider mt-1">
-                Dossiê Pericial e Histórico de Autenticidade Veicular Automatch
+                Resumo dos dados informados no anúncio
               </p>
             </div>
 
@@ -482,7 +416,7 @@ export default function OfficialDossierModal({ isOpen, onClose, car }) {
                         Laudo Cautelar Auditado por Inteligência Artificial
                       </h4>
                       <span className="text-[10px] text-blue-700 font-bold">
-                        Motor Multimodal Google Gemini 1.5 Flash • Análise Pericial Oficial
+                        Análise assistida · conferir evidências e documento original
                       </span>
                     </div>
                   </div>
@@ -639,7 +573,7 @@ export default function OfficialDossierModal({ isOpen, onClose, car }) {
                 Termo de Conformidade
               </h3>
               <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200 text-xs text-slate-600 leading-relaxed">
-                Este documento certifica que o veículo <strong>{brand} {model}</strong>, ano <strong>{year}</strong>, foi periciado e validado pelos padrões de transparência radical da plataforma Automatch. O documento conta com autenticidade eletrônica registrada e verificação pública.
+                Este é um exemplo de relatório com informações do anunciante. Não certifica integridade, situação cadastral, micragem ou procedência. Confira documentos e realize uma vistoria antes de decidir.
               </div>
             </div>
 
@@ -653,7 +587,7 @@ export default function OfficialDossierModal({ isOpen, onClose, car }) {
           {/* Barra Inferior com CTA de Impressão */}
           <div className="bg-slate-50 px-6 py-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
             <p className="text-xs text-slate-500 text-center sm:text-left">
-              Documento oficial em padrão A4 com preservação de cores e dados autenticados.
+              Exemplo em padrão A4 com os dados do anúncio. Não substitui uma vistoria ou consulta oficial.
             </p>
             <div className="flex items-center gap-2.5 w-full sm:w-auto">
               <button

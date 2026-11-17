@@ -56,3 +56,6 @@ A sincronização aqui é parte do procedimento de publicação. Não foi instal
 um robô de espelhamento ou token entre organizações. O workflow de Pages
 continua restrito ao principal; CI e permissões devem ser conferidos em cada
 repositório. Ver [CONTRIBUTING](../CONTRIBUTING.md).
+
+Nesta etapa não há deploy. O workflow de Pages está somente manual; não o
+acionar ao sincronizar commits. Reformulação do banco requer nova autorização.

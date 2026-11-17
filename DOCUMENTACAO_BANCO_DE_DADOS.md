@@ -4,6 +4,11 @@ Atualizado em **17/11/2026**, código `1b7d094`. Referência estrutural:
 [models.py](backend/models.py) e [migrações Alembic](backend/alembic/versions).
 Esta revisão leu o código; não consultou nem alterou um banco real.
 
+A etapa demonstrativa de 17/11/2026 preservou esta estrutura. Os campos de
+origem/consulta acrescentados à resposta HTTP de placa não criam colunas no
+banco. A reformulação para a futura execução local aguarda autorização; não
+foram alterados ORM, migrações ou dados reais.
+
 ## Persistência e ambientes
 
 SQLAlchemy configura PostgreSQL pelo `DATABASE_URL`; SQLite exige modo de

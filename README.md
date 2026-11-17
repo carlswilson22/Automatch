@@ -1,6 +1,6 @@
 # Automatch — marketplace automotivo e análise assistida de veículos
 
-Documentação revisada em **17/11/2026**, sobre o código `1b7d094`.
+Documentação revisada em **17/11/2026**, com melhorias demonstrativas sobre a base `444bc09`.
 Projeto Integrador de Análise e Desenvolvimento de Sistemas do CEUB.
 Equipe registrada: Carlos Wilson, Matheus Porto, Paulo Arthur e Vinicius Aurelio.
 
@@ -17,6 +17,12 @@ Ele não executa FastAPI, banco, uploads ou IA no servidor. A aplicação comple
 exige backend e banco próprios. A documentação distingue operação com API,
 amostras locais, integrações simuladas e recursos fora do escopo ativo.
 
+A etapa atual é apenas demonstrativa: **sem deploy e sem reformulação do banco**.
+A reformulação para a futura execução local aguarda autorização específica.
+O workflow de Pages é manual; enviar commits às duas `main` não publica o site.
+Para experimentar as amostras, use o modo demo descrito em
+[configuração e execução](docs/configuracao-e-execucao.md).
+
 ## Funcionalidades e limites
 
 | Área | Situação atual |
@@ -31,9 +37,9 @@ amostras locais, integrações simuladas e recursos fora do escopo ativo.
 | Comparação, financiamento e TCO | Comparação de dados e estimativas ilustrativas; sem aprovação bancária ou cotação vinculante |
 | Rede B2B | Lojas/parcerias, estoque compartilhado, reservas temporárias, mensagens por consultas periódicas e fechamento via API |
 | DETRAN e placa | Bases de demonstração; não há consulta oficial de débitos/restrições contratada |
-| FIPE | Parte dos fluxos consulta BrasilAPI e usa cache/alternativa ilustrativa; conferir fonte e competência |
-| Multicanal e XML | Canais e sucesso de sincronização simulados; feed XML de exemplo, sem publicação externa comprovada |
-| Alertas de preço | Cadastro persistido na API; envio de WhatsApp/e-mail/Web Push não implementado |
+| FIPE | Parte dos fluxos consulta BrasilAPI e usa cache por código/ano; falhas sem preço substituto; conferir fonte e competência |
+| Multicanal e XML | Prévia e histórico de simulação; XML do catálogo atual na API ou do anúncio em demo; nenhum envio externo |
+| Alertas de preço | Interesse na API ou navegador em demo e prévia de queda de preço no site; sem envio externo |
 | Checkout | Simulação em desenvolvimento; produção retorna indisponibilidade sem provedor de pagamento |
 | Pneus e diagnóstico acústico | Não fazem parte da interface ativa; arquivos e endpoints legados não representam funcionalidade entregue |
 

@@ -1,6 +1,6 @@
 # Testes, evidências e limites
 
-Atualizado em **17/11/2026**, referência de código `1b7d094`.
+Atualizado em **17/11/2026**, melhorias demonstrativas sobre a base `444bc09`.
 Uma porcentagem de testes aprovados não equivale à porcentagem de cobertura,
 à ausência de falhas ou à certificação de acessibilidade/IA.
 
@@ -23,7 +23,7 @@ conforme o ambiente. Não há meta fixa de quantidade de testes para toda versã
 No diretório `backend`, com dependências instaladas:
 
 ```sh
-python run_tests.py
+python -X utf8 run_tests.py
 ```
 
 O executor desativa carregamento do `.env`, define ambiente de teste, remove
@@ -31,6 +31,30 @@ a chave Gemini do processo de teste e cria bancos SQLite/diretórios de mídia
 temporários. Executa descoberta unittest e cinco roteiros de jornada. Não
 substituí-lo pela execução indiscriminada de scripts antigos sobre o banco local.
 
+## Execução desta implementação — 17/11/2026
+
+Ambiente: Windows/PowerShell, Node 22 e Python 3.11 em ambiente isolado via uv.
+Nenhum `.env` privado foi lido; bancos e uploads usados no backend são temporários.
+
+- `npm test`: **275 testes aprovados**, incluindo regressões de armazenamento,
+  isolamento por conta/veículo, erro sem falso sucesso, cancelamento, XML,
+  valores ausentes e foco/Tab/Escape em diálogos aninhados.
+- `npm run lint`: **zero erros e 163 avisos**, comparados a 209 na análise anterior.
+  Não houve supressão global de regras; a limpeza foi concentrada nas telas alteradas.
+- `VITE_DEMO_MODE=true`, `VITE_BASE_PATH=/Automatch/`, `npm run build`: compilação local
+  e cópia `404.html`; não houve envio de artefatos ou deploy.
+- `python -X utf8 run_tests.py`: **103 testes unittest e cinco jornadas aprovados**,
+  com SQLite e arquivos descartáveis. Consultas externas dos novos testes usam mocks.
+- XML validado com parser e conferência de atualizações/filtro por loja; PDF tem
+  texto extraído para verificar dados ausentes, escape de marcação e ausência de
+  certificação/cotação fictícia. QR identifica o exemplo, sem URL de órgão externo.
+
+O Python do sistema não estava instalado; o ambiente de testes foi preparado
+separadamente. Ultralytics/Torch apresentou dependência de DLL indisponível neste
+Windows; as verificações locais não homologam inferência YOLO real nem as fixtures
+externas de imagens. Não confundir testes de caminhos locais/mocks com acurácia IA.
+Inspeção visual, leitor de tela e medições de desempenho em dispositivos continuam
+manuais. Não foram testados entrega externa, importação por portais, deploy ou banco real.
 ## Resultados históricos de referência
 
 A [auditoria de 16/11](auditoria-2026-11-16.md) registra a execução anterior e
@@ -51,7 +75,7 @@ para resolver um aviso.
 ## CI e publicação
 
 `ci.yml` possui jobs de backend, frontend, migrações PostgreSQL/SQLite e builds
-Docker. `static.yml` testa/compila/publica o frontend Pages somente no principal.
+Docker. `static.yml` testa/compila/publica o frontend Pages somente no principal e por acionamento manual. Não acionar nesta etapa; commits não fazem deploy.
 São workflows separados: uma execução de Pages não comprova, por si só, sucesso
 de todos os jobs do backend. Conferir status por commit nos dois repositórios.
 A [sincronização](sincronizacao-repositorios.md) não replica segredos ou permissões.

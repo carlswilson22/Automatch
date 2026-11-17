@@ -1,6 +1,6 @@
 # Arquitetura do Automatch
 
-Atualizada em **17/11/2026**, código `1b7d094`.
+Atualizada em **17/11/2026**, melhorias demonstrativas sobre a base `444bc09`.
 Fontes: `frontend/package.json`, `backend/requirements.txt`, `backend/main.py`,
 Compose, gateways e workflows versionados.
 
@@ -59,10 +59,10 @@ telas ativas. O 360° é sequência de fotos, não reconstrução geométrica 3D
 Gemini é opcional; os modelos/SDKs presentes precisam ser homologados quando
 ativados. Falta de chave pode acionar análise/resposta local, sem comprovar a
 precisão de uma análise remota. DETRAN e preenchimento por placa são simulados.
-FIPE pode vir de BrasilAPI, cache, cadastro ou alternativa fixa; registrar origem.
+FIPE pode vir de BrasilAPI, cache por código/ano ou cadastro; não há preço fixo substituto na rota de consulta.
 
-Multicanal retorna canais e protocolos fictícios; feed XML contém exemplo.
-Alertas são persistidos, mas envio de notificações não está implementado.
+Multicanal identifica a simulação sem URLs de publicação. XML da API lê o catálogo existente e filtra por loja; a demonstração local exporta o anúncio escolhido.
+Alertas são registrados na API ou localmente em demo, com estado separado por conta. Há prévia no site; monitoramento e envio externo não estão implementados.
 Checkout de produção fica indisponível sem provedor de pagamento. SMTP atende
 recuperação de acesso quando configurado; não existe envio operacional por
 simplesmente cadastrar um alerta de preço.
@@ -95,3 +95,7 @@ Não há certificação WCAG AAA, integridade absoluta ou meta universal de lat�
 Os [ADRs](decisoes/README.md) preservam decisões históricas com complementos.
 Ver [estado atual](estado-atual.md), [banco](../DOCUMENTACAO_BANCO_DE_DADOS.md),
 [execução](configuracao-e-execucao.md) e [segurança](../SECURITY.md).
+
+Nesta etapa não há deploy nem reformulação de entidades/migrações. O workflow
+de Pages é exclusivamente manual. A mudança do banco para a futura execução
+local depende de autorização específica.

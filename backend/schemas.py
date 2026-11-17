@@ -343,8 +343,8 @@ class PlateLookupResponse(BaseModel):
     placa: str
     marca: str
     modelo: str
-    ano_fabricacao: int
-    ano_modelo: int
+    ano_fabricacao: Optional[int]
+    ano_modelo: Optional[int]
     cor: str
     combustivel: str
     chassi_parcial: str
@@ -359,4 +359,7 @@ class PlateLookupResponse(BaseModel):
     mes_referencia_fipe: Optional[str] = None
     cache_hit: bool = False
     is_simulado: bool = False
+    consulta_oficial: bool = False
+    origem: str = 'cadastro'
+    mensagem: str = ''
 

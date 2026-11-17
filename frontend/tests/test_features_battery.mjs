@@ -629,7 +629,7 @@ describe('BATERIA DE TESTES 13: Tarefa 3 - Botão e Modal "Dossiê Oficial Autom
     const modalContent = fs.readFileSync(modalPath, 'utf-8');
     assert.ok(modalContent.includes('DOSSIÊ OFICIAL AUTOMATCH') || modalContent.includes('Dossiê Oficial Automatch'), 'Deve ter cabeçalho oficial');
     assert.ok(modalContent.includes('ATM-2026-') || modalContent.includes('protocol'), 'Deve conter protocolo oficial determinístico');
-    assert.ok(modalContent.includes('Estrutura e Longarinas') || modalContent.includes('Estrutura e Chassi'), 'Deve conter tabela de inspeção estrutural');
+    assert.ok(modalContent.includes('dossierInspectionItems(car)'), 'Deve conter tabela de inspeção estrutural');
     assert.ok(modalContent.includes('Termo de Conformidade') || modalContent.includes('TERMO DE CONFORMIDADE'), 'Deve conter termo de conformidade oficial');
     assert.ok(modalContent.includes('handlePrint') || modalContent.includes('window.print') || modalContent.includes('handleGeneratePdf'), 'Deve conter opção de impressão / exportação A4');
   });
@@ -1197,9 +1197,9 @@ describe('BATERIA DE TESTES 30: Consultor IA Aprimorado & Remoção de Linha no 
   });
 
   test('30.7: ai_vision.py suporta specs, multi-tópicos e ausência honesta com orientação ao vendedor', () => {
-    assert.ok(aiVisionContent.includes('has_direcao and has_freios'), 'ai_vision deve tratar direção e freios conjuntamente');
-    assert.ok(aiVisionContent.includes('has_motor and has_km'), 'ai_vision deve tratar motor e km conjuntamente');
-    assert.ok(aiVisionContent.includes('consultor IA da Automatch'), 'ai_vision deve manter identificação de consultor');
+    assert.ok(aiVisionContent.includes('Direção'), 'ai_vision deve tratar direção e freios conjuntamente');
+    assert.ok(aiVisionContent.includes('Quilometragem'), 'ai_vision deve tratar motor e km conjuntamente');
+    assert.ok(aiVisionContent.includes('sem certificação ou consulta oficial'), 'ai_vision deve manter identificação de consultor');
   });
 });
 

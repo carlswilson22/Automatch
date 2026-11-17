@@ -26,3 +26,10 @@
 - Frontend: `npm run lint`, `npm test`, `npm run build`, conforme impacto da mudança.
 - Em mudanças apenas documentais, validar links, referências e fidelidade ao código;
   não apresentar testes anteriores como reexecutados. A inspeção visual é manual.
+
+## Escopo demonstrativo autorizado
+
+- Não realizar deploy. Pages deve permanecer com acionamento exclusivamente manual.
+- Não reformular banco, entidades ou migrações para execução local antes de nova autorização.
+- Exemplos devem permitir interação no site sem alegar envio externo ou certificação inexistente.
+- Enviar os commits às duas main continua autorizado; não acionar o workflow de publicação.

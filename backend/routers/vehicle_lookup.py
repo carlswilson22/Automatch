@@ -158,99 +158,37 @@ def validate_brazilian_plate(clean_plate: str) -> bool:
 
 @router.get("/lookup-plate/{placa}", response_model=schemas.PlateLookupResponse)
 async def lookup_plate(placa: str, db: Session = Depends(get_db)):
-    """
-    Consulta cadastral inteligente de veículo por placa para auto-preenchimento.
-    Suporta formato antigo e padrão Mercosul com cache de 24 horas.
-    Cruza com dados de restrições, procedência e Tabela FIPE.
-    """
+    """Preenche a partir de amostra ou cadastro, sem inferir situação oficial."""
     clean_plate = normalize_plate(placa)
-
-    if not clean_plate:
-        raise HTTPException(status_code=400, detail="Placa veicular não informada.")
-
-    if not validate_brazilian_plate(clean_plate):
-        raise HTTPException(
-            status_code=422,
-            detail="Formato de placa inválido. Informe um padrão Mercosul (ex: ABC1D23) ou antigo (ex: ABC-1234)."
-        )
-
-    # 1. Verifica cache em memória de 24h
+    if not clean_plate or not validate_brazilian_plate(clean_plate):
+        raise HTTPException(status_code=422, detail="Informe uma placa válida de 7 caracteres.")
     now = time.time()
-    if clean_plate in _PLATE_CACHE:
-        cached_entry = _PLATE_CACHE[clean_plate]
-        if now - cached_entry["cached_at"] < PLATE_CACHE_TTL_SECONDS:
-            logger.info("Plate Lookup Cache HIT para placa: %s", clean_plate)
-            resp = cached_entry["data"].copy()
-            resp["cache_hit"] = True
-            return schemas.PlateLookupResponse(**resp)
-
-    # 2. Busca na base de veículos conhecidos ou constrói resposta sintética coerente
-    if clean_plate in KNOWN_VEHICLES_DATABASE:
+    local_car = db.query(models.Car).filter(models.Car.plate == clean_plate).first()
+    cached = _PLATE_CACHE.get(clean_plate)
+    if not local_car and cached and now - cached["cached_at"] < PLATE_CACHE_TTL_SECONDS:
+        return schemas.PlateLookupResponse(**{**cached["data"], "cache_hit": True})
+    if not local_car and clean_plate in KNOWN_VEHICLES_DATABASE:
         data = KNOWN_VEHICLES_DATABASE[clean_plate].copy()
-        data["is_simulado"] = False
+        data.update(is_simulado=True, origem="amostra", mensagem="Amostra cadastral de demonstração; não é consulta oficial.")
     else:
-        # Se veículo já existir cadastrado na base local da Automatch, reaproveita dados
-        local_car = db.query(models.Car).filter(models.Car.plate == clean_plate).first()
-        if local_car:
-            data = {
-                "marca": local_car.brand,
-                "modelo": local_car.model,
-                "ano_fabricacao": local_car.year,
-                "ano_modelo": local_car.year,
-                "cor": local_car.color or "Branco",
-                "combustivel": local_car.fuel or "Flex",
-                "chassi_parcial": f"9BW***{clean_plate[-4:]}",
-                "municipio": local_car.location.split(',')[0].strip() if local_car.location else "São Paulo",
-                "uf": local_car.location.split(',')[1].strip() if local_car.location and ',' in local_car.location else "SP",
-                "situacao_veiculo": "Regular",
-                "status_roubo_furto": "Nada Consta (Regular)",
-                "restricoes_financeiras": "Sem Gravame (Quitado)",
-                "historico_leilao": "Sem Registro de Leilão",
-                "preco_fipe_sugerido": float(local_car.fipe_price) if local_car.fipe_price is not None else ((float(local_car.price) * 0.98) if local_car.price else 0.0),
-                "codigo_fipe": local_car.fipe_code or "002165-2",
-                "mes_referencia_fipe": "Setembro de 2024",
-                "is_simulado": False
-            }
-        else:
-            # Geração algorítmica realista para qualquer placa válida
-            hash_num = abs(hash(clean_plate))
-            marcas_modelos = [
-                ("Honda", "Civic Touring 1.5 Turbo Aut.", 145000.0, "014088-0"),
-                ("Toyota", "Corolla Cross XRE 2.0 Aut.", 152000.0, "002198-9"),
-                ("Jeep", "Compass Longitude 1.3 Turbo Flex", 138000.0, "017056-9"),
-                ("Hyundai", "Creta Ultimate 2.0 Flex Aut.", 129000.0, "015147-6"),
-                ("Nissan", "Kicks Exclusive 1.6 CVT", 114000.0, "023154-1")
-            ]
-            picked = marcas_modelos[hash_num % len(marcas_modelos)]
-            ano_fab = 2020 + (hash_num % 4)
-
-            data = {
-                "marca": picked[0],
-                "modelo": picked[1],
-                "ano_fabricacao": ano_fab,
-                "ano_modelo": ano_fab,
-                "cor": ["Prata", "Preto", "Branco", "Cinza", "Vermelho"][hash_num % 5],
-                "combustivel": "Flex",
-                "chassi_parcial": f"9BW{clean_plate[:3]}***{clean_plate[-4:]}",
-                "municipio": ["São Paulo", "Rio de Janeiro", "Curitiba", "Belo Horizonte", "Brasília"][hash_num % 5],
-                "uf": ["SP", "RJ", "PR", "MG", "DF"][hash_num % 5],
-                "situacao_veiculo": "Regular",
-                "status_roubo_furto": "Nada Consta (Regular)",
-                "restricoes_financeiras": "Sem Gravame (Quitado)" if (hash_num % 3 != 0) else "Alienação Fiduciária (Ativa)",
-                "historico_leilao": "Sem Registro de Leilão",
-                "preco_fipe_sugerido": picked[2],
-                "codigo_fipe": picked[3],
-                "mes_referencia_fipe": "Setembro de 2024",
-                "is_simulado": True
-            }
-
-    data["placa"] = clean_plate
-    data["cache_hit"] = False
-
-    # 3. Salva no cache de 24h
-    _PLATE_CACHE[clean_plate] = {
-        "cached_at": now,
-        "data": data
-    }
-
+        if not local_car:
+            raise HTTPException(status_code=404, detail="Placa sem amostra ou cadastro. Preencha os dados do veículo manualmente.")
+        location = (local_car.location or "").split(",")
+        data = {
+            "marca": local_car.brand or "", "modelo": local_car.model or "",
+            "ano_fabricacao": local_car.year, "ano_modelo": local_car.year,
+            "cor": local_car.color or "", "combustivel": local_car.fuel or "",
+            "chassi_parcial": "Não informado", "municipio": location[0].strip(),
+            "uf": location[1].strip() if len(location) > 1 else "",
+            "preco_fipe_sugerido": float(local_car.fipe_price) if local_car.fipe_price is not None else None,
+            "codigo_fipe": local_car.fipe_code, "mes_referencia_fipe": None,
+            "is_simulado": False, "origem": "cadastro",
+            "mensagem": "Dados preenchidos pelo anúncio cadastrado; situação externa não consultada.",
+        }
+    data.update(placa=clean_plate, cache_hit=False, consulta_oficial=False,
+                situacao_veiculo="Não consultado", status_roubo_furto="Não consultado",
+                restricoes_financeiras="Não consultado", historico_leilao="Não consultado")
+    # Cache somente de amostras imutáveis; dados editáveis são lidos do cadastro.
+    if data["origem"] == "amostra":
+        _PLATE_CACHE[clean_plate] = {"cached_at": now, "data": data.copy()}
     return schemas.PlateLookupResponse(**data)

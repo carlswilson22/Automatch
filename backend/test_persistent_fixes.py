@@ -41,8 +41,8 @@ def run_tests():
     assert "olx" in channel_ids, f"OLX Autos deve estar presente nos canais: {channel_ids}"
 
     autocerto_info = next(c for c in channels_data if c["id"] == "autocerto")
-    assert autocerto_info["status"] == "conectado", "Status do AutoCerto deve ser 'conectado'"
-    assert "DMS" in autocerto_info["tipo_integracao"], "Tipo de integração deve ser de conexão direta DMS"
+    assert autocerto_info["status"] == "demonstracao", "Canal deve identificar a demonstração"
+    assert autocerto_info["tipo_integracao"] == "Exemplo interativo", "Conexão não deve ser declarada real"
     print(f"  -> Canais ativos homologados: {channel_ids} (AutoCerto reintegrado com sucesso)")
 
     # Confirmação estrita: rota legada /api/integrations/autocerto/feed.xml permanece 404
@@ -161,7 +161,7 @@ def run_tests():
         "car_context": car_ctx
     })
     ans_laudo = resp_chat_laudo.json().get("resposta", "")
-    assert "Laudo Cautelar 100% Aprovado" in ans_laudo or "estrutura" in ans_laudo.lower()
+    assert "Situação do laudo informada" in ans_laudo and "sem certificação" in ans_laudo
     print(f"  -> Pergunta 'Laudo' -> Resposta: {ans_laudo[:80]}...")
 
     # Teste 9: Fallback orientador amigável (pergunta aleatória sem mapeamento)
@@ -171,7 +171,7 @@ def run_tests():
     })
     ans_fallback = resp_chat_fallback.json().get("resposta", "")
     assert "Laudo Cautelar 100% Aprovado" not in ans_fallback, "Fallback não deve afirmar laudo 100% aprovado aleatoriamente"
-    assert "consultor IA da Automatch" in ans_fallback, "Fallback deve orientar o usuário sobre tópicos disponíveis"
+    assert "Consulte o vendedor" in ans_fallback and "Não há informação" in ans_fallback, "Fallback deve informar ausência e orientar confirmação"
     print(f"  -> Fallback Orientador -> Resposta: {ans_fallback[:80]}...")
 
     print("\n" + "="*70)

@@ -1,131 +1,57 @@
-"""
-integrations.py — Router de integrações externas e multichannel do Automatch.
-
-Objetivo e Motivo da Criação:
-  - Criado para permitir que concessionárias e revendedores parceiros publiquem e sincronizem seus estoques B2B
-    com múltiplos marketplaces automotivos (Webmotors, iCarros, OLX) de forma automatizada e centralizada.
-  - Gera links de compartilhamento seguro, payloads de exportação e QR Codes institucionais.
-
-Responsabilidades:
-  - Publicação simultânea de anúncios em múltiplas plataformas (OLX, Webmotors, iCarros).
-  - Sincronização de status de anúncios entre plataformas.
-  - Geração de links de compartilhamento e QR codes para anúncios.
-"""
-
+"""Amostra multicanal e exportação do catálogo; nenhum envio a provedores."""
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional, Dict, Any, List
-from fastapi import APIRouter, Response, Depends, Header
-from pydantic import BaseModel
-
+from xml.etree.ElementTree import Element, SubElement, tostring
+from fastapi import APIRouter, Response, Depends, HTTPException
+from pydantic import BaseModel, Field
+from sqlalchemy.orm import Session
 import models
+from database import get_db
 from routers.auth import get_current_user_from_header
 
 router = APIRouter(prefix="/api/integrations", tags=["Sincronizador Multicanal B2B"])
-
 CHANNELS = [
-    {
-        "id": "autocerto",
-        "nome": "AutoCerto DMS",
-        "status": "conectado",
-        "tipo_integracao": "API de Conexão Direta (DMS)",
-        "anuncios_sincronizados": 18,
-        "ultima_sincronizacao": "Há 5 minutos",
-        "badge_cor": "#0066cc"
-    },
-    {
-        "id": "autoavaliar",
-        "nome": "AutoAvaliar",
-        "status": "conectado",
-        "tipo_integracao": "API B2B + Carga de Estoque e Avaliação",
-        "anuncios_sincronizados": 18,
-        "ultima_sincronizacao": "Há 10 minutos",
-        "badge_cor": "#ff6600"
-    },
-    {
-        "id": "olx",
-        "nome": "OLX Autos",
-        "status": "conectado",
-        "tipo_integracao": "AutoXML / Carga de Estoque",
-        "anuncios_sincronizados": 18,
-        "ultima_sincronizacao": "Há 18 minutos",
-        "badge_cor": "#6e0ad6"
-    }
+    {"id": "autocerto", "nome": "AutoCerto DMS", "badge_cor": "#0066cc"},
+    {"id": "autoavaliar", "nome": "AutoAvaliar", "badge_cor": "#ff6600"},
+    {"id": "olx", "nome": "OLX Autos", "badge_cor": "#6e0ad6"},
 ]
-
 
 class SyncRequest(BaseModel):
     car_id: Optional[str] = None
     car_name: Optional[str] = "Veículo"
-    store_id: Optional[int] = 1
-    channels: Optional[List[str]] = ["autocerto", "autoavaliar", "olx"]
-
+    store_id: Optional[int] = None
+    channels: List[str] = Field(default_factory=lambda: [channel["id"] for channel in CHANNELS])
 
 @router.get("/channels")
 async def listar_canais_integracao() -> Dict[str, Any]:
-    """Retorna os canais de integração ativos e o status de conexão."""
-    return {
-        "status": "success",
-        "total_canais": len(CHANNELS),
-        "canais": CHANNELS
-    }
-
+    return {"status": "success", "envio_externo": False, "total_canais": len(CHANNELS), "canais": [
+        {**channel, "status": "demonstracao", "tipo_integracao": "Exemplo interativo", "anuncios_sincronizados": 0, "ultima_sincronizacao": None} for channel in CHANNELS
+    ]}
 
 @router.post("/sync")
-async def sincronizar_estoque_multicanal(
-    payload: SyncRequest,
-    current_user: models.User = Depends(get_current_user_from_header)
-) -> Dict[str, Any]:
-    """
-    Dispara a sincronização de estoque multi-plataforma com canais homologados (AutoCerto, AutoAvaliar, OLX).
-    Gera protocolo de envio e links de confirmação.
-    """
-    protocolo = f"SYNC-{uuid.uuid4().hex[:8].upper()}"
-    selected = payload.channels or ["autocerto", "autoavaliar", "olx"]
-
-    resultados = []
-    for cid in selected:
-        ch = next((c for c in CHANNELS if c["id"] == cid), None)
-        cname = ch["nome"] if ch else cid.capitalize()
-        resultados.append({
-            "canal_id": cid,
-            "canal_nome": cname,
-            "status": "publicado",
-            "tempo_resposta": "180ms",
-            "url_publicacao": f"https://www.{cid}.com.br/anuncio/{payload.car_id or 'auto-1'}",
-            "sincronizado_em": datetime.utcnow().isoformat() + "Z"
-        })
-
-    return {
-        "status": "success",
-        "protocolo": protocolo,
-        "veiculo": payload.car_name,
-        "total_sincronizados": len(resultados),
-        "canais_sincronizados": resultados,
-        "mensagem": f"Veículo '{payload.car_name}' sincronizado com sucesso em {len(resultados)} plataformas parceiras!"
-    }
-
+async def sincronizar_estoque_multicanal(payload: SyncRequest, current_user: models.User = Depends(get_current_user_from_header)) -> Dict[str, Any]:
+    selected = list(dict.fromkeys(payload.channels))
+    if not selected or any(cid not in {channel["id"] for channel in CHANNELS} for cid in selected):
+        raise HTTPException(status_code=422, detail="Selecione ao menos um canal conhecido.")
+    resultados = [{"canal_id": cid, "canal_nome": next(channel["nome"] for channel in CHANNELS if channel["id"] == cid), "status": "simulado", "url_publicacao": None} for cid in selected]
+    return {"status": "success", "protocolo": f"DEMO-{uuid.uuid4().hex[:8].upper()}", "veiculo": payload.car_name,
+            "envio_externo": False, "total_sincronizados": 0, "total_simulados": len(resultados), "canais_sincronizados": resultados,
+            "mensagem": "Amostra preparada no Automatch. Nenhum anúncio foi enviado aos portais."}
 
 @router.get("/feed.xml")
-async def gerar_feed_xml():
-    """Gera o Feed XML padrão automotivo compatível com integradores de estoque."""
-    xml_content = """<?xml version="1.0" encoding="UTF-8"?>
-<estoque versao="2.0" gerador="Automatch B2B Hub">
-    <data_geracao>""" + datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S") + """</data_geracao>
-    <concessionaria id="1" nome="Euroville BMW &amp; Automatch">
-        <veiculo id="1">
-            <marca>Volkswagen</marca>
-            <modelo>Golf GTI 2.0 TSI</modelo>
-            <ano_fabricacao>2021</ano_fabricacao>
-            <ano_modelo>2021</ano_modelo>
-            <preco>142000.00</preco>
-            <preco_fipe>145800.00</preco_fipe>
-            <km>42000</km>
-            <cor>Cinza</cor>
-            <transmissao>Automático DSG</transmissao>
-            <combustivel>Gasolina</combustivel>
-            <laudo_ia_aprovado>true</laudo_ia_aprovado>
-        </veiculo>
-    </concessionaria>
-</estoque>"""
-    return Response(content=xml_content, media_type="application/xml")
+async def gerar_feed_xml(store_id: Optional[int] = None, db: Session = Depends(get_db)):
+    """Exporta apenas campos públicos do catálogo atual, sem informações de repasse."""
+    query = db.query(models.Car).filter((models.Car.status_reserva != "vendido") | models.Car.status_reserva.is_(None))
+    if store_id is not None:
+        query = query.filter(models.Car.store_id == store_id)
+    estoque = Element("estoque", versao="2.0", ambiente="demonstracao")
+    SubElement(estoque, "data_geracao").text = datetime.now(timezone.utc).isoformat()
+    for car in query.order_by(models.Car.id).all():
+        vehicle = SubElement(estoque, "veiculo", id=str(car.id))
+        fields = {"marca": car.brand, "modelo": car.model, "ano_modelo": car.year, "preco": f"{car.price:.2f}" if car.price is not None else None,
+                  "km": car.km, "cor": car.color, "transmissao": car.transmission, "combustivel": car.fuel, "store_id": car.store_id}
+        for name, value in fields.items():
+            if value is not None:
+                SubElement(vehicle, name).text = str(value)
+    return Response(content=tostring(estoque, encoding="utf-8", xml_declaration=True), media_type="application/xml")

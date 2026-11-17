@@ -1,6 +1,6 @@
 # Requisitos do Automatch
 
-Revisão de **17/11/2026**, código `1b7d094`. Os identificadores RF-01 a RF-28
+Revisão de **17/11/2026**, melhorias demonstrativas sobre a base `444bc09`. Os identificadores RF-01 a RF-28
 foram mantidos para rastreabilidade. Descrição não equivale a integração
 homologada; a coluna de situação registra o comportamento encontrado.
 
@@ -20,22 +20,22 @@ automáticas auxiliam a análise e não substituem inspeção profissional.
 | RF-03 | Diagnóstico acústico | Fora do escopo ativo; componentes/endpoints legados não entregam diagnóstico ao usuário |
 | RF-04 | Scanner de pneus | Fora do escopo ativo; não há scanner ou reescaneamento de pneus na interface |
 | RF-05 | Catálogo | Busca, filtros e ordenação; API paginada e alternativa local no modo de demonstração |
-| RF-06 | Preço FIPE | Exibir referência com sua origem; parte da API consulta BrasilAPI, com cache e alternativa ilustrativa. Não garantir cotação atual em toda tela |
+| RF-06 | Preço FIPE | Exibir referência com sua origem; parte da API consulta BrasilAPI, com cache por código/ano e indisponibilidade sem cotação substituta. Não garantir cotação atual em toda tela |
 | RF-07 | Dossiê de transparência | Apresentar dados do anúncio/laudo; ausências não comprovam inexistência de risco |
 | RF-08 | Dados DETRAN | Demonstração por bases conhecidas; consulta oficial externa pendente |
 | RF-09 | Troca com troco | Estimativa local de diferença; não avalia profissionalmente o usado nem transfere Pix |
 | RF-10 | Financiamento | Estimativas com referências de bancos; sem contratação, consulta ou aprovação de crédito |
-| RF-11 | Radar de preço | Cadastro persistido por conta na API; monitoramento e envio externo ainda pendentes |
+| RF-11 | Radar de preço | Interesse por conta na API ou navegador em demo; prévia de queda no site, sem monitoramento/envio externo |
 | RF-12 | Assistente contextual | Chat com contexto do veículo, integração Gemini opcional e respostas locais; sem evidência de pipeline RAG completo |
 | RF-13 | Contato com vendedor | Fluxo no anúncio/WhatsApp; não confundir com chat humano público em tempo real. Chat B2B possui persistência/polling |
-| RF-14 | Multicanal B2B | AutoCerto, AutoAvaliar e OLX no código; protocolo/status de envio são simulados, sem publicação real |
-| RF-15 | Feed XML | Endpoint com documento de exemplo; geração completa do estoque e compatibilidade com importadores pendentes |
+| RF-14 | Multicanal B2B | AutoCerto, AutoAvaliar e OLX no código; prévia e histórico demonstrativos, sem links falsos ou envio externo |
+| RF-15 | Feed XML | XML com catálogo atual e filtro de loja; somente campos públicos e veículos não vendidos; compatibilidade externa não homologada |
 | RF-16 | Novo anúncio | Formulário em etapas, mídia e análise assistida; conferir propriedade, dados e confirmação de gravação |
 | RF-17 | Exclusão de anúncio | Exige autorização e confirmação da API; falha não deve ocultar registro apenas localmente |
 | RF-18 | Lojas e estoque B2B | Vínculo à loja, parcerias, reserva temporária, fechamento e histórico persistidos pela API |
 | RF-19 | Autenticação | Cadastro/login JWT, PBKDF2, perfil e versão de sessão; não conceder privilégio por e-mail especial |
 | RF-20 | Planos/checkout | Rota de planos redireciona ao catálogo; checkout simulado fora de produção, bloqueado em produção sem provedor |
-| RF-21 | PDF com QR Code | Documento Automatch vinculado a snapshot/protocolo; não é laudo oficial nem assinatura digital certificada |
+| RF-21 | PDF com QR Code | Relatório demonstrativo de dados fornecidos; snapshot/protocolo na API; sem certificação, preço substituto ou validação externa no PDF |
 | RF-22 | Validação pública | Consultar protocolo existente; inexistente não pode receber confirmação de autenticidade |
 | RF-23 | Recuperação OTP | Código com hash, expiração de 15 minutos e limitação de tentativas; produção depende de SMTP TLS e não devolve OTP |
 | RF-24 | Paginação | Listagem da API com `limit`/`offset` e navegação no frontend; conferir total, filtros e páginas vazias |
