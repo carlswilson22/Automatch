@@ -55,6 +55,20 @@ Windows; as verificações locais não homologam inferência YOLO real nem as fi
 externas de imagens. Não confundir testes de caminhos locais/mocks com acurácia IA.
 Inspeção visual, leitor de tela e medições de desempenho em dispositivos continuam
 manuais. Não foram testados entrega externa, importação por portais, deploy ou banco real.
+## Reanálise sobre `ffe60e2` — 17/11/2026
+
+Executados novamente: 275 testes frontend, 103 unittest backend e cinco jornadas
+aprovados; lint com zero erros e 163 avisos. Não houve novo build local nessa
+reanálise. O CI do SHA examinado terminou com sucesso, incluindo build.
+
+Diagnósticos adicionais em memória confirmaram cinco lacunas nos testes:
+selos favoráveis contradizem o cadastro; a rota do PDF ainda injeta FIPE de 4%
+a mais; favoritos exibem km incorreto e compartilham lista entre contas; cadastro
+local confirma sucesso após erro de armazenamento. Veja o
+[relatório com reproduções](revisao-pendencias-demo-2026-11-17.md).
+A análise não corrigiu esses casos nem os adicionou às regressões permanentes.
+Banco real, `.env` privado, entidades e migrações não foram alterados.
+
 ## Resultados históricos de referência
 
 A [auditoria de 16/11](auditoria-2026-11-16.md) registra a execução anterior e

@@ -1,5 +1,10 @@
 # Automatch — marketplace automotivo e análise assistida de veículos
 
+**Complemento de 17/11/2026:** a [revisão da demonstração](docs/revisao-pendencias-demo-2026-11-17.md)
+confirmou cinco pendências de comportamento em anúncios/PDF, favoritos e cadastro
+local. As melhorias anteriores foram parciais nesses caminhos; o backlog registra
+as correções ainda necessárias. Esta atualização não implementa essas correções.
+
 Documentação revisada em **17/11/2026**, com melhorias demonstrativas sobre a base `444bc09`.
 Projeto Integrador de Análise e Desenvolvimento de Sistemas do CEUB.
 Equipe registrada: Carlos Wilson, Matheus Porto, Paulo Arthur e Vinicius Aurelio.

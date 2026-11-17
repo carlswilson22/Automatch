@@ -23,6 +23,13 @@ permanecem intactas.
 | [Segurança](../SECURITY.md) | Controles, limitações e reporte reservado |
 | [Changelog](../CHANGELOG.md) | Mudanças atuais e registros de ciclos anteriores |
 
+## Revisão de pendências da demonstração
+
+A [análise sobre o código `ffe60e2`](revisao-pendencias-demo-2026-11-17.md)
+registra cinco problemas reproduzidos, suas fontes e critérios de correção.
+Os testes atuais aprovados não cobrem integralmente esses casos. O backlog
+foi complementado; não houve correção funcional, deploy ou alteração do banco.
+
 ## Documentação acadêmica e histórica
 
 - [ADRs](decisoes/README.md): decisões registradas e ressalvas de implementação atuais.

@@ -1,5 +1,10 @@
 # Estado atual do Automatch
 
+**Complemento de 17/11/2026:** a [revisão da demonstração](revisao-pendencias-demo-2026-11-17.md)
+confirmou cinco pendências de comportamento em anúncios/PDF, favoritos e cadastro
+local. As melhorias anteriores foram parciais nesses caminhos; o backlog registra
+as correções ainda necessárias. Esta atualização não implementa essas correções.
+
 Atualizado em **17/11/2026**, melhorias demonstrativas sobre a base `444bc09`.
 Fonte: rotas e componentes versionados, manifests, Compose, migrações e
 [auditoria anterior](auditoria-2026-11-16.md). Esta revisão não refez uma

@@ -1,5 +1,15 @@
 # Histórico de mudanças
 
+## 17/11/2026 — Reanálise das pendências demonstrativas
+
+- Confirmado que as solicitações anteriores dos modelos foram concluídas.
+- Revisado o Automatch `ffe60e2`: cinco problemas reproduzidos em anúncio/PDF,
+  quilometragem e isolamento de favoritos e persistência do cadastro local.
+- Backlog, estado atual e evidências complementados com fontes e critérios.
+- Reexecutados 275 testes frontend, 103 unittest backend e cinco jornadas;
+  todos aprovados, com lacunas de cobertura documentadas. Lint: zero erros/163 avisos.
+- Atualização documental: sem correções funcionais, deploy ou reformulação do banco.
+
 ## 17/11/2026 — Melhorias para a demonstração
 
 - Alertas com registro e prévia de queda no site; multicanal com seleção,
