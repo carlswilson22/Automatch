@@ -73,10 +73,18 @@ para instalação sem Docker, produção e explicação dos arquivos de ambiente
 | OpenAPI | `http://localhost:8000/openapi.json` |
 | PostgreSQL exposto no host | `127.0.0.1:5433` |
 
-A inicialização cria uma conta administrativa conforme o ambiente. Defina a
-senha por `ADMIN_SEED_PASSWORD` e use somente contas locais de teste na
-demonstração. Produção requer credenciais e segredo JWT próprios, fornecidos
-por configuração privada. Não publicar senhas em documentação.
+## Acesso público da demonstração — GitHub Pages
+
+| Campo | Valor |
+| --- | --- |
+| E-mail | `admin@automatch.com` |
+| Senha | `admin123` |
+
+Esses acessos são públicos e destinados à apresentação no modo de demonstração
+do GitHub Pages. Sua manutenção na documentação foi autorizada pelo responsável
+pelo projeto em 17/11/2026. Não são credenciais privadas de uma instalação real.
+Na instalação do cliente, configurar acesso administrativo próprio por
+`ADMIN_SEED_PASSWORD`, com segredo JWT e demais credenciais privados.
 
 ## Verificar alterações
 

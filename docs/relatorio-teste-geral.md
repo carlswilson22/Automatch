@@ -10,8 +10,9 @@ O estado atual distingue recursos ativos de amostras: pneus/acústica não integ
 
 Referências: [estado atual](estado-atual.md) e [testes/evidências](testes-e-evidencias.md).
 
-Nota de proteção: logins e senhas de demonstração explícitos foram omitidos
-nesta atualização. Os resultados, datas e demais fatos do relato foram preservados.
+Nota de contexto: os acessos de teste citados no registro são exemplos públicos
+da demonstração, mantidos por autorização do responsável em 17/11/2026.
+Não representam credenciais de uma instalação real.
 
 ## Registro original preservado
 
@@ -69,7 +70,7 @@ Durante a presente bateria de auditoria e testes do sistema AutoMatch, foi condu
 
 | ID | Severidade | Área | Título / Descrição | Passos para Reproduzir | Resultado Obtido | Resultado Esperado | Causa Provável |
 | :---: | :---: | :---: | :--- | :--- | :--- | :--- | :--- |
-| **DEF-01** | **Crítica** | Backend / Auth & RBAC | **Bypass de Autenticação via Tokens Demo** | 1. Enviar requisição para qualquer endpoint de lojista/admin.<br>2. Incluir cabeçalho `Authorization: Bearer demo-qualquer-coisa`. | O backend autentica a requisição como `Admin` oficial (`[login de teste omitido]`) sem validar assinatura JWT. | Retornar HTTP 401 Unauthorized para qualquer token que não possua assinatura HMAC-SHA256 válida. | Lógica de contingência de demonstração em `backend/routers/auth.py` (L39-46) e `partnerships.py` (L41-48) ativa sem trava de ambiente. |
+| **DEF-01** | **Crítica** | Backend / Auth & RBAC | **Bypass de Autenticação via Tokens Demo** | 1. Enviar requisição para qualquer endpoint de lojista/admin.<br>2. Incluir cabeçalho `Authorization: Bearer demo-qualquer-coisa`. | O backend autentica a requisição como `Admin` oficial (`admin@automatch.com`) sem validar assinatura JWT. | Retornar HTTP 401 Unauthorized para qualquer token que não possua assinatura HMAC-SHA256 válida. | Lógica de contingência de demonstração em `backend/routers/auth.py` (L39-46) e `partnerships.py` (L41-48) ativa sem trava de ambiente. |
 | **DEF-02** | **Crítica** | Backend / Catálogo | **Quebra de Isolamento Multilocatário (BOLA/IDOR)** | 1. Autenticar como usuário comum (comprador ou lojista B).<br>2. Enviar requisição `DELETE /api/cars/sc-001` ou `PUT /api/cars/sc-001`. | O anúncio oficial é alterado ou deletado do banco de dados por um usuário não proprietário. | Retornar HTTP 403 Forbidden ("Permissão negada. Você só pode editar veículos da sua conta"). | Condicional `if car.user_id and car.user_id != current_user.id:` em `cars.py` (L147, L191) falha se `user_id` for `None` (como nos carros do seed). |
 | **DEF-03** | **Crítica** | Frontend / Privacidade | **Exposição de Senhas em Texto Puro no `localStorage`** | 1. Realizar cadastro em `/login`.<br>2. Abrir DevTools -> Application -> Local Storage.<br>3. Consultar chave `@automatch:registered_users`. | A senha do usuário está armazenada em texto plano (`password: "minhasenha"`). | Jamais persistir senhas em texto puro no cliente (violação OWASP e LGPD). | Linhas 127 e 156 do `AuthContext.jsx` realizam `updated.push({ ...fullUser, password })` para suporte a fallback offline. |
 | **DEF-04** | **Alta** | CI/CD / DevOps | **Falha Contínua de Deploy do GitHub Pages no Repositório Secundário** | 1. Acessar GitHub Actions de `CAMPUSCEUB/ADS-AUTOMATCH`.<br>2. Executar `gh run view 36778499441 --repo CAMPUSCEUB/ADS-AUTOMATCH`. | O job de build falha com erro 404: `Get Pages site failed. Please verify that the repository has Pages enabled`. | O pipeline deve construir e publicar a aplicação na URL do GitHub Pages do repositório secundário. | O GitHub Pages não foi ativado nas configurações do repositório `CAMPUSCEUB/ADS-AUTOMATCH` (Settings -> Pages -> Source). |

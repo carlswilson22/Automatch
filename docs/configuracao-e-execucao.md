@@ -4,6 +4,10 @@ Atualizado em **17/11/2026**, referência `1b7d094`. Não incluir valores secret
 em commits, relatórios, capturas ou documentação. Os comandos abaixo são guias;
 a revisão documental não os executou contra o banco do usuário.
 
+Os acessos públicos do GitHub Pages estão no [README](../README.md), com uso
+explicitamente autorizado para demonstração. São distintos dos segredos de
+ambiente e das contas de uma instalação real.
+
 ## Arquivos de ambiente
 
 Na cópia examinada existem `.env` local, `.env.example` e

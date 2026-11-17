@@ -8,8 +8,9 @@
   procedimento de sincronização. Campos e afirmações de integração simulada
   foram distinguidos de serviços operacionais.
 - Scanner/reescaneamento de pneus e diagnóstico acústico não integram o escopo ativo.
-- Corrigidos links locais dos relatórios e omitidas credenciais explícitas de
-  demonstração; configuração de acesso permanece privada.
+- Corrigidos links locais dos relatórios e mantidos os acessos públicos de
+  demonstração do GitHub Pages por autorização explícita do responsável.
+  Credenciais reais e segredos de implantação permanecem privados.
 - Sprints, entregas, ADRs, atas e auditorias mantêm o relato original com notas
   datadas; resultados antigos não foram apresentados como testes novos.
 - Registrada a regra: toda atualização da main principal alcança a main

@@ -36,7 +36,9 @@ permanece manual. Ver [testes e evidências](docs/testes-e-evidencias.md).
 
 ## Segurança e autoria
 
-Não enviar `.env`, bancos, uploads privados, tokens ou dados pessoais. Usar
+Não enviar `.env`, bancos, uploads privados, tokens reais ou dados pessoais.
+Os acessos públicos de demonstração no README foram explicitamente autorizados
+para apresentação no GitHub Pages; manter essa identificação ao documentá-los. Usar
 modelos de ambiente com placeholders e preservar `LICENSE`/`NOTICE`.
 Não executar scripts de teste antigos contra banco real, resetar dados ou
 recriar tabelas para fazer uma migração passar. Ver [SECURITY](SECURITY.md).

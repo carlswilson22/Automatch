@@ -24,9 +24,13 @@ ou auditoria independente. A revisão documental não implementou novos controle
 
 ## Configuração e operação
 
-Não versionar `.env`, credenciais, bancos ou documentos privados. `JWT_SECRET`,
+Não versionar `.env`, credenciais reais, bancos ou documentos privados. `JWT_SECRET`,
 senha administrativa, banco, Gemini e SMTP pertencem ao ambiente protegido.
 `VITE_*` é configuração pública de frontend; não armazenar segredos nesses campos.
+
+Os acessos públicos de demonstração documentados no README são uma exceção
+expressamente autorizada para o GitHub Pages. Não são segredos e não devem ser
+confundidos com credenciais de uma instalação real.
 
 O Pages estático usa demonstração e não comprova autorização em servidor.
 Favoritos/caches locais não devem guardar informações confidenciais nem ser
