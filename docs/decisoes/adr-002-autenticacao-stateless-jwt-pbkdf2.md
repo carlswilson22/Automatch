@@ -1,5 +1,17 @@
 # ADR-002: Autenticação Stateless com JWT e Criptografia PBKDF2
 
+> **Registro histórico — atualização documental de 17/11/2026.**
+> O relato original abaixo foi preservado. Datas, resultados, aprovações e
+> métricas são registros da época, sem nova execução ou certificação nesta revisão.
+
+## Situação para leitura atual
+
+JWT é conferido com token_version da conta; troca de senha/anonimização revoga versões anteriores. OTP guarda hash e exige SMTP em produção. Stateless não significa ausência de consulta ao estado da conta.
+
+Referências: [estado atual](../estado-atual.md) e [testes/evidências](../testes-e-evidencias.md).
+
+## Registro original preservado
+
 ## Título
 Gerenciamento de sessões autenticadas sem estado com tokens JWT e hash de senhas PBKDF2-HMAC-SHA256.
 
@@ -30,4 +42,3 @@ Implementar autenticação totalmente sem estado (*stateless*):
 - **Documento de Arquitetura**: [docs/arquitetura.md](../arquitetura.md)
 - **Módulo de Segurança**: `backend/routers/auth.py` e `backend/security_guard.py`
 - **Relatório de Sprint 01**: [sprints/sprint-01.md](../../sprints/sprint-01.md)
-

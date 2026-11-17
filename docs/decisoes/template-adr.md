@@ -36,3 +36,14 @@ Melhoria das funcionalidades e status do sistema
 - **Documento de Arquitetura:** [docs/arquitetura.md](https://github.com/CAMPUSCEUB/ADS-AUTOMATCH/blob/main/docs/arquitetura.md)
 - **Documento de Requisitos:** [docs/requisitos.md](https://github.com/CAMPUSCEUB/ADS-AUTOMATCH/blob/main/docs/requisitos.md)
 - **Relatório de Sprint 03:** [sprints/sprint-03.md](https://github.com/CAMPUSCEUB/ADS-AUTOMATCH/blob/main/sprints/sprint-03.md)
+
+## Rastreabilidade e limites da atualização
+
+- Data e commit de referência: preencher com dados reais.
+- Situação: planejado, implementado, demonstrativo, pendente ou fora do escopo.
+- Evidência executada: comando, ambiente, resultado, avisos e limitações.
+- Serviços externos: identificar uso real, mock ou indisponibilidade.
+- Não inventar participantes, aprovações, métricas ou execução de testes.
+- Publicação: confirmar main principal e main secundária; preservar outras branches do secundário.
+
+Modelo revisado em 17/11/2026. Consultar o [índice atual](../README.md).

@@ -1,5 +1,12 @@
 # Registros de Decisões Arquiteturais (ADRs) — Automatch™
 
+## Atualização documental — 17/11/2026
+
+Os ADRs 001 a 007 são decisões históricas com complementos de 17/11 sobre a implementação atual; status de decisão não certifica que toda integração pretendida esteja entregue. O ADR-008 registra a orientação vigente de sincronização.
+
+Referência de comportamento: [estado atual](../estado-atual.md). Ambos os repositórios
+recebem atualizações na main; demais branches do secundário são preservadas.
+
 Esta pasta concentra os registros formais de decisões de arquitetura e engenharia de software da plataforma **Automatch**.
 
 ---
@@ -17,6 +24,10 @@ Esta pasta concentra os registros formais de decisões de arquitetura e engenhar
 | **ADR-007** | Refatoração e Adição de Novas Funcionalidades (Termômetro, TCO e Comparador) | 15/09/2026 | Aprovado | [adr-007-refatoracao-e-novas-funcionalidades.md](adr-007-refatoracao-e-novas-funcionalidades.md) |
 
 ---
+
+## Decisão de sincronização
+
+- [ADR-008 — Principal/secundário somente na main](adr-008-sincronizacao-repositorios.md), 17/11/2026.
 
 ## Modelo Padronizado
 

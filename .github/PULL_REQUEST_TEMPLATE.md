@@ -43,8 +43,18 @@ Inclua saídas de terminais, logs de testes, prints de tela ou links de artefato
 
 - [ ] A mudança está vinculada a uma Issue aberta (`Closes #`).
 - [ ] A Issue está associada à Milestone da Sprint correspondente.
-- [ ] Todos os 181 testes automatizados continuam passando sem regressão (`npm test`).
+- [ ] Foram executadas verificações proporcionais à mudança, com comando, commit, resultado e limitações registrados; não foi reutilizada uma contagem antiga como resultado novo.
 - [ ] A compilação em modo de produção (`npm run build`) foi concluída sem erros.
 - [ ] A documentação, changelog e relatórios de sprint foram atualizados.
 - [ ] Caso haja mudança de arquitetura, um novo ADR foi registrado em `docs/decisoes/`.
 
+
+## Publicação e situação das funcionalidades
+
+- [ ] Recurso ativo, demonstração e integração pendente estão descritos corretamente.
+- [ ] Main principal atualizada e hash registrado.
+- [ ] Main secundária atualizada com o mesmo resultado e hash conferido.
+- [ ] Nenhuma outra branch do secundário foi criada, alterada ou excluída.
+- [ ] Segredos, dados privados e evidências de terceiros foram preservados.
+
+Template revisado em 17/11/2026. Procedimento: [sincronização](../docs/sincronizacao-repositorios.md).

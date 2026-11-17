@@ -1,122 +1,97 @@
-# Arquitetura de Software — Automatch™
+# Arquitetura do Automatch
 
-Este documento descreve a arquitetura de software, componentes, fluxo de dados, modelo de persistência e decisões técnicas que fundamentam a plataforma **Automatch**.
+Atualizada em **17/11/2026**, código `1b7d094`.
+Fontes: `frontend/package.json`, `backend/requirements.txt`, `backend/main.py`,
+Compose, gateways e workflows versionados.
 
----
-
-## 1. Contexto Técnico
-
-A solução atende ao ecossistema de marketplace automotivo com foco em auditoria pericial e transparência. Seus principais desafios operacionais são:
-- **Alta responsividade na análise visual**: Processamento de imagens em alta definição sem bloqueio da interface do usuário.
-- **Isolamento e desacoplamento**: Separação clara entre a camada de apresentação, serviços de negócio, orquestração pericial e persistência de dados.
-- **Segurança de transações e dados**: Criptografia de senhas, sessões autenticadas sem estado (*stateless JWT*) e mitigação de acessos não autorizados.
+## Componentes e fluxo
 
 ```mermaid
-graph TD
-    User([Cliente / Navegador]) -->|HTTP 80 / 3000| Gateway[Nginx Reverse Proxy]
-    Gateway -->|/*| Frontend[React 18 + Vite SPA]
-    Gateway -->|/api/*| Backend[FastAPI Python 3.11]
-    Backend -->|Persistência Relacional| DB[(PostgreSQL 15 / SQLite Dev)]
-    Backend -->|Visão Computacional| VisionEngine[OpenCV + YOLOv8 Engine]
-    Backend -->|LLM Multimodal| GeminiAPI[Google Gemini 1.5 Flash Vision]
-    Backend -->|Consultas Oficiais| ExternalGov[APIs DETRAN & FIPE]
+flowchart LR
+    U[Navegador React] --> G[Gateway Nginx]
+    G --> F[Frontend Vite em dev / Nginx estático em produção]
+    G --> A[API FastAPI modular]
+    A --> D[(PostgreSQL)]
+    A --> M[Arquivos de mídia]
+    A --> V[OpenCV / YOLO]
+    A -. opcional .-> I[Gemini]
+    A -. recuperação .-> E[SMTP]
+    A -. referência FIPE .-> B[BrasilAPI]
 ```
 
----
+O backend é uma aplicação modular com roteadores, não um conjunto de
+microsserviços de negócio independentes. O Compose define quatro serviços:
+`db`, `backend`, `frontend` e `gateway`. Redis não faz parte da configuração.
 
-## 2. Componentes do Sistema
+| Camada | Implementação |
+| --- | --- |
+| SPA | React 18, Router 7, Vite 8, TailwindCSS 3; rotas e modais sob demanda |
+| Estado | Contextos de autenticação/tour, gerenciadores de catálogo/favoritos e armazenamento local |
+| HTTP | `apiClient.js`, timeout padrão de 10 s, cancelamento e retry limitado a GET; chamadas podem ter configuração própria |
+| API | FastAPI/Pydantic, roteadores de autenticação, veículos, visão, laudos, uploads, alertas e B2B |
+| Dados | SQLAlchemy, PostgreSQL 15 e SQLite para testes/dev; migrações Alembic |
+| IA/documentos | OpenCV/Ultralytics, Gemini opcional, heurísticas, Pillow, ReportLab e QR Code |
+| Background | APScheduler e rate limiting em processo; produção configurada com um worker |
 
-| Componente | Tecnologia | Responsabilidade Principal |
-| :--- | :--- | :--- |
-| **API Gateway** | Nginx Alpine | Ponto de entrada unificado da aplicação, terminação HTTP, proxy reverso, compressão Gzip e roteamento de tráfego `/` e `/api/*`. |
-| **Frontend (SPA)** | React 18, Vite, TailwindCSS | Interface do usuário responsiva, animações Framer Motion, visualizador 360° interativo e processamento de som Web Audio API. |
-| **Backend API** | FastAPI / Python 3.11 | API RESTful assíncrona, validação de esquemas com Pydantic v2, autenticação JWT e orquestração de microsserviços. |
-| **Motor de Visão Computacional** | OpenCV + YOLOv8 + PIL | Pré-processamento e compressão de fotos (*LANCZOS*), detecção de classes automotivas e mapeamento de avarias na lataria. |
-| **Motor de Diagnóstico Acústico** | Python DSP + FFT / Web Audio | Análise espectral de frequências sonoras da marcha lenta e simulação de áudio mecânico. |
-| **Banco de Dados Relacional** | PostgreSQL 15 | Armazenamento de dados persistentes de veículos, lojas, laudos periciais e usuários com SQLAlchemy ORM (com modo SQLite para dev). |
-| **Gerenciamento de Estado** | FastAPI / JWT Stateless | Gerenciamento de sessões JWT sem estado e cache de contingência em memória. |
-| **Agendador em Background** | APScheduler | Monitoramento periódico assíncrono (a cada 60 segundos) de débitos da Watchlist DETRAN. |
+A existência de biblioteca/endpoint não comprova uso em uma tela. Scanner de
+pneus e diagnóstico acústico permanecem como código legado, sem integração às
+telas ativas. O 360° é sequência de fotos, não reconstrução geométrica 3D.
 
----
+## Fronteiras de dados e acesso
 
-## 3. Integrações Externas
+- Catálogo com API usa registros do banco. Modo demo pode apresentar dados locais;
+  cache não comprova propriedade de anúncio nem confirmação de uma transação.
+- Conta tem papel `comum`, `lojista` ou `admin`, vínculo opcional à loja e
+  `sub_role`. Autorização deve ser conferida em cada operação no servidor.
+- JWT inclui versão da conta, conferida na autenticação; troca de senha e
+  anonimização invalidam versões anteriores. Favoritos continuam locais.
+- Operações B2B dependem da API. Reserva usa aquisição condicional; fechamento
+  e cancelamento confirmam o resultado antes do sucesso na interface.
+- Mensagens B2B são consultadas por polling, com isolamento de sessão/conversa
+  e descarte de respostas antigas. Não há WebSocket nesse fluxo.
+- Emissão de PDF usa snapshot/protocolo registrados. Validação pública comprova
+  o registro Automatch consultado, não a veracidade material de uma perícia.
+- Migrações incrementais e seed têm finalidades distintas. Não apagar banco ou
+  aplicar `stamp` automaticamente para contornar divergências.
 
-1. **Tabela FIPE (Fundação Instituto de Pesquisas Econômicas)**:
-   - *Finalidade*: Consulta em tempo real do valor médio oficial de mercado por código FIPE e ano modelo.
-   - *Resiliência*: Fallback inteligente para dados históricos em caso de indisponibilidade momentânea da API externa.
-2. **DETRAN / SENATRAN (Bases Governamentais)**:
-   - *Finalidade*: Checagem cadastral de débitos (IPVA, licenciamento e multas) e auditoria de restrições administrativas/judiciais (RENAJUD).
-3. **Google Gemini Multimodal API (v1beta)**:
-   - *Finalidade*: Laudo pericial visual descritivo e assistente virtual consultivo especializado no veículo via RAG.
-4. **Agregadores Automotivos B2B (Webmotors, OLX, iCarros, Mercado Livre)**:
-   - *Finalidade*: Sincronização automatizada de anúncios em múltiplos portais e exportação de Feed XML padronizado (`/api/integrations/feed.xml`).
+## Integrações e alternativas
 
----
+Gemini é opcional; os modelos/SDKs presentes precisam ser homologados quando
+ativados. Falta de chave pode acionar análise/resposta local, sem comprovar a
+precisão de uma análise remota. DETRAN e preenchimento por placa são simulados.
+FIPE pode vir de BrasilAPI, cache, cadastro ou alternativa fixa; registrar origem.
 
-## 4. Fluxo e Gestão de Dados
+Multicanal retorna canais e protocolos fictícios; feed XML contém exemplo.
+Alertas são persistidos, mas envio de notificações não está implementado.
+Checkout de produção fica indisponível sem provedor de pagamento. SMTP atende
+recuperação de acesso quando configurado; não existe envio operacional por
+simplesmente cadastrar um alerta de preço.
 
-```mermaid
-sequenceDiagram
-    autonumber
-    actor Cliente as Usuário / Vendedor
-    participant Front as Frontend (React)
-    participant Gate as Gateway (Nginx)
-    participant Back as Backend (FastAPI)
-    participant DB as PostgreSQL
-    participant AI as IA Vision / Audio Engine
+## Ambientes e exposição
 
-    Cliente->>Front: Envia fotos do veículo
-    Front->>Gate: POST /api/analise-visual (Base64 / Multipart)
-    Gate->>Back: Roteia requisição
-    Back->>AI: Pré-processa imagem & executa inferência YOLO/CV
-    AI-->>Back: Retorna coordenadas (X, Y), severidade e score
-    Back->>DB: Salva registro do laudo cautelar
-    Back-->>Gate: Resposta JSON com avarias mapeadas
-    Gate-->>Front: Renderiza pins interativos e laudo na tela
-```
+| Serviço | Desenvolvimento | Produção Compose |
+| --- | --- | --- |
+| Gateway | Host 80 e 3000 | Host 80 e 443 publicados |
+| Frontend | `127.0.0.1:5173` | Sem porta direta no host |
+| Backend | `127.0.0.1:8000` | Sem porta direta no host |
+| Banco | `127.0.0.1:5433` | Sem porta direta no host; volume persistente |
 
-- **Privacidade & LGPD**: Dados de contato de compradores e placas de veículos são transmitidos sob canal criptografado HTTPS/TLS e nunca expostos publicamente em feeds externos sem consentimento.
+O `nginx.prod.conf` atual escuta HTTP em 80. Expor 443 no Compose não configura
+TLS, certificados, HSTS ou CSP automaticamente. Não descrever essa configuração
+como HTTPS pronto ou hardening certificado. Definir terminação TLS e testar os
+cabeçalhos na implantação.
 
----
+GitHub Pages publica somente o frontend do principal em demonstração. O build
+usa a base do repositório; a mesma base de código pode ser sincronizada sem
+publicar um segundo Pages institucional. Workflows têm permissões próprias.
 
-## 5. Decisões Técnicas (ADRs Sintetizadas)
+## Riscos e trabalho pendente
 
-- **ADR-01: Arquitetura em Microsserviços Conteinerizados via Docker Compose**:
-  - *Decisão*: Isolar banco de dados, cache, backend, frontend e gateway em contêineres dedicados.
-  - *Justificativa*: Facilidade de implantação, reprodutibilidade em qualquer ambiente e independência de versões.
-- **ADR-02: Autenticação Stateless com JWT e Criptografia PBKDF2-HMAC-SHA256**:
-  - *Decisão*: Utilizar tokens JWT assinados via HMAC-SHA256 e salts aleatórios para senhas.
-  - *Justificativa*: Elimina necessidade de armazenar estado de sessão no servidor e atende aos mais rigorosos padrões de cibersegurança.
-- **ADR-03: Motor Híbrido de Visão Computacional (Edge/Local + Cloud Fallback)**:
-  - *Decisão*: Suportar inferência com YOLOv8/OpenCV local e Google Gemini Cloud.
-  - *Justificativa*: Garante que a perícia visual funcione mesmo em ambientes sem conectividade com APIs de terceiros.
+Operação real exige segredos exclusivos, PostgreSQL, armazenamento/backup,
+restauração, monitoramento, privacidade, limites de uso e homologação externa.
+Escala horizontal requer compartilhar scheduler/limitadores e revisar concorrência.
+Não há certificação WCAG AAA, integridade absoluta ou meta universal de latência.
 
----
-
-## 6. Riscos Técnicos e Estratégias de Mitigação
-
-| Risco Identificado | Impacto | Estratégia de Mitigação |
-| :--- | :---: | :--- |
-| **Latência no upload de imagens pesadas** | Médio | Pré-compressão com algoritmo *LANCZOS* reduzindo fotos para 1024x1024 antes da transmissão. |
-| **Indisponibilidade de APIs governamentais (DETRAN/FIPE)** | Alto | Contingência resiliente via dados locais simulados e fallback assíncrono. |
-| **Sobrecarga em consultas concorrentes de estoque** | Médio | Pool assíncrono de conexões com SQLAlchemy e indexação por chaves primárias UUID e códigos FIPE. |
-
----
-
-## 7. Hardening de Infraestrutura e Contêineres (CIS Benchmark & OWASP)
-
-Em conformidade com as melhores práticas de segurança de contêineres, o sistema implementa segregação estrita entre os perfis de desenvolvimento e produção:
-
-### 7.1. Matriz de Exposição de Portas e Redes
-
-| Serviço | Porta Interna | Porta em Desenvolvimento (`docker-compose.yml`) | Porta em Produção (`docker-compose.prod.yml`) | Política de Isolamento |
-| :--- | :---: | :---: | :---: | :--- |
-| **`gateway`** | `80` | `80:80`, `3000:80` (Acesso Local) | `80:80`, `443:443` (Acesso Público) | Ponto único de entrada HTTP/HTTPS. |
-| **`frontend`** | `5173` / `80` | `127.0.0.1:5173:5173` | **Nenhuma porta exposta no host** | Servido exclusivamente através do Gateway. |
-| **`backend`** | `8000` | `127.0.0.1:8000:8000` (Docs Swagger) | **Nenhuma porta exposta no host** | Isolado 100% na rede interna `automatch-prod-network`. |
-| **`db` (Postgres)** | `5432` | `127.0.0.1:5433:5432` (DBeaver Local) | **Nenhuma porta exposta no host** | Acessível unicamente pelo contêiner do `backend`. |
-
-### 7.2. ADR-04: Segregação de Perfis de Orquestração
-- **Decisão**: Manter o `docker-compose.yml` voltado para DX (live-reload com volumes) e criar `docker-compose.prod.yml` com build imutável e multi-workers.
-- **Justificativa**: Evita vazamento de portas de banco de dados para a internet em servidores de produção e padroniza a gestão de segredos através do `.env.example`.
-
+Os [ADRs](decisoes/README.md) preservam decisões históricas com complementos.
+Ver [estado atual](estado-atual.md), [banco](../DOCUMENTACAO_BANCO_DE_DADOS.md),
+[execução](configuracao-e-execucao.md) e [segurança](../SECURITY.md).

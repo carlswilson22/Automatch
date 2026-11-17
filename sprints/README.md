@@ -1,5 +1,12 @@
 # Sprints — Automatch™
 
+## Atualização documental — 17/11/2026
+
+Este índice conserva os ciclos e períodos registrados. Os relatórios são históricos, com complementos de situação; não comprovam que propostas antigas ou integrações simuladas estejam prontas hoje. Não foram criadas novas sprints ou medições nesta revisão.
+
+Referência de comportamento: [estado atual](../docs/estado-atual.md). Ambos os repositórios
+recebem atualizações na main; demais branches do secundário são preservadas.
+
 Esta pasta concentra os registros de planejamento, acompanhamento, revisão e encerramento de cada sprint do projeto Automatch.
 
 ---

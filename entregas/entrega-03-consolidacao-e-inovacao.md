@@ -1,5 +1,17 @@
 # Entrega 03 — Consolidação do Sistema, Governança, Varredura 360° e Calibração Pericial (Entrega Final)
 
+> **Registro histórico — atualização documental de 17/11/2026.**
+> O relato original abaixo foi preservado. Datas, resultados, aprovações e
+> métricas são registros da época, sem nova execução ou certificação nesta revisão.
+
+## Situação para leitura atual
+
+O estado atual distingue recursos ativos de amostras: pneus/acústica não integram a interface; DETRAN/multicanal são simulados; alertas não têm entrega externa; laudos Automatch não são certificação oficial. Relatos de Redis, HTTPS pronto, WCAG AAA, homologação externa ou cobertura integral não comprovam esses resultados na versão atual.
+
+Referências: [estado atual](../docs/estado-atual.md) e [testes/evidências](../docs/testes-e-evidencias.md).
+
+## Registro original preservado
+
 ## Identificação
 - **Projeto**: Automatch™ — Marketplace Automotivo com Perícia por Inteligência Artificial
 - **Instituição**: Centro Universitário de Brasília (CEUB)
@@ -53,4 +65,3 @@ Consolidação das **Sprints 06, 07 e 08** (Milestones `v2.4.0`, `v2.5.0` e `v2.
 
 ## Próximos Passos
 - Apresentação final do Projeto Integrador e submissão aos avaliadores institucionais do CEUB.
-

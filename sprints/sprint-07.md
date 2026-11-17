@@ -1,5 +1,17 @@
 # Sprint 07 — Aprimoramento Orbital 360°, Desempenho B2B, Fechamento Resiliente e Unificação de Lojas
 
+> **Registro histórico — atualização documental de 17/11/2026.**
+> O relato original abaixo foi preservado. Datas, resultados, aprovações e
+> métricas são registros da época, sem nova execução ou certificação nesta revisão.
+
+## Situação para leitura atual
+
+O estado atual distingue recursos ativos de amostras: pneus/acústica não integram a interface; DETRAN/multicanal são simulados; alertas não têm entrega externa; laudos Automatch não são certificação oficial. Relatos de Redis, HTTPS pronto, WCAG AAA, homologação externa ou cobertura integral não comprovam esses resultados na versão atual.
+
+Referências: [estado atual](../docs/estado-atual.md) e [testes/evidências](../docs/testes-e-evidencias.md).
+
+## Registro original preservado
+
 ## Período
 Início: 29/09/2026 | Fim: 12/10/2026
 
@@ -41,4 +53,3 @@ Resolver a exibição fidedigna do ângulo 180° (traseira) na varredura 360°, 
 ## Retrospectiva
 - **Pontos Fortes**: A separação do timer em componente memoizado eliminou totalmente o jitter no modal B2B.
 - **Próximas ações**: Realizar auditoria de comentários em todo o código-fonte, criar catálogo de escopo e homologar os dados periciais do Chevrolet Tracker na Sprint 08.
-

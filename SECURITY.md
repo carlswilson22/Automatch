@@ -1,25 +1,61 @@
-# Segurança e Proteção de Dados — Automatch™
+# Segurança e proteção de dados — Automatch
 
-A integridade do código, a conformidade com a LGPD e a proteção de credenciais são prioridades absolutas na arquitetura do Automatch.
+Revisado em **17/11/2026**, código `1b7d094`. Este arquivo descreve mecanismos
+e orientações de operação; não certifica conformidade LGPD, imunidade a ataques
+ou auditoria independente. A revisão documental não implementou novos controles.
 
----
+## Medidas no código
 
-## 1. Diretrizes de Proteção
+- Senhas com PBKDF2-HMAC-SHA256, salt aleatório e comparação de hash;
+  `backend/security.py` é a referência dos parâmetros atuais.
+- JWT assinado e conferido com versão da conta. Alteração de senha e
+  anonimização invalidam tokens antigos; conta anonimizada não autentica.
+- Produção exige segredo próprio, rejeita tokens demo e SQLite.
+- OTP tem expiração e hash, sem armazenamento aberto; produção usa SMTP TLS e
+  não retorna o código na resposta. Sem SMTP configurado, não há entrega real.
+- Rotas verificam sessão/propriedade/cargo conforme a operação. Vínculo à loja
+  não deve ser confundido com autorização universal de todos os subperfis.
+- Uploads possuem verificações de formato/conteúdo/tamanho; downloads de imagens
+  remotas restringem hosts e redirects. Isso não é antivírus ou garantia de arquivo seguro.
+- Limitadores ficam em memória no processo; produção tem um worker enquanto
+  não houver coordenação compartilhada.
+- Exportação/anonimização de conta e logs B2B são pontuais; não comprovam
+  eliminação de todas as cópias, bases externas ou backups.
 
-- **Variáveis de Ambiente**: NUNCA envie arquivos `.env` para o Git. Utilize sempre `.env.example` com placeholders.
-- **Segredos e Chaves**: Chaves de API (ex: `GEMINI_API_KEY`), senhas de banco (`POSTGRES_PASSWORD`) e segredos de token (`JWT_SECRET`) devem ser configuradas exclusivamente via variáveis de ambiente protegidas.
-- **Senhas e Criptografia**: Senhas de usuários devem ser salvas utilizando PBKDF2-HMAC-SHA256 com salts aleatórios de alta entropia.
-- **Proteção OWASP**:
-  - Validação estrita de Magic Bytes (`%PDF-`, `\xFF\xD8\xFF`, `\x89PNG`) em uploads.
-  - Rate limiting ativo em endpoints públicos e de inteligência artificial.
-  - Controle rigoroso de acesso e isolamento multilocatário por loja.
+## Configuração e operação
 
----
+Não versionar `.env`, credenciais, bancos ou documentos privados. `JWT_SECRET`,
+senha administrativa, banco, Gemini e SMTP pertencem ao ambiente protegido.
+`VITE_*` é configuração pública de frontend; não armazenar segredos nesses campos.
 
-## 2. Reporte de Vulnerabilidades e Incidentes
+O Pages estático usa demonstração e não comprova autorização em servidor.
+Favoritos/caches locais não devem guardar informações confidenciais nem ser
+tratados como banco central. Dados demonstrativos não são laudos oficiais.
 
-Caso identifique qualquer brecha de segurança ou exposição acidental de credencial:
-1. Notifique imediatamente os mantenedores do projeto.
-2. Não abra issues públicas com detalhes de exploits ou senhas expostas.
-3. Proceda com a rotação imediata de credenciais e tokens afetados.
+Antes de operar, definir HTTPS, origens, limites, papéis, backup/restauração,
+atualizações, monitoramento e processo de incidentes. O Nginx de produção
+versionado escuta HTTP em 80; publicar 443 não configura certificados.
+Não há rotina de backup automatizada ou trilha imutável comprovada.
 
+## Privacidade
+
+Inventariar dados e fornecedores, finalidade, base de tratamento, acesso,
+retenção e procedimento de solicitações. Não presumir conformidade integral
+porque existe um botão de exportar/anonimizar. Avaliar documentos, logs, alertas,
+mensagens, backups e compartilhamentos separadamente para a operação real.
+
+Não afirmar que fotos de pneus, áudio ou consultas simuladas certificam
+conformidade técnica/legal. Os recursos ativos e pendências estão em
+[estado atual](docs/estado-atual.md) e [backlog](BACKLOG.md).
+
+## Reporte reservado
+
+Comunicar vulnerabilidades aos mantenedores por canal reservado disponível;
+não publicar tokens, dados pessoais ou detalhes exploráveis em issues públicas.
+Não há prazo de resposta ou SLA definido neste arquivo. Se houver exposição,
+revogar/rotacionar credenciais afetadas e avaliar o alcance antes de publicar
+um relato sanitizado.
+
+A mesma orientação vale para os dois repositórios. Enviar correções à `main`
+principal e secundária, preservando as outras branches do secundário, conforme
+[sincronização](docs/sincronizacao-repositorios.md).

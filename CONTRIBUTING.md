@@ -1,38 +1,42 @@
-# Guia de Contribuição — Automatch™
+# Contribuição e publicação — Automatch
 
-Este projeto adota um fluxo de trabalho estruturado, com branches temáticas, commits semânticos, testes automatizados e pull requests rastreáveis.
+Atualizado em **17/11/2026**. Código e documentação devem descrever o
+comportamento comprovado. Comece pelo [índice](docs/README.md).
 
----
+## Fluxo
 
-## 1. Fluxo de Trabalho (Git Workflow)
+1. Registrar problema, resultado esperado e requisito afetado. Usar issue/PR
+   para rastreabilidade acadêmica quando aplicável, sem inventar números.
+2. Implementar mudança proporcional ao escopo e preservar dados/alterações de terceiros.
+3. Executar verificações adequadas: frontend com lint/testes/build; backend com
+   `python run_tests.py`. Revisão só documental verifica links e fidelidade às fontes.
+4. Atualizar estado/requisitos/arquitetura/banco conforme o impacto; registrar
+   mudanças relevantes no changelog. Históricos recebem complementos datados.
+5. Fazer commit descritivo e publicar conforme a orientação vigente do responsável.
+   Nesta sessão, as entregas foram autorizadas diretamente na `main`.
+6. Publicar o mesmo resultado na **main do secundário** e verificar os hashes.
+   **Não alterar qualquer outra branch do secundário.**
 
-1. **Escolha ou Crie uma Issue**: Toda alteração no código ou documentação deve estar vinculada a uma Issue aberta com critérios de aceitação definidos.
-2. **Crie uma Branch Padronizada**:
-   - `feature/<numero-issue>-descricao`: Implementação de novas funcionalidades ou requisitos.
-   - `fix/<numero-issue>-descricao`: Correção de bugs ou divergências funcionais.
-   - `docs/<numero-issue>-descricao`: Atualizações de documentação, ADRs ou relatórios.
-   - `chore/<numero-issue>-descricao`: Tarefas de manutenção, dependências ou infraestrutura.
-3. **Desenvolva com Testes**:
-   - Escreva testes unitários/integração para novas rotas ou componentes.
-   - Execute a suíte de testes antes de comitar: `npm test` no frontend e suíte de integração no backend.
-4. **Commits Semânticos**:
-   - `feat: adicionar visualizador orbital 360`
-   - `fix: corrigir sincronização de laudo cautelar no scanner`
-   - `docs: atualizar relatório da sprint 08`
-   - `test: adicionar bateria de testes do consultor IA`
-5. **Abra um Pull Request**:
-   - Preencha integralmente o `.github/PULL_REQUEST_TEMPLATE.md`.
-   - Adicione link para a issue (`Closes #ID`).
-   - Apresente evidências de validação (saída de testes, logs de build).
-6. **Revisão e Merge**:
-   - O merge deve ocorrer somente após a suíte de testes passar 100% e o build de produção (`npm run build`) compilar com sucesso.
+Branches temáticas/PRs podem ser usados no principal quando o trabalho exigir
+ou houver orientação específica. Não criar uma branch no secundário para
+contornar a regra. Preservar contribuições e nunca forçar histórico divergente.
+O [procedimento de sincronização](docs/sincronizacao-repositorios.md) é parte da conclusão.
 
----
+## Qualidade e evidência
 
-## 2. Padrões de Código e Qualidade
+Usar commits como `fix: ...`, `feat: ...` e `docs: ...`. Relatar comando,
+commit, ambiente, resultado e limitações; não fixar contagem antiga de testes
+no template de PR. Lint sem erros pode ter avisos, que devem ser identificados.
+Não criar testes que apenas repitam texto da implementação ou alterações
+puramente editoriais; aplicar validações relevantes ao risco da mudança.
 
-- **Frontend**: Componentes modulares em React 18, TailwindCSS, hooks organizados e importações limpas.
-- **Backend**: FastAPI com tipagem estrita via Pydantic v2, routers desacoplados e logs semânticos.
-- **Documentação**: Arquivos Markdown formatados, títulos concisos, tabelas alinhadas e diagramas Mermaid.
-- **Comentários**: Códigos devem conter comentários explicativos indicando objetivo e motivo de criação, preservando a manutenibilidade.
+Não declarar integração externa pronta porque uma simulação retorna sucesso.
+Pneus/acústica são código legado fora das telas ativas. Conferência visual
+permanece manual. Ver [testes e evidências](docs/testes-e-evidencias.md).
 
+## Segurança e autoria
+
+Não enviar `.env`, bancos, uploads privados, tokens ou dados pessoais. Usar
+modelos de ambiente com placeholders e preservar `LICENSE`/`NOTICE`.
+Não executar scripts de teste antigos contra banco real, resetar dados ou
+recriar tabelas para fazer uma migração passar. Ver [SECURITY](SECURITY.md).

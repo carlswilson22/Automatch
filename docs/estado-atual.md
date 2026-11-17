@@ -1,0 +1,88 @@
+# Estado atual do Automatch
+
+Atualizado em **17/11/2026**, sobre o código `1b7d094`.
+Fonte: rotas e componentes versionados, manifests, Compose, migrações e
+[auditoria anterior](auditoria-2026-11-16.md). Esta revisão não refez uma
+homologação integral nem mediu precisão de IA ou desempenho em aparelhos reais.
+
+## Modos de execução
+
+1. **Frontend estático/Pages:** navegação e amostras locais conforme as flags
+   de demonstração. GitHub Pages não hospeda a API, banco ou uploads.
+2. **Aplicação com API:** backend FastAPI, banco e mídia próprios; autenticação,
+   cadastro de anúncios, reservas e demais operações persistentes dependem dessa API.
+3. **Serviços externos:** exigem configuração, disponibilidade e homologação
+   próprias. Um botão ou resposta de exemplo não prova integração real.
+
+## Recursos ativos
+
+| Jornada | Implementação e limite |
+| --- | --- |
+| Visitante | Inicial, vitrine, busca/filtros, anúncio e validação pública de protocolo existente |
+| Conta comum | Cadastro/login, perfil, favoritos locais, novo anúncio e Meus Anúncios; sem dashboard B2B |
+| Lojista/admin | Dashboard e rede B2B, conforme vínculo e autorização verificados na API |
+| Catálogo | API paginada; demonstração pode usar catálogo estático. Cache local não é fonte oficial de propriedade |
+| Mídia | Galeria e sequência orbital por veículo; fotos disponíveis determinam os ângulos reais |
+| Scanner | Análise de fotos de lataria; cancelamento/respostas isolados por anúncio. Não atesta condição mecânica nem acurácia milimétrica |
+| Laudo anexado | Auditoria assistida PDF/imagem por IA/heurística, com ausência de dados exigindo conferência |
+| Dossiê PDF | Snapshot persistido e protocolo verificável; dados do cadastro prevalecem na emissão vinculada ao anúncio |
+| Vídeo | Player com roteiro nominal de 20 segundos; sem vídeo, há representação demonstrativa, não filmagem real |
+| Comparador | Dois a três veículos, preço/FIPE, uso, laudo, documentação e ficha; origem dos dados precisa ser considerada |
+| Financiamento/TCO/troca | Cálculos ilustrativos, sem consulta/aprovação de banco, transferência Pix ou proposta automática vinculante |
+| Favoritos | Persistência no navegador e atualização local entre componentes; não há backend de favoritos |
+| Chat público | Assistente contextual e encaminhamento ao vendedor; não há prova de central humana conectada nesse widget |
+| Chat B2B | Mensagens da negociação pela API, atualizadas por polling; sem WebSocket |
+| Parcerias/reservas | Proposta, aceite/encerramento, reserva temporária, pedido de fechamento e repasse com confirmação da API |
+| Sessão | JWT com versão de conta; troca de senha e anonimização invalidam tokens anteriores |
+| Recuperação | OTP com hash e expiração; código demonstrado só fora de produção, entrega real depende de SMTP TLS |
+| Alertas | Cadastro em banco vinculado à conta; isso não implementa monitoramento e envio externo |
+
+Papel principal da conta é `comum`, `lojista` ou `admin`; `sub_role` registra
+subperfil comercial. Não presumir que subperfis tenham uma matriz completa de
+permissões em todos os endpoints apenas porque o campo existe.
+
+## Integrações e demonstrações
+
+| Área | Situação comprovada no código |
+| --- | --- |
+| Gemini | Integração opcional de visão/chat/laudos; sem chave ou em falha há caminhos locais. Não homologada nesta revisão com credenciais reais |
+| YOLO/OpenCV | Processamento local e bibliotecas declaradas; resultados dependem de modelo/imagem/ambiente e não certificam veículo |
+| DETRAN/placa | Registros conhecidos e respostas simuladas; não são certidões ou consultas oficiais |
+| FIPE | `detran.py` consulta BrasilAPI por código, com cache de 24h e alternativa fixa se falhar. Outros dados vêm do cadastro/seed |
+| Multicanal | AutoCerto DMS, AutoAvaliar e OLX Autos no código atual; status e links são simulados, sem chamada de publicação aos provedores |
+| Feed XML | Documento de exemplo, sem geração comprovada a partir de todo o estoque |
+| Alertas WhatsApp/e-mail/Web Push | Cadastro existe; serviço de envio/monitoramento ainda pendente |
+| Checkout | Pedidos simulados em desenvolvimento; produção bloqueia cobrança sem provedor |
+| SMTP | Serviço implementado para recuperação de senha; entrega exige credenciais e teste operacional |
+
+Nomes comerciais e taxas de financiamento são exemplos. Não constituem parceria
+bancária, oferta ou homologação pelo fornecedor. PDFs Automatch não são laudos
+oficiais de órgão público nem substituem inspeção profissional presencial.
+
+## Recursos fora do escopo ativo
+
+**Não há scanner ou reescaneamento de pneus disponível na interface atual.**
+`TireDepthScanner.jsx` e `EngineAcousticScanner.jsx` não são importados pelas
+telas ativas. Endpoints e funções correspondentes permanecem como código legado,
+sem caracterizar funcionalidades entregues. Não documentar medição de sulcos,
+conformidade CONTRAN ou diagnóstico acústico real como recurso pronto.
+O roteiro do vídeo pode citar pneus; isso não implementa um scanner de pneus.
+
+Redis não compõe o Compose atual. Não há certificação WCAG AAA, laudo oficial,
+precisão pericial certificada, SLA ou cobertura de testes de todos os fluxos.
+Existem mecanismos pontuais de acessibilidade/segurança que precisam de
+homologação nas condições de uso.
+
+## Pendências antes de operação real
+
+- Substituir consultas cadastrais, multicanal e feed de exemplo por integrações contratadas.
+- Implementar monitoramento/entrega de alertas e eventual pagamento real.
+- Homologar SMTP, IA, privacidade, políticas de acesso e tratamento de erros externos.
+- Definir domínio/HTTPS, segredos, backups, restauração, monitoramento e retenção.
+- Planejar coordenação compartilhada para rate limiting/scheduler antes de escalar workers.
+- Manter limpeza de avisos de manutenção com testes proporcionais à mudança.
+- Validar manualmente layout, teclado, acessibilidade e fluidez dos fluxos.
+
+Fontes de detalhe: [arquitetura](arquitetura.md), [banco](../DOCUMENTACAO_BANCO_DE_DADOS.md),
+[segurança](../SECURITY.md), [backlog](../BACKLOG.md) e
+[testes](testes-e-evidencias.md).

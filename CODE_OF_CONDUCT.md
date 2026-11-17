@@ -27,3 +27,11 @@ Este repositório adota padrões de integridade acadêmica, respeito mútuo, res
 
 Casos de divergência ou violação deste código de conduta devem ser encaminhados aos líderes técnicos do projeto ou à coordenação institucional competente.
 
+
+## Aplicação nos dois repositórios
+
+Revisado em 17/11/2026. As orientações de respeito, autoria e integridade de
+evidências valem no principal e no secundário. Preservar atas/relatos antigos;
+não inventar testes, métricas ou aprovações. Publicações seguem o
+[procedimento de sincronização](docs/sincronizacao-repositorios.md), alterando
+somente a main do secundário. O texto de conduta anterior foi preservado.

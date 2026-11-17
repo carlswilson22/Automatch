@@ -1,5 +1,17 @@
 # Auditoria do Automatch — 16/11/2026
 
+> **Registro histórico — atualização documental de 17/11/2026.**
+> O relato original abaixo foi preservado. Datas, resultados, aprovações e
+> métricas são registros da época, sem nova execução ou certificação nesta revisão.
+
+## Situação para leitura atual
+
+A referência de comportamento mais recente está no complemento ao fim deste registro (263 testes frontend e avisos daquela execução). Esta revisão é documental; os números anteriores não foram reexecutados. Scanner de pneus e acústica permanecem fora das telas ativas.
+
+Referências: [estado atual](estado-atual.md) e [testes/evidências](testes-e-evidencias.md).
+
+## Registro original preservado
+
 ## Escopo e método
 
 O inventário inicial continha 352 arquivos versionados. Foram analisadas a estrutura, as duplicidades por SHA-256, referências de mídia e as configurações de build, banco, Docker e GitHub Actions. A análise estática percorreu os módulos JavaScript/JSX e Python; os fluxos principais receberam testes de execução e regressão. A inspeção visual do navegador permanece a cargo do usuário.

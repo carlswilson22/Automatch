@@ -1,5 +1,17 @@
 # ADR-005: Visualizador Orbital 360° Fotográfico com Perspectiva 3D e Desoneração de GPU
 
+> **Registro histórico — atualização documental de 17/11/2026.**
+> O relato original abaixo foi preservado. Datas, resultados, aprovações e
+> métricas são registros da época, sem nova execução ou certificação nesta revisão.
+
+## Situação para leitura atual
+
+O giro é uma sequência de fotos cadastradas do veículo, sem reconstrução 3D. A mídia disponível determina os ângulos; nenhuma medição de desempenho/GPU foi refeita nesta revisão.
+
+Referências: [estado atual](../estado-atual.md) e [testes/evidências](../testes-e-evidencias.md).
+
+## Registro original preservado
+
 ## Título
 Renderização tridimensional com CSS transforms acelerados por hardware e eliminação de filtros pesados.
 
@@ -33,4 +45,3 @@ O visualizador 360° original sofria de duas falhas críticas:
 ## Links Relacionados
 - **Componente**: `frontend/src/components/vehicle/Vehicle360Viewer.jsx`
 - **Relatório de Sprint 06**: [sprints/sprint-06.md](../../sprints/sprint-06.md)
-

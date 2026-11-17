@@ -1,4 +1,22 @@
 # Relatório Final de Testes e Resolução de Defeitos — Anúncio & Scanner de IA
+
+> **Registro histórico — atualização documental de 17/11/2026.**
+> O relato original abaixo foi preservado. Datas, resultados, aprovações e
+> métricas são registros da época, sem nova execução ou certificação nesta revisão.
+
+## Situação para leitura atual
+
+O estado atual distingue recursos ativos de amostras: pneus/acústica não integram a interface; DETRAN/multicanal são simulados; alertas não têm entrega externa; laudos Automatch não são certificação oficial. Relatos de Redis, HTTPS pronto, WCAG AAA, homologação externa ou cobertura integral não comprovam esses resultados na versão atual.
+
+Referências: [estado atual](estado-atual.md) e [testes/evidências](testes-e-evidencias.md).
+
+Nota de autorização atual: contas comuns, lojistas e administradores podem
+publicar anúncios conforme a API e o vínculo/propriedade. A restrição antiga
+a apenas lojistas no relato abaixo foi superada; não usar aquele trecho como
+contrato atual de acesso.
+
+## Registro original preservado
+
 **Plataforma:** Automatch | **Data:** 2026-10-07 | **Ambiente:** Local Docker (dev)  
 **Engenheiro QA:** Antigravity AI | **Status:** ✅ 100% dos Casos de Teste Aprovados
 
@@ -62,7 +80,7 @@ Todas as falhas identificadas no ciclo de testes E2E foram corrigidas na raiz e 
 
 ### [DEF-01] Controle de Acesso no Endpoint `POST /api/cars` (OWASP A01:2021)
 - **Causa:** O endpoint `create_car` recebia qualquer usuário autenticado e não checava se possuía a permissão de lojista.
-- **Correção em [`backend/routers/cars.py`](file:///c:/Users/Usuario/Downloads/Projeto%20pi/backend/routers/cars.py):**
+- **Correção em [`backend/routers/cars.py`](../backend/routers/cars.py):**
   ```python
   if getattr(current_user, "role", None) not in ("lojista", "admin"):
       raise HTTPException(status_code=403, detail="Acesso negado: apenas lojistas podem publicar anúncios.")
@@ -76,7 +94,7 @@ Todas as falhas identificadas no ciclo de testes E2E foram corrigidas na raiz e 
   1. O YOLOv8 detectava 0 veículos em paisagens ou edifícios, mas o código ignorava esse retorno e executava cálculos de lataria em nuvens, árvores e fachadas.
   2. As 5 zonas anatômicas usavam porcentagens globais de toda a tela, absorvendo fundos contrastantes.
   3. Comparações puramente relativas forçavam zonas de um carro novo a serem rotuladas como amassadas.
-- **Correção em [`backend/services/ai_service.py`](file:///c:/Users/Usuario/Downloads/Projeto%20pi/backend/services/ai_service.py):**
+- **Correção em [`backend/services/ai_service.py`](../backend/services/ai_service.py):**
   1. Bloqueio imediato com `status: "rejected"` e `tem_avarias: False` quando o detector YOLO não encontra veículos automotores.
   2. Recorte das zonas anatômicas ancorado estritamente à bounding box do veículo detectado.
   3. Algoritmo híbrido com densidade Canny global e variância Laplaciana calibradas para distinguir pinturas uniformes de colisões reais.
@@ -86,7 +104,7 @@ Todas as falhas identificadas no ciclo de testes E2E foram corrigidas na raiz e 
 
 ### [DEF-03] Validação de Intervalo de Ano e Preço no Backend
 - **Causa:** Validação existia apenas no front-end JavaScript; o Pydantic aceitava qualquer número inteiro e float.
-- **Correção em [`backend/schemas.py`](file:///c:/Users/Usuario/Downloads/Projeto%20pi/backend/schemas.py):**
+- **Correção em [`backend/schemas.py`](../backend/schemas.py):**
   ```python
   @field_validator("year")
   @classmethod
@@ -110,14 +128,14 @@ Todas as falhas identificadas no ciclo de testes E2E foram corrigidas na raiz e 
 ### [DEF-04] Sinalização de Dados de Consulta de Placa Sintética
 - **Causa:** O endpoint `GET /api/vehicles/lookup-plate/{placa}` gerava carros sintéticos via hash sem distinguir de veículos oficiais cadastrados.
 - **Correção:**
-  - Em [`backend/schemas.py`](file:///c:/Users/Usuario/Downloads/Projeto%20pi/backend/schemas.py): Adicionado `is_simulado: bool = False` no schema `PlateLookupResponse`.
-  - Em [`backend/routers/vehicle_lookup.py`](file:///c:/Users/Usuario/Downloads/Projeto%20pi/backend/routers/vehicle_lookup.py): Atribuído `is_simulado: True` para placas sintetizadas e `False` para base oficial/banco.
-  - Em [`frontend/src/pages/NewCarAdForm.jsx`](file:///c:/Users/Usuario/Downloads/Projeto%20pi/frontend/src/pages/NewCarAdForm.jsx): Inserido badge visual âmbar: *"⚠️ Dados Simulados (Demonstração)"*.
+  - Em [`backend/schemas.py`](../backend/schemas.py): Adicionado `is_simulado: bool = False` no schema `PlateLookupResponse`.
+  - Em [`backend/routers/vehicle_lookup.py`](../backend/routers/vehicle_lookup.py): Atribuído `is_simulado: True` para placas sintetizadas e `False` para base oficial/banco.
+  - Em [`frontend/src/pages/NewCarAdForm.jsx`](../frontend/src/pages/NewCarAdForm.jsx): Inserido badge visual âmbar: *"⚠️ Dados Simulados (Demonstração)"*.
 
 ---
 
 ### [Achados A1, A2, A3, A4] Estabilidade e Experiência do Formulário
-- **A1 / A3:** [`NewCarAdForm.jsx`](file:///c:/Users/Usuario/Downloads/Projeto%20pi/frontend/src/pages/NewCarAdForm.jsx) corrigido para só registrar o carro após resposta HTTP 200 do backend, salvando o `laudo_feedback` visual da IA e exibindo mensagens detalhadas de erro em caso de falha.
+- **A1 / A3:** [`NewCarAdForm.jsx`](../frontend/src/pages/NewCarAdForm.jsx) corrigido para só registrar o carro após resposta HTTP 200 do backend, salvando o `laudo_feedback` visual da IA e exibindo mensagens detalhadas de erro em caso de falha.
 - **A4:** Registro de teste `a12d7527-442c-4e54-835a-90d1a2a1d4e4` excluído com sucesso do banco de dados PostgreSQL.
 
 ---

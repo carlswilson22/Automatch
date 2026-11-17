@@ -1,5 +1,17 @@
 # ADR-006: Mitigação de Vulnerabilidades OWASP Top 10 e Rate Limiting no Consultor IA
 
+> **Registro histórico — atualização documental de 17/11/2026.**
+> O relato original abaixo foi preservado. Datas, resultados, aprovações e
+> métricas são registros da época, sem nova execução ou certificação nesta revisão.
+
+## Situação para leitura atual
+
+Controles são pontuais e não equivalem a certificação OWASP/LGPD. Limitadores/scheduler são locais; produção usa um worker e exige segredos próprios. Conferir acesso por operação e origem de dados.
+
+Referências: [estado atual](../estado-atual.md) e [testes/evidências](../testes-e-evidencias.md).
+
+## Registro original preservado
+
 ## Título
 Aplicação de controles de segurança defensiva em camadas (OWASP A01 a A05) e proteção anti-abuso.
 
@@ -40,4 +52,3 @@ Implementar um conjunto integrado de medidas de segurança defensiva:
 - **Guia de Segurança**: [SECURITY.md](../../SECURITY.md)
 - **Bateria de Testes de Segurança**: `frontend/tests/test_security_audit.mjs`
 - **Módulo de Proteção**: `backend/security_guard.py`
-

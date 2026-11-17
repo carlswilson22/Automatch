@@ -31,3 +31,14 @@ Não teve impedimentos nas ações feitas
 - **ADR Relacionado:** [docs/decisoes/template-adr.md](https://github.com/CAMPUSCEUB/ADS-AUTOMATCH/blob/main/docs/decisoes/template-adr.md)
 - **Documentação do Projeto:** [README.md](https://github.com/CAMPUSCEUB/ADS-AUTOMATCH/blob/main/README.md)
 - **Backlog do Projeto:** [BACKLOG.md](https://github.com/CAMPUSCEUB/ADS-AUTOMATCH/blob/main/BACKLOG.md)
+
+## Rastreabilidade e limites da atualização
+
+- Data e commit de referência: preencher com dados reais.
+- Situação: planejado, implementado, demonstrativo, pendente ou fora do escopo.
+- Evidência executada: comando, ambiente, resultado, avisos e limitações.
+- Serviços externos: identificar uso real, mock ou indisponibilidade.
+- Não inventar participantes, aprovações, métricas ou execução de testes.
+- Publicação: confirmar main principal e main secundária; preservar outras branches do secundário.
+
+Modelo revisado em 17/11/2026. Consultar o [índice atual](../README.md).

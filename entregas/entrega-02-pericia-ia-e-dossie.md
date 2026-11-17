@@ -1,5 +1,17 @@
 # Entrega 02 — Perícia por Inteligência Artificial, Dossiê com QR Code e Comparador
 
+> **Registro histórico — atualização documental de 17/11/2026.**
+> O relato original abaixo foi preservado. Datas, resultados, aprovações e
+> métricas são registros da época, sem nova execução ou certificação nesta revisão.
+
+## Situação para leitura atual
+
+O estado atual distingue recursos ativos de amostras: pneus/acústica não integram a interface; DETRAN/multicanal são simulados; alertas não têm entrega externa; laudos Automatch não são certificação oficial. Relatos de Redis, HTTPS pronto, WCAG AAA, homologação externa ou cobertura integral não comprovam esses resultados na versão atual.
+
+Referências: [estado atual](../docs/estado-atual.md) e [testes/evidências](../docs/testes-e-evidencias.md).
+
+## Registro original preservado
+
 ## Identificação
 - **Projeto**: Automatch™ — Marketplace Automotivo com Perícia por Inteligência Artificial
 - **Instituição**: Centro Universitário de Brasília (CEUB)
@@ -48,4 +60,3 @@ Consolidação das **Sprints 03, 04 e 05** (Milestones `v2.1.0`, `v2.2.0` e `v2.
 ## Próximos Passos
 - Refatorar a renderização do visualizador 360° para perspectiva 3D contínua acelerada por hardware na Entrega 03.
 - Aplicar code-splitting dinâmico com `React.lazy()` e realizar auditoria completa de segurança OWASP Top 10.
-

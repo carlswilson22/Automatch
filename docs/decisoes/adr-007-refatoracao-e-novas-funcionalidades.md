@@ -1,5 +1,17 @@
 # ADR-007: Refatoração e Implementação de Novas Funcionalidades
 
+> **Registro histórico — atualização documental de 17/11/2026.**
+> O relato original abaixo foi preservado. Datas, resultados, aprovações e
+> métricas são registros da época, sem nova execução ou certificação nesta revisão.
+
+## Situação para leitura atual
+
+TCO, comparação e financiamento são estimativas baseadas nos dados disponíveis. Alertas são persistidos, mas a entrega externa permanece pendente; histórico de testes não comprova integração real.
+
+Referências: [estado atual](../estado-atual.md) e [testes/evidências](../testes-e-evidencias.md).
+
+## Registro original preservado
+
 ## Título
 
 Última reunião: Refatoração e implementação de novas funcionalidades

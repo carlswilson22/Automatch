@@ -1,5 +1,20 @@
 # Relatório Final Consolidado — Melhoria Geral do Projeto AutoMatch
 
+> **Registro histórico — atualização documental de 17/11/2026.**
+> O relato original abaixo foi preservado. Datas, resultados, aprovações e
+> métricas são registros da época, sem nova execução ou certificação nesta revisão.
+
+## Situação para leitura atual
+
+O estado atual distingue recursos ativos de amostras: pneus/acústica não integram a interface; DETRAN/multicanal são simulados; alertas não têm entrega externa; laudos Automatch não são certificação oficial. Relatos de Redis, HTTPS pronto, WCAG AAA, homologação externa ou cobertura integral não comprovam esses resultados na versão atual.
+
+Referências: [estado atual](estado-atual.md) e [testes/evidências](testes-e-evidencias.md).
+
+Nota de proteção: logins e senhas de demonstração explícitos foram omitidos
+nesta atualização. Os resultados, datas e demais fatos do relato foram preservados.
+
+## Registro original preservado
+
 > **Data de Emissão:** 28 de Setembro de 2026  
 > **Status:** Concluído com Sucesso  
 > **Protocolo Adotado:** VLAEG (Visão, Lógica, Arquitetura, Estilo e Governança)  
@@ -33,7 +48,7 @@ Todas as fases do protocolo **VLAEG** foram formalmente documentadas e aprovadas
 | **Compressão HTTP (GZip)** | Respostas do FastAPI sem compressão | Ativado `GZipMiddleware(minimum_size=1000)` | **Implementado** | `backend/main.py` |
 | **Índices de Banco de Dados** | Faltavam índices compostos para busca rápida | Criado `idx_cars_brand_price` e índice em `partnership_audit_logs.created_at` | **Implementado** | `backend/models.py` |
 | **Proteção Brute-Force (Rate Limit)** | `/api/login` e `/api/detran/{placa}` sem limites | Criado `security_guard.py` com `RateLimiter` em janela deslizante (5 tentativas/min no login, 30/min no Detran) | **Implementado** | `backend/security_guard.py`, `backend/routers/auth.py`, `backend/routers/detran.py` |
-| **Anti-IDOR / Broken Access Control** | `get_current_b2b_user` assumia `admin@automatch.com` quando desautenticado | Removido fallback de desenvolvimento; agora exige token JWT válido com 401 | **Implementado** | `backend/routers/partnerships.py` |
+| **Anti-IDOR / Broken Access Control** | `get_current_b2b_user` assumia `[login de teste omitido]` quando desautenticado | Removido fallback de desenvolvimento; agora exige token JWT válido com 401 | **Implementado** | `backend/routers/partnerships.py` |
 | **Proteção LGPD & Anonimização** | PII exposta em logs stdout; sem exportação/exclusão de titular | Adicionado `mask_email`, mascaramento em logs e endpoints `GET /api/users/me/export-data` e `DELETE /api/users/me` | **Implementado** | `backend/security_guard.py`, `backend/routers/auth.py` |
 | **Cabeçalhos de Segurança HTTP** | Faltavam cabeçalhos defensivos recomendados pela OWASP | Middleware injeta `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `HSTS` e `Referrer-Policy` | **Implementado** | `backend/main.py` |
 | **Padronização de Animações** | Estilos de transição fragmentados | Criado `animations.js` com presets Framer Motion | **Implementado** | `frontend/src/utils/animations.js` |
@@ -47,7 +62,7 @@ Todas as fases do protocolo **VLAEG** foram formalmente documentadas e aprovadas
 
 ### 3.1. Broken Access Control / IDOR no Módulo B2B (Alta Severidade)
 * **Local:** `backend/routers/partnerships.py` (`get_current_b2b_user`)
-* **Problema:** Existia um bloco de fallback que, na ausência de autenticação ou em caso de token inválido, retornava o usuário administrativo `admin@automatch.com`, concedendo acesso a transações e estoques confidenciais de outros lojistas.
+* **Problema:** Existia um bloco de fallback que, na ausência de autenticação ou em caso de token inválido, retornava o usuário administrativo `[login de teste omitido]`, concedendo acesso a transações e estoques confidenciais de outros lojistas.
 * **Correção:** Removido o fallback. A função agora valida estritamente a assinatura e expiração do JWT, retornando `HTTP 401 Unauthorized` caso não autenticado.
 
 ### 3.2. Ausência de Rate Limiting em Rotas Críticas (Média-Alta Severidade)

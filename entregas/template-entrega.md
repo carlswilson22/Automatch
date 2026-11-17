@@ -35,3 +35,14 @@ Liste os itens ainda abertos, as correções futuras ou as dependências não re
 ## Próximos passos
 
 Indique os ajustes, a continuidade planejada e as ações esperadas após a avaliação.
+
+## Rastreabilidade e limites da atualização
+
+- Data e commit de referência: preencher com dados reais.
+- Situação: planejado, implementado, demonstrativo, pendente ou fora do escopo.
+- Evidência executada: comando, ambiente, resultado, avisos e limitações.
+- Serviços externos: identificar uso real, mock ou indisponibilidade.
+- Não inventar participantes, aprovações, métricas ou execução de testes.
+- Publicação: confirmar main principal e main secundária; preservar outras branches do secundário.
+
+Modelo revisado em 17/11/2026. Consultar o [índice atual](../docs/README.md).

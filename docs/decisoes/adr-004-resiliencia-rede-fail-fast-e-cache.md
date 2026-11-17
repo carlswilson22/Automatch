@@ -1,5 +1,17 @@
 # ADR-004: Resiliência de Rede com Fail-Fast e Estratégia de Caching
 
+> **Registro histórico — atualização documental de 17/11/2026.**
+> O relato original abaixo foi preservado. Datas, resultados, aprovações e
+> métricas são registros da época, sem nova execução ou certificação nesta revisão.
+
+## Situação para leitura atual
+
+O cliente HTTP central usa timeout padrão de 10 segundos, cancelamento e retry limitado a GET; chamadas específicas podem sobrescrever valores. Reservas/fechamentos não devem simular sucesso quando a API falhar.
+
+Referências: [estado atual](../estado-atual.md) e [testes/evidências](../testes-e-evidencias.md).
+
+## Registro original preservado
+
 ## Título
 Implementação de timeouts com `AbortSignal.timeout` e cache em memória com TTL no frontend e backend.
 
@@ -32,4 +44,3 @@ Durante testes de estresse em conexões lentas ou com backend momentaneamente in
 ## Links Relacionados
 - **Documento de Arquitetura**: [docs/arquitetura.md](../arquitetura.md)
 - **Relatório de Sprint 04**: [sprints/sprint-04.md](../../sprints/sprint-04.md)
-

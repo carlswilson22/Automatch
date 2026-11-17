@@ -1,5 +1,34 @@
 # Histórico de mudanças
 
+## 17/11/2026 — Documentação e sincronização dos repositórios
+
+- Atualizados README, requisitos, arquitetura, banco, catálogo técnico, backlog,
+  segurança, contribuição e protótipo conforme o código de referência 1b7d094.
+- Criados índice, estado atual, configuração/execução, testes/evidências e
+  procedimento de sincronização. Campos e afirmações de integração simulada
+  foram distinguidos de serviços operacionais.
+- Scanner/reescaneamento de pneus e diagnóstico acústico não integram o escopo ativo.
+- Corrigidos links locais dos relatórios e omitidas credenciais explícitas de
+  demonstração; configuração de acesso permanece privada.
+- Sprints, entregas, ADRs, atas e auditorias mantêm o relato original com notas
+  datadas; resultados antigos não foram apresentados como testes novos.
+- Registrada a regra: toda atualização da main principal alcança a main
+  secundária, sem modificar outras branches do secundário; ADR-008 e AGENTS.
+- Alterações documentais; nenhum serviço externo, banco, mídia ou funcionalidade
+  da aplicação foi modificado nesta revisão.
+
+## Correções anteriores — referência de 16/11/2026
+
+Os commits 6acb609, 316feec e 1b7d094 registram correções de sessão, persistência,
+laudos, migrações, mídia e comportamento assíncrono. Resultados e limitações
+estão na [auditoria](docs/auditoria-2026-11-16.md).
+
+## Registros históricos por sprint
+
+Os itens abaixo são o relato original dos ciclos. Afirmações antigas de
+homologação, desempenho e alternativas locais precisam ser lidas com o
+[estado atual](docs/estado-atual.md); não são compromissos ou certificações vigentes.
+
 Registre aqui as mudanças relevantes por sprint ou marco avaliativo.
 
 ## Sprint 08 - Auditoria Multimodal de Laudos por IA, Tour Guiado Interativo B2B e Vitrine Resiliente (v2.6.0)

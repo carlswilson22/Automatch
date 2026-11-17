@@ -1,92 +1,71 @@
-# Especificação de Requisitos — Automatch™
+# Requisitos do Automatch
 
-Este documento consolida os requisitos funcionais, requisitos não funcionais, público-alvo e critérios de aceitação da plataforma **Automatch**.
+Revisão de **17/11/2026**, código `1b7d094`. Os identificadores RF-01 a RF-28
+foram mantidos para rastreabilidade. Descrição não equivale a integração
+homologada; a coluna de situação registra o comportamento encontrado.
 
----
+## Objetivo e usuários
 
-## 1. Visão do Produto
+Marketplace de veículos, análise assistida de fotos/laudos e negociação entre
+lojas. Visitante consulta o catálogo; conta comum anuncia e usa ferramentas
+pessoais; lojista/admin acessa o B2B conforme autorização da API. Informações
+automáticas auxiliam a análise e não substituem inspeção profissional.
 
-O **Automatch** é uma plataforma web para compra, venda e avaliação de veículos que estabelece um novo padrão de segurança e transparência no mercado automotivo. O sistema audita anúncios de veículos através de **Visão Computacional**, **Diagnóstico Acústico de Motor**, **Scanner de Pneus**, **Histórico DETRAN** e **Preço FIPE**, viabilizando simulações comerciais inovadoras como a **Troca com Troco** e sincronização multicanal para lojistas.
+## Requisitos funcionais e situação
 
----
+| ID | Recurso | Situação e critério verificável |
+| --- | --- | --- |
+| RF-01 | Scanner de carroceria | Ativo com API de imagem; conferir dados retornados, erro e cancelamento. Sem acurácia milimétrica comprovada |
+| RF-02 | Visualização 360° | Fotográfica; abrir ângulos cadastrados do veículo, arrastar/girar e tratar mídia ausente |
+| RF-03 | Diagnóstico acústico | Fora do escopo ativo; componentes/endpoints legados não entregam diagnóstico ao usuário |
+| RF-04 | Scanner de pneus | Fora do escopo ativo; não há scanner ou reescaneamento de pneus na interface |
+| RF-05 | Catálogo | Busca, filtros e ordenação; API paginada e alternativa local no modo de demonstração |
+| RF-06 | Preço FIPE | Exibir referência com sua origem; parte da API consulta BrasilAPI, com cache e alternativa ilustrativa. Não garantir cotação atual em toda tela |
+| RF-07 | Dossiê de transparência | Apresentar dados do anúncio/laudo; ausências não comprovam inexistência de risco |
+| RF-08 | Dados DETRAN | Demonstração por bases conhecidas; consulta oficial externa pendente |
+| RF-09 | Troca com troco | Estimativa local de diferença; não avalia profissionalmente o usado nem transfere Pix |
+| RF-10 | Financiamento | Estimativas com referências de bancos; sem contratação, consulta ou aprovação de crédito |
+| RF-11 | Radar de preço | Cadastro persistido por conta na API; monitoramento e envio externo ainda pendentes |
+| RF-12 | Assistente contextual | Chat com contexto do veículo, integração Gemini opcional e respostas locais; sem evidência de pipeline RAG completo |
+| RF-13 | Contato com vendedor | Fluxo no anúncio/WhatsApp; não confundir com chat humano público em tempo real. Chat B2B possui persistência/polling |
+| RF-14 | Multicanal B2B | AutoCerto, AutoAvaliar e OLX no código; protocolo/status de envio são simulados, sem publicação real |
+| RF-15 | Feed XML | Endpoint com documento de exemplo; geração completa do estoque e compatibilidade com importadores pendentes |
+| RF-16 | Novo anúncio | Formulário em etapas, mídia e análise assistida; conferir propriedade, dados e confirmação de gravação |
+| RF-17 | Exclusão de anúncio | Exige autorização e confirmação da API; falha não deve ocultar registro apenas localmente |
+| RF-18 | Lojas e estoque B2B | Vínculo à loja, parcerias, reserva temporária, fechamento e histórico persistidos pela API |
+| RF-19 | Autenticação | Cadastro/login JWT, PBKDF2, perfil e versão de sessão; não conceder privilégio por e-mail especial |
+| RF-20 | Planos/checkout | Rota de planos redireciona ao catálogo; checkout simulado fora de produção, bloqueado em produção sem provedor |
+| RF-21 | PDF com QR Code | Documento Automatch vinculado a snapshot/protocolo; não é laudo oficial nem assinatura digital certificada |
+| RF-22 | Validação pública | Consultar protocolo existente; inexistente não pode receber confirmação de autenticidade |
+| RF-23 | Recuperação OTP | Código com hash, expiração de 15 minutos e limitação de tentativas; produção depende de SMTP TLS e não devolve OTP |
+| RF-24 | Paginação | Listagem da API com `limit`/`offset` e navegação no frontend; conferir total, filtros e páginas vazias |
+| RF-25 | Favoritos | Área autenticada, persistência local e atualização por eventos; sem sincronização entre dispositivos via banco |
+| RF-26 | Auditoria de laudo anexado | Validar PDF/imagem e analisar por IA/heurística; divergência ou dado insuficiente exige conferência, não aprovação automática |
+| RF-27 | Vídeo de inspeção | Roteiro atual de 20 segundos, upload e player; ausência/erro pode exibir representação demonstrativa |
+| RF-28 | Comparação multidimensional | Dois a três veículos, cinco seções, tratamento de dados ausentes e navegação ao anúncio |
 
-## 2. Público-Alvo
+RF-03 e RF-04 registram propostas antigas, sem compromisso de implementação no
+escopo atual. Não acrescentar scanner de pneus como pendência obrigatória.
 
-- **Compradores de Seminovos e Usados**: Buscam transparência na conservação real do veículo, sem riscos de vícios ocultos mecânicos ou pendências no DETRAN.
-- **Vendedores Particulares**: Desejam anunciar seus veículos de forma rápida e com laudo pericial que valorize o bem.
-- **Lojistas e Concessionárias**: Necessitam gerenciar estoques com ferramentas profissionais de exportação multicanal (Webmotors, OLX, iCarros, ML) e CRM.
-- **Avaliadores e Peritos**: Utilizam a plataforma para registro e emissão de laudos de conformidade estrutural.
+## Requisitos não funcionais
 
----
+| ID | Área | Implementação ou objetivo a validar |
+| --- | --- | --- |
+| RNF-01 | Desempenho | Carregamento sob demanda, imagens e cancelamentos; metas numéricas exigem ambiente/carga definidos. Não há SLA de 200 ms comprovado |
+| RNF-02 | Segurança | Hash PBKDF2, JWT/versionamento, validações e autorização; homologar fluxos críticos e revisar dependências |
+| RNF-03 | Operação | Compose com gateway/frontend/backend/banco e probes; disponibilidade/backup/restauração dependem de implantação |
+| RNF-04 | Confiabilidade | Testes existentes cobrem cenários específicos; não há comprovação de cobertura integral ou ausência de defeitos |
+| RNF-05 | Usabilidade | Responsividade, estados de carregamento/erro, teclado e movimento reduzido; avaliação visual/acessibilidade manual pendente |
+| RNF-06 | Cache/escala | Caches e limitadores locais ao processo; Redis e coordenação distribuída não implementados |
+| RNF-07 | Compatibilidade | Homologar navegadores/dispositivos escolhidos; não presumir compatibilidade universal pelos testes Node |
+| RNF-08 | Privacidade | Exportação/anonimização de conta e controles pontuais; não constituem conformidade LGPD certificada |
 
-## 3. Problema e Objetivos
+## Evidência de conclusão
 
-### Problema
-A desconfiança generalizada gerada por fotos de baixa qualidade, históricos de leilão omitidos, multas não declaradas e a impossibilidade do comprador leigo avaliar a integridade do motor e pneus à distância.
+Registrar requisito, comportamento esperado, commit, comando/ambiente, resultado
+e limitações. Diferenciar teste isolado, execução com API e validação externa.
+Mudar a situação somente após evidência correspondente; não classificar mock
+como integração ou porcentagem de testes aprovados como porcentagem de cobertura.
 
-### Objetivos do Projeto
-1. Automatizar a vistoria e auditoria visual da lataria de veículos com precisão milimétrica.
-2. Fornecer avaliação acústica remota da marcha lenta do motor.
-3. Permitir a conferência instantânea da regularidade cadastral (DETRAN) e de mercado (FIPE).
-4. Oferecer simulações financeiras completas com modelo inovador de "Troca com Troco".
-
----
-
-## 4. Requisitos Funcionais (RF)
-
-| ID | Nome | Descrição |
-| :--- | :--- | :--- |
-| **RF-01** | **Scanner Pericial de Carroceria** | O sistema deve processar imagens do veículo e identificar avarias na lataria com coordenadas (X, Y), classificação de gravidade e custo estimado de reparo. |
-| **RF-02** | **Varredura 360° Interativa** | O sistema deve permitir a inspeção da carroceria em rotação contínua 360° por arraste e modo automático, com hotspots por quadrante angular. |
-| **RF-03** | **Diagnóstico Acústico do Motor** | O sistema deve analisar a assinatura sonora do motor (~820 RPM), exibindo waveform espectral e avaliando tuchos, correias, marcha lenta e admissão/escape. |
-| **RF-04** | **Scanner de Desgaste de Pneus** | O sistema deve aferir a profundidade dos sulcos em mm nas 4 rodas do chassi e validar a conformidade com a Resolução 558/80 do CONTRAN (mínimo 1.6mm). |
-| **RF-05** | **Catálogo Multifacetado** | O sistema deve disponibilizar busca e filtros por marca, modelo, ano, faixa de preço, quilometragem, transmissão e combustível. |
-| **RF-06** | **Referência de Preço FIPE** | O sistema deve exibir a cotação oficial da Tabela FIPE comparada ao preço anunciado, destacando o percentual e valor de economia. |
-| **RF-07** | **Dossiê de Transparência** | O sistema deve apresentar a linha do tempo do veículo, histórico de sinistros, leilão e parecer técnico independente. |
-| **RF-08** | **Auditoria DETRAN** | O sistema deve consultar e exibir situação cadastral, débitos de IPVA, licenciamento, multas e restrições judiciais (RENAJUD). |
-| **RF-09** | **Simulador Troca com Troco** | O sistema deve avaliar o veículo de entrada do cliente e calcular se há saldo a pagar ou troco a receber em dinheiro via Pix. |
-| **RF-10** | **Comparador Multi-Bancos** | O sistema deve simular parcelas de financiamento comparando taxas entre Itaú Auto, Santander Auto e BV Financeira. |
-| **RF-11** | **Radar de Oportunidades** | O sistema deve permitir o cadastro de alertas de queda de preço com notificações via WhatsApp, E-mail e WebPush. |
-| **RF-12** | **Assistente IA Especialista (RAG)** | O sistema deve disponibilizar chatbot consultivo com respostas contextualizadas no veículo em visualização. |
-| **RF-13** | **Chat com o Vendedor** | O sistema deve permitir o envio de mensagens em tempo real e redirecionamento de contato para o WhatsApp. |
-| **RF-14** | **Sincronizador Multicanal B2B** | O sistema deve permitir a exportação simultânea de anúncios para os 3 canais homologados: Webmotors, OLX Autos e AutoCerto DMS. |
-| **RF-15** | **Feed XML Automotivo** | O sistema deve fornecer endpoint com feed de estoque padronizado no formato AutoXML / Webmotors. |
-| **RF-16** | **Publicação de Anúncios com IA** | O sistema deve guiar o anunciante em etapas com compressão de imagens e pré-análise pericial automática. |
-| **RF-17** | **Exclusão Atômica de Anúncios** | O sistema deve permitir a exclusão segura de anúncios (`DELETE /api/cars/{id}`) com confirmação no frontend. |
-| **RF-18** | **Identificação Multi-Lojas** | O sistema deve segmentar veículos por revenda e concessionária parceira com dados de contato e endereço. |
-| **RF-19** | **Autenticação Unificada** | O sistema deve fornecer modal único para login e cadastro com hash PBKDF2 e tokens JWT. |
-| **RF-20** | **Planos de Assinatura & Checkout** | O sistema deve gerenciar planos de anúncio (*Gratuito, Pro, Revenda, Concessionária*) com checkout seguro e negociação direta com vendedores via chat/WhatsApp sem taxa de reserva online. |
-| **RF-21** | **Dossiê em PDF Vetorial com QR Code** | O sistema deve gerar e exportar laudo pericial oficial em PDF vetorial A4 (ReportLab) com métricas de conformidade e QR Code de autenticidade escaneável (300 DPI). |
-| **RF-22** | **Validação Pública de Laudos** | O sistema deve disponibilizar página pública (`/validar/:protocolo`) para conferência imediata da autenticidade e validade dos laudos periciais emitidos. |
-| **RF-23** | **Recuperação de Senha com OTP** | O sistema deve disponibilizar recuperação de senha via código OTP de 6 dígitos com expiração em 15 minutos, rate limiting defensivo de 3 req/hora e modal com popup em modo desenvolvimento. |
-| **RF-24** | **Paginação do Catálogo no Servidor** | O sistema deve paginar a busca de veículos nativamente no banco de dados (`limit=20`, `offset`), com envelope padronizado e navegação numérica no frontend. |
-| **RF-25** | **Central de Favoritos** | O sistema deve permitir que usuários salvem veículos favoritos com sincronização em tempo real e visualização dedicada em `/favoritos`. |
-| **RF-26** | **Auditoria de Laudos em PDF por IA** | O sistema deve receber laudos periciais em PDF anexados pelo anunciante, validar integridade via magic bytes (`%PDF-`) e executar auditoria pericial automatizada com Gemini AI e motor heurístico local. |
-| **RF-27** | **Vídeo Pericial de 15 Segundos** | O sistema deve exibir player de vídeo pericial de 15s integrado aos anúncios com timeline interativa, checkpoints periciais (frente, lateral/pneus e traseira/motor) e endpoint para upload de mídias de vistoria. |
-| **RF-28** | **Comparador Multidimensional Lado a Lado** | O sistema deve permitir a comparação simultânea de até 3 veículos lado a lado analisando preço vs FIPE, quilometragem anual estimada, integridade pericial de laudo, pendências DETRAN e ficha técnica sem utilização de trustscore. |
-
----
-
-## 5. Requisitos Não Funcionais (RNF)
-
-| ID | Categoria | Descrição |
-| :--- | :--- | :--- |
-| **RNF-01** | **Desempenho** | O tempo de resposta das consultas de catálogo deve ser inferior a 200ms em média sob carga normal. |
-| **RNF-02** | **Segurança** | As senhas devem ser armazenadas com hash PBKDF2-HMAC-SHA256 e salts aleatórios de 16 bytes. Sessões devem usar tokens JWT com tempo de expiração. |
-| **RNF-03** | **Disponibilidade** | A arquitetura deve operar com microsserviços conteinerizados sob Nginx com tolerância a falhas e healthchecks. |
-| **RNF-04** | **Confiabilidade** | O sistema deve manter suíte de testes de integração cobrindo 100% dos fluxos periciais e de dados críticos. |
-| **RNF-05** | **Usabilidade** | A interface deve ser responsiva (mobile-first), adotando design moderno com TailwindCSS e animações fluidas. |
-| **RNF-06** | **Escalabilidade** | A camada de cache em Redis deve absorver consultas repetitivas de placas e tabela FIPE para preservar recursos do banco. |
-| **RNF-07** | **Compatibilidade** | O frontend deve rodar nos principais navegadores modernos (Chrome, Firefox, Safari, Edge) sem necessidade de plugins proprietários. |
-| **RNF-08** | **Privacidade (LGPD)** | Dados sensíveis de compradores e placas de veículos devem ser protegidos contra exposição indevida. |
-
----
-
-## 6. Critérios de Aceitação & Definition of Done (DoD)
-
-Para que uma funcionalidade seja considerada concluída:
-1. Deve possuir validação de tipos com Pydantic v2 e componentes tipados no frontend.
-2. Deve retornar status HTTP semânticos corretos (200, 201, 400, 404, 422).
-3. Deve ser coberta por testes automatizados na suíte de testes do projeto.
-4. O código deve compilar em modo de produção (`npm run build`) sem erros de lint ou dependência.
-5. Deve estar documentada no README e integrada ao Docker Compose.
+Referências: [estado atual](estado-atual.md), [arquitetura](arquitetura.md),
+[testes](testes-e-evidencias.md) e [backlog](../BACKLOG.md).

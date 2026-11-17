@@ -1,169 +1,110 @@
-# 🚗 Automatch™ — Marketplace Automotivo & Perícia por IA
+# Automatch — marketplace automotivo e análise assistida de veículos
 
-[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=black)](https://react.dev/)
-[![TailwindCSS](https://img.shields.io/badge/TailwindCSS-3.4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![OpenCV](https://img.shields.io/badge/OpenCV-Computer%20Vision-5C3EE8?logo=opencv&logoColor=white)](https://opencv.org/)
+Documentação revisada em **17/11/2026**, sobre o código `1b7d094`.
+Projeto Integrador de Análise e Desenvolvimento de Sistemas do CEUB.
+Equipe registrada: Carlos Wilson, Matheus Porto, Paulo Arthur e Vinicius Aurelio.
 
-Plataforma automotiva Fullstack que une **marketplace de compra e venda de veículos**, **perícia veicular por IA (OpenCV + YOLOv8 + Gemini)**, **varredura 360° interativa**, **auditoria cadastral DETRAN/FIPE**, **emissão de laudos periciais em PDF com QR Code público** e **painel B2B para lojistas**.
+## Repositórios e publicação
 
----
+- **Principal:** [carlswilson22/Automatch](https://github.com/carlswilson22/Automatch).
+- **Secundário institucional:** [CAMPUSCEUB/ADS-AUTOMATCH](https://github.com/CAMPUSCEUB/ADS-AUTOMATCH).
+- Toda atualização publicada na `main` do principal deve ser levada à `main`
+  do secundário. **Não alterar as outras branches do secundário.**
+- Procedimento: [sincronização dos repositórios](docs/sincronizacao-repositorios.md).
 
-## 🏛️ Identificação Institucional
+O GitHub Pages do principal apresenta o frontend estático em modo demonstrativo.
+Ele não executa FastAPI, banco, uploads ou IA no servidor. A aplicação completa
+exige backend e banco próprios. A documentação distingue operação com API,
+amostras locais, integrações simuladas e recursos fora do escopo ativo.
 
-| Campo | Informação |
-| :--- | :--- |
-| **Instituição** | Centro Universitário de Brasília (CEUB) |
-| **Curso** | Análise e Desenvolvimento de Sistemas (ADS) |
-| **Disciplina** | Projeto Integrador |
-| **Organização no GitHub** | `CampusCEUB` |
-| **Repositório Oficial** | `ADS-AUTOMATCH` |
-| **Equipe de Desenvolvimento** | Carlos Wilson, Matheus Porto, Paulo Arthur e Vinicius Aurelio |
-| **ID do Projeto** | `ADS-AUTOMATCH-2026` |
+## Funcionalidades e limites
 
----
+| Área | Situação atual |
+| --- | --- |
+| Catálogo e anúncios | Busca/filtros, paginação da API, cadastro, edição e exclusão autorizada; galeria e detalhes |
+| Contas | Cadastro/login, perfil, JWT, recuperação OTP; produção exige SMTP para entregar o código |
+| Favoritos | Área autenticada com persistência no navegador; sem sincronização de favoritos em banco |
+| Visualização 360° | Sequência fotográfica por veículo; depende das imagens disponíveis, não é reconstrução 3D |
+| Scanner de lataria | Análise de imagem por serviços de visão/IA e alternativas locais; sem precisão pericial certificada |
+| Laudos enviados | PDF/imagem, validação de conteúdo e análise assistida; resultado requer conferência humana |
+| PDF e validação pública | Documento Automatch com protocolo/snapshot registrado; não é laudo oficial de órgão público |
+| Comparação, financiamento e TCO | Comparação de dados e estimativas ilustrativas; sem aprovação bancária ou cotação vinculante |
+| Rede B2B | Lojas/parcerias, estoque compartilhado, reservas temporárias, mensagens por consultas periódicas e fechamento via API |
+| DETRAN e placa | Bases de demonstração; não há consulta oficial de débitos/restrições contratada |
+| FIPE | Parte dos fluxos consulta BrasilAPI e usa cache/alternativa ilustrativa; conferir fonte e competência |
+| Multicanal e XML | Canais e sucesso de sincronização simulados; feed XML de exemplo, sem publicação externa comprovada |
+| Alertas de preço | Cadastro persistido na API; envio de WhatsApp/e-mail/Web Push não implementado |
+| Checkout | Simulação em desenvolvimento; produção retorna indisponibilidade sem provedor de pagamento |
+| Pneus e diagnóstico acústico | Não fazem parte da interface ativa; arquivos e endpoints legados não representam funcionalidade entregue |
 
-## 🧭 Estrutura de Navegação do Repositório
+Consulte o [estado atual](docs/estado-atual.md), os [requisitos](docs/requisitos.md)
+e o [backlog](BACKLOG.md). Não há certificação WCAG AAA, garantia de acurácia da
+IA, disponibilidade contratada ou cobertura integral de testes comprovadas.
 
-| Seção | Descrição | Link |
-| :--- | :--- | :--- |
-| **Protótipo (Figma)** | Protótipo interativo de alta fidelidade e design system | [docs/prototipo/README.md](docs/prototipo/README.md) • [Figma](https://www.figma.com/design/O0idlMRlPkxnmLzbPVQjY7/Pr%C3%B3tipo-Automatch?node-id=0-1&p=f&t=rFZQxPaViaihmlcm-0) |
-| **Backlog** | Épicos, histórias de usuário e matriz de rastreabilidade | [BACKLOG.md](BACKLOG.md) |
-| **Sprints** | Planejamento, execução e evidências das Sprints 00 a 08 | [sprints/README.md](sprints/README.md) |
-| **Entregas** | Relatórios formais das Entregas 01, 02 e 03 (Final) | [entregas/README.md](entregas/README.md) |
-| **Requisitos** | Especificação dos Requisitos Funcionais e Não Funcionais | [docs/requisitos.md](docs/requisitos.md) |
-| **Arquitetura** | Decisões estruturais, diagramas Mermaid e componentes | [docs/arquitetura.md](docs/arquitetura.md) |
-| **Decisões (ADRs)** | Registros formais de Decisões Arquiteturais (ADR-001 a ADR-007) | [docs/decisoes/README.md](docs/decisoes/README.md) |
-| **Escopo dos Arquivos** | Catálogo técnico com o propósito e objetivo de cada arquivo | [ESCOPO_DOS_ARQUIVOS.md](ESCOPO_DOS_ARQUIVOS.md) |
+## Stack e arquitetura
 
----
+React 18, React Router 7, Vite 8 e TailwindCSS 3 no frontend; Python 3.11,
+FastAPI, SQLAlchemy e Alembic no backend; PostgreSQL 15 no Compose e SQLite
+para desenvolvimento/testes. Visão usa OpenCV/Ultralytics e integração opcional
+Gemini; PDFs usam ReportLab. Os manifests são a referência de versões.
+A API é um backend modular; o Compose atual tem quatro serviços e não inclui Redis.
 
-## 🛠️ Stack Tecnológica
+## Executar com Docker
 
-| Camada | Tecnologias |
-| :--- | :--- |
-| **Frontend** | React 18, Vite, TailwindCSS, Framer Motion, Lucide Icons, Canvas API |
-| **Backend** | Python 3.11, FastAPI assíncrono, SQLAlchemy ORM, Pydantic v2, APScheduler |
-| **Inteligência Artificial** | OpenCV (5 zonas anatômicas), Ultralytics YOLOv8, Google Gemini Vision |
-| **Documentos & Mídia** | ReportLab (Laudo A4 vetorial), QRCode 300 DPI, Pillow |
-| **Infraestrutura** | Docker Compose, PostgreSQL 15, Nginx Gateway |
-| **Segurança** | JWT (RFC 7519), PBKDF2-HMAC-SHA256, Magic Bytes, OWASP A01 Access Control |
+Na raiz, com Docker e Compose disponíveis:
 
----
-
-## 🌟 Principais Funcionalidades
-
-1. **Varredura 360° Fotográfica & Detecção de Avarias por IA:**
-   - Visualizador orbital fotográfico 360° em 8 ângulos contínuos com perspectiva tridimensional e iluminação dinâmica de estúdio, garantindo consistência visual estrita do veículo em exibição.
-   - Motor CV com análise adaptativa em 5 zonas anatômicas (Capô/Teto, Para-choque, Laterais e Traseira) medindo descontinuidades e custos estimados de reparo.
-2. **Laudo Pericial Oficial com QR Code:**
-   - Geração de laudo cautelar em PDF vetorial A4 de alta resolução via ReportLab.
-   - QR Code que direciona para a validação pública digital sem exigência de login (`/validar/{protocolo}`).
-3. **Comparador Técnico Multidimensional:**
-   - Comparação simultânea de 2 a 3 veículos em 5 dimensões (FIPE vs Preço, KM/ano, Integridade de Laudo, Débitos DETRAN e Ficha Técnica), com carregamento sob demanda por acordeão.
-4. **Calculadora TCO & Termômetro de Mercado:**
-   - Custo Total de Posse mensal detalhado (IPVA proporcional por UF, seguro, combustível e depreciação) e indicador de dispersão frente à FIPE.
-5. **Painel B2B do Lojista, Rede de Conexão & Trava Exclusiva (Hold Lock):**
-   - Gestão de estoque multi-lojas, valor imobilizado e publicação multicanal.
-   - Ecossistema de Rede B2B com estoque compartilhado, simulador de margem em tempo real, propostas de parcerias entre concessionárias, Trava de Reserva Exclusiva (Hold Lock) e histórico de repasses formalizados.
-6. **Auditoria Multimodal de Laudos Cautelares por IA:**
-   - Extração pericial automática de dados de laudos cautelares (PDF/imagem) via Gemini 1.5 Flash.
-   - Cross-check em tempo real (Placa, Chassi, Marca/Modelo, Ano e KM), identificação de histórico de sinistro/leilão e classificação automática em três níveis (Sem Ressalvas, Com Atenção, Com Restrições).
-7. **Tour Guiado Interativo com Acessibilidade WCAG AAA:**
-   - Sistema de spotlight interativo nativo (`AutomatchTour.jsx`) cobrindo as jornadas do Comprador, Vendedor e Lojista.
-   - Sincronização automática com as 5 telas da Rede B2B e sub-modal de Hold Lock, com navegação fluida por teclado e leitor de tela.
-8. **Segurança & Resiliência:**
-   - Controle estrito de acesso na exclusão de veículos (OWASP A01).
-   - Validação binária de Magic Bytes (JPEG, PNG e PDF) antes de alocar buffer de upload.
-   - Compressão client-side em Canvas HTML5 eliminando estouro de memória no navegador.
-9. **Performance & Otimização SPA (Core Web Vitals):**
-   - Code-splitting dinâmico com `React.lazy()` para todos os modais pesados, reduzindo o bundle inicial em até 40%.
-   - Pipeline de imagens com `loading="lazy"`, decodificação assíncrona (`decoding="async"`) e desoneração da GPU pela remoção de filtros gaussianos contínuos.
-   - Proteção de rede com timeout fail-fast de 1.2s via `AbortSignal.timeout` e fallback de alta disponibilidade garantindo catálogo na vitrine digital.
-
----
-
-## 🚀 Como Executar
-
-### Pré-requisitos
-* [Docker](https://docs.docker.com/get-docker/) e [Docker Compose](https://docs.docker.com/compose/) instalados.
-
-### 1. Clonar e configurar
-```bash
-git clone https://github.com/CAMPUSCEUB/ADS-AUTOMATCH.git
-cd ADS-AUTOMATCH
+```sh
+git clone https://github.com/carlswilson22/Automatch.git
+cd Automatch
 cp .env.example .env
-```
-
-### 2. Iniciar a aplicação
-```bash
 docker compose up -d --build
 ```
 
-### 3. Acompanhar logs
-```bash
-docker compose logs -f
-```
+No PowerShell, usar `Copy-Item .env.example .env` em lugar de `cp`.
+Preencher a configuração local sem versionar segredos. O exemplo serve ao
+ambiente de desenvolvimento. Veja [configuração e execução](docs/configuracao-e-execucao.md)
+para instalação sem Docker, produção e explicação dos arquivos de ambiente.
 
----
+| Serviço em desenvolvimento | Endereço |
+| --- | --- |
+| Gateway | `http://localhost` ou `http://localhost:3000` |
+| Frontend Vite | `http://localhost:5173` |
+| Swagger da API | `http://localhost:8000/docs` |
+| OpenAPI | `http://localhost:8000/openapi.json` |
+| PostgreSQL exposto no host | `127.0.0.1:5433` |
 
-## 🌐 Portas & Acesso Local
+A inicialização cria uma conta administrativa conforme o ambiente. Defina a
+senha por `ADMIN_SEED_PASSWORD` e use somente contas locais de teste na
+demonstração. Produção requer credenciais e segredo JWT próprios, fornecidos
+por configuração privada. Não publicar senhas em documentação.
 
-| Serviço | Endereço | Descrição |
-| :--- | :--- | :--- |
-| **Aplicação Web (Gateway)** | `http://localhost` ou `http://localhost:5173` | Interface principal do Automatch |
-| **API Docs (Swagger UI)** | `http://localhost:8000/docs` | Documentação interativa dos endpoints FastAPI |
-| **OpenAPI Schema** | `http://localhost:8000/openapi.json` | Contrato OpenAPI da aplicação |
-| **PostgreSQL** | `localhost:5433` (`db: automatch`) | Banco relacional (porta externa 5433 no compose) |
+## Verificar alterações
 
----
+No diretório `frontend`:
 
-## 🔑 Credenciais Padrão (Ambiente de Demonstração)
-
-* **E-mail:** `admin@automatch.com`
-* **Senha:** `admin123`
-
----
-
-## 🧪 Testes Automatizados
-
-Para executar a suíte completa de testes no frontend:
-```bash
-cd frontend
+```sh
+npm ci
+npm run lint
 npm test
+npm run build
 ```
-*Status esperado:* **100% de aprovação (181/181 testes)**.
 
-Para executar os testes de integração do backend:
-```bash
-docker compose exec backend python test_vision_and_delete.py
+No diretório `backend`, com dependências instaladas:
+
+```sh
+python run_tests.py
 ```
-*Status esperado:* **100% de aprovação (10/10 testes)**.
 
----
+O executor do backend usa bancos/arquivos temporários e não carrega o `.env`
+local. Não substituir esse comando por roteiros antigos contra um banco real.
+Os totais e resultados históricos ficam em [testes e evidências](docs/testes-e-evidencias.md);
+não são resultados novos a cada leitura deste README. A conferência visual é manual.
 
-## 📚 Documentação & Governança
+## Documentação
 
-* [BACKLOG.md](BACKLOG.md) — Backlog de requisitos e histórias de usuário (US).
-* [CHANGELOG.md](CHANGELOG.md) — Histórico cronológico de versões e entregas.
-* [ESCOPO_DOS_ARQUIVOS.md](ESCOPO_DOS_ARQUIVOS.md) — Catálogo de finalidade de todos os arquivos do projeto.
-* [docs/requisitos.md](docs/requisitos.md) — Matriz de requisitos funcionais e não-funcionais.
-* [docs/arquitetura.md](docs/arquitetura.md) — Decisões técnicas e arquitetura do ecossistema.
-* [docs/decisoes/README.md](docs/decisoes/README.md) — Repositório de ADRs (ADR-001 a ADR-007).
-* [sprints/README.md](sprints/README.md) — Relatórios detalhados das Sprints 00 a 08.
-* [entregas/README.md](entregas/README.md) — Relatórios formais das Entregas Avaliativas 01 a 03.
-* [CONTRIBUTING.md](CONTRIBUTING.md) — Guia de contribuição e fluxo de branches.
-* [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) — Código de conduta profissional e acadêmica.
-* [SECURITY.md](SECURITY.md) — Política de segurança e reporte de vulnerabilidades.
+O [índice completo](docs/README.md) organiza requisitos, arquitetura, banco,
+catálogo de arquivos, decisões, sprints, entregas e relatórios históricos.
 
----
-
-## 📄 Licença
-
-Distribuído sob a licença MIT. Consulte o arquivo [LICENSE](LICENSE) para obter mais informações.
-
-## Revisão de código e testes isolados
-
-A [auditoria de 16/11/2026](docs/auditoria-2026-11-16.md) registra correções, verificações e limites. Para testar a API sem usar o banco local, execute `python run_tests.py` dentro de `backend`. No frontend, `npm test` executa todas as baterias.
+- [Contribuição](CONTRIBUTING.md) e [sincronização](docs/sincronizacao-repositorios.md).
+- [Segurança](SECURITY.md) e [código de conduta](CODE_OF_CONDUCT.md).
+- [Changelog](CHANGELOG.md), [licença MIT](LICENSE) e [atribuições de terceiros](NOTICE).

@@ -1,5 +1,17 @@
 # ADR-003: Motor Híbrido de Visão Computacional (Edge Local + Cloud Fallback)
 
+> **Registro histórico — atualização documental de 17/11/2026.**
+> O relato original abaixo foi preservado. Datas, resultados, aprovações e
+> métricas são registros da época, sem nova execução ou certificação nesta revisão.
+
+## Situação para leitura atual
+
+Gemini é opcional e há caminhos locais/heurísticos. Bibliotecas de visão não comprovam precisão pericial. Scanner de pneus e diagnóstico acústico não integram as telas ativas.
+
+Referências: [estado atual](../estado-atual.md) e [testes/evidências](../testes-e-evidencias.md).
+
+## Registro original preservado
+
 ## Título
 Combinação de Visão Computacional local (OpenCV + YOLOv8) com Google Gemini Multimodal Vision.
 
@@ -31,4 +43,3 @@ Adotar uma arquitetura híbrida e resiliente para o endpoint `/api/analise-visua
 - **Documento de Arquitetura**: [docs/arquitetura.md](../arquitetura.md)
 - **Serviço de IA**: `backend/services/ai_service.py` e `backend/routers/ai_vision.py`
 - **Relatório de Sprint 02**: [sprints/sprint-02.md](../../sprints/sprint-02.md)
-

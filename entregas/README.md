@@ -1,5 +1,12 @@
 # Entregas — Automatch™
 
+## Atualização documental — 17/11/2026
+
+As três entregas são relatórios acadêmicos históricos. Critérios e resultados registrados foram preservados e contextualizados; não equivalem a nova homologação, contrato comercial ou certificação externa. Não foram alteradas datas/participantes para simular uma nova entrega.
+
+Referência de comportamento: [estado atual](../docs/estado-atual.md). Ambos os repositórios
+recebem atualizações na main; demais branches do secundário são preservadas.
+
 Esta pasta concentra os registros formais das entregas avaliativas do projeto **Automatch**, conectando os marcos da disciplina às sprints correspondentes, critérios de aceitação e evidências de validação técnica.
 
 ---

@@ -1,5 +1,17 @@
 # Sprint 01 — Limpeza de Anúncios, Favoritos e Homologação B2B AutoCerto
 
+> **Registro histórico — atualização documental de 17/11/2026.**
+> O relato original abaixo foi preservado. Datas, resultados, aprovações e
+> métricas são registros da época, sem nova execução ou certificação nesta revisão.
+
+## Situação para leitura atual
+
+O estado atual distingue recursos ativos de amostras: pneus/acústica não integram a interface; DETRAN/multicanal são simulados; alertas não têm entrega externa; laudos Automatch não são certificação oficial. Relatos de Redis, HTTPS pronto, WCAG AAA, homologação externa ou cobertura integral não comprovam esses resultados na versão atual.
+
+Referências: [estado atual](../docs/estado-atual.md) e [testes/evidências](../docs/testes-e-evidencias.md).
+
+## Registro original preservado
+
 ## Período
 Início: 28/08/2026 | Fim: 07/09/2026
 

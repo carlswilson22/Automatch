@@ -1,5 +1,17 @@
 # Relatório Completo de Auditoria Técnica — Automatch
 
+> **Registro histórico — atualização documental de 17/11/2026.**
+> O relato original abaixo foi preservado. Datas, resultados, aprovações e
+> métricas são registros da época, sem nova execução ou certificação nesta revisão.
+
+## Situação para leitura atual
+
+O estado atual distingue recursos ativos de amostras: pneus/acústica não integram a interface; DETRAN/multicanal são simulados; alertas não têm entrega externa; laudos Automatch não são certificação oficial. Relatos de Redis, HTTPS pronto, WCAG AAA, homologação externa ou cobertura integral não comprovam esses resultados na versão atual.
+
+Referências: [estado atual](estado-atual.md) e [testes/evidências](testes-e-evidencias.md).
+
+## Registro original preservado
+
 **Data da Auditoria:** 25 de Setembro de 2026  
 **Ambiente de Homologação:** Docker Container (`automatch-backend:latest`, Python 3.11, FastAPI, SQLAlchemy, SQLite/PostgreSQL, React 18, Vite)  
 **Metodologia:** Protocolo VLAEG (Visão, Lógica, Arquitetura, Estilo) & Auditoria de Causa Raiz em 5 Pilares  
@@ -28,12 +40,12 @@ A auditoria abrangeu 5 pilares estratégicos:
   - *Fase 2:* Tentativa de correção transformou o botão em inerte (não respondia ao clique).
   - *Fase 3:* Exibição de dados corrompidos quando veículos possuíam esquemas heterogêneos.
 - **Causa Raiz Identificada:**
-  1. *Ausência de Error Boundary no Nível de Roteador:* No [frontend/src/App.jsx](file:///frontend/src/App.jsx), erros de runtime em qualquer componente filho causavam o desmonte de toda a árvore React, transformando a tela em branco.
+  1. *Ausência de Error Boundary no Nível de Roteador:* No [frontend/src/App.jsx](../frontend/src/App.jsx), erros de runtime em qualquer componente filho causavam o desmonte de toda a árvore React, transformando a tela em branco.
   2. *Incompatibilidade de Naming Convention (snake_case vs camelCase):* Veículos provenientes da API REST retornam atributos como `fipe_price`, `fuel_consumption_city`, enquanto veículos mockados ou cacheados usavam `fipePrice`, `consumptionCity`. Quando uma propriedade indefinida era acessada sem encadeamento opcional ou default, ocorria crash imediato.
   3. *Vazamento de Estado no Modal:* O estado de seleção acumulava referências de instâncias anteriores caso o usuário abrisse o comparador repetidas vezes.
 - **Solução Implementada:**
-  - Criação do [frontend/src/components/common/GlobalErrorBoundary.jsx](file:///frontend/src/components/common/GlobalErrorBoundary.jsx) encapsulando todas as rotas da aplicação, impedindo que telas fiquem em branco e fornecendo UI de recuperação elegante com log no console.
-  - Criação do utilitário canônico [frontend/src/utils/vehicleNormalizer.js](file:///frontend/src/utils/vehicleNormalizer.js) que intercepta qualquer objeto de veículo e produz uma estrutura padronizada e imutável.
+  - Criação do [frontend/src/components/common/GlobalErrorBoundary.jsx](../frontend/src/components/common/GlobalErrorBoundary.jsx) encapsulando todas as rotas da aplicação, impedindo que telas fiquem em branco e fornecendo UI de recuperação elegante com log no console.
+  - Criação do utilitário canônico [frontend/src/utils/vehicleNormalizer.js](../frontend/src/utils/vehicleNormalizer.js) que intercepta qualquer objeto de veículo e produz uma estrutura padronizada e imutável.
   - Blindagem do `VehicleComparatorModal.jsx` com verificação de integridade dos IDs e limpeza de estado no ciclo de desmontagem.
 
 ---

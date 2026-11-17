@@ -1,5 +1,17 @@
 # ADR-001: Arquitetura em Microsserviços Conteinerizados via Docker Compose
 
+> **Registro histórico — atualização documental de 17/11/2026.**
+> O relato original abaixo foi preservado. Datas, resultados, aprovações e
+> métricas são registros da época, sem nova execução ou certificação nesta revisão.
+
+## Situação para leitura atual
+
+O Compose atual tem quatro serviços (gateway, frontend, backend e PostgreSQL), sem Redis. O backend é uma API modular, não vários microsserviços de negócio independentes.
+
+Referências: [estado atual](../estado-atual.md) e [testes/evidências](../testes-e-evidencias.md).
+
+## Registro original preservado
+
 ## Título
 Isolamento e conteinerização dos serviços do ecossistema Automatch com Docker Compose.
 
@@ -32,4 +44,3 @@ Adotar Docker Compose como padrão de orquestração local e de implantação, d
 - **Documento de Arquitetura**: [docs/arquitetura.md](../arquitetura.md)
 - **Relatório de Sprint 00**: [sprints/sprint-00-planejamento.md](../../sprints/sprint-00-planejamento.md)
 - **Arquivo Compose**: [docker-compose.yml](../../docker-compose.yml)
-
