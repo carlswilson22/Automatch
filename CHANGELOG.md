@@ -1,5 +1,14 @@
 # Histórico de mudanças
 
+## 17/11/2026 — Revisão das pendências do backlog
+
+- Removidos da lista os três itens de prioridade indefinida, por solicitação
+  do responsável. A remoção não representa implementação.
+- Analisadas as sete pendências restantes, com fontes no código, impacto,
+  próximo passo e critério verificável de conclusão.
+- ESLint executado nesta análise: zero erros e 209 avisos; nenhuma mudança de
+  comportamento ou integração foi implementada nesta revisão documental.
+
 ## 17/11/2026 — Documentação e sincronização dos repositórios
 
 - Atualizados README, requisitos, arquitetura, banco, catálogo técnico, backlog,
