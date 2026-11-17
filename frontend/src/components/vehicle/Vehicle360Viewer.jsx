@@ -165,7 +165,7 @@ const Vehicle360Viewer = ({
     });
 
     return map;
-  }, [car?.id, car?.image, car?.imagem, car?.gallery, car?.photos360, vehicleImage, gallery, photos360]);
+  }, [car?.image, car?.imagem, car?.gallery, car?.photos360, vehicleImage, gallery, photos360]);
 
   const activeImage = imageMap[currentAngle] || imageMap[0];
 

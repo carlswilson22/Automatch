@@ -60,20 +60,19 @@ export default function FavoritesPage() {
 
     const unsub = subscribeFavorites ? subscribeFavorites((newIds) => {
       setFavoriteIds(newIds);
-      if (newIds.length >= 2 && selectedForCompare.length === 0) {
-        setSelectedForCompare(newIds.slice(0, 2));
-      }
+      setSelectedForCompare(previous => previous.filter(id => newIds.some(favorite => String(favorite) === String(id))));
     }) : () => {};
 
-    // Carrega carros do backend para resolver IDs do banco de dados
-    api.get('/api/cars?limit=100')
+    // Cancela o carregamento ao sair da página.
+    const controller = new AbortController();
+    api.get('/api/cars?limit=100', { signal: controller.signal })
       .then(data => {
         const items = Array.isArray(data) ? data : (data?.items || []);
-        setDbCars(items.map(mapVehicleToViewModel).filter(Boolean));
+        if (!controller.signal.aborted) setDbCars(items.map(mapVehicleToViewModel).filter(Boolean));
       })
       .catch(() => {});
 
-    return unsub;
+    return () => { unsub(); controller.abort(); };
   }, []);
 
   // Resolve car objects from all data sources including Postgres API
@@ -153,23 +152,19 @@ export default function FavoritesPage() {
 
   const handleRemove = (carId) => {
     removeFavorite(carId);
-    setFavoriteIds(prev => prev.filter(id => id !== carId));
-    setSelectedForCompare(prev => prev.filter(id => id !== carId));
+    setFavoriteIds(prev => prev.filter(id => String(id) !== String(carId)));
+    setSelectedForCompare(prev => prev.filter(id => String(id) !== String(carId)));
   };
 
   const toggleSelectForCompare = (carId) => {
-    if (selectedForCompare.includes(carId)) {
-      setSelectedForCompare(prev => prev.filter(id => id !== carId));
-    } else {
-      if (selectedForCompare.length >= 3) {
-        setSelectedForCompare(prev => [...prev.slice(1), carId]);
-      } else {
-        setSelectedForCompare(prev => [...prev, carId]);
-      }
-    }
+    const id = String(carId);
+    setSelectedForCompare(previous => {
+      if (previous.includes(id)) return previous.filter(selected => selected !== id);
+      return [...previous.slice(-2), id];
+    });
   };
 
-  const vehiclesToCompare = favoriteCars.filter(c => selectedForCompare.includes(c.id));
+  const vehiclesToCompare = favoriteCars.filter(car => selectedForCompare.includes(String(car.id)));
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 font-sans">
@@ -288,7 +283,7 @@ export default function FavoritesPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <AnimatePresence>
               {favoriteCars.map((car, index) => {
-                const isSelected = selectedForCompare.includes(car.id);
+                const isSelected = selectedForCompare.some(id => String(id) === String(car.id));
                 return (
                   <motion.div
                     key={car.id}

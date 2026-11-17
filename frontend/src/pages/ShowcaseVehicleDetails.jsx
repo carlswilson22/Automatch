@@ -78,6 +78,7 @@ export default function ShowcaseVehicleDetails() {
   const [activeAccordion, setActiveAccordion] = useState(null); // 'laudo' | 'detran' | 'fipe' | null
   const laudoCacheRef = useRef(null);
   const detranCacheRef = useRef(null);
+  const analysisScopeRef = useRef(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [inspectionTab, setInspectionTab] = useState('body'); // 'body' | '360' | 'video'
   const [isAlertModalOpen, setIsAlertModalOpen] = useState(false);
@@ -265,10 +266,10 @@ export default function ShowcaseVehicleDetails() {
   const [currentDamagePoints, setCurrentDamagePoints] = useState(car?.damagePoints || []);
 
   useEffect(() => {
-    if (car?.damagePoints) {
-      setCurrentDamagePoints(car.damagePoints);
-    }
-  }, [car?.id]);
+    setCurrentDamagePoints(Array.isArray(car?.damagePoints) ? car.damagePoints : []);
+    setActiveDamage(null);
+    setAiDamageData(null);
+  }, [car?.id, car?.damagePoints]);
 
   const compressImage = (src, maxDim = 1024, quality = 0.8) => {
     return new Promise((resolve) => {
@@ -322,6 +323,23 @@ export default function ShowcaseVehicleDetails() {
   const [isLaudoLoading, setIsLaudoLoading] = useState(false);
   const [detranData, setDetranData] = useState(null);
   const [isDetranLoading, setIsDetranLoading] = useState(false);
+  const [integrationError, setIntegrationError] = useState(null);
+
+  useEffect(() => {
+    const scope = { active: true, controller: new AbortController() };
+    analysisScopeRef.current = scope;
+    laudoCacheRef.current = null;
+    detranCacheRef.current = null;
+    setLaudoData(null);
+    setDetranData(null);
+    setIsLaudoLoading(false);
+    setIsDetranLoading(false);
+    setActiveAccordion(null);
+    setIntegrationError(null);
+    setAnalysisResult('');
+    setIsAnalyzing(false);
+    return () => { scope.active = false; scope.controller.abort(); };
+  }, [id]);
 
   const toggleAccordion = async (tipo) => {
     if (activeAccordion === tipo) {
@@ -329,77 +347,59 @@ export default function ShowcaseVehicleDetails() {
       return;
     }
     setActiveAccordion(tipo);
+    setIntegrationError(null);
+    const scope = analysisScopeRef.current;
+    if (!scope?.active) return;
 
     if (tipo === 'laudo' && !laudoCacheRef.current) {
       setIsLaudoLoading(true);
       try {
         const fipeCode = car?.fipeCode || '004487-3';
-        const data = await api.get(`/api/v1/integracoes/laudo-cautelar/${fipeCode}`);
+        const data = await api.get(`/api/v1/integracoes/laudo-cautelar/${fipeCode}`, { signal: scope.controller.signal });
+        if (!scope.active) return;
         laudoCacheRef.current = data;
         setLaudoData(data);
-      } catch (e) {
-        const fallback = {
-          laudo_id: `LC-${String(car?.id || '0042').slice(-4).toUpperCase()}`,
-          status: 'APROVADO',
-          analise_estrutural: {
-            longarinas_dianteiras: 'Sem deformações – 100% íntegras',
-            espessura_media_tinta_micras: '115'
-          },
-          dados_oficiais_fipe: {
-            valor: `R$ ${(car?.fipePrice || car?.price * 1.04 || 165000).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
-            codigoFipe: car?.fipeCode || '004487-3',
-            mesReferencia: 'Setembro/2026'
-          }
-        };
-        laudoCacheRef.current = fallback;
-        setLaudoData(fallback);
+      } catch {
+        if (!scope.active) return;
+        setIntegrationError({ type: 'laudo', message: 'Não foi possível consultar o laudo cautelar. Tente novamente.' });
       } finally {
-        setIsLaudoLoading(false);
+        if (scope.active) setIsLaudoLoading(false);
       }
     } else if (tipo === 'detran' && !detranCacheRef.current) {
       setIsDetranLoading(true);
       try {
         const plate = car?.plate || 'ABC1234';
-        const data = await api.get(`/api/v1/integracoes/detran/${plate}`);
+        const data = await api.get(`/api/v1/integracoes/detran/${plate}`, { signal: scope.controller.signal });
+        if (!scope.active) return;
         detranCacheRef.current = data;
         setDetranData(data);
-      } catch (e) {
-        const fallback = {
-          placa: car?.plate || 'ATM-2026',
-          chassi: '9BWZZZ377VT' + String(Math.floor(Math.random() * 900000 + 100000)),
-          uf: 'SP',
-          situacao_veiculo: 'Regular – Circulação Permitida',
-          debitos: {
-            ipva: 'Quitado – 2026',
-            licenciamento_exercicio: '2026',
-            licenciamento_status: 'Pago em dia',
-            total_multas: 0
-          },
-          restricoes: {
-            gravame: 'Sem Gravame (Livre)'
-          }
-        };
-        detranCacheRef.current = fallback;
-        setDetranData(fallback);
+      } catch {
+        if (!scope.active) return;
+        setIntegrationError({ type: 'detran', message: 'Não foi possível consultar os dados do DETRAN. Tente novamente.' });
       } finally {
-        setIsDetranLoading(false);
+        if (scope.active) setIsDetranLoading(false);
       }
     }
   };
 
 
   const analisarFotoDoCarro = async () => {
+    const scope = analysisScopeRef.current;
+    if (!scope?.active || isAnalyzing) return;
     setIsAnalyzing(true);
+    setAiDamageData(null);
     setAnalysisResult('');
     
     try {
       const vehicleImg = inspectionImage || car.image || car.imagem || '/images/carro_lataria_amassada.jpg';
       // 1. Pré-compressão rápida client-side
       const compressedB64 = await compressImage(vehicleImg, 1024, 0.8);
+      if (!scope.active) return;
 
       // 2. Chamada assíncrona para o endpoint de perícia visual
       const response = await fetch('/api/analise-visual', {
         method: 'POST',
+        signal: scope.controller.signal,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           imageUrl: vehicleImg,
@@ -414,20 +414,22 @@ export default function ShowcaseVehicleDetails() {
         }),
       });
       const data = await response.json();
+      if (!scope.active) return;
       if (!response.ok) throw new Error(data.error || 'Erro ao conectar à IA.');
       
       setAnalysisResult(data.resposta || 'Análise pericial concluída com sucesso.');
       setAiDamageData(data);
 
-      if (Array.isArray(data.pontos_avaria) && data.pontos_avaria.length > 0) {
+      if (Array.isArray(data.pontos_avaria)) {
         setCurrentDamagePoints(data.pontos_avaria);
-        setActiveDamage(data.pontos_avaria[0].id);
+        setActiveDamage(data.pontos_avaria[0]?.id ?? null);
       }
     } catch (error) {
-      console.warn("Falha na chamada da IA, utilizando análise defensiva:", error);
-      setAnalysisResult('IA Automatch Vision: Lataria com pintura uniforme, faróis alinhados e sem sinais aparentes de colisões ou deformidades.');
+      if (!scope.active) return;
+      console.warn('Falha na chamada da IA:', error);
+      setAnalysisResult('Não foi possível concluir a análise visual. Tente novamente.');
     } finally {
-      setIsAnalyzing(false);
+      if (scope.active) setIsAnalyzing(false);
     }
   };
 
@@ -609,7 +611,7 @@ export default function ShowcaseVehicleDetails() {
                 carName={car.name || `${car.brand} ${car.model}`}
                 gallery={car.gallery}
                 photos360={car.photos360}
-                damagePoints={car.damagePoints}
+                damagePoints={currentDamagePoints}
                 onOpenLaudo={() => setActiveAccordion('laudo')}
               /></div>
             )}
@@ -759,12 +761,12 @@ export default function ShowcaseVehicleDetails() {
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-2.5">
-                        <div className={`p-2 rounded-xl ${aiDamageData?.tem_avarias ? 'bg-amber-500/20 text-amber-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
-                          {aiDamageData?.tem_avarias ? <AlertTriangle className="w-5 h-5" /> : <CheckCircle2 className="w-5 h-5" />}
+                        <div className={`p-2 rounded-xl ${!aiDamageData || aiDamageData.tem_avarias ? 'bg-amber-500/20 text-amber-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
+                          {!aiDamageData || aiDamageData.tem_avarias ? <AlertTriangle className="w-5 h-5" /> : <CheckCircle2 className="w-5 h-5" />}
                         </div>
                         <div>
                           <h4 className="text-white font-bold text-sm flex items-center gap-2">
-                            Laudo Técnico do Scanner Pericial IA ({aiDamageData?.modelo || 'Automatch Vision'})
+                            {aiDamageData ? `Laudo Técnico do Scanner Pericial IA (${aiDamageData.modelo || 'Automatch Vision'})` : 'Análise visual indisponível'}
                           </h4>
                           {aiDamageData?.score_lataria !== undefined && (
                             <p className="text-[11px] text-slate-400 mt-0.5">
@@ -981,6 +983,9 @@ export default function ShowcaseVehicleDetails() {
 
 
               {/* Resultado: Laudo Cautelar com AccordionPanel */}
+              {integrationError?.type === activeAccordion && (
+                <p role="alert" className="p-4 rounded-2xl bg-amber-950/30 border border-amber-700/40 text-sm text-amber-300">{integrationError.message}</p>
+              )}
               <AccordionPanel isOpen={activeAccordion === 'laudo' && !!laudoData}>
                 <div className="p-5 rounded-3xl bg-slate-950 border border-blue-900/50 shadow-2xl space-y-4">
                   <div className="flex items-center justify-between border-b border-slate-800 pb-3">

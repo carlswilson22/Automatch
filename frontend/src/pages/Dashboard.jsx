@@ -99,7 +99,7 @@ export default function Dashboard() {
   const isB2B = Boolean(canAccessB2B?.());
 
   // Estado de controle para anúncios pessoais do comprador
-  const [personalAdsVersion, setPersonalAdsVersion] = useState(0);
+  const [personalAds, setPersonalAds] = useState(() => getNewCars());
 
   // Inventário de lojas (B2B)
   const [b2bInventoryList, setB2bInventoryList] = useState(() => getStoredInventory());
@@ -107,7 +107,7 @@ export default function Dashboard() {
   // Anúncios do usuário comprador (Particular)
   const personalInventory = useMemo(() => {
     if (isB2B) return [];
-    const all = getNewCars();
+    const all = personalAds;
     const userCars = all.filter(c => {
       if (c.userEmail && user?.email) {
         return c.userEmail.toLowerCase() === user.email.toLowerCase();
@@ -135,7 +135,7 @@ export default function Dashboard() {
       isParticular: true,
       rawCar: c
     }));
-  }, [isB2B, user?.email, personalAdsVersion]);
+  }, [isB2B, user?.email, personalAds]);
 
   // Lista ativa conforme role: B2B usa b2bInventoryList, Comprador usa personalInventory
   const inventoryList = isB2B ? b2bInventoryList : personalInventory;
@@ -243,7 +243,7 @@ export default function Dashboard() {
     try {
       if (!isB2B) {
         await deleteNewCar(assetId);
-        setPersonalAdsVersion(v => v + 1);
+        setPersonalAds(getNewCars());
         setFeedbackToast({
           type: 'info',
           message: 'Anúncio removido com sucesso.'

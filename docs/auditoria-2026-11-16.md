@@ -88,3 +88,17 @@ Migração incremental de um banco versionado, com DATABASE_URL configurada:
 ~~~sh
 python migrate.py
 ~~~
+
+
+## Complemento: comportamento dos hooks e operações assíncronas
+
+- Favoritos: a assinatura de eventos consulta o estado atual da seleção, conserva escolhas manuais e remove da comparação IDs excluídos. IDs numéricos e textuais são tratados igualmente; carregamentos são cancelados ao sair da página.
+- Anúncios: avarias acompanham a hidratação dos dados do mesmo veículo e são removidas quando deixam de existir. Laudo, DETRAN e análise visual têm cache/solicitações isolados por anúncio, com cancelamento e descarte de respostas antigas. Falhas de consulta não geram aprovação fictícia. A lista vazia de avarias retornada pelo scanner também limpa o resultado anterior.
+- Chat B2B: cada conversa/sessão cancela consultas anteriores, limita polling concorrente e descarta respostas fora de ordem. Falhas no envio exibem erro e recuperam o texto quando o campo está livre.
+- Parcerias: callbacks estáveis evitam laços de carregamento. Pesquisas, abas e contas invalidam respostas antigas; o cache do estoque não atravessa contas. Respostas atrasadas de polling não desfazem um fechamento confirmado.
+- Reservas: criação, cancelamento, solicitação e aprovação de fechamento só anunciam sucesso após confirmação da API. Registros locais antigos não são mesclados às reservas oficiais e não são criadas reservas com IDs fictícios. O cache de estoque é invalidado após uma alteração confirmada.
+- Dashboard: a atualização após exclusão usa a lista real de anúncios como dependência, substituindo um contador artificial de invalidação do memo.
+
+Validação local: 263 testes do frontend aprovados (15 novos cenários de regressão), build de produção com base /Automatch/ aprovado e ESLint com zero erros e 209 avisos. Os oito avisos de hooks nas telas ativas foram resolvidos. Permanecem dois avisos em EngineAcousticScanner.jsx e TireDepthScanner.jsx: esses componentes não são importados pelas telas atuais e não representam funcionalidades disponíveis na interface; foram preservados sem alterações. Os demais avisos são 196 declarações sem uso, nove de Fast Refresh e duas diretivas ESLint desnecessárias.
+
+Este complemento altera somente o frontend e adiciona testes; a conferência visual continua sob responsabilidade do usuário, conforme combinado.

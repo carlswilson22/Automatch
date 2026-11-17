@@ -6,7 +6,7 @@ import { readSessionToken } from '../../services/sessionStorage';
  *   - Criado para agilizar o fechamento de transações B2B de repasse, permitindo troca de mensagens,
  *     envio de contrapropostas e confirmação de reserva de veículos entre gerentes de vendas.
  */
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Send, MessageSquare, Car, DollarSign, Store, Shield, CheckCircle, Clock } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
@@ -20,48 +20,57 @@ export default function PartnerChatModal({ isOpen, onClose, reservation }) {
   const [loading, setLoading] = useState(false);
   const [sending, setSending] = useState(false);
   const messagesEndRef = useRef(null);
+  const activeSession = useRef(null);
+  const sessionToken = readSessionToken();
+  const [error, setError] = useState('');
 
-  const resolveToken = () => {
-    return readSessionToken();
-  };
-
-  const fetchMessages = async (isMounted = true) => {
-    if (!reservation?.id) return;
+  const fetchMessages = useCallback(async (session) => {
+    if (!session || session.controller.signal.aborted) return;
+    const request = ++session.version;
+    session.fetching = true;
     try {
-      const token = resolveToken();
-      const res = await fetch(`/api/partnerships/reservations/${reservation.id}/messages`, {
-        headers: {
-          'Authorization': token ? `Bearer ${token}` : ''
-        }
+      const token = readSessionToken();
+      const res = await fetch(`/api/partnerships/reservations/${session.reservationId}/messages`, {
+        headers: { Authorization: token ? `Bearer ${token}` : '' },
+        signal: session.controller.signal,
       });
-      if (res.ok && isMounted) {
-        const data = await res.json();
-        setMessages(data);
+      if (!res.ok) throw new Error('Não foi possível carregar as mensagens.');
+      const data = await res.json();
+      if (activeSession.current === session && !session.controller.signal.aborted && request === session.version) {
+        setMessages(Array.isArray(data) ? data : []);
+        setError('');
       }
-    } catch (e) {
-      console.error("Erro ao carregar mensagens:", e);
+    } catch {
+      if (activeSession.current === session && !session.controller.signal.aborted && request === session.version) {
+        setError('Não foi possível atualizar a conversa. Tente novamente.');
+      }
+    } finally {
+      if (request === session.version) session.fetching = false;
     }
-  };
+  }, []);
 
   useEffect(() => {
-    let isMounted = true;
-    if (isOpen && reservation?.id) {
-      setLoading(true);
-      fetchMessages(isMounted).finally(() => {
-        if (isMounted) setLoading(false);
-      });
-
-      // Polling suave a cada 5 segundos durante negociação com cleanup
-      const interval = setInterval(() => {
-        if (isMounted) fetchMessages(isMounted);
-      }, 5000);
-
-      return () => {
-        isMounted = false;
-        clearInterval(interval);
-      };
-    }
-  }, [isOpen, reservation?.id]);
+    setMessages([]);
+    setInputText('');
+    setSending(false);
+    setError('');
+    setLoading(false);
+    if (!isOpen || !reservation?.id) return;
+    const session = { reservationId: reservation.id, controller: new AbortController(), version: 0, fetching: false };
+    activeSession.current = session;
+    setLoading(true);
+    fetchMessages(session).finally(() => {
+      if (activeSession.current === session && !session.controller.signal.aborted) setLoading(false);
+    });
+    const interval = setInterval(() => {
+      if (!session.fetching) fetchMessages(session);
+    }, 5000);
+    return () => {
+      session.controller.abort();
+      if (activeSession.current === session) activeSession.current = null;
+      clearInterval(interval);
+    };
+  }, [isOpen, reservation?.id, user?.id, user?.email, user?.storeId, user?.store_id, user?.role, sessionToken, fetchMessages]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -69,31 +78,29 @@ export default function PartnerChatModal({ isOpen, onClose, reservation }) {
 
   const handleSendMessage = async (e) => {
     e?.preventDefault();
-    if (!inputText.trim() || sending) return;
-
-    const token = resolveToken();
+    const session = activeSession.current;
+    if (!inputText.trim() || sending || !session) return;
     const msgToSend = inputText.trim();
+    const token = readSessionToken();
     setInputText('');
     setSending(true);
-
+    setError('');
     try {
-      const res = await fetch(`/api/partnerships/reservations/${reservation.id}/messages`, {
+      const res = await fetch(`/api/partnerships/reservations/${session.reservationId}/messages`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : ''
-        },
-        body: JSON.stringify({ message: msgToSend })
+        headers: { 'Content-Type': 'application/json', Authorization: token ? `Bearer ${token}` : '' },
+        signal: session.controller.signal,
+        body: JSON.stringify({ message: msgToSend }),
       });
-
-
-      if (res.ok) {
-        await fetchMessages();
+      if (!res.ok) throw new Error('Falha no envio.');
+      if (activeSession.current === session && !session.controller.signal.aborted) await fetchMessages(session);
+    } catch {
+      if (activeSession.current === session && !session.controller.signal.aborted) {
+        setInputText(current => current || msgToSend);
+        setError('Mensagem não enviada. Confira o texto e tente novamente.');
       }
-    } catch (e) {
-      console.error("Erro ao enviar mensagem:", e);
     } finally {
-      setSending(false);
+      if (activeSession.current === session && !session.controller.signal.aborted) setSending(false);
     }
   };
 
@@ -231,6 +238,8 @@ export default function PartnerChatModal({ isOpen, onClose, reservation }) {
               </button>
             ))}
           </div>
+
+          {error && <p role="alert" className="px-6 py-2 text-sm text-red-700 bg-red-50">{error}</p>}
 
           {/* Input Footer */}
           <form onSubmit={handleSendMessage} className="p-4 bg-white border-t border-slate-200 flex items-center gap-3">

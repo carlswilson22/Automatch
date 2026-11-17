@@ -22,7 +22,8 @@ import B2BInventorySkeleton from './B2BInventorySkeleton';
 import { getVehicleImageUrl, handleVehicleImageError } from '../../utils/imageHelper';
 import { showcaseCars } from '../../data/showcaseData';
 import { stores as officialProjectStores } from '../../data/inventoryData';
-import { api } from '../../services/apiClient';
+import { api, isDemoModeEnabled } from '../../services/apiClient';
+import { canUseOfflineFallback } from '../../services/sessionStorage';
 
 const B2BInventoryCard = memo(function B2BInventoryCard({ car, onReserve }) {
   const piso = car.valor_minimo_repasse || (car.price * 0.90);
@@ -139,15 +140,14 @@ const ReservationTimerBadge = memo(function ReservationTimerBadge({ expiresAt, f
   });
 
   useEffect(() => {
+    const remainingNow = () => expiresAt ? Math.max(0, Math.floor(expiresAt - Date.now() / 1000)) : Math.max(0, fallbackSecs);
+    setRemaining(remainingNow());
     const timer = setInterval(() => {
-      if (expiresAt) {
-        setRemaining(Math.max(0, Math.floor(expiresAt - Date.now() / 1000)));
-      } else {
-        setRemaining(prev => Math.max(0, prev - 1));
-      }
+      if (expiresAt) setRemaining(remainingNow());
+      else setRemaining(previous => Math.max(0, previous - 1));
     }, 1000);
     return () => clearInterval(timer);
-  }, [expiresAt]);
+  }, [expiresAt, fallbackSecs]);
 
   const isExpired = remaining <= 0;
   const mins = Math.floor(remaining / 60);
@@ -206,14 +206,7 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
   });
   const [partnerships, setPartnerships] = useState([]);
   const [storesLoading, setStoresLoading] = useState(false);
-  const [myReservations, setMyReservations] = useState(() => {
-    try {
-      const saved = localStorage.getItem('automatch_b2b_reservations');
-      return saved ? JSON.parse(saved) : [];
-    } catch {
-      return [];
-    }
-  });
+  const [myReservations, setMyReservations] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [inventoryLoading, setInventoryLoading] = useState(false);
@@ -225,8 +218,8 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
 
   // Refs para controle de concorrência e cache local de estoque (TTL 60s)
   const sharedCarsCacheRef = useRef({});
-  const isFetchingRef = useRef(false);
-  const searchDebounceRef = useRef(null);
+  const requestScopeRef = useRef(null);
+  const accountKey = JSON.stringify([user?.id, user?.email, user?.storeId, user?.store_id, user?.role, readSessionToken()]);
 
   // Filters
   const [searchCar, setSearchCar] = useState('');
@@ -284,6 +277,29 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
   const [reviewingTx, setReviewingTx] = useState(null);
   const [reviewForm, setReviewForm] = useState({ rating: 5, punctuality_rating: 5, comment: '' });
 
+  // Cada abertura, aba e pesquisa invalida respostas iniciadas no contexto anterior.
+  useEffect(() => {
+    const scope = { active: isOpen && isB2BAuthorized, controller: new AbortController() };
+    requestScopeRef.current = scope;
+    setInventoryLoading(false);
+    setLoadingMore(false);
+    setStoresLoading(false);
+    setActionLoading(false);
+    return () => { scope.active = false; scope.controller.abort(); };
+  }, [isOpen, isB2BAuthorized, activeTab, searchCar, accountKey]);
+
+  useEffect(() => {
+    sharedCarsCacheRef.current = {};
+    setSharedCars([]);
+    setPartnerships([]);
+    setAvailableStores([]);
+    setMyReservations([]);
+    setTransactions([]);
+    setActiveChatReservation(null);
+    setReservingCar(null);
+    setFeedbackMsg({ type: '', text: '' });
+  }, [accountKey]);
+
   // Helper de token resiliente e unificado
   const getAuthHeaders = useCallback(() => {
     const token = readSessionToken();
@@ -291,171 +307,108 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
       'Content-Type': 'application/json',
       'Authorization': token ? `Bearer ${token}` : ''
     };
-  }, [user]);
+  }, []);
 
-  // Carregamento paginado e assíncrono com cache local de alta performance
-  const loadSharedInventory = async (query = searchCar, offset = 0, isAppend = false) => {
-    const cleanQuery = (query || '').trim().toLowerCase();
-    const cacheKey = `${cleanQuery}_off_${offset}`;
-    const now = Date.now();
-
-    // Reutiliza cache do cliente caso ainda esteja dentro do TTL de 60s
-    if (!isAppend && sharedCarsCacheRef.current[cacheKey]) {
-      const cached = sharedCarsCacheRef.current[cacheKey];
-      if (now - cached.timestamp < 60000) {
-        setSharedCars(cached.items);
-        setHasMoreCars(cached.hasMore);
-        setCurrentOffset(offset);
-        return;
-      }
+  const loadSharedInventory = useCallback(async (query = '', offset = 0, isAppend = false) => {
+    const scope = requestScopeRef.current;
+    if (!scope?.active) return;
+    const version = scope.inventoryVersion = (scope.inventoryVersion || 0) + 1;
+    const isCurrent = () => scope.active && requestScopeRef.current === scope && scope.inventoryVersion === version;
+    const cleanQuery = query.trim().toLowerCase();
+    const cacheKey = JSON.stringify([cleanQuery, offset]);
+    const cached = sharedCarsCacheRef.current[cacheKey];
+    if (!isAppend && cached && Date.now() - cached.timestamp < 60000) {
+      setSharedCars(cached.items); setHasMoreCars(cached.hasMore); setCurrentOffset(offset);
+      return;
     }
-
-    if (isAppend) {
-      setLoadingMore(true);
-    } else {
-      setInventoryLoading(true);
-    }
-
-    isFetchingRef.current = true;
-
+    if (isAppend) setLoadingMore(true); else setInventoryLoading(true);
     try {
-      const res = await fetch(
-        `/api/partnerships/shared-inventory?limit=12&offset=${offset}&q=${encodeURIComponent(query)}`,
-        { headers: getAuthHeaders(), signal: AbortSignal.timeout(1200) }
-      );
-
-      if (res.ok) {
-        const data = await res.json();
-        const hasMoreHeader = res.headers.get('X-Has-More');
-        const hasMore = hasMoreHeader !== null ? (hasMoreHeader === 'true') : (Array.isArray(data) && data.length >= 12);
-
-        setHasMoreCars(hasMore);
-        setCurrentOffset(offset);
-
-        if (isAppend) {
-          setSharedCars(prev => {
-            const combined = [...prev, ...(Array.isArray(data) ? data : [])];
-            const seen = new Set();
-            return combined.filter(c => {
-              if (seen.has(c.id)) return false;
-              seen.add(c.id);
-              return true;
-            });
-          });
-        } else {
-          setSharedCars(Array.isArray(data) ? data : []);
-          sharedCarsCacheRef.current[cacheKey] = {
-            items: Array.isArray(data) ? data : [],
-            hasMore,
-            timestamp: now
-          };
-        }
+      const data = await api.get(`/api/partnerships/shared-inventory?limit=12&offset=${offset}&q=${encodeURIComponent(cleanQuery)}`, {
+        headers: getAuthHeaders(), signal: scope.controller.signal,
+      });
+      if (!isCurrent()) return;
+      const items = Array.isArray(data) ? data : [];
+      const hasMore = items.length >= 12;
+      setHasMoreCars(hasMore); setCurrentOffset(offset);
+      if (isAppend) {
+        setSharedCars(previous => [...new Map([...previous, ...items].map(car => [String(car.id), car])).values()]);
       } else {
-        throw new Error(`HTTP ${res.status}`);
+        setSharedCars(items);
+        sharedCarsCacheRef.current[cacheKey] = { items, hasMore, timestamp: Date.now() };
       }
-    } catch (e) {
-      if (!isAppend && sharedCars.length === 0) {
-        const fallbackItems = (showcaseCars || []).slice(0, 9).map((c, i) => ({
-          id: c.id || `partner-car-${i}`,
-          brand: c.brand,
-          model: c.model,
-          year: c.year,
-          km: c.mileage || 0,
-          price: c.price,
-          valor_minimo_repasse: Math.round((c.price || 100000) * 0.90),
-          image: c.image,
-          store_name: i % 3 === 0 ? 'AutoShop Prime' : (i % 3 === 1 ? 'Motors Campinas' : 'Concessionária Alpha'),
-          status_reserva: i === 2 ? 'reservado' : 'disponivel',
-          location: i % 3 === 0 ? 'São Paulo, SP' : (i % 3 === 1 ? 'Campinas, SP' : 'Curitiba, PR')
-        }));
-        setSharedCars(fallbackItems);
+    } catch (error) {
+      if (!isCurrent()) return;
+      if (!isAppend && canUseOfflineFallback(error, isDemoModeEnabled())) {
+        const items = showcaseCars.filter(car => (car.brand + ' ' + car.model).toLowerCase().includes(cleanQuery)).slice(0, 9)
+          .map(car => ({ ...car, valor_minimo_repasse: Math.round(car.price * 0.9), store_name: 'Loja de demonstração', status_reserva: 'disponivel' }));
+        setSharedCars(items); setHasMoreCars(false); setCurrentOffset(0);
+      } else {
+        if (!isAppend) setSharedCars([]);
         setHasMoreCars(false);
+        setFeedbackMsg({ type: 'error', text: error.message || 'Não foi possível carregar o estoque.' });
       }
     } finally {
-      setInventoryLoading(false);
-      setLoadingMore(false);
-      isFetchingRef.current = false;
+      if (isCurrent()) { setInventoryLoading(false); setLoadingMore(false); }
     }
-  };
+  }, [getAuthHeaders]);
 
   const handleLoadMore = () => {
-    if (loadingMore || !hasMoreCars) return;
-    const nextOffset = currentOffset + 12;
-    loadSharedInventory(searchCar, nextOffset, true);
+    if (loadingMore || inventoryLoading || !hasMoreCars) return;
+    loadSharedInventory(searchCar, currentOffset + 12, true);
   };
 
-  const loadPartnerships = async () => {
+  const loadPartnerships = useCallback(async () => {
+    const scope = requestScopeRef.current;
+    if (!scope?.active) return;
+    const version = scope.partnershipsVersion = (scope.partnershipsVersion || 0) + 1;
+    const isCurrent = () => scope.active && requestScopeRef.current === scope && scope.partnershipsVersion === version;
     setStoresLoading(true);
     try {
+      const options = { headers: getAuthHeaders(), signal: scope.controller.signal };
       const [remotePartnerships, remoteStores] = await Promise.all([
-        api.get('/api/partnerships/my', { headers: getAuthHeaders() }),
-        api.get('/api/partnerships/stores-available', { headers: getAuthHeaders() })
+        api.get('/api/partnerships/my', options), api.get('/api/partnerships/stores-available', options),
       ]);
-      if (Array.isArray(remotePartnerships)) setPartnerships(remotePartnerships);
-      if (Array.isArray(remoteStores) && remoteStores.length > 0) {
-        const seen = new Set();
-        const cleanStores = [];
-        for (const st of remoteStores) {
-          if (!st || !st.name) continue;
-          const normName = st.name.trim();
-          const key = normName.toLowerCase();
-          if (!seen.has(key)) {
-            seen.add(key);
-            cleanStores.push({
-              ...st,
-              name: normName
-            });
-          }
-        }
-        setAvailableStores(cleanStores.length > 0 ? cleanStores : getOfficialFallbackStores());
-      } else {
-        setAvailableStores(getOfficialFallbackStores());
-      }
-    } catch (e) {
-      setAvailableStores(getOfficialFallbackStores());
-    } finally {
-      setStoresLoading(false);
-    }
-  };
-
-  const loadReservations = async () => {
-    try {
-      const res = await fetch('/api/partnerships/reservations/my', { 
-        headers: getAuthHeaders(),
-        signal: AbortSignal.timeout(1500)
+      if (!isCurrent()) return;
+      setPartnerships(Array.isArray(remotePartnerships) ? remotePartnerships : []);
+      const seen = new Set();
+      const stores = (Array.isArray(remoteStores) ? remoteStores : []).filter(store => {
+        const name = store?.name?.trim().toLowerCase();
+        if (!name || seen.has(name)) return false;
+        seen.add(name); return true;
       });
-      if (res.ok) {
-        const remoteData = await res.json();
-        const localSaved = JSON.parse(localStorage.getItem('automatch_b2b_reservations') || '[]');
-        const combined = Array.isArray(remoteData) ? [...remoteData] : [];
-        localSaved.forEach(localRes => {
-          if (!combined.some(r => r.id === localRes.id || r.car_id === localRes.car_id)) {
-            combined.unshift(localRes);
-          }
-        });
-        setMyReservations(combined);
-        return;
-      }
-    } catch (e) {
-      // Offline fallback: recupera do storage local sem emitir erro
-      const localSaved = JSON.parse(localStorage.getItem('automatch_b2b_reservations') || '[]');
-      if (localSaved.length > 0) {
-        setMyReservations(localSaved);
-      }
-    }
-  };
+      setAvailableStores(stores);
+    } catch (error) {
+      if (!isCurrent()) return;
+      setAvailableStores(canUseOfflineFallback(error, isDemoModeEnabled()) ? getOfficialFallbackStores() : []);
+      setFeedbackMsg({ type: 'error', text: error.message || 'Não foi possível carregar as parcerias.' });
+    } finally { if (isCurrent()) setStoresLoading(false); }
+  }, [getAuthHeaders, getOfficialFallbackStores]);
 
-  const loadTransactions = async () => {
+  const loadReservations = useCallback(async () => {
+    const scope = requestScopeRef.current;
+    if (!scope?.active) return;
+    const version = scope.reservationsVersion = (scope.reservationsVersion || 0) + 1;
+    const isCurrent = () => scope.active && requestScopeRef.current === scope && scope.reservationsVersion === version;
     try {
-      const res = await fetch('/api/partnerships/transactions', { 
-        headers: getAuthHeaders(),
-        signal: AbortSignal.timeout(1500)
-      });
-      if (res.ok) setTransactions(await res.json());
-    } catch (e) {
-      // Ignora erro de rede em background
+      const data = await api.get('/api/partnerships/reservations/my', { headers: getAuthHeaders(), signal: scope.controller.signal });
+      if (isCurrent()) setMyReservations(Array.isArray(data) ? data : []);
+    } catch (error) {
+      if (isCurrent()) setFeedbackMsg({ type: 'error', text: error.message || 'Não foi possível carregar as reservas.' });
     }
-  };
+  }, [getAuthHeaders]);
+
+  const loadTransactions = useCallback(async () => {
+    const scope = requestScopeRef.current;
+    if (!scope?.active) return;
+    const version = scope.transactionsVersion = (scope.transactionsVersion || 0) + 1;
+    const isCurrent = () => scope.active && requestScopeRef.current === scope && scope.transactionsVersion === version;
+    try {
+      const data = await api.get('/api/partnerships/transactions', { headers: getAuthHeaders(), signal: scope.controller.signal });
+      if (isCurrent()) setTransactions(Array.isArray(data) ? data : []);
+    } catch (error) {
+      if (isCurrent()) setFeedbackMsg({ type: 'error', text: error.message || 'Não foi possível carregar as transações.' });
+    }
+  }, [getAuthHeaders]);
 
   const refreshAll = async () => {
     setLoading(true);
@@ -480,11 +433,10 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
     if (!isOpen || !isB2BAuthorized) return;
 
     if (activeTab === 'inventory') {
-      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
-      searchDebounceRef.current = setTimeout(() => {
+      const debounce = setTimeout(() => {
         loadSharedInventory(searchCar, 0, false);
       }, 250);
-      return () => clearTimeout(searchDebounceRef.current);
+      return () => clearTimeout(debounce);
     } else if (activeTab === 'partnerships') {
       loadPartnerships();
     } else if (activeTab === 'reservations') {
@@ -492,7 +444,7 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
     } else if (activeTab === 'transactions') {
       loadTransactions();
     }
-  }, [isOpen, isB2BAuthorized, activeTab, searchCar]);
+  }, [isOpen, isB2BAuthorized, activeTab, searchCar, accountKey, loadSharedInventory, loadPartnerships, loadReservations, loadTransactions]);
 
 
 
@@ -501,7 +453,7 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
     if (!isOpen || !isB2BAuthorized || activeTab !== 'reservations') return;
     const interval = setInterval(loadReservations, 15000);
     return () => clearInterval(interval);
-  }, [isOpen, isB2BAuthorized, activeTab]);
+  }, [isOpen, isB2BAuthorized, activeTab, accountKey, loadReservations]);
 
 
   // Ações de Parceria
@@ -578,183 +530,70 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
 
   const handleConfirmReservation = async (e) => {
     e.preventDefault();
-    if (!reservingCar) return;
-
-    const piso = reservingCar.valor_minimo_repasse || (reservingCar.price * 0.90);
-    if (reservationForm.proposed_price < piso) {
-      setFeedbackMsg({
-        type: 'error',
-        text: `Valor proposto não pode ser inferior ao piso mínimo de repasse (R$ ${piso.toLocaleString('pt-BR')}).`
-      });
-      return;
-    }
-
+    if (!reservingCar || actionLoading) return;
+    const scope = requestScopeRef.current;
+    if (!scope?.active) return;
     setActionLoading(true);
-    let reservationSuccess = false;
-
     try {
-      const res = await fetch('/api/partnerships/reservations', {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        signal: AbortSignal.timeout(1500),
-        body: JSON.stringify({
-          car_id: reservingCar.id,
-          proposed_price: Number(reservationForm.proposed_price),
-          client_markup: Number(reservationForm.client_markup),
-          client_name: reservationForm.client_name,
-          duration_minutes: Number(reservationForm.duration_minutes)
-        })
-      });
-
-      if (res.ok) {
-        reservationSuccess = true;
-      }
-    } catch {
-      // Backend offline / ECONNREFUSED / timeout: assume fallback local imediato sem travar a interface
-    }
-
-    // Cria/garante registro da reserva com Hold Lock ativo
-    const durationMins = Number(reservationForm.duration_minutes) || 120;
-    const nowSec = Math.floor(Date.now() / 1000);
-    const expiresAt = nowSec + (durationMins * 60);
-
-    const newRes = {
-      id: `res_b2b_${Date.now()}`,
-      car_id: reservingCar.id,
-      car_title: `${reservingCar.brand} ${reservingCar.model}`,
-      car_image: reservingCar.image,
-      requesting_store_name: 'Minha Concessionária',
-      owner_store_name: reservingCar.store_name || 'Loja Parceira',
-      proposed_price: Number(reservationForm.proposed_price),
-      client_markup: Number(reservationForm.client_markup),
-      client_name: reservationForm.client_name || 'Cliente em Loja',
-      status: 'ativa',
-      duration_minutes: durationMins,
-      created_at: new Date().toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
-      expires_at: expiresAt,
-      time_remaining_seconds: durationMins * 60,
-      closing_requested: 0,
-      is_owner: false
-    };
-
-    setMyReservations(prev => {
-      const updated = [newRes, ...prev.filter(r => r.car_id !== reservingCar.id)];
-      try {
-        localStorage.setItem('automatch_b2b_reservations', JSON.stringify(updated));
-      } catch (storageErr) {
-        console.error(storageErr);
-      }
-      return updated;
-    });
-
-    // Atualiza status do veículo imediatamente no estoque compartilhado
-    setSharedCars(prev => prev.map(c => c.id === reservingCar.id ? { ...c, status_reserva: 'reservado' } : c));
-
-    setFeedbackMsg({
-      type: 'success',
-      text: reservationSuccess 
-        ? 'Reserva (Hold Lock) confirmada com sucesso!' 
-        : 'Reserva (Hold Lock) criada com sucesso no catálogo B2B!'
-    });
-
-    setReservingCar(null);
-    setActionLoading(false);
-    setActiveTab('reservations');
+      await api.post('/api/partnerships/reservations', {
+        car_id: reservingCar.id, proposed_price: Number(reservationForm.proposed_price),
+        client_markup: Number(reservationForm.client_markup), client_name: reservationForm.client_name,
+        duration_minutes: Number(reservationForm.duration_minutes),
+      }, { headers: getAuthHeaders(), signal: scope.controller.signal });
+      if (!scope.active || requestScopeRef.current !== scope) return;
+      sharedCarsCacheRef.current = {};
+      setReservingCar(null);
+      setFeedbackMsg({ type: 'success', text: 'Reserva (Hold Lock) confirmada com sucesso!' });
+      setActiveTab('reservations');
+    } catch (error) {
+      if (scope.active && requestScopeRef.current === scope) setFeedbackMsg({ type: 'error', text: error.message || 'Reserva não confirmada. Tente novamente.' });
+    } finally { if (scope.active && requestScopeRef.current === scope) setActionLoading(false); }
   };
 
   const handleRequestClosing = async (reservationId) => {
+    const scope = requestScopeRef.current;
+    if (!scope?.active || actionLoading) return;
     setActionLoading(true);
-
-    // Atualização otimista imediata na interface: marca solicitação de fechamento e retira o Hold Lock
-    setMyReservations(prev => {
-      const updated = prev.map(r => r.id === reservationId ? {
-        ...r,
-        closing_requested: 1,
-        closing_requested_at: new Date().toISOString(),
-        status_fechamento: 'solicitado'
-      } : r);
-      try {
-        localStorage.setItem('automatch_b2b_reservations', JSON.stringify(updated));
-      } catch (err) {
-        console.warn('Falha ao salvar no storage local:', err);
-      }
-      return updated;
-    });
-
-    setFeedbackMsg({
-      type: 'success',
-      text: '✓ Solicitação de fechamento enviada com sucesso! A trava Hold Lock foi liberada e a loja parceira foi notificada para confirmar a venda.'
-    });
-
     try {
-      const res = await fetch(`/api/partnerships/reservations/${reservationId}/request-closing`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        signal: AbortSignal.timeout(2000)
-      });
-      const data = await res.json();
-      if (res.ok) {
-        await loadReservations();
-      }
-    } catch {
-      // Estado otimista já assegurado na interface
-    } finally {
-      setActionLoading(false);
-    }
+      const data = await api.post(`/api/partnerships/reservations/${reservationId}/request-closing`, {}, { headers: getAuthHeaders(), signal: scope.controller.signal });
+      if (!scope.active || requestScopeRef.current !== scope) return;
+      sharedCarsCacheRef.current = {};
+      setFeedbackMsg({ type: 'success', text: data.message || 'Solicitação de fechamento enviada.' });
+      await loadReservations();
+    } catch (error) {
+      if (scope.active && requestScopeRef.current === scope) setFeedbackMsg({ type: 'error', text: error.message || 'Solicitação não confirmada. Tente novamente.' });
+    } finally { if (scope.active && requestScopeRef.current === scope) setActionLoading(false); }
   };
 
   const handleConsentDecision = async (reservationId, approved, notes = '') => {
+    const scope = requestScopeRef.current;
+    if (!scope?.active || actionLoading) return;
     setActionLoading(true);
     try {
-      const res = await fetch(`/api/partnerships/reservations/${reservationId}/give-consent`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        signal: AbortSignal.timeout(1500),
-        body: JSON.stringify({ approved, notes })
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setFeedbackMsg({
-          type: approved ? 'success' : 'info',
-          text: approved ? `Negócio formalizado! Protocolo: ${data.protocol}` : 'Proposta recusada.'
-        });
-        await refreshAll();
-      } else {
-        setFeedbackMsg({ type: 'error', text: data.detail || 'Erro ao processar consentimento.' });
-      }
-    } catch {
-      setFeedbackMsg({ type: 'info', text: approved ? 'Venda aprovada com sucesso.' : 'Proposta recusada.' });
-    } finally {
-      setActionLoading(false);
-    }
+      const data = await api.post(`/api/partnerships/reservations/${reservationId}/give-consent`, { approved, notes }, { headers: getAuthHeaders(), signal: scope.controller.signal });
+      if (!scope.active || requestScopeRef.current !== scope) return;
+      sharedCarsCacheRef.current = {};
+      setFeedbackMsg({ type: approved ? 'success' : 'info', text: data.message || (approved ? 'Negócio formalizado!' : 'Proposta recusada.') });
+      await loadReservations();
+    } catch (error) {
+      if (scope.active && requestScopeRef.current === scope) setFeedbackMsg({ type: 'error', text: error.message || 'Decisão não confirmada. Tente novamente.' });
+    } finally { if (scope.active && requestScopeRef.current === scope) setActionLoading(false); }
   };
 
   const handleCancelReservation = async (reservationId) => {
-    if (!confirm('Deseja realmente cancelar esta reserva e liberar o veículo?')) return;
+    if (actionLoading || !confirm('Deseja realmente cancelar esta reserva e liberar o veículo?')) return;
+    const scope = requestScopeRef.current;
+    if (!scope?.active) return;
     setActionLoading(true);
     try {
-      await fetch(`/api/partnerships/reservations/${reservationId}/cancel`, {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        signal: AbortSignal.timeout(1200)
-      });
-    } catch {
-      // Ignora erro offline
-    } finally {
-      setMyReservations(prev => {
-        const target = prev.find(r => r.id === reservationId);
-        const next = prev.filter(r => r.id !== reservationId);
-        try {
-          localStorage.setItem('automatch_b2b_reservations', JSON.stringify(next));
-        } catch  { /* O recurso opcional mantém seu estado anterior. */ }
-        if (target) {
-          setSharedCars(cars => cars.map(c => c.id === target.car_id ? { ...c, status_reserva: 'disponivel' } : c));
-        }
-        return next;
-      });
-      setFeedbackMsg({ type: 'info', text: 'Reserva cancelada com sucesso.' });
-      setActionLoading(false);
-    }
+      const data = await api.post(`/api/partnerships/reservations/${reservationId}/cancel`, {}, { headers: getAuthHeaders(), signal: scope.controller.signal });
+      if (!scope.active || requestScopeRef.current !== scope) return;
+      sharedCarsCacheRef.current = {};
+      setFeedbackMsg({ type: 'info', text: data.message || 'Reserva cancelada com sucesso.' });
+      await loadReservations();
+    } catch (error) {
+      if (scope.active && requestScopeRef.current === scope) setFeedbackMsg({ type: 'error', text: error.message || 'Cancelamento não confirmado. Tente novamente.' });
+    } finally { if (scope.active && requestScopeRef.current === scope) setActionLoading(false); }
   };
 
   const handleSendReview = async (e) => {
