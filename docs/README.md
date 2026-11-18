@@ -23,7 +23,13 @@ permanecem intactas.
 | [Segurança](../SECURITY.md) | Controles, limitações e reporte reservado |
 | [Changelog](../CHANGELOG.md) | Mudanças atuais e registros de ciclos anteriores |
 
-## Revisão de pendências da demonstração
+## Limpeza de arquivos — 18/11/2026
+
+[Relatório de remoções e preservações](limpeza-arquivos-2026-11-18.md): 15 módulos
+sem uso, quatro dependências e duas funcionalidades legadas retiradas. Auditoria
+permanente de imports adicionada ao `npm test`; documentação histórica preservada.
+
+## Revisões anteriores da demonstração
 
 A [análise sobre o código `ffe60e2`](revisao-pendencias-demo-2026-11-17.md)
 registra cinco problemas reproduzidos, suas fontes e critérios de correção.

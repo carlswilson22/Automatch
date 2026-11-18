@@ -5,10 +5,11 @@ foram corrigidos com regressões permanentes: dados do anúncio/PDF, quilometrag
 favoritos separados por conta e cadastro local sem falso sucesso. Sem deploy ou
 reformulação do banco; conferência visual e de acessibilidade permanece manual.
 
-**Manutenção:** lint sem erros ou avisos e 290 testes frontend aprovados.
-Ver [análise dos 161 avisos e correções](docs/manutencao-avisos-2026-11-17.md).
+**Limpeza de 18/11/2026:** retirados 15 módulos sem uso e quatro dependências.
+Auditoria de imports sem órfãos, lint sem avisos e testes dos fluxos mantidos
+aprovados. Ver [o que foi removido e preservado](docs/limpeza-arquivos-2026-11-18.md).
 
-Documentação revisada em **17/11/2026**, com melhorias demonstrativas sobre a base `444bc09`.
+Documentação revisada em **18/11/2026**, com melhorias demonstrativas sobre a base `444bc09`.
 Projeto Integrador de Análise e Desenvolvimento de Sistemas do CEUB.
 Equipe registrada: Carlos Wilson, Matheus Porto, Paulo Arthur e Vinicius Aurelio.
 

@@ -30,7 +30,7 @@ nova autorização. Nenhuma entidade ORM, migração, banco real ou arquivo priv
 | Feed de estoque | XML da API usa catálogo atual, filtro opcional por loja e exclui vendidos e campos privados de repasse; exemplo local usa o veículo escolhido | Sem homologação de importadores externos |
 | Radar de preço | Interesse local por conta na demonstração; cadastro confirmado pela API fora dela; simulação da queda mostra o aviso no próprio site | Sem monitoramento contínuo ou entrega WhatsApp/e-mail |
 | Diálogos | Semântica, nomes acessíveis, foco inicial/retorno, Tab, Escape e rolagem; requisições canceladas ao fechar | Inspeção visual e leitor de tela ainda manuais |
-| Manutenção | Removidos imports, estados e dados substitutos sem uso das telas alteradas | Limpeza por lotes; legado de pneus/acústica permanece inativo |
+| Manutenção | Removidos imports, estados e dados substitutos sem uso das telas alteradas | Limpeza concluída sobre os consumidores atuais; legado de pneus/acústica retirado |
 
 ## Pendências A1–A5 concluídas
 
@@ -48,6 +48,13 @@ Os 161 avisos de ESLint foram tratados: **zero erros e zero avisos**, sem
 desativar regras. Providers/hooks separados, código sem consumidores removido
 e efeitos legados corrigidos sem integrar esses recursos às telas.
 Ver [causas, mudanças e evidências](docs/manutencao-avisos-2026-11-17.md).
+
+## Limpeza concluída — 18/11/2026
+
+Removidos 15 módulos frontend sem consumidores, quatro dependências e o legado
+de pneus/acústica (componentes, rotas e funções). A auditoria de imports passou
+para `npm test`; os 85 módulos restantes são alcançáveis. Mídia, fixtures,
+licenças, histórico e recursos ativos preservados. Ver [relatório](docs/limpeza-arquivos-2026-11-18.md).
 
 ## Pendências atuais da demonstração
 

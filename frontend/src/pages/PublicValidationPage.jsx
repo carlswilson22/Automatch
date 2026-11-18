@@ -10,7 +10,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ShieldCheck, CheckCircle2, Car, Tag, Copy, Check, ArrowLeft, Loader2, Lock, ShieldAlert, Calendar } from 'lucide-react';
-import AutomatchLogo from '../components/ui/microkit/AutomatchLogo';
+import AutomatchLogo from '../components/ui/AutomatchLogo';
 
 
 export default function PublicValidationPage() {

@@ -13,7 +13,7 @@ import {
   Building2, FileText, KeyRound, ArrowLeft, Clock, Copy, AlertTriangle, Check
 } from 'lucide-react';
 import { useAuth } from '../contexts/useAuth';
-import AutomatchLogo from '../components/ui/microkit/AutomatchLogo';
+import AutomatchLogo from '../components/ui/AutomatchLogo';
 
 import { modalVariants } from '../utils/motionTokens';
 

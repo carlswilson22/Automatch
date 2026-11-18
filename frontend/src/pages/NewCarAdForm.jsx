@@ -16,7 +16,7 @@ import { stores as defaultStores } from '../data/inventoryData';
 import { addNewCar } from '../data/newCarsManager';
 import LaudoFeedbackCard from '../components/vehicle/LaudoFeedbackCard';
 import { useAuth } from '../contexts/useAuth';
-import AutomatchLogo from '../components/ui/microkit/AutomatchLogo';
+import AutomatchLogo from '../components/ui/AutomatchLogo';
 
 // Compressor inteligente via HTML5 Canvas para mitigar QuotaExceededError no localStorage
 const compressImageToJpeg = (file, maxDimension = 1200, quality = 0.82) => {

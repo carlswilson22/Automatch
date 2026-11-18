@@ -23,7 +23,7 @@ Paulo Arthur e Vinicius Aurelio. Principal:
 | --- | --- | --- |
 | Inicial e vitrine | `/`, `/encontrar` | RF-05 e RF-24 |
 | Anúncio e galeria orbital | `/encontrar/:id`, `Vehicle360Viewer` | RF-02 e RF-07 |
-| Vídeo e análise de lataria | `PericialVideoViewer`, `AutomatchScan` | RF-01 e RF-27 |
+| Vídeo e análise de lataria | `PericialVideoViewer`, `ShowcaseVehicleDetails` | RF-01 e RF-27 |
 | Dossiê e validação pública | `OfficialDossierModal`, `/validar/:protocolo` | RF-21 e RF-22 |
 | Comparação, TCO e financiamento | Ferramentas do anúncio | RF-10 e RF-28; estimativas locais |
 | Login, cadastro e perfil | `/login`, `/perfil` | RF-19 e RF-23 |

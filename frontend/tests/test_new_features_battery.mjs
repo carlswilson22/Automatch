@@ -206,36 +206,6 @@ describe('BATERIA DE TESTES - NOVAS FUNCIONALIDADES (SPRINT EXPANDIDA)', () => {
     });
   });
 
-  // 5. SHOULD HAVE: WarrantyBadgeModal
-  describe('5. Modal de Garantia e Extensão de Garantia (WarrantyBadgeModal)', () => {
-    const filePath = path.join(rootDir, 'src/components/vehicle/WarrantyBadgeModal.jsx');
-    const content = fs.readFileSync(filePath, 'utf-8');
-
-    test('5.1: Componente existe e exporta default', () => {
-      assert.ok(fs.existsSync(filePath), 'WarrantyBadgeModal.jsx deve existir');
-      assert.ok(
-        content.includes('export default function WarrantyBadgeModal') || 
-        content.includes('export default WarrantyBadgeModal'), 
-        'Deve exportar default WarrantyBadgeModal'
-      );
-    });
-
-    test('5.2: Apresenta planos de cobertura (motor, câmbio, elétrica, laudo)', () => {
-      assert.ok(content.includes('Motor'), 'Deve cobrir motor');
-      assert.ok(content.includes('Transmissão') || content.includes('câmbio'), 'Deve cobrir transmissão/câmbio');
-      assert.ok(content.includes('WARRANTY') || content.includes('Garantia') || content.includes('Meses'), 'Deve detalhar planos');
-    });
-
-    test('5.3: Implementa fechamento por backdrop e botão fechar', () => {
-      assert.ok(content.includes('onClose'), 'Deve conter handler de fechamento');
-      assert.ok(content.includes('isOpen'), 'Deve responder à visibilidade isOpen');
-    });
-
-    test('5.4: Possui sintaxe balanceada e sem erros estruturais', () => {
-      verifyBalancedSyntax(content, 'WarrantyBadgeModal.jsx');
-    });
-  });
-
   // 6. COULD HAVE: AIStudioModal
   describe('6. Estúdio Virtual IA de Veículos (AIStudioModal)', () => {
     const filePath = path.join(rootDir, 'src/components/inventory/AIStudioModal.jsx');

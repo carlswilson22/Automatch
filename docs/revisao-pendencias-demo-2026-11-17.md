@@ -1,5 +1,8 @@
 # Revisão de pendências da demonstração — 17/11/2026
 
+> Complemento de 18/11/2026: a [limpeza posterior](limpeza-arquivos-2026-11-18.md)
+> retirou componentes legados e atualizou as evidências; este registro descreve a etapa anterior.
+
 Código examinado: `ffe60e226c81e6a44b45191456faa62788cabda2`, confirmado na
 `main` principal e na `main` secundária antes da revisão. A análise examinou
 anúncio, normalização de dados, favoritos, cadastro local, PDF, backlog e CI.
@@ -44,7 +47,7 @@ cadastradas não comprova aprovação.
 
 Fontes: [mapeador](../frontend/src/utils/vehicleMapper.js),
 [anúncio](../frontend/src/pages/ShowcaseVehicleDetails.jsx),
-[normalizador](../frontend/src/utils/vehicleNormalizer.js) e
+[normalizador](https://github.com/carlswilson22/Automatch/blob/7fd2315928bcef6884069628911492ee9e3330a2/frontend/src/utils/vehicleNormalizer.js) e
 [cadastro](../frontend/src/pages/NewCarAdForm.jsx).
 
 ### A2 — Alta: a rota do PDF ainda fabrica referência FIPE e regularidade

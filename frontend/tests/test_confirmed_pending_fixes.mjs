@@ -11,9 +11,9 @@ const text = view => JSON.stringify(view.toJSON());
 const content = node => typeof node === 'string' ? node : (node?.children || []).map(content).join('');
 const button = (view,label) => view.root.findAllByType('button').find(node=>content(node).includes(label));
 const negative = {id:'audit-negative',brand:'Marca',model:'Modelo',year:2022,km:42000,price:100000,laudo_status:'Reprovado',debt_status:'Com débitos',auction_history:'Sim'};
-let server, view, auth, AuthProvider, useAuth, manager, mapper, normalizeVehicle;
+let server, view, auth, AuthProvider, useAuth, manager, mapper;
 before(async()=>{
- const empty = new Set(['AIChatBox','SellerChat','TradeInSimulator','MarketPriceIndicator','PriceDropBadge','PericialVideoViewer','OfficialDossierModal','AutomatchScan','TcoCalculatorCard']);
+ const empty = new Set(['AIChatBox','SellerChat','TradeInSimulator','MarketPriceIndicator','PriceDropBadge','PericialVideoViewer','OfficialDossierModal','TcoCalculatorCard']);
  server = await createServer({envFile:false,server:{middlewareMode:true},ssr:{noExternal:['framer-motion']},appType:'custom',logLevel:'silent',plugins:[{
   name:'confirmed-regressions-boundaries',enforce:'pre',
   resolveId(id,importer){
@@ -33,7 +33,6 @@ before(async()=>{
  ({useAuth}=await server.ssrLoadModule('/src/contexts/useAuth.js'));
  manager=await server.ssrLoadModule('/src/data/favoritesManager.js');
  ({mapVehicleToViewModel:mapper}=await server.ssrLoadModule('/src/utils/vehicleMapper.js'));
- ({normalizeVehicle}=await server.ssrLoadModule('/src/utils/vehicleNormalizer.js'));
 });
 after(async()=>{await server?.close();for(const [key,value] of Object.entries(globals)){if(value===undefined)delete globalThis[key];else globalThis[key]=value;}delete globalThis.__pendingPost;delete globalThis.__pendingGet;});
 beforeEach(()=>{
@@ -48,14 +47,12 @@ async function mount(Component,props={},initialEntries=['/']){await act(async()=
 async function mountAuth(){function Probe(){auth=useAuth();return null;}await act(async()=>{view=TestRenderer.create(React.createElement(AuthProvider,null,React.createElement(Probe)));});}
 const account = id => sessionStorage.setItem('automatch_user',JSON.stringify({id,email:`${id}@example.test`}));
 
-test('A1: mapper e normalizador preservam dados negativos, metadados e ausência de FIPE',()=>{
- for(const map of [mapper,normalizeVehicle]){
-  const car=map({...negative,specs:{motor:'2.0',airbags:'2'},priceHistory:[{price:110000}],seller:{name:'Dono'}});
+test('A1: mapeador preserva dados negativos, metadados e ausência de FIPE',()=>{
+  const car=mapper({...negative,specs:{motor:'2.0',airbags:'2'},priceHistory:[{price:110000}],seller:{name:'Dono'}});
   assert.equal(car.laudoStatus,'Reprovado');assert.equal(car.debtStatus,'Com débitos');assert.equal(car.auctionHistory,'Sim');
   assert.equal(car.mileage,42000);assert.equal(car.fipePrice,null);assert.equal(car.fipeCode,null);assert.equal(car.specs.motor,'2.0');assert.equal(car.specs.airbags,'2');assert.equal(car.priceHistory.length,1);assert.equal(car.seller.name,'Dono');
-  const unknown=map({id:'missing',price:100000});assert.equal(unknown.laudoStatus,'Não informado');assert.equal(unknown.debtStatus,'Não informado');assert.equal(unknown.auctionHistory,'Não informado');assert.equal(unknown.mileage,null);assert.equal(unknown.year,null);assert.deepEqual(unknown.specs,{});
-  assert.equal(map({id:'zero',km:0}).mileage,0);
- }
+  const unknown=mapper({id:'missing',price:100000});assert.equal(unknown.laudoStatus,'Não informado');assert.equal(unknown.debtStatus,'Não informado');assert.equal(unknown.auctionHistory,'Não informado');assert.equal(unknown.mileage,null);assert.equal(unknown.year,null);assert.deepEqual(unknown.specs,{});
+  assert.equal(mapper({id:'zero',km:0}).mileage,0);
  assert.equal(mapper({...negative,fipe_price:'R$ 120.000,50'}).fipePrice,120000.5);
 });
 

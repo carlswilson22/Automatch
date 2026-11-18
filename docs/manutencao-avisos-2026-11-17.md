@@ -1,5 +1,8 @@
 # Revisão dos avisos de manutenção — 17/11/2026
 
+> Complemento de 18/11/2026: a [limpeza posterior](limpeza-arquivos-2026-11-18.md)
+> retirou componentes legados e atualizou as evidências; este registro descreve a etapa anterior.
+
 Base examinada: `8294a2617ba9bd341b93356abdf79761c16aa599`, igual nas duas
 `main` no início. Escopo desta revisão: frontend, seus testes e documentação.
 Não houve deploy, alteração do backend/banco, migração ou leitura de `.env` privado.

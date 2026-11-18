@@ -113,20 +113,19 @@ describe('MÓDULO 1: Varredura 360 Graus (Vehicle360Viewer & Ativos)', () => {
 // ══════════════════════════════════════════════════════════════════════════════
 // MÓDULO 2: VARREDURA COM INTELIGÊNCIA ARTIFICIAL (SCANNER PERICIAL & LAUDO)
 // ══════════════════════════════════════════════════════════════════════════════
-describe('MÓDULO 2: Varredura com IA (AutomatchScan & Laudo Fotográfico)', () => {
-  const scanComponentPath = path.join(rootDir, 'src', 'components', 'vehicle', 'AutomatchScan.jsx');
+describe('MÓDULO 2: Varredura com IA no anúncio ativo', () => {
   const detailsPagePath = path.join(rootDir, 'src', 'pages', 'ShowcaseVehicleDetails.jsx');
 
-  test('2.1: AutomatchScan.jsx possui animação de linha de varredura a laser', () => {
-    const content = fs.readFileSync(scanComponentPath, 'utf-8');
+  test('2.1: anúncio mantém estado e indicador de análise visual', () => {
+    const content = fs.readFileSync(detailsPagePath, 'utf-8');
     assert.ok(
       content.includes('scan-laser') || content.includes('animate-pulse') || content.includes('linear-gradient') || content.includes('isScanning'),
       'Deve possuir efeito visual luminoso de varredura a laser'
     );
   });
 
-  test('2.2: AutomatchScan.jsx mapeia danos com gravidade, orçamento e bounding boxes', () => {
-    const content = fs.readFileSync(scanComponentPath, 'utf-8');
+  test('2.2: anúncio mantém mapa de danos e valores em reais', () => {
+    const content = fs.readFileSync(detailsPagePath, 'utf-8');
     assert.ok(content.includes('damage') || content.includes('avaria') || content.includes('score'), 'Deve calcular avarias ou score de lataria');
     assert.ok(content.includes('R$') || content.includes('BRL') || content.includes('toLocaleString'), 'Deve formatar custos na moeda BRL');
   });

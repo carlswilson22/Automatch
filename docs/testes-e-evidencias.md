@@ -31,7 +31,20 @@ a chave Gemini do processo de teste e cria bancos SQLite/diretórios de mídia
 temporários. Executa descoberta unittest e cinco roteiros de jornada. Não
 substituí-lo pela execução indiscriminada de scripts antigos sobre o banco local.
 
-## Manutenção — execução atual de 17/11/2026
+## Limpeza — execução atual de 18/11/2026
+
+Base: `7fd2315`. `npm test` executa a auditoria de uso (85 módulos alcançáveis e
+cinco dependências utilizadas) e **284 testes frontend aprovados**. Lint com
+`--max-warnings 0`: **zero erros/avisos**; build local `/Automatch/` concluído.
+O runner backend executou **111 unittest e cinco jornadas aprovados**, com bancos
+SQLite e uploads temporários, sem `.env` privado ou dados reais.
+
+Seis testes dos componentes retirados foram aposentados; os testes de dados e
+scanner foram direcionados à implementação usada. Duas regressões HTTP novas
+protegem a retirada dos endpoints excluídos e a análise visual mantida. Ver
+[escopo e limites](limpeza-arquivos-2026-11-18.md). Não houve deploy nem migração.
+
+## Manutenção — execução anterior de 17/11/2026
 
 Base: `8294a26`. Frontend somente: `npm run lint -- --max-warnings 0` com
 **zero erros/avisos**, `npm test` com **290 testes aprovados**, build local

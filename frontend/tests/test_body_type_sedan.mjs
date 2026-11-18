@@ -11,7 +11,6 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { filterVehicles, normalizeBodyType } from '../src/utils/filterVehicles.js';
-import { normalizeVehicle } from '../src/utils/vehicleNormalizer.js';
 import { mapVehicleToViewModel } from '../src/utils/vehicleMapper.js';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -71,14 +70,9 @@ describe('BATERIA DE TESTES - TAREFA 4: Correção Ortográfica e Filtro Sedan',
     assert.deepStrictEqual(result.map(c => c.id), ['1', '2', '3']);
   });
 
-  test('4.5: vehicleNormalizer e vehicleMapper convertem Seda/Sedã para Sedan', () => {
+  test('4.5: mapeador canônico converte Seda/Sedã para Sedan', () => {
     const rawLegacy1 = { id: 'x1', marca: 'Honda', modelo: 'Civic', body_type: 'Seda' };
     const rawLegacy2 = { id: 'x2', marca: 'Toyota', modelo: 'Corolla', bodyType: 'Sedã' };
-
-    const norm1 = normalizeVehicle(rawLegacy1);
-    const norm2 = normalizeVehicle(rawLegacy2);
-    assert.strictEqual(norm1.bodyType, 'Sedan', 'vehicleNormalizer deve mapear Seda para Sedan');
-    assert.strictEqual(norm2.bodyType, 'Sedan', 'vehicleNormalizer deve mapear Sedã para Sedan');
 
     const mapped1 = mapVehicleToViewModel(rawLegacy1);
     const mapped2 = mapVehicleToViewModel(rawLegacy2);

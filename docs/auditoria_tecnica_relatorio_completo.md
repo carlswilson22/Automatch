@@ -45,7 +45,7 @@ A auditoria abrangeu 5 pilares estratégicos:
   3. *Vazamento de Estado no Modal:* O estado de seleção acumulava referências de instâncias anteriores caso o usuário abrisse o comparador repetidas vezes.
 - **Solução Implementada:**
   - Criação do [frontend/src/components/common/GlobalErrorBoundary.jsx](../frontend/src/components/common/GlobalErrorBoundary.jsx) encapsulando todas as rotas da aplicação, impedindo que telas fiquem em branco e fornecendo UI de recuperação elegante com log no console.
-  - Criação do utilitário canônico [frontend/src/utils/vehicleNormalizer.js](../frontend/src/utils/vehicleNormalizer.js) que intercepta qualquer objeto de veículo e produz uma estrutura padronizada e imutável.
+  - Criação do utilitário canônico [frontend/src/utils/vehicleNormalizer.js](https://github.com/carlswilson22/Automatch/blob/7fd2315928bcef6884069628911492ee9e3330a2/frontend/src/utils/vehicleNormalizer.js) que intercepta qualquer objeto de veículo e produz uma estrutura padronizada e imutável.
   - Blindagem do `VehicleComparatorModal.jsx` com verificação de integridade dos IDs e limpeza de estado no ciclo de desmontagem.
 
 ---

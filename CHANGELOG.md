@@ -1,5 +1,20 @@
 # Histórico de mudanças
 
+## 18/11/2026 — Limpeza de código sem consumidores
+
+- Removidos 15 módulos frontend fora do fluxo ativo; aliases de logotipo passam
+  diretamente à implementação existente. `/planos` continua redirecionando ao catálogo.
+- Retirados componentes, endpoints e serviços legados de pneus/acústica, mantendo
+  a análise de lataria e 360°. Banco, ORM e migrações preservados.
+- Removidos Axios, clsx, GSAP e tailwind-merge; parser já usado pelo ESLint passou
+  a dependência de desenvolvimento explícita para a auditoria de imports.
+- `npm test` agora confere módulos alcançáveis e dependências de execução usadas.
+- Testes dos recursos aposentados retirados; contratos ativos preservados com
+  284 testes frontend, 111 unittest e cinco jornadas aprovados, lint sem avisos
+  e build local. Detalhes em [limpeza](docs/limpeza-arquivos-2026-11-18.md).
+- Histórico/licenças preservados e links de código antigo fixados ao commit anterior.
+  Mesma atualização destinada às duas `main`, sem deploy.
+
 ## 17/11/2026 — Tratamento dos avisos de manutenção
 
 - ESLint: de 161 avisos para zero, com zero erros e regras preservadas.

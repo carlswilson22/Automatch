@@ -15,7 +15,7 @@ const content = node => typeof node==='string' ? node : (node?.children || []).m
 const button = (view,label) => view.root.findAllByType('button').find(node=>content(node).includes(label));
 let server, view;
 before(async()=>{
- const stubs = new Set(['AIChatBox','SellerChat','TradeInSimulator','MarketPriceIndicator','PriceDropBadge','PericialVideoViewer','OfficialDossierModal','AutomatchScan','TcoCalculatorCard']);
+ const stubs = new Set(['AIChatBox','SellerChat','TradeInSimulator','MarketPriceIndicator','PriceDropBadge','PericialVideoViewer','OfficialDossierModal','TcoCalculatorCard']);
  server=await createServer({server:{middlewareMode:true},ssr:{noExternal:['framer-motion']},logLevel:'silent',appType:'custom',plugins:[{
    name:'behavior-test-boundaries',enforce:'pre',
    resolveId(source,importer){if(source==='framer-motion'&&importer!=='\0behavior-motion')return '\0behavior-motion';const name=source.split('/').at(-1).replace(/\.jsx$/,'');if(name==='useAuth')return '\0behavior-auth';if(name==='useTour')return '\0behavior-tour';if(stubs.has(name))return '\0behavior-empty';},

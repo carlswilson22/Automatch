@@ -1,19 +1,19 @@
 # Catálogo dos arquivos técnicos do Automatch
 
-Atualizado em **17/11/2026**, melhorias demonstrativas sobre a base `444bc09`. Inventário obtido dos caminhos
+Atualizado em **18/11/2026**, após a limpeza sobre a base `7fd2315`. Inventário obtido dos caminhos
 versionados, sem contar dependências instaladas, builds ou arquivos privados.
 Não é uma medição de cobertura, precisão ou qualidade de cada módulo.
 
 ## Organização
 
-O catálogo contém 212 arquivos de código/configuração presentes na base
+O catálogo contém 199 arquivos de código/configuração presentes na base
 examinada. Imagens, vídeos, fixtures binárias, lockfile, licença e documentação
 são tratados separadamente; `git ls-files` é o inventário completo do checkout.
 Novos documentos desta revisão estão no [índice](docs/README.md).
 
-Os nomes legados de componentes não garantem recurso ativo. Pneus/acústica
-não integram as telas; arquivos de mídia duplicados entre builds frontend/backend
-têm função de empacotamento, e reexports de UI não devem ser removidos pelo nome.
+Módulos sem consumidores e o legado de pneus/acústica foram retirados. Mídia
+duplicada entre frontend/backend atende contextos de build separados; os demais
+componentes de UI foram preservados quando possuem consumidores.
 
 ## Infraestrutura e configuração
 
@@ -55,7 +55,7 @@ têm função de empacotamento, e reexports de UI não devem ser removidos pelo 
 | [backend/models.py](backend/models.py) | Entidades e relações ORM; inclui PriceAlert e versão de sessão. |
 | [backend/requirements.txt](backend/requirements.txt) | Arquivo técnico/configuração; consultar o conteúdo e seus consumidores. |
 | [backend/routers/__init__.py](backend/routers/__init__.py) | Arquivo técnico/configuração; consultar o conteúdo e seus consumidores. |
-| [backend/routers/ai_vision.py](backend/routers/ai_vision.py) | Endpoints de visão/chat/precificação; também contém endpoints legados de pneus/acústica. |
+| [backend/routers/ai_vision.py](backend/routers/ai_vision.py) | Endpoints ativos de visão, chat, precificação e mapa 360°. |
 | [backend/routers/alerts.py](backend/routers/alerts.py) | Cadastro persistido de alertas; sem entrega externa implementada. |
 | [backend/routers/auth.py](backend/routers/auth.py) | Cadastro/login/perfil, OTP, anonimização/exportação e checkout condicionado ao ambiente. |
 | [backend/routers/cars.py](backend/routers/cars.py) | Catálogo, anúncios da conta, criação/edição/exclusão autorizada. |
@@ -136,7 +136,6 @@ têm função de empacotamento, e reexports de UI não devem ser removidos pelo 
 | --- | --- |
 | [frontend/src/App.jsx](frontend/src/App.jsx) | Rotas públicas/protegidas, contextos e carregamento sob demanda. |
 | [frontend/src/components/ProtectedRoute.jsx](frontend/src/components/ProtectedRoute.jsx) | Componente da interface; presença no catálogo não comprova uso em uma rota ativa. |
-| [frontend/src/components/ai/AutomatchAI.jsx](frontend/src/components/ai/AutomatchAI.jsx) | Componente da interface; presença no catálogo não comprova uso em uma rota ativa. |
 | [frontend/src/components/chat/HomeSupportChat.jsx](frontend/src/components/chat/HomeSupportChat.jsx) | Componente da interface; presença no catálogo não comprova uso em uma rota ativa. |
 | [frontend/src/components/common/ErrorBoundary.jsx](frontend/src/components/common/ErrorBoundary.jsx) | Componente da interface; presença no catálogo não comprova uso em uma rota ativa. |
 | [frontend/src/components/common/GlobalErrorBoundary.jsx](frontend/src/components/common/GlobalErrorBoundary.jsx) | Componente da interface; presença no catálogo não comprova uso em uma rota ativa. |
@@ -154,26 +153,17 @@ têm função de empacotamento, e reexports de UI não devem ser removidos pelo 
 | [frontend/src/components/tour/TourIntroModal.jsx](frontend/src/components/tour/TourIntroModal.jsx) | Componente da interface; presença no catálogo não comprova uso em uma rota ativa. |
 | [frontend/src/components/tour/TourNotificationToast.jsx](frontend/src/components/tour/TourNotificationToast.jsx) | Componente da interface; presença no catálogo não comprova uso em uma rota ativa. |
 | [frontend/src/components/ui/AutomatchLogo.jsx](frontend/src/components/ui/AutomatchLogo.jsx) | Componente/variante de interface; reexports podem preservar compatibilidade. |
-| [frontend/src/components/ui/CarCard.jsx](frontend/src/components/ui/CarCard.jsx) | Componente/variante de interface; reexports podem preservar compatibilidade. |
 | [frontend/src/components/ui/FocusInput.jsx](frontend/src/components/ui/FocusInput.jsx) | Componente/variante de interface; reexports podem preservar compatibilidade. |
 | [frontend/src/components/ui/GlowButton.jsx](frontend/src/components/ui/GlowButton.jsx) | Componente/variante de interface; reexports podem preservar compatibilidade. |
 | [frontend/src/components/ui/SlidingTabs.jsx](frontend/src/components/ui/SlidingTabs.jsx) | Componente/variante de interface; reexports podem preservar compatibilidade. |
-| [frontend/src/components/ui/StoreBadge.jsx](frontend/src/components/ui/StoreBadge.jsx) | Componente/variante de interface; reexports podem preservar compatibilidade. |
 | [frontend/src/components/ui/StoreIdentifier.jsx](frontend/src/components/ui/StoreIdentifier.jsx) | Componente/variante de interface; reexports podem preservar compatibilidade. |
 | [frontend/src/components/ui/WipeButton.jsx](frontend/src/components/ui/WipeButton.jsx) | Componente/variante de interface; reexports podem preservar compatibilidade. |
-| [frontend/src/components/ui/microkit/AutomatchLogo.jsx](frontend/src/components/ui/microkit/AutomatchLogo.jsx) | Componente/variante de interface; reexports podem preservar compatibilidade. |
 | [frontend/src/components/ui/microkit/FocusInput.jsx](frontend/src/components/ui/microkit/FocusInput.jsx) | Componente/variante de interface; reexports podem preservar compatibilidade. |
 | [frontend/src/components/ui/microkit/GlowButton.jsx](frontend/src/components/ui/microkit/GlowButton.jsx) | Componente/variante de interface; reexports podem preservar compatibilidade. |
-| [frontend/src/components/ui/microkit/IconSwapButton.jsx](frontend/src/components/ui/microkit/IconSwapButton.jsx) | Componente/variante de interface; reexports podem preservar compatibilidade. |
-| [frontend/src/components/ui/microkit/SlidingTabs.jsx](frontend/src/components/ui/microkit/SlidingTabs.jsx) | Componente/variante de interface; reexports podem preservar compatibilidade. |
 | [frontend/src/components/ui/microkit/SpotlightCard.jsx](frontend/src/components/ui/microkit/SpotlightCard.jsx) | Componente/variante de interface; reexports podem preservar compatibilidade. |
 | [frontend/src/components/ui/microkit/WipeButton.jsx](frontend/src/components/ui/microkit/WipeButton.jsx) | Componente/variante de interface; reexports podem preservar compatibilidade. |
-| [frontend/src/components/ui/microkit/index.js](frontend/src/components/ui/microkit/index.js) | Componente/variante de interface; reexports podem preservar compatibilidade. |
 | [frontend/src/components/vehicle/AIChatBox.jsx](frontend/src/components/vehicle/AIChatBox.jsx) | Componente da interface; presença no catálogo não comprova uso em uma rota ativa. |
 | [frontend/src/components/vehicle/AccordionPanel.jsx](frontend/src/components/vehicle/AccordionPanel.jsx) | Componente da interface; presença no catálogo não comprova uso em uma rota ativa. |
-| [frontend/src/components/vehicle/AutomatchScan.jsx](frontend/src/components/vehicle/AutomatchScan.jsx) | Componente da interface; presença no catálogo não comprova uso em uma rota ativa. |
-| [frontend/src/components/vehicle/EngineAcousticScanner.jsx](frontend/src/components/vehicle/EngineAcousticScanner.jsx) | Legado: não importado nas telas ativas; sem diagnóstico entregue. |
-| [frontend/src/components/vehicle/FinancingSimulator.jsx](frontend/src/components/vehicle/FinancingSimulator.jsx) | Componente da interface; presença no catálogo não comprova uso em uma rota ativa. |
 | [frontend/src/components/vehicle/LaudoFeedbackCard.jsx](frontend/src/components/vehicle/LaudoFeedbackCard.jsx) | Componente da interface; presença no catálogo não comprova uso em uma rota ativa. |
 | [frontend/src/components/vehicle/MarketPriceIndicator.jsx](frontend/src/components/vehicle/MarketPriceIndicator.jsx) | Componente da interface; presença no catálogo não comprova uso em uma rota ativa. |
 | [frontend/src/components/vehicle/MultichannelSyncModal.jsx](frontend/src/components/vehicle/MultichannelSyncModal.jsx) | Componente da interface; presença no catálogo não comprova uso em uma rota ativa. |
@@ -183,11 +173,9 @@ têm função de empacotamento, e reexports de UI não devem ser removidos pelo 
 | [frontend/src/components/vehicle/PriceDropBadge.jsx](frontend/src/components/vehicle/PriceDropBadge.jsx) | Componente da interface; presença no catálogo não comprova uso em uma rota ativa. |
 | [frontend/src/components/vehicle/SellerChat.jsx](frontend/src/components/vehicle/SellerChat.jsx) | Componente da interface; presença no catálogo não comprova uso em uma rota ativa. |
 | [frontend/src/components/vehicle/TcoCalculatorCard.jsx](frontend/src/components/vehicle/TcoCalculatorCard.jsx) | Componente da interface; presença no catálogo não comprova uso em uma rota ativa. |
-| [frontend/src/components/vehicle/TireDepthScanner.jsx](frontend/src/components/vehicle/TireDepthScanner.jsx) | Legado: não importado nas telas ativas; não é scanner entregue. |
 | [frontend/src/components/vehicle/TradeInSimulator.jsx](frontend/src/components/vehicle/TradeInSimulator.jsx) | Componente da interface; presença no catálogo não comprova uso em uma rota ativa. |
 | [frontend/src/components/vehicle/Vehicle360Viewer.jsx](frontend/src/components/vehicle/Vehicle360Viewer.jsx) | Visualização orbital fotográfica do veículo. |
 | [frontend/src/components/vehicle/VehicleComparatorModal.jsx](frontend/src/components/vehicle/VehicleComparatorModal.jsx) | Componente da interface; presença no catálogo não comprova uso em uma rota ativa. |
-| [frontend/src/components/vehicle/WarrantyBadgeModal.jsx](frontend/src/components/vehicle/WarrantyBadgeModal.jsx) | Componente da interface; presença no catálogo não comprova uso em uma rota ativa. |
 | [frontend/src/contexts/AuthContext.jsx](frontend/src/contexts/AuthContext.jsx) | Sessão/perfil e transições de autenticação. |
 | [frontend/src/contexts/TourContext.jsx](frontend/src/contexts/TourContext.jsx) | Contexto de estado da SPA. |
 | [frontend/src/data/favoritesManager.js](frontend/src/data/favoritesManager.js) | Dados locais ou gerenciador de estado demonstrativo; conferir persistência no módulo. |
@@ -208,7 +196,6 @@ têm função de empacotamento, e reexports de UI não devem ser removidos pelo 
 | [frontend/src/pages/HowItWorksPage.jsx](frontend/src/pages/HowItWorksPage.jsx) | Tela/rota da SPA; acesso definido em App.jsx e no servidor quando aplicável. |
 | [frontend/src/pages/MyAdsPage.jsx](frontend/src/pages/MyAdsPage.jsx) | Tela/rota da SPA; acesso definido em App.jsx e no servidor quando aplicável. |
 | [frontend/src/pages/NewCarAdForm.jsx](frontend/src/pages/NewCarAdForm.jsx) | Tela/rota da SPA; acesso definido em App.jsx e no servidor quando aplicável. |
-| [frontend/src/pages/PlansPage.jsx](frontend/src/pages/PlansPage.jsx) | Tela/rota da SPA; acesso definido em App.jsx e no servidor quando aplicável. |
 | [frontend/src/pages/ProfilePage.jsx](frontend/src/pages/ProfilePage.jsx) | Tela/rota da SPA; acesso definido em App.jsx e no servidor quando aplicável. |
 | [frontend/src/pages/PublicValidationPage.jsx](frontend/src/pages/PublicValidationPage.jsx) | Tela/rota da SPA; acesso definido em App.jsx e no servidor quando aplicável. |
 | [frontend/src/pages/ShowcaseCatalog.jsx](frontend/src/pages/ShowcaseCatalog.jsx) | Tela/rota da SPA; acesso definido em App.jsx e no servidor quando aplicável. |
@@ -217,7 +204,6 @@ têm função de empacotamento, e reexports de UI não devem ser removidos pelo 
 | [frontend/src/services/apiClient.js](frontend/src/services/apiClient.js) | HTTP, timeout configurável, cancelamento, retry de GET e erros. |
 | [frontend/src/services/sessionStorage.js](frontend/src/services/sessionStorage.js) | Resolução central da credencial da sessão. |
 | [frontend/src/utils/aiConsultantCore.js](frontend/src/utils/aiConsultantCore.js) | Utilitários compartilhados; conferir chamadas e testes associados. |
-| [frontend/src/utils/animations.js](frontend/src/utils/animations.js) | Utilitários compartilhados; conferir chamadas e testes associados. |
 | [frontend/src/utils/filterVehicles.js](frontend/src/utils/filterVehicles.js) | Utilitários compartilhados; conferir chamadas e testes associados. |
 | [frontend/src/utils/imageHelper.js](frontend/src/utils/imageHelper.js) | Utilitários compartilhados; conferir chamadas e testes associados. |
 | [frontend/src/utils/inspectionData.js](frontend/src/utils/inspectionData.js) | Utilitários compartilhados; conferir chamadas e testes associados. |
@@ -225,7 +211,6 @@ têm função de empacotamento, e reexports de UI não devem ser removidos pelo 
 | [frontend/src/utils/scrollLockCore.js](frontend/src/utils/scrollLockCore.js) | Utilitários compartilhados; conferir chamadas e testes associados. |
 | [frontend/src/utils/useScrollLock.js](frontend/src/utils/useScrollLock.js) | Utilitários compartilhados; conferir chamadas e testes associados. |
 | [frontend/src/utils/vehicleMapper.js](frontend/src/utils/vehicleMapper.js) | Utilitários compartilhados; conferir chamadas e testes associados. |
-| [frontend/src/utils/vehicleNormalizer.js](frontend/src/utils/vehicleNormalizer.js) | Utilitários compartilhados; conferir chamadas e testes associados. |
 | [frontend/src/utils/vehicleNumbers.js](frontend/src/utils/vehicleNumbers.js) | Utilitários compartilhados; conferir chamadas e testes associados. |
 
 ## Testes frontend
@@ -283,3 +268,13 @@ têm função de empacotamento, e reexports de UI não devem ser removidos pelo 
 | [frontend/src/contexts/useAuth.js](frontend/src/contexts/useAuth.js) | Objeto de contexto e hook de autenticação compartilhados, separados do provider JSX. |
 | [frontend/src/contexts/useTour.js](frontend/src/contexts/useTour.js) | Objeto de contexto e hook do tour, compartilhados com o provider. |
 | [frontend/tests/test_maintenance_regressions.mjs](frontend/tests/test_maintenance_regressions.mjs) | Três regressões de contexto, cancelamento e cache; componentes legados somente no teste. |
+
+## Verificação da limpeza de 18/11/2026
+
+O inventário atual exclui os 15 módulos retirados. Os registros anteriores
+continuam no histórico Git; [relatório de limpeza](docs/limpeza-arquivos-2026-11-18.md).
+
+| Arquivo | Responsabilidade / limite |
+| --- | --- |
+| [frontend/scripts/check-source-usage.mjs](frontend/scripts/check-source-usage.mjs) | Auditoria de imports/dependências a partir da aplicação; executada por `npm test`. |
+| [backend/test_cleanup_regressions.py](backend/test_cleanup_regressions.py) | Contrato HTTP da retirada de pneus/acústica e preservação da análise visual. |

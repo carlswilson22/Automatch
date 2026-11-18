@@ -64,8 +64,8 @@ test('valores brasileiros preservam preço e km nos dois normalizadores',async()
  const {parseVehicleNumber}=await import('../src/utils/vehicleNumbers.js');
  for(const value of ['R$ 185.000,50','185000.50',185000.5])assert.equal(parseVehicleNumber(value),185000.5);
  assert.equal(parseVehicleNumber('12.000 km'),12000);
- const {normalizeVehicle}=await import('../src/utils/vehicleNormalizer.js');
- assert.equal(normalizeVehicle({price:'R$ 185.000,50',km:'12.000 km'}).price,185000.5);
+ const {mapVehicleToViewModel}=await import('../src/utils/vehicleMapper.js');
+ assert.equal(mapVehicleToViewModel({price:'R$ 185.000,50',km:'12.000 km'}).price,185000.5);
 });
 test('imagem de upload preserva rota da API',async()=>{
  const {getVehicleImageUrl}=await import('../src/utils/imageHelper.js');

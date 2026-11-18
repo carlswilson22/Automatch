@@ -17,7 +17,7 @@ import {
 import { useAuth } from '../contexts/useAuth';
 import { PLANS_DATA } from '../data/plansData';
 import { showcaseCars } from '../data/showcaseData';
-import AutomatchLogo from '../components/ui/microkit/AutomatchLogo';
+import AutomatchLogo from '../components/ui/AutomatchLogo';
 
 
 

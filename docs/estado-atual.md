@@ -5,12 +5,19 @@ foram corrigidos com regressões permanentes: dados do anúncio/PDF, quilometrag
 favoritos separados por conta e cadastro local sem falso sucesso. Sem deploy ou
 reformulação do banco; conferência visual e de acessibilidade permanece manual.
 
-Atualizado em **17/11/2026**, melhorias demonstrativas sobre a base `444bc09`.
+Atualizado em **18/11/2026**, melhorias demonstrativas sobre a base `444bc09`.
 Fonte: rotas e componentes versionados, manifests, Compose, migrações e
 [auditoria anterior](auditoria-2026-11-16.md). Esta revisão não refez uma
 homologação integral nem mediu precisão de IA ou desempenho em aparelhos reais.
 
-## Manutenção do frontend
+## Limpeza de arquivos — 18/11/2026
+
+Quinze módulos sem consumidores foram retirados, incluindo telas antigas e os
+componentes legados de pneus/acústica. As rotas e funções correspondentes desses
+dois recursos também foram removidas. Auditoria: 85 módulos alcançáveis e cinco
+dependências de execução utilizadas. Ver [relatório](limpeza-arquivos-2026-11-18.md).
+
+## Manutenção anterior do frontend
 
 A revisão sobre `8294a26` eliminou os 161 avisos de ESLint, mantendo as regras:
 zero erros/avisos, 290 testes frontend e build local aprovados. Contextos/hooks
@@ -82,9 +89,8 @@ oficiais de órgão público nem substituem inspeção profissional presencial.
 ## Recursos fora do escopo ativo
 
 **Não há scanner ou reescaneamento de pneus disponível na interface atual.**
-`TireDepthScanner.jsx` e `EngineAcousticScanner.jsx` não são importados pelas
-telas ativas. Endpoints e funções correspondentes permanecem como código legado,
-sem caracterizar funcionalidades entregues. Não documentar medição de sulcos,
+Os componentes legados, endpoints e funções de pneus/acústica foram removidos
+na limpeza de 18/11/2026. Não documentar medição de sulcos,
 conformidade CONTRAN ou diagnóstico acústico real como recurso pronto.
 O roteiro do vídeo pode citar pneus; isso não implementa um scanner de pneus.
 

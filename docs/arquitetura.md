@@ -34,8 +34,8 @@ microsserviços de negócio independentes. O Compose define quatro serviços:
 | Background | APScheduler e rate limiting em processo; produção configurada com um worker |
 
 A existência de biblioteca/endpoint não comprova uso em uma tela. Scanner de
-pneus e diagnóstico acústico permanecem como código legado, sem integração às
-telas ativas. O 360° é sequência de fotos, não reconstrução geométrica 3D.
+pneus e diagnóstico acústico foram retirados na limpeza de 18/11/2026,
+incluindo os componentes, endpoints e funções de serviço sem uso. O 360° é sequência de fotos, não reconstrução geométrica 3D.
 
 ## Fronteiras de dados e acesso
 

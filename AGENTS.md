@@ -13,8 +13,8 @@
 ## Documentação e verificação
 
 - Usar `docs/README.md` e `docs/estado-atual.md` como referências atuais.
-- Não oferecer scanner/reescaneamento de pneus ou diagnóstico acústico: são
-  arquivos/endpoints legados sem integração às telas ativas.
+- Não oferecer scanner/reescaneamento de pneus ou diagnóstico acústico: foram
+  retirados do escopo e tiveram os arquivos/endpoints legados removidos.
 - O responsável autorizou manter públicos os acessos da demonstração do GitHub
   Pages no README; são exemplos de apresentação, não segredos de produção.
   Preservar essa identificação e não removê-los como se fossem credenciais reais.
