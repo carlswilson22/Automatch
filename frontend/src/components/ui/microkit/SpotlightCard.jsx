@@ -18,7 +18,8 @@ export default function SpotlightCard({
   children,
   className = '',
   spotlightColor = 'rgba(37, 99, 235, 0.08)',
-  borderColor = 'rgba(37, 99, 235, 0.25)',
+  borderColor,
+  style,
   onClick,
   ...props
 }) {
@@ -52,6 +53,7 @@ export default function SpotlightCard({
       className={`relative overflow-hidden bg-white rounded-3xl border border-slate-200/80 transition-all duration-300 shadow-sm hover:shadow-xl hover:shadow-slate-900/5 ${
         onClick ? 'cursor-pointer' : ''
       } ${className}`}
+      style={{ ...(borderColor ? { borderColor } : {}), ...style }}
       {...props}
     >
       {/* Radial Spotlight Overlay */}

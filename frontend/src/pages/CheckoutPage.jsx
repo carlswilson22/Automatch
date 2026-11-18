@@ -10,24 +10,22 @@ import { canUseOfflineFallback } from '../services/sessionStorage';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { 
-  ShieldCheck, ArrowLeft, QrCode, CreditCard, FileText, 
-  CheckCircle2, Copy, Check, Lock, Clock, AlertCircle, 
-  Sparkles, Car, Loader2, ArrowRight, Printer, ExternalLink,
-  ShieldAlert, Award
+import {
+  ArrowLeft, QrCode, CreditCard, FileText, CheckCircle2, Copy, Check, Lock, Clock, Sparkles,
+  Loader2, Printer
 } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/useAuth';
 import { PLANS_DATA } from '../data/plansData';
 import { showcaseCars } from '../data/showcaseData';
 import AutomatchLogo from '../components/ui/microkit/AutomatchLogo';
-import SpotlightCard from '../components/ui/microkit/SpotlightCard';
-import GlowButton from '../components/ui/microkit/GlowButton';
-import WipeButton from '../components/ui/microkit/WipeButton';
+
+
+
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { user, isAuthenticated } = useAuth();
+  const { user } = useAuth();
 
   const type = searchParams.get('type') || 'plan'; // 'plan' | 'vehicle'
   const planId = searchParams.get('planId') || 'pro';

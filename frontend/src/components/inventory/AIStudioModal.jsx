@@ -148,7 +148,6 @@ function PreviewCard({ originalSrc, selectedBg, processing }) {
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 export default function AIStudioModal({ isOpen, onClose, vehicleName }) {
   const [step, setStep] = useState(0); // 0=upload, 1=style, 2=result
-  const [uploadedFile, setUploadedFile] = useState(null);
   const [previewSrc, setPreviewSrc] = useState(null);
   const [selectedBg, setSelectedBg] = useState('studio-white');
   const [processing, setProcessing] = useState(false);
@@ -160,7 +159,6 @@ export default function AIStudioModal({ isOpen, onClose, vehicleName }) {
 
   const handleFileChange = (file) => {
     if (!file || !file.type.startsWith('image/')) return;
-    setUploadedFile(file);
     const reader = new FileReader();
     reader.onload = e => {
       setPreviewSrc(e.target.result);
@@ -188,7 +186,6 @@ export default function AIStudioModal({ isOpen, onClose, vehicleName }) {
 
   const handleReset = () => {
     setStep(0);
-    setUploadedFile(null);
     setPreviewSrc(null);
     setSelectedBg('studio-white');
     setProcessing(false);

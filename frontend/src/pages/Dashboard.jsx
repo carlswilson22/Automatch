@@ -7,45 +7,17 @@
  */
 import React, { useState, useEffect, useMemo, Suspense, lazy } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Car, 
-  Banknote, 
-  Search, 
-  LayoutGrid, 
-  List, 
-  ArrowLeft,
-  TrendingUp,
-  Package,
-  FileText,
-  Users,
-  ChevronLeft,
-  ChevronRight,
-  Sliders,
-  CheckCircle2,
-  AlertCircle,
-  X,
-  BarChart3,
-  Sparkles,
-  ExternalLink,
-  ShieldCheck,
-  Building2,
-  PlusCircle,
-  Trash2,
-  Eye,
-  ArrowUpRight
+import {
+  Car, Banknote, Search, LayoutGrid, List, ArrowLeft, Package, FileText, Users, ChevronLeft,
+  ChevronRight, Sliders, CheckCircle2, AlertCircle, X, BarChart3, Sparkles, ExternalLink,
+  ShieldCheck, PlusCircle, Trash2, ArrowUpRight
 } from 'lucide-react';
 import B2BRepassePanel from '../components/inventory/B2BRepassePanel';
 import { useNavigate } from 'react-router-dom';
-import { useTour } from '../contexts/TourContext';
+import { useTour } from '../contexts/useTour';
 import { getTourById } from '../data/tourGuideData';
-import { 
-  stores, 
-  inventory, 
-  getStoredInventory, 
-  updateInventoryAsset, 
-  deleteInventoryAsset 
-} from '../data/inventoryData';
-import { useAuth } from '../contexts/AuthContext';
+import { stores, getStoredInventory, updateInventoryAsset, deleteInventoryAsset } from '../data/inventoryData';
+import { useAuth } from '../contexts/useAuth';
 import { getNewCars, deleteNewCar } from '../data/newCarsManager';
 import StoreSelector from '../components/layout/StoreSelector';
 import StoreIdentifier from '../components/ui/StoreIdentifier';
@@ -53,8 +25,8 @@ import AssetConfigurationModal from '../components/inventory/AssetConfigurationM
 import { getVehicleImageUrl, handleVehicleImageError } from '../utils/imageHelper';
 import useScrollLock from '../utils/useScrollLock';
 import SpotlightCard from '../components/ui/microkit/SpotlightCard';
-import GlowButton from '../components/ui/microkit/GlowButton';
-import WipeButton from '../components/ui/microkit/WipeButton';
+
+
 
 // Code-Splitting: PartnershipHubModal e AIStudioModal carregados sob demanda
 const PartnershipHubModal = lazy(() => import('../components/partners/PartnershipHubModal'));

@@ -112,10 +112,10 @@ export function identifyTopics(normalizedMsg) {
 }
 
 /**
- * Resolve o contexto de acompanhamento curto com base no histórico
+ * Identifica perguntas curtas que podem complementar a conversa
  * Exemplo: usuário perguntou sobre motor, e agora pergunta "e os freios?"
  */
-export function resolveFollowUp(normalizedMsg, history = []) {
+export function resolveFollowUp(normalizedMsg) {
   const isShortFollowUp = normalizedMsg.length < 25 && (
     normalizedMsg.startsWith('e ') ||
     normalizedMsg.startsWith('qual ') ||

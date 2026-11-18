@@ -15,7 +15,7 @@
 
 import React, { useRef } from 'react';
 import { motion } from 'framer-motion';
-import { usePrefersReducedMotion, MOTION_DURATIONS, MOTION_EASINGS } from '../../../utils/motionTokens';
+import { usePrefersReducedMotion, MOTION_EASINGS } from '../../../utils/motionTokens';
 
 export default function SlidingTabs({
   tabs = [],

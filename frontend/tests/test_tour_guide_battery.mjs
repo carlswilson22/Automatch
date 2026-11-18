@@ -140,7 +140,7 @@ describe('BATERIA DE TESTES - TOUR GUIADO INTERATIVO & ACESSIBILIDADE', () => {
     assert.ok(tourComponentContent.includes("e.key === 'ArrowRight'"), 'Deve tratar tecla ArrowRight');
     assert.ok(tourComponentContent.includes("e.key === 'ArrowLeft'"), 'Deve tratar tecla ArrowLeft');
     assert.ok(tourComponentContent.includes("e.key === 'Tab'"), 'Deve conter Focus Trap com tecla Tab');
-    assert.ok(tourComponentContent.includes('prefers-reduced-motion'), 'Deve respeitar prefers-reduced-motion');
+    assert.ok(tourComponentContent.includes("behavior: 'auto'") && !tourComponentContent.includes("behavior: 'smooth'"), 'Tour mantém rolagem instantânea, sem animação desnecessária');
   });
 
   // =========================================================================
@@ -173,7 +173,9 @@ describe('BATERIA DE TESTES - TOUR GUIADO INTERATIVO & ACESSIBILIDADE', () => {
     const contextContent = fs.readFileSync(path.join(rootDir, 'src/contexts/TourContext.jsx'), 'utf-8');
 
     assert.ok(contextContent.includes('export function TourProvider'), 'Deve exportar TourProvider');
-    assert.ok(contextContent.includes('export function useTour'), 'Deve exportar useTour');
+    const hookContent = fs.readFileSync(path.join(rootDir, 'src/contexts/useTour.js'), 'utf-8');
+    assert.ok(hookContent.includes('export function useTour'), 'Hook separado deve exportar useTour');
+    assert.ok(contextContent.includes("import { TourContext } from './useTour'"), 'Provider deve usar o mesmo contexto do hook');
     assert.ok(contextContent.includes('openTourIntro'), 'Deve fornecer openTourIntro');
     assert.ok(contextContent.includes('closeTourIntro'), 'Deve fornecer closeTourIntro');
     assert.ok(contextContent.includes('startDemo'), 'Deve fornecer startDemo');

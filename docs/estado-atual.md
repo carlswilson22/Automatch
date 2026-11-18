@@ -10,6 +10,13 @@ Fonte: rotas e componentes versionados, manifests, Compose, migrações e
 [auditoria anterior](auditoria-2026-11-16.md). Esta revisão não refez uma
 homologação integral nem mediu precisão de IA ou desempenho em aparelhos reais.
 
+## Manutenção do frontend
+
+A revisão sobre `8294a26` eliminou os 161 avisos de ESLint, mantendo as regras:
+zero erros/avisos, 290 testes frontend e build local aprovados. Contextos/hooks
+separados e efeitos legados com respostas/cache isolados por veículo. Pneus e
+acústica continuam fora das telas. Ver [relatório](manutencao-avisos-2026-11-17.md).
+
 ## Escopo desta etapa
 
 Somente demonstração, sem deploy. Pages passou a acionamento manual; nenhum

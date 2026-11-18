@@ -28,8 +28,10 @@ permanecem intactas.
 A [análise sobre o código `ffe60e2`](revisao-pendencias-demo-2026-11-17.md)
 registra cinco problemas reproduzidos, suas fontes e critérios de correção.
 O complemento de conclusão registra as cinco correções e seus testes permanentes.
-A versão atual passou em 287 testes frontend, 109 unittest backend e cinco jornadas;
-ver [evidências e limites](testes-e-evidencias.md). Sem deploy ou reformulação do banco.
+A correção A1–A5 passou em 287 testes frontend, 109 unittest backend e cinco jornadas.
+A [manutenção posterior](manutencao-avisos-2026-11-17.md) passou em 290 testes
+frontend, build local e lint sem erros/avisos; backend não reexecutado nessa etapa.
+Ver [evidências e limites](testes-e-evidencias.md). Sem deploy ou reformulação do banco.
 
 ## Documentação acadêmica e histórica
 

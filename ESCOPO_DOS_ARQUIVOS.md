@@ -6,7 +6,7 @@ Não é uma medição de cobertura, precisão ou qualidade de cada módulo.
 
 ## Organização
 
-O catálogo contém 209 arquivos de código/configuração presentes na base
+O catálogo contém 212 arquivos de código/configuração presentes na base
 examinada. Imagens, vídeos, fixtures binárias, lockfile, licença e documentação
 são tratados separadamente; `git ls-files` é o inventário completo do checkout.
 Novos documentos desta revisão estão no [índice](docs/README.md).
@@ -274,3 +274,12 @@ têm função de empacotamento, e reexports de UI não devem ser removidos pelo 
 | [frontend/src/utils/vehicleInformation.js](frontend/src/utils/vehicleInformation.js) | Status informados e quilometragem sem substituir ausência por aprovação ou zero. |
 | [frontend/tests/test_confirmed_pending_fixes.mjs](frontend/tests/test_confirmed_pending_fixes.mjs) | Doze regressões de dados, anúncio, comparador, favoritos por conta e cadastro com falha. |
 | [backend/test_confirmed_pending_fixes.py](backend/test_confirmed_pending_fixes.py) | Seis testes HTTP/PDF com snapshot e validação em SQLite descartável. |
+
+
+## Manutenção dos avisos
+
+| Arquivo | Responsabilidade / limite |
+| --- | --- |
+| [frontend/src/contexts/useAuth.js](frontend/src/contexts/useAuth.js) | Objeto de contexto e hook de autenticação compartilhados, separados do provider JSX. |
+| [frontend/src/contexts/useTour.js](frontend/src/contexts/useTour.js) | Objeto de contexto e hook do tour, compartilhados com o provider. |
+| [frontend/tests/test_maintenance_regressions.mjs](frontend/tests/test_maintenance_regressions.mjs) | Três regressões de contexto, cancelamento e cache; componentes legados somente no teste. |

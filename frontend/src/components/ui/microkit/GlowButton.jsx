@@ -13,7 +13,7 @@
 
 import React from 'react';
 import { ChevronRight, Loader2 } from 'lucide-react';
-import { usePrefersReducedMotion, MOTION_DURATIONS } from '../../../utils/motionTokens';
+import { usePrefersReducedMotion } from '../../../utils/motionTokens';
 
 export default function GlowButton({
   children,

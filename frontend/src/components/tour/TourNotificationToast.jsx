@@ -28,7 +28,7 @@ export default function TourNotificationToast({ onStartTour }) {
         setIsVisible(true);
       }, 1500);
       return () => clearTimeout(timer);
-    } catch (_) {
+    } catch {
       // Falha silenciosa em caso de restrições de sandbox / private mode
     }
   }, []);
@@ -41,7 +41,7 @@ export default function TourNotificationToast({ onStartTour }) {
           STORAGE_KEY,
           JSON.stringify({ dismissedOnboardingSuggestion: true })
         );
-      } catch (_) { /* O recurso opcional mantém seu estado anterior. */ }
+      } catch { /* O recurso opcional mantém seu estado anterior. */ }
     }
   };
 

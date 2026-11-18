@@ -42,11 +42,17 @@ nova autorização. Nenhuma entidade ORM, migração, banco real ou arquivo priv
 | A4 | Listas por conta, atualização na troca de sessão e importação explícita; dados legados/visitante preservados | Login/logout, duas contas, importação na tela, evento de outra conta e falha de gravação |
 | A5 | Cadastro local só autentica depois de salvar conta e sessão; quota/corrupção não confirmam sucesso; cache opcional da API é distinto | Falha, repetição, login posterior, duplicata, recusa da API e rollback de sessão parcial |
 
+## Manutenção concluída
+
+Os 161 avisos de ESLint foram tratados: **zero erros e zero avisos**, sem
+desativar regras. Providers/hooks separados, código sem consumidores removido
+e efeitos legados corrigidos sem integrar esses recursos às telas.
+Ver [causas, mudanças e evidências](docs/manutencao-avisos-2026-11-17.md).
+
 ## Pendências atuais da demonstração
 
 | Prioridade | Item | Critério de conclusão |
 | --- | --- | --- |
-| Média | Continuar a redução de avisos de manutenção | Restam 161 avisos; remover código sem uso por lotes, sem suprimir regras ou ativar legado |
 | Média | Conferir acessibilidade e fluidez manualmente | Validar teclado/leitor de tela, contraste e comportamento nos dispositivos escolhidos; medir antes de otimizar |
 
 ## Integrações futuras, fora da implementação atual

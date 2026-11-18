@@ -20,7 +20,7 @@ before(async()=>{
    if(id.includes('services/apiClient'))return '\0pending-api';
    if(id==='framer-motion'&&importer!=='\0pending-motion')return '\0pending-motion';
    const name=id.split('/').at(-1).replace(/\.jsx$/,'');
-   if(name==='TourContext')return '\0pending-tour';if(empty.has(name))return '\0pending-empty';
+   if(name==='useTour')return '\0pending-tour';if(empty.has(name))return '\0pending-empty';
   },
   load(id){
    if(id==='\0pending-api')return 'export const isDemoModeEnabled=()=>true; export const api={post:(...args)=>globalThis.__pendingPost(...args),get:(...args)=>globalThis.__pendingGet(...args)};';
@@ -29,7 +29,8 @@ before(async()=>{
    if(id==='\0pending-empty')return 'export default function Empty(){return null;}';
   }
  }]});
- ({AuthProvider,useAuth}=await server.ssrLoadModule('/src/contexts/AuthContext.jsx'));
+ ({AuthProvider}=await server.ssrLoadModule('/src/contexts/AuthContext.jsx'));
+ ({useAuth}=await server.ssrLoadModule('/src/contexts/useAuth.js'));
  manager=await server.ssrLoadModule('/src/data/favoritesManager.js');
  ({mapVehicleToViewModel:mapper}=await server.ssrLoadModule('/src/utils/vehicleMapper.js'));
  ({normalizeVehicle}=await server.ssrLoadModule('/src/utils/vehicleNormalizer.js'));

@@ -31,7 +31,18 @@ a chave Gemini do processo de teste e cria bancos SQLite/diretórios de mídia
 temporários. Executa descoberta unittest e cinco roteiros de jornada. Não
 substituí-lo pela execução indiscriminada de scripts antigos sobre o banco local.
 
-## Correções A1–A5 — execução atual de 17/11/2026
+## Manutenção — execução atual de 17/11/2026
+
+Base: `8294a26`. Frontend somente: `npm run lint -- --max-warnings 0` com
+**zero erros/avisos**, `npm test` com **290 testes aprovados**, build local
+`VITE_DEMO_MODE=true VITE_BASE_PATH=/Automatch/ npm run build` concluído.
+Três regressões novas verificam contexto de tour compartilhado, cancelamento de
+resposta antiga e cache/repetição por veículo em componentes legados isolados.
+API e animações desses testes são controladas; não equivalem a validação visual.
+Backend não alterado/reexecutado nesta etapa. Sem banco real, migrações ou deploy.
+[Relatório de causas e correções](manutencao-avisos-2026-11-17.md).
+
+## Execução anterior: correções A1–A5 em 17/11/2026
 
 Base de início: `fd229c3`, posterior ao diagnóstico `ffe60e2`.
 

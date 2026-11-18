@@ -9,10 +9,8 @@ import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
-  X, Check, AlertCircle, ShieldCheck, ArrowRight, DollarSign,
-  Calendar, Gauge, Fuel, CheckCircle2, SlidersHorizontal, Plus,
-  TrendingDown, TrendingUp, Minus, Car, Sparkles, Scale, ExternalLink,
-  Search, ChevronDown, ChevronUp
+  X, ShieldCheck, DollarSign, Gauge, Fuel, CheckCircle2, Plus, TrendingDown, TrendingUp, Sparkles,
+  Scale, ExternalLink, Search, ChevronDown, ChevronUp
 } from 'lucide-react';
 import { useScrollLock } from '../../utils/useScrollLock';
 import { getVehicleImageUrl, handleVehicleImageError } from '../../utils/imageHelper';

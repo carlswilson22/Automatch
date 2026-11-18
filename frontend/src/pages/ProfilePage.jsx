@@ -6,20 +6,18 @@
  *     configuração de preferências de notificação e visualização dos dados da loja/empresa parceira.
  */
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { 
-  User, Mail, ShieldCheck, Calendar, Heart, Eye, LogOut, 
-  Edit3, Camera, Save, ArrowLeft, Loader2, Sparkles, 
-  LayoutDashboard, PlusCircle, ChevronRight, Car, Users,
-  CheckCircle2, ArrowUpRight, Award, Bell
+import {
+  User, Mail, ShieldCheck, Calendar, Heart, Eye, LogOut, Edit3, Camera, Save, ArrowLeft, Loader2,
+  Sparkles, LayoutDashboard, PlusCircle, ChevronRight, Car, Users, Award
 } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/useAuth';
 import { getFavorites, subscribeFavorites } from '../data/favoritesManager';
 import { getNewCars, isCarDeleted } from '../data/newCarsManager';
 import { showcaseCars } from '../data/showcaseData';
 import SpotlightCard from '../components/ui/microkit/SpotlightCard';
-import GlowButton from '../components/ui/microkit/GlowButton';
+
 import WipeButton from '../components/ui/microkit/WipeButton';
 import FocusInput from '../components/ui/microkit/FocusInput';
 

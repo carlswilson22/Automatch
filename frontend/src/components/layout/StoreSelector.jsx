@@ -10,7 +10,6 @@ import { ChevronDown, Store } from 'lucide-react';
 import { stores } from '../../data/inventoryData';
 
 export default function StoreSelector({ selectedStoreId, onSelect }) {
-  const selectedStore = stores.find(s => s.id === selectedStoreId);
 
   return (
     <div className="relative group">

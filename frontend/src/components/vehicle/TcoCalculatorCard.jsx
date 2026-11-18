@@ -47,7 +47,6 @@ export default function TcoCalculatorCard({
   price     = 90000,
   fipePrice,
   fuelType  = 'Flex',
-  carYear,
   showHeader = true,
   className = ''
 }) {

@@ -6,15 +6,14 @@
  *     de combustão, correias ou válvulas, gerando um índice preventivo de saúde mecânica.
  */
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Volume2, VolumeX, Mic, Play, Pause, Activity, CheckCircle2, ShieldCheck, AlertCircle, RefreshCw, UploadCloud } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Volume2, VolumeX, Activity, CheckCircle2, ShieldCheck, RefreshCw } from 'lucide-react';
 import axios from 'axios';
 
 const EngineAcousticScanner = ({ car }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [acousticData, setAcousticData] = useState(null);
-  const [audioSource, setAudioSource] = useState('sample'); // 'sample' | 'recorded' | 'uploaded'
   const [barsData, setBarsData] = useState([]);
   const audioContextRef = useRef(null);
   const oscillatorRef = useRef(null);
@@ -101,7 +100,7 @@ const EngineAcousticScanner = ({ car }) => {
         oscillatorRef.current.lfo.stop();
         oscillatorRef.current = null;
       }
-    } catch (e) {
+    } catch {
       // ignore
     }
   };
@@ -110,48 +109,49 @@ const EngineAcousticScanner = ({ car }) => {
     return () => stopEngineSound();
   }, []);
 
-  // Executa perícia acústica chamando o backend
-  const handleRunAcousticScan = async () => {
-    setIsAnalyzing(true);
-    try {
-      const resp = await axios.post('/api/analise-acustica', {
-        car_context: {
-          brand: car?.brand,
-          model: car?.model || car?.name,
-          km: car?.km || 45000,
-          specs: car?.specs || {}
-        }
-      });
-      if (resp.data && resp.data.status === 'success') {
-        setAcousticData(resp.data);
-      }
-    } catch (err) {
-      console.warn('Erro ao chamar /api/analise-acustica:', err);
-      // Fallback pericial seguro
-      setAcousticData({
-        score_motor: 97,
-        status_geral: 'Excelente (Mecânica Íntegra)',
-        rpm_estimado: 820,
-        frequencia_dominante_hz: 27.3,
-        itens_checados: [
-          { item: 'Tuchos Hidráulicos e Válvulas', status: 'Aprovado', detalhe: 'Sem ruídos de folga metálica.' },
-          { item: 'Correias e Rolamentos', status: 'Aprovado', detalhe: 'Tensão regular e sem chiados anômalos.' },
-          { item: 'Estabilidade da Marcha Lenta', status: 'Aprovado', detalhe: 'Ciclos de combustão uniformes a ~820 RPM.' },
-          { item: 'Sistema de Admissão e Escape', status: 'Aprovado', detalhe: 'Sem vazamentos audíveis de compressão.' }
-        ],
-        laudo_resumo: `IA Automatch Engine Sound: Análise acústica aprovada para ${car?.name || 'Veículo'}. Marcha lenta perfeitamente estabilizada a ~820 RPM. Assinatura harmônica sem ruídos anormais de tuchos ou atrito de correias.`
-      });
-    } finally {
-      setIsAnalyzing(false);
-    }
-  };
-
-  // Carrega análise inicial se ainda não houver
+  // Legado não importado pelas telas: efeito isolado por veículo, sem closures obsoletas.
+  const [scanVersion, setScanVersion] = useState(0);
+  const carId = car?.id;
+  const carName = car?.name || 'Veículo';
+  const scanContext = JSON.stringify({
+    brand: car?.brand, model: car?.model || car?.name,
+    km: car?.km ?? 45000, specs: car?.specs || {}
+  });
   useEffect(() => {
-    if (!acousticData) {
-      handleRunAcousticScan();
-    }
-  }, [car?.id]);
+    let active = true;
+    const controller = new AbortController();
+    setAcousticData(null);
+    const runScan = async () => {
+      setIsAnalyzing(true);
+      try {
+        const resp = await axios.post('/api/analise-acustica', { car_context: JSON.parse(scanContext) }, { signal: controller.signal });
+        if (active && resp.data && resp.data.status === 'success') {
+          setAcousticData(resp.data);
+        }
+      } catch (err) {
+        if (!active) return;
+        console.warn('Erro ao chamar /api/analise-acustica:', err);
+        // Fallback pericial seguro
+        setAcousticData({
+          score_motor: 97,
+          status_geral: 'Excelente (Mecânica Íntegra)',
+          rpm_estimado: 820,
+          frequencia_dominante_hz: 27.3,
+          itens_checados: [
+            { item: 'Tuchos Hidráulicos e Válvulas', status: 'Aprovado', detalhe: 'Sem ruídos de folga metálica.' },
+            { item: 'Correias e Rolamentos', status: 'Aprovado', detalhe: 'Tensão regular e sem chiados anômalos.' },
+            { item: 'Estabilidade da Marcha Lenta', status: 'Aprovado', detalhe: 'Ciclos de combustão uniformes a ~820 RPM.' },
+            { item: 'Sistema de Admissão e Escape', status: 'Aprovado', detalhe: 'Sem vazamentos audíveis de compressão.' }
+          ],
+          laudo_resumo: `IA Automatch Engine Sound: Análise acústica aprovada para ${carName}. Marcha lenta perfeitamente estabilizada a ~820 RPM. Assinatura harmônica sem ruídos anormais de tuchos ou atrito de correias.`
+        });
+      } finally {
+        if (active) setIsAnalyzing(false);
+      }
+    };
+    runScan();
+    return () => { active = false; controller.abort(); };
+  }, [scanContext, scanVersion, carId, carName]);
 
   return (
     <div className="bg-slate-900 rounded-2xl border border-slate-800 overflow-hidden shadow-2xl flex flex-col">
@@ -178,7 +178,7 @@ const EngineAcousticScanner = ({ car }) => {
         {/* Action button */}
         <button
           type="button"
-          onClick={handleRunAcousticScan}
+          onClick={() => setScanVersion(version => version + 1)}
           disabled={isAnalyzing}
           className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center gap-2 shadow-md transition-all disabled:opacity-50"
         >

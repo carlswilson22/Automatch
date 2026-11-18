@@ -10,25 +10,9 @@
  */
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ShieldCheck, 
-  AlertTriangle, 
-  XCircle, 
-  CheckCircle2, 
-  Sparkles, 
-  FileCheck2, 
-  Cpu, 
-  ExternalLink,
-  Camera,
-  ZoomIn,
-  X,
-  Eye,
-  Check,
-  Info,
-  AlertOctagon,
-  SearchCheck,
-  ShieldAlert,
-  CheckCheck,
+import {
+  ShieldCheck, AlertTriangle, XCircle, CheckCircle2, Sparkles, FileCheck2, Cpu, ExternalLink,
+  Camera, ZoomIn, X, Eye, Info, AlertOctagon, SearchCheck, ShieldAlert
 } from 'lucide-react';
 
 export default function LaudoFeedbackCard({ feedback, pdfUrl, fileName, yoloFeedback, iaFeedback: directIaFeedback }) {
@@ -41,11 +25,7 @@ export default function LaudoFeedbackCard({ feedback, pdfUrl, fileName, yoloFeed
 
   const {
     veredito: rawVeredito = 'Aprovado',
-    score_procedencia = 95,
     resumo: rawResumo = '',
-    itens_auditados = [],
-    alertas = [],
-    modelo_ia = 'Google Gemini 1.5 Flash & Automatch Vision'
   } = feedback || {};
 
   const activeYolo = yoloFeedback || feedback?.yolo_feedback;
@@ -57,7 +37,6 @@ export default function LaudoFeedbackCard({ feedback, pdfUrl, fileName, yoloFeed
 
   const isApproved = classificacaoGeral === 'SEM_RESSALVAS';
   const isWarning = classificacaoGeral === 'COM_ATENCAO';
-  const isRejected = classificacaoGeral === 'COM_RESTRICOES';
 
   const theme = isApproved
     ? {

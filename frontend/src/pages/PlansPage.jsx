@@ -8,17 +8,15 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { 
-  ShieldCheck, Check, Zap, Sparkles, Building2, User, 
-  ArrowRight, HelpCircle, ChevronDown, ChevronUp, Star,
-  Award, Scan, MessageSquare, ArrowLeft, CheckCircle2,
-  Lock, ArrowUpRight, TrendingUp, Layers
+import {
+  Check, Zap, Sparkles, Building2, ArrowRight, HelpCircle, ChevronDown, ChevronUp, Star, Award,
+  Scan, ArrowLeft
 } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/useAuth';
 import { PLANS_DATA, FAQS } from '../data/plansData';
 import SpotlightCard from '../components/ui/microkit/SpotlightCard';
 import GlowButton from '../components/ui/microkit/GlowButton';
-import WipeButton from '../components/ui/microkit/WipeButton';
+
 import AutomatchLogo from '../components/ui/microkit/AutomatchLogo';
 
 export { PLANS_DATA, FAQS };

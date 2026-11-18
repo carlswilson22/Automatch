@@ -31,7 +31,7 @@ const VehicleComparatorModal = React.lazy(() => import('../components/vehicle/Ve
 import MarketPriceIndicator from '../components/vehicle/MarketPriceIndicator';
 import TcoCalculatorCard from '../components/vehicle/TcoCalculatorCard';
 import PriceDropBadge from '../components/vehicle/PriceDropBadge';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/useAuth';
 import { getVehicleImageUrl, handleVehicleImageError } from '../utils/imageHelper';
 import ErrorBoundary from '../components/common/ErrorBoundary';
 import AccordionPanel from '../components/vehicle/AccordionPanel';
@@ -40,9 +40,9 @@ import { demoDossier, demoRegistration } from '../utils/demoTools';
 import VehicleReferencePanel from '../components/vehicle/VehicleReferencePanel';
 import { mapVehicleToViewModel } from '../utils/vehicleMapper';
 
-export const formatMileage = formatVehicleMileage;
+const formatMileage = formatVehicleMileage;
 
-export const formatPrice = (val) => {
+const formatPrice = (val) => {
   if (val === undefined || val === null) return 'R$ 0';
   const num = typeof val === 'number' ? val : Number(String(val).replace(/[^0-9.-]+/g, ''));
   return isNaN(num) ? `R$ ${val}` : `R$ ${num.toLocaleString('pt-BR')}`;
@@ -895,7 +895,7 @@ export default function ShowcaseVehicleDetails() {
                       price={car.price}
                       fipePrice={car.fipePrice}
                       fuelType={car.specs?.combustivel || car.fuel || 'Não informado'}
-                      carYear={car.year}
+
                       showHeader={false}
                     />
                   </motion.div>
@@ -919,7 +919,7 @@ export default function ShowcaseVehicleDetails() {
                     currentPrice={car.price}
                     priceHistory={car.priceHistory || []}
                     variant="badge"
-                    isFeatured={car.featured}
+
                   />
                 </div>
                 <p className="text-4xl sm:text-5xl font-black text-white tracking-tight">

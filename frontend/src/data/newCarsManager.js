@@ -64,7 +64,7 @@ export const isCarDeleted = (id) => {
   try {
     const deleted = JSON.parse(localStorage.getItem(DELETED_KEY) || '[]');
     return deleted.includes(String(id));
-  } catch (e) {
+  } catch {
     return false;
   }
 };

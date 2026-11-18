@@ -5,9 +5,9 @@
  *   - Criado para analisar imagens dos pneus dianteiros e traseiros, indicando a profundidade restante
  *     em milímetros e alertando sobre a necessidade de troca ou alinhamento.
  */
-import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Gauge, ShieldCheck, AlertTriangle, Disc, RefreshCw, CheckCircle2, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
+import { Gauge, ShieldCheck, Disc, RefreshCw, CheckCircle2 } from 'lucide-react';
 import axios from 'axios';
 
 const WHEELS = [
@@ -22,63 +22,66 @@ const TireDepthScanner = ({ car }) => {
   const [isScanning, setIsScanning] = useState(false);
   const [wheelsData, setWheelsData] = useState({});
 
-  // Inicializa medições para as 4 rodas chamando o backend ou calibrando valores
+  // Legado não importado pelas telas. Cache e respostas ficam no veículo atual.
+  const [scanVersion, setScanVersion] = useState(0);
+  const measurementsRef = useRef(new Map());
+  const measuredVehicleRef = useRef(null);
+  const vehicleKey = JSON.stringify({ id: car?.id, brand: car?.brand,
+    model: car?.model || car?.name, km: car?.km ?? 45000 });
+
   useEffect(() => {
-    fetchWheelData(selectedWheel);
-  }, [selectedWheel, car?.id]);
-
-  const fetchWheelData = async (wheelId) => {
-    if (wheelsData[wheelId]) return;
-
-    setIsScanning(true);
-    try {
-      const resp = await axios.post('/api/analise-pneus', {
-        posicao_roda: wheelId,
-        car_context: {
-          brand: car?.brand,
-          model: car?.model || car?.name,
-          km: car?.km || 45000,
-        },
-      });
-
-      if (resp.data && resp.data.status === 'success') {
-        setWheelsData((prev) => ({
-          ...prev,
-          [wheelId]: resp.data,
-        }));
-      }
-    } catch (err) {
-      console.warn('Erro ao chamar /api/analise-pneus:', err);
-      // Fallback seguro de perícia
-      const fallbacks = {
-        dianteiro_esquerdo: { mm: 6.8, vida: 85, km: 38000 },
-        dianteiro_direito: { mm: 6.7, vida: 83, km: 37000 },
-        traseiro_esquerdo: { mm: 7.2, vida: 91, km: 41000 },
-        traseiro_direito: { mm: 7.1, vida: 89, km: 40000 },
-      };
-      const f = fallbacks[wheelId] || { mm: 6.8, vida: 85, km: 38000 };
-      setWheelsData((prev) => ({
-        ...prev,
-        [wheelId]: {
-          posicao_roda: wheelId,
-          posicao_label: WHEELS.find((w) => w.id === wheelId)?.name,
-          profundidade_mm: f.mm,
-          limite_legal_contran_mm: 1.6,
-          vida_util_restante_pct: f.vida,
-          km_estimado_restante: f.km,
-          condicao: 'Excelente (Pneu Seminovo/Novo)',
-          status_cor: 'emerald',
-          aprovado_contran: true,
-          laudo_resumo: `Scanner de Pneu IA: Sulco com ${f.mm}mm de profundidade. Aprovado pelo CONTRAN (mínimo 1.6mm) com desgaste regular na banda de rodagem.`,
-          desgaste_uniforme: true,
-        },
-      }));
-    } finally {
-      setIsScanning(false);
+    let active = true;
+    const controller = new AbortController();
+    if (measuredVehicleRef.current !== vehicleKey) {
+      measuredVehicleRef.current = vehicleKey;
+      measurementsRef.current.clear();
+      setWheelsData({});
     }
-  };
+    const wheelId = selectedWheel;
+    if (measurementsRef.current.has(wheelId)) {
+      setIsScanning(false);
+      return () => controller.abort();
+    }
+    const save = data => {
+      if (!active) return;
+      measurementsRef.current.set(wheelId, data);
+      setWheelsData(previous => ({ ...previous, [wheelId]: data }));
+    };
+    const runScan = async () => {
+      setIsScanning(true);
+      try {
+        const { id: _id, ...context } = JSON.parse(vehicleKey);
+        const response = await axios.post('/api/analise-pneus', {
+          posicao_roda: wheelId, car_context: context
+        }, { signal: controller.signal });
+        if (response.data?.status === 'success') save(response.data);
+      } catch (error) {
+        if (!active) return;
+        console.warn('Erro ao chamar /api/analise-pneus:', error);
+        const fallbacks = {
+          dianteiro_esquerdo: { mm: 6.8, vida: 85, km: 38000 },
+          dianteiro_direito: { mm: 6.7, vida: 83, km: 37000 },
+          traseiro_esquerdo: { mm: 7.2, vida: 91, km: 41000 },
+          traseiro_direito: { mm: 7.1, vida: 89, km: 40000 }
+        };
+        const sample = fallbacks[wheelId] || fallbacks.dianteiro_esquerdo;
+        save({
+          posicao_roda: wheelId, posicao_label: WHEELS.find(wheel => wheel.id === wheelId)?.name,
+          profundidade_mm: sample.mm, limite_legal_contran_mm: 1.6,
+          vida_util_restante_pct: sample.vida, km_estimado_restante: sample.km,
+          condicao: 'Excelente (Pneu Seminovo/Novo)', status_cor: 'emerald', aprovado_contran: true,
+          laudo_resumo: `Scanner de Pneu IA: Sulco com ${sample.mm}mm de profundidade. Aprovado pelo CONTRAN (mínimo 1.6mm) com desgaste regular na banda de rodagem.`,
+          desgaste_uniforme: true
+        });
+      } finally {
+        if (active) setIsScanning(false);
+      }
+    };
+    runScan();
+    return () => { active = false; controller.abort(); };
+  }, [selectedWheel, vehicleKey, scanVersion]);
 
-  const currentData = wheelsData[selectedWheel] || {
+  const currentData = (measuredVehicleRef.current === vehicleKey ? wheelsData[selectedWheel] : null) || {
     profundidade_mm: 6.8,
     limite_legal_contran_mm: 1.6,
     vida_util_restante_pct: 85,
@@ -128,12 +131,8 @@ const TireDepthScanner = ({ car }) => {
         <button
           type="button"
           onClick={() => {
-            setWheelsData((prev) => {
-              const copy = { ...prev };
-              delete copy[selectedWheel];
-              return copy;
-            });
-            fetchWheelData(selectedWheel);
+            measurementsRef.current.delete(selectedWheel);
+            setScanVersion(version => version + 1);
           }}
           disabled={isScanning}
           className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-2 shadow-md transition-all disabled:opacity-50"

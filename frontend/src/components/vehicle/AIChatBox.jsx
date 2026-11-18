@@ -161,7 +161,7 @@ const AIChatBox = ({ car }) => {
           // Tratado no catch abaixo
         }
       });
-    } catch (err) {
+    } catch {
       // Se foi cancelado pelo usuário, mantém texto parcial
       if (controller.signal.aborted) {
         setMessages(prev =>

@@ -9,10 +9,7 @@ import { formatVehicleMileage } from '../utils/vehicleInformation.js';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  ArrowLeft, Heart, Trash2, Calendar, Gauge, Palette,
-  Eye, ChevronRight, Car, Scale, Search, Sparkles
-} from 'lucide-react';
+import { ArrowLeft, Heart, Trash2, Calendar, Gauge, Eye, ChevronRight, Scale, Search } from 'lucide-react';
 import { getFavorites, removeFavorite, subscribeFavorites, getFavoriteOwnerKey, getGuestFavorites, importGuestFavorites } from '../data/favoritesManager';
 import { showcaseCars } from '../data/showcaseData';
 import { mockCars } from '../data/mockData';
@@ -26,11 +23,6 @@ import { mapVehicleToViewModel } from '../utils/vehicleMapper';
 
 // Code-Splitting: Comparador carregado sob demanda
 const VehicleComparatorModal = React.lazy(() => import('../components/vehicle/VehicleComparatorModal'));
-
-const fadeUp = {
-  hidden: { opacity: 0, y: 24 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: [0.16, 1, 0.3, 1] } }
-};
 
 const formatPrice = (val) => {
   if (val === undefined || val === null || val === '') return '';

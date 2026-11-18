@@ -7,10 +7,7 @@
  */
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  TrendingDown, TrendingUp, CheckCircle2, AlertCircle, Sparkles, 
-  Tag, HelpCircle, ShieldCheck, History, Clock, ChevronDown, Info, X
-} from 'lucide-react';
+import { TrendingDown, CheckCircle2, Sparkles, Tag, HelpCircle, History, Clock, Info, X } from 'lucide-react';
 
 export default function MarketPriceIndicator({
   price,

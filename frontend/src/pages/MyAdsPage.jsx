@@ -9,13 +9,12 @@ import { api, isDemoModeEnabled } from '../services/apiClient';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ArrowLeft, PlusCircle, Trash2, Eye, Calendar, Gauge, Palette, 
-  MapPin, AlertTriangle, CheckCircle2, ShieldCheck, Car, Sparkles,
-  ExternalLink, ChevronRight, Fuel, Shield
+import {
+  ArrowLeft, PlusCircle, Trash2, Eye, Calendar, Gauge, Palette, MapPin, AlertTriangle,
+  CheckCircle2, ShieldCheck, Car, Sparkles, ExternalLink
 } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import { useTour } from '../contexts/TourContext';
+import { useAuth } from '../contexts/useAuth';
+
 import { getNewCars, deleteNewCar } from '../data/newCarsManager';
 import { getVehicleImageUrl, handleVehicleImageError } from '../utils/imageHelper';
 import SpotlightCard from '../components/ui/microkit/SpotlightCard';
@@ -23,7 +22,7 @@ import GlowButton from '../components/ui/microkit/GlowButton';
 import WipeButton from '../components/ui/microkit/WipeButton';
 import { modalVariants } from '../utils/motionTokens';
 
-export const formatMileage = (val) => {
+const formatMileage = (val) => {
   if (val === undefined || val === null) return '0 km';
   if (typeof val === 'number') return `${val.toLocaleString('pt-BR')} km`;
   const str = String(val).trim();
@@ -32,7 +31,7 @@ export const formatMileage = (val) => {
   return isNaN(num) || num === 0 ? `${str} km` : `${num.toLocaleString('pt-BR')} km`;
 };
 
-export const formatPrice = (val) => {
+const formatPrice = (val) => {
   if (val === undefined || val === null) return 'R$ 0';
   const num = typeof val === 'number' ? val : Number(String(val).replace(/[^0-9.-]+/g, ''));
   return isNaN(num) ? `R$ ${val}` : `R$ ${num.toLocaleString('pt-BR')}`;
@@ -85,7 +84,7 @@ export default function MyAdsPage() {
         text: `Anúncio do "${carToDelete.marca} ${carToDelete.modelo}" foi excluído com sucesso!` 
       });
       setTimeout(() => setFeedbackMessage(null), 4000);
-    } catch (err) {
+    } catch {
       setFeedbackMessage({ 
         type: 'error', 
         text: 'Não foi possível excluir o anúncio. Tente novamente.' 

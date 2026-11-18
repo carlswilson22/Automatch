@@ -117,7 +117,7 @@ export default function HomeSupportChat({ isOpen, onClose }) {
           // onError é chamado antes do throw, tratado no catch abaixo
         }
       });
-    } catch (error) {
+    } catch {
       // Se foi cancelado pelo usuário, mantém o texto parcial
       if (controller.signal.aborted) {
         setMessages(prev =>

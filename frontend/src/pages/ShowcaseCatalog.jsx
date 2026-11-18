@@ -15,7 +15,7 @@ import AutomatchLogo from '../components/ui/AutomatchLogo';
 import FocusInput from '../components/ui/FocusInput';
 import SlidingTabs from '../components/ui/SlidingTabs';
 import { stores } from '../data/inventoryData';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/useAuth';
 import { getNewCars, isCarDeleted } from '../data/newCarsManager';
 import { toggleFavorite, isFavorite, subscribeFavorites } from '../data/favoritesManager';
 import VehicleComparatorModal from '../components/vehicle/VehicleComparatorModal';
@@ -30,9 +30,9 @@ import { api, isDemoModeEnabled } from '../services/apiClient';
 import { mapVehicleToViewModel } from '../utils/vehicleMapper';
 import { filterVehicles, PRICE_RANGES, KM_RANGES, normalizeString } from '../utils/filterVehicles';
 
-export const formatMileage = formatVehicleMileage;
+const formatMileage = formatVehicleMileage;
 
-export const formatPrice = (val) => {
+const formatPrice = (val) => {
   if (val === undefined || val === null || val === '') return '';
   const num = typeof val === 'number' ? val : Number(String(val).replace(/[^0-9.-]+/g, ''));
   return isNaN(num) || num <= 0 ? '' : `R$ ${num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -81,7 +81,7 @@ const CarCard = React.memo(({ car, index, viewMode }) => {
               </div>
               <p className="text-xs text-slate-500 font-medium flex items-center gap-1 mt-0.5"><Car className="w-3.5 h-3.5" /> {car.bodyType}</p>
             </div>
-            <div className="text-right shrink-0"><PriceDropBadge originalPrice={car.originalPrice} currentPrice={car.price} variant="badge" isFeatured={car.featured} /></div>
+            <div className="text-right shrink-0"><PriceDropBadge originalPrice={car.originalPrice} currentPrice={car.price} variant="badge"  /></div>
           </div>
           <div className="flex gap-4 my-3 text-xs text-slate-500 font-medium flex-wrap">
             <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> {car.year}</span>
@@ -99,7 +99,7 @@ const CarCard = React.memo(({ car, index, viewMode }) => {
     <div data-tour={index === 0 ? "vitrine-primeiro-card" : undefined} className="bg-white rounded-2xl overflow-hidden border border-slate-200/80 shadow-card hover:shadow-card-hover hover:-translate-y-1 transition-all duration-300 group cursor-pointer flex flex-col" onClick={() => navigate(`/encontrar/${car.id}`)}>
       <div className="relative aspect-[16/10] overflow-hidden bg-slate-900">
         <img src={getVehicleImageUrl(car.image || 'placeholder-carro.jpg')} alt={car.name} loading="lazy" decoding="async" onError={handleVehicleImageError} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-3 pt-8 flex items-end justify-end"><PriceDropBadge originalPrice={car.originalPrice} currentPrice={car.price} variant="badge" isFeatured={car.featured} /></div>
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-3 pt-8 flex items-end justify-end"><PriceDropBadge originalPrice={car.originalPrice} currentPrice={car.price} variant="badge"  /></div>
         <button onClick={handleLike} aria-label={liked ? 'Remover dos favoritos' : 'Curtir veiculo'} className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/95 border border-slate-200/60 flex items-center justify-center hover:bg-white transition-colors shadow-sm z-10"><Heart className={`w-4 h-4 transition-all ${liked ? 'fill-red-500 text-red-500 scale-110' : 'text-slate-400 hover:text-red-500'}`} /></button>
         <div className="absolute top-3 left-3 z-20"><StoreIdentifier storeId={car.storeId} variant="badge" /></div>
       </div>

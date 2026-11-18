@@ -191,7 +191,7 @@ export const getStoredInventory = () => {
           });
         }
       }
-    } catch (_) { /* O recurso opcional mantém seu estado anterior. */ }
+    } catch { /* O recurso opcional mantém seu estado anterior. */ }
 
     return validated;
   } catch (e) {

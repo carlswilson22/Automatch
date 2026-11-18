@@ -15,7 +15,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { stores as defaultStores } from '../data/inventoryData';
 import { addNewCar } from '../data/newCarsManager';
 import LaudoFeedbackCard from '../components/vehicle/LaudoFeedbackCard';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/useAuth';
 import AutomatchLogo from '../components/ui/microkit/AutomatchLogo';
 
 // Compressor inteligente via HTML5 Canvas para mitigar QuotaExceededError no localStorage

@@ -9,8 +9,8 @@
  */
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import { useTour } from '../contexts/TourContext';
+import { useAuth } from '../contexts/useAuth';
+import { useTour } from '../contexts/useTour';
 
 const ProtectedRoute = ({ children, allowedRoles = null }) => {
   const { user, isAuthenticated, loading } = useAuth();

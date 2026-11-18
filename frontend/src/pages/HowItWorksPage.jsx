@@ -8,17 +8,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  ArrowLeft, Search, RotateCw, Bot, PlusCircle, ChevronDown,
-  CheckCircle2, HelpCircle, Lock, Compass, Sparkles, Car,
-  ShieldCheck, Clock, PlayCircle
-} from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import { useTour } from '../contexts/TourContext';
-import {
-  howItWorksSections, b2bSectionNotice,
-  generalFaqList, b2bFaqList, quickPillars
-} from '../data/howItWorksData';
+import { ArrowLeft, Search, RotateCw, Bot, ChevronDown, HelpCircle, Lock, Compass, ShieldCheck, Clock, PlayCircle } from 'lucide-react';
+import { useAuth } from '../contexts/useAuth';
+import { useTour } from '../contexts/useTour';
+import { howItWorksSections, b2bSectionNotice, generalFaqList, b2bFaqList } from '../data/howItWorksData';
 import { getAvailableTours } from '../data/tourGuideData';
 import AutomatchLogo from '../components/ui/AutomatchLogo';
 import GlowButton from '../components/ui/GlowButton';

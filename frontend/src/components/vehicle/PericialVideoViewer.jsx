@@ -8,10 +8,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { getVideoUrl } from '../../utils/imageHelper';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  Play, Pause, RotateCcw, ShieldCheck, CheckCircle2,
-  Clock, Video, Sparkles, AlertCircle, Upload, Check, Volume2, VolumeX
-} from 'lucide-react';
+import { Play, Pause, RotateCcw, ShieldCheck, CheckCircle2, Clock, Video, Sparkles, Check, Volume2, VolumeX } from 'lucide-react';
 
 const VIDEO_DURATION = 20;
 
@@ -41,13 +38,11 @@ const CHECKPOINTS = [
 
 export default function PericialVideoViewer({
   videoUrl,
-  carName = 'Veículo',
-  onUploadVideo
+  carName = 'Veículo'
 }) {
   const videoRef = useRef(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(VIDEO_DURATION);
   const [isMuted, setIsMuted] = useState(true);
   const [activeSegment, setActiveSegment] = useState(0);
   const [simulatedProgress, setSimulatedProgress] = useState(0);
@@ -171,9 +166,6 @@ export default function PericialVideoViewer({
                   setIsPlaying(false);
                 }
               }
-            }}
-            onLoadedMetadata={() => {
-              if (videoRef.current) setDuration(videoRef.current.duration || VIDEO_DURATION);
             }}
           />
         ) : (

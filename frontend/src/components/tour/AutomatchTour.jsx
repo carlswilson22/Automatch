@@ -13,8 +13,8 @@ import { useLocation } from 'react-router-dom';
 import {
   Compass, ChevronRight, ChevronLeft, X, CheckCircle2
 } from 'lucide-react';
-import { useTour } from '../../contexts/TourContext';
-import { useAuth } from '../../contexts/AuthContext';
+import { useTour } from '../../contexts/useTour';
+import { useAuth } from '../../contexts/useAuth';
 import { getTourById } from '../../data/tourGuideData';
 import { lockScroll, unlockScroll } from '../../utils/scrollLockCore';
 
@@ -33,10 +33,6 @@ export default function AutomatchTour() {
   const tourConfig = getTourById(demoState.tourId, user?.role);
   const steps = tourConfig?.steps || [];
   const currentStep = steps[demoState.stepIndex];
-
-  // Verifica preferência de movimento reduzido (mantido para conformidade WCAG AAA)
-  const prefersReducedMotion = typeof window !== 'undefined' &&
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // Gestão estrita do bloqueio de rolagem central
   useEffect(() => {

@@ -5,13 +5,13 @@
  *   - Criado para manter o estado do tour vivo durante navegações de rotas SPA no React Router,
  *     gerenciando o Modal de Apresentação (sem timer de fechamento) e a transição entre telas da demonstração.
  */
-import React, { createContext, useContext, useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from './AuthContext';
+import { useAuth } from './useAuth';
 import { getTourById } from '../data/tourGuideData';
 import { lockScroll, unlockScroll } from '../utils/scrollLockCore';
 
-const TourContext = createContext({});
+import { TourContext } from './useTour';
 
 export function TourProvider({ children }) {
   const navigate = useNavigate();
@@ -161,12 +161,3 @@ export function TourProvider({ children }) {
     </TourContext.Provider>
   );
 }
-
-export function useTour() {
-  const context = useContext(TourContext);
-  if (!context) {
-    throw new Error('useTour deve ser utilizado dentro de um TourProvider');
-  }
-  return context;
-}
-

@@ -8,9 +8,9 @@ import { readSessionToken, canUseOfflineFallback } from '../services/sessionStor
  *   - Criado para gerenciar estado de login, perfil de usuário (buyer/dealer), armazenamento seguro
  *     de tokens JWT e métodos de login/logout em toda a aplicação React.
  */
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 
-const AuthContext = createContext({});
+import { AuthContext } from './useAuth';
 
 // ===========================================================================
 // Utilitários Internos
@@ -27,7 +27,7 @@ const hashPasswordLocal = async (plainPassword) => {
       const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
       const hashArray = Array.from(new Uint8Array(hashBuffer));
       return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    } catch (_) { /* O recurso opcional mantém seu estado anterior. */ }
+    } catch { /* O recurso opcional mantém seu estado anterior. */ }
   }
   let hash = 0;
   for (let i = 0; i < plainPassword.length; i++) {
@@ -202,7 +202,7 @@ export const AuthProvider = ({ children }) => {
           const passwordHash = await hashPasswordLocal(password);
           updated.push({ ...safeUser, passwordHash });
           localStorage.setItem('@automatch:registered_users', JSON.stringify(updated));
-        } catch (e) { /* O recurso opcional mantém seu estado anterior. */ }
+        } catch { /* O recurso opcional mantém seu estado anterior. */ }
       }
 
       return fullUser;
@@ -307,5 +307,3 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
-
-export const useAuth = () => useContext(AuthContext);

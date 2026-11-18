@@ -18,7 +18,7 @@ before(async()=>{
  const stubs = new Set(['AIChatBox','SellerChat','TradeInSimulator','MarketPriceIndicator','PriceDropBadge','PericialVideoViewer','OfficialDossierModal','AutomatchScan','TcoCalculatorCard']);
  server=await createServer({server:{middlewareMode:true},ssr:{noExternal:['framer-motion']},logLevel:'silent',appType:'custom',plugins:[{
    name:'behavior-test-boundaries',enforce:'pre',
-   resolveId(source,importer){if(source==='framer-motion'&&importer!=='\0behavior-motion')return '\0behavior-motion';const name=source.split('/').at(-1).replace(/\.jsx$/,'');if(name==='AuthContext')return '\0behavior-auth';if(name==='TourContext')return '\0behavior-tour';if(stubs.has(name))return '\0behavior-empty';},
+   resolveId(source,importer){if(source==='framer-motion'&&importer!=='\0behavior-motion')return '\0behavior-motion';const name=source.split('/').at(-1).replace(/\.jsx$/,'');if(name==='useAuth')return '\0behavior-auth';if(name==='useTour')return '\0behavior-tour';if(stubs.has(name))return '\0behavior-empty';},
    load(id){if(id==='\0behavior-motion')return "export * from 'framer-motion'; export function AnimatePresence({children}){return children;}";if(id==='\0behavior-auth')return 'export const useAuth = () => globalThis.__behaviorUser;';if(id==='\0behavior-tour')return 'export const useTour = () => ({demoState: {}});';if(id==='\0behavior-empty')return 'export default function Empty(){return null;}';},
  }]});
 });

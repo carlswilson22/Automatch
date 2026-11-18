@@ -1,5 +1,18 @@
 # Histórico de mudanças
 
+## 17/11/2026 — Tratamento dos avisos de manutenção
+
+- ESLint: de 161 avisos para zero, com zero erros e regras preservadas.
+- Removidos imports, parâmetros, estados e funções sem consumidores; hooks/contextos
+  separados dos providers JSX e formatadores exclusivos das páginas tornados internos.
+- Corrigidos dependências, cancelamento e cache por veículo dos efeitos legados;
+  scanner de pneus/acústica continuam fora das telas ativas.
+- 290 testes frontend e build local aprovados, com três regressões novas;
+  backend não alterado nem reexecutado. Registro detalhado em
+  [manutenção](docs/manutencao-avisos-2026-11-17.md).
+- Sem deploy ou alteração do banco; mesma atualização destinada às duas `main`,
+  preservando as demais branches do secundário.
+
 ## 17/11/2026 — Correções dos cinco problemas confirmados
 
 - Centralizado o mapeamento dos veículos; anúncio/comparador preservam laudo,

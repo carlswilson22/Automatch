@@ -200,8 +200,8 @@ describe('AUDITORIA DE SEGURANÇA E MITIGAÇÃO (OWASP TOP 10 & RBAC)', () => {
     assert.ok(homeContent.includes('location.state?.accessDenied'), 'Home.jsx deve capturar accessDenied do roteamento');
     assert.ok(homeContent.includes('ShieldAlert'), 'Home.jsx deve renderizar ShieldAlert no banner de aviso');
     assert.ok(
-      homeContent.includes('canAccessB2B && canAccessB2B()') || homeContent.includes('canAccessB2B'),
-      'Home.jsx deve importar ou condicionar com canAccessB2B'
+      homeContent.includes('if (!isAuthenticated)') && homeContent.includes("pathname: '/novo-anuncio'"),
+      'Home.jsx deve encaminhar visitante para login antes de anunciar'
     );
     assert.ok(catalogContent.includes('canAccessB2B && canAccessB2B()'), 'ShowcaseCatalog.jsx deve condicionar + Anunciar a canAccessB2B');
   });

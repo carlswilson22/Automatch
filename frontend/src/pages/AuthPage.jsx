@@ -8,15 +8,13 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { 
-  ShieldCheck, Mail, Lock, User, ArrowRight, Eye, EyeOff, 
-  XCircle, CheckCircle2, Loader2, Home, Phone, Building2, 
-  MapPin, Sparkles, FileText, KeyRound, ArrowLeft, Clock,
-  Copy, AlertTriangle, Check
+import {
+  Mail, Lock, User, ArrowRight, Eye, EyeOff, XCircle, CheckCircle2, Loader2, Home, Phone,
+  Building2, FileText, KeyRound, ArrowLeft, Clock, Copy, AlertTriangle, Check
 } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../contexts/useAuth';
 import AutomatchLogo from '../components/ui/microkit/AutomatchLogo';
-import GlowButton from '../components/ui/microkit/GlowButton';
+
 import { modalVariants } from '../utils/motionTokens';
 
 const AuthPage = () => {
@@ -450,7 +448,7 @@ const AuthPage = () => {
                   required
                   value={formData.email}
                   onChange={handleInputChange}
-                  onBlur={(e) => setFormData(prev => ({ ...prev, email: prev.email.replace(/^@+/, '').trim() }))}
+                  onBlur={() => setFormData(prev => ({ ...prev, email: prev.email.replace(/^@+/, '').trim() }))}
                   placeholder="exemplo@email.com"
                   className="w-full bg-slate-950 border border-slate-800 rounded-2xl py-3 pl-11 pr-4 text-sm text-white placeholder:text-slate-600 focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 outline-none transition-all"
                 />

@@ -6,26 +6,8 @@
  *     incluindo upload de laudos PDF, vídeos periciais e sequência de imagens 360 graus.
  */
 import React, { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  X, 
-  Check, 
-  Trash2, 
-  DollarSign, 
-  Store, 
-  ShieldCheck, 
-  FileText, 
-  Eye, 
-  Users, 
-  AlertCircle, 
-  CheckCircle2,
-  Sliders,
-  Car,
-  Tag,
-  Gauge,
-  Calendar,
-  Sparkles
-} from 'lucide-react';
+import { motion } from 'framer-motion';
+import { X, Check, Trash2, DollarSign, Store, FileText, Eye, Users, AlertCircle, CheckCircle2, Car } from 'lucide-react';
 import { getVehicleImageUrl, handleVehicleImageError } from '../../utils/imageHelper';
 import useScrollLock from '../../utils/useScrollLock';
 

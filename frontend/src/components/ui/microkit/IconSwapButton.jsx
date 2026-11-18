@@ -13,7 +13,7 @@
 
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { usePrefersReducedMotion, MOTION_EASINGS, MOTION_DURATIONS } from '../../../utils/motionTokens';
+import { usePrefersReducedMotion, MOTION_EASINGS } from '../../../utils/motionTokens';
 
 export default function IconSwapButton({
   isActive = false,

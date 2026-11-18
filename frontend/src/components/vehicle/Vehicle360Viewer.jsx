@@ -7,9 +7,9 @@
  */
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  RotateCw, Compass, Play, Pause, Sparkles, Camera, ShieldCheck, 
-  AlertCircle, Search, Eye, X, ZoomIn, CheckCircle2, ChevronRight, FileText
+import {
+  RotateCw, Compass, Play, Pause, Camera, ShieldCheck, AlertCircle, Search, X, ZoomIn,
+  CheckCircle2, FileText
 } from 'lucide-react';
 import { getVehicleImageUrl, handleVehicleImageError } from '../../utils/imageHelper';
 import { isComplete360Set } from '../../utils/vehicleMapper';
@@ -37,7 +37,6 @@ const Vehicle360Viewer = ({
   gallery = null,
   photos360 = null,
   damagePoints = null,
-  imagesByAngle = null,
   onOpenLaudo = null
 }) => {
   const [currentAngle, setCurrentAngle] = useState(0);

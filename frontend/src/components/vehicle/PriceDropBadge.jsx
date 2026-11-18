@@ -7,14 +7,13 @@
  */
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Flame, TrendingDown, Clock, ChevronDown, CheckCircle2, History, Tag } from 'lucide-react';
+import { Flame, Clock, ChevronDown, History } from 'lucide-react';
 
 export default function PriceDropBadge({
   originalPrice,
   currentPrice,
   priceHistory = [],
   variant = 'badge', // 'badge' | 'detailed'
-  isFeatured = false,
   className = ''
 }) {
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);

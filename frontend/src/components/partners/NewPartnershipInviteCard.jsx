@@ -6,18 +6,7 @@
  *     com termos de colaboração e compartilhamento de inventário pré-definidos.
  */
 import React, { useState, useMemo } from 'react';
-import { 
-  Building2, 
-  Send, 
-  Search, 
-  Percent, 
-  Sparkles, 
-  CheckCircle2, 
-  AlertCircle, 
-  ChevronRight,
-  X,
-  FileText
-} from 'lucide-react';
+import { Building2, Send, Search, Percent, CheckCircle2, AlertCircle, ChevronRight, X, FileText } from 'lucide-react';
 
 export default function NewPartnershipInviteCard({ 
   availableStores = [], 
@@ -95,7 +84,7 @@ export default function NewPartnershipInviteCard({
           text: data.detail || 'Não foi possível enviar o convite de parceria.' 
         });
       }
-    } catch (err) {
+    } catch {
       setFeedback({ 
         type: 'error', 
         text: 'Erro de conexão ao enviar o pedido de parceria.' 

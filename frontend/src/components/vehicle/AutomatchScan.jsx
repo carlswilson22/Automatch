@@ -7,7 +7,7 @@
  */
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UploadCloud, Scan, AlertCircle, Wrench, Sparkles, CheckCircle2, ShieldAlert, Image as ImageIcon } from 'lucide-react';
+import { UploadCloud, Scan, AlertCircle, Wrench, Sparkles, CheckCircle2 } from 'lucide-react';
 
 const SAMPLE_SCENARIOS = [
   {

@@ -8,13 +8,12 @@ import { readSessionToken } from '../../services/sessionStorage';
  */
 import React, { useState, useEffect, useCallback, useRef, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  X, Users, Car, Clock, FileText, CheckCircle2, AlertTriangle, 
-  Send, ShieldCheck, Search, Filter, ArrowRight, MessageSquare, 
-  Star, DollarSign, RefreshCw, PlusCircle, Check, XCircle, ChevronRight, Lock
+import {
+  X, Users, Car, Clock, FileText, CheckCircle2, AlertTriangle, ShieldCheck, Search, MessageSquare,
+  Star, RefreshCw, Check, XCircle, Lock
 } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
-import { useTour } from '../../contexts/TourContext';
+import { useAuth } from '../../contexts/useAuth';
+import { useTour } from '../../contexts/useTour';
 import { getTourById, TOUR_ANCHORS } from '../../data/tourGuideData';
 import PartnerChatModal from './PartnerChatModal';
 import NewPartnershipInviteCard from './NewPartnershipInviteCard';
@@ -223,7 +222,6 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
 
   // Filters
   const [searchCar, setSearchCar] = useState('');
-  const [markupMap, setMarkupMap] = useState({}); // { carId: markupValue }
 
   // Sub-modals
   const [reservingCar, setReservingCar] = useState(null);
@@ -456,29 +454,6 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
   }, [isOpen, isB2BAuthorized, activeTab, accountKey, loadReservations]);
 
 
-  // Ações de Parceria
-  const handleInvite = async (storeId) => {
-    setActionLoading(true);
-    try {
-      const res = await fetch('/api/partnerships/invite', {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ receiver_store_id: storeId, commission_rate: 3.0 })
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setFeedbackMsg({ type: 'success', text: data.message });
-        await loadPartnerships();
-      } else {
-        setFeedbackMsg({ type: 'error', text: data.detail || 'Erro ao enviar convite.' });
-      }
-    } catch (e) {
-      setFeedbackMsg({ type: 'error', text: 'Falha na conexão.' });
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
   const handleAcceptInvite = async (partnershipId) => {
     setActionLoading(true);
     try {
@@ -518,7 +493,7 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
   // Ações de Reserva
   const openReservationModal = useCallback((car, customMarkup = 5000) => {
     const piso = car.valor_minimo_repasse || (car.price * 0.90);
-    const initialMarkup = customMarkup !== undefined ? customMarkup : (markupMap[car.id] !== undefined ? markupMap[car.id] : 5000);
+    const initialMarkup = customMarkup !== undefined ? customMarkup : 5000;
     setReservingCar(car);
     setReservationForm({
       proposed_price: piso,
@@ -526,7 +501,7 @@ export default function PartnershipHubModal({ isOpen, onClose }) {
       client_name: '',
       duration_minutes: 120
     });
-  }, [markupMap]);
+  }, []);
 
   const handleConfirmReservation = async (e) => {
     e.preventDefault();

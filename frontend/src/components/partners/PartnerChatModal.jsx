@@ -8,8 +8,8 @@ import { readSessionToken } from '../../services/sessionStorage';
  */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Send, MessageSquare, Car, DollarSign, Store, Shield, CheckCircle, Clock } from 'lucide-react';
-import { useAuth } from '../../contexts/AuthContext';
+import { X, Send, MessageSquare, Car } from 'lucide-react';
+import { useAuth } from '../../contexts/useAuth';
 import { getVehicleImageUrl, handleVehicleImageError } from '../../utils/imageHelper';
 
 export default function PartnerChatModal({ isOpen, onClose, reservation }) {

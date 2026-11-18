@@ -6,8 +6,8 @@
  *     na compra de um veículo do estoque da concessionária.
  */
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Calculator, CheckCircle2, Building2, ShieldCheck } from 'lucide-react';
+
+import { Calculator, ShieldCheck } from 'lucide-react';
 
 const FinancingSimulator = ({ price = 142000, carName = 'Veículo' }) => {
   // Estado Financiamento Padrão

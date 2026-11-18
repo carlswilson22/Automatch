@@ -8,8 +8,8 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ShieldCheck, X, CheckCircle2, ChevronDown, ChevronUp,
-  Wrench, Zap, Droplets, Settings2, Star, Clock, AlertTriangle
+  ShieldCheck, X, CheckCircle2, ChevronDown, ChevronUp, Wrench, Zap, Droplets, Settings2, Clock,
+  AlertTriangle
 } from 'lucide-react';
 
 // ─── COVERAGE DATA ────────────────────────────────────────────────────────────

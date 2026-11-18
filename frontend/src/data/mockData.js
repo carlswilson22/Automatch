@@ -5,7 +5,7 @@
  *   - Criado para garantir que o frontend possa ser demonstrado e testado independentemente do backend,
  *     fornecendo veículos de exemplo com laudos periciais e fotos completos.
  */
-/* eslint-disable no-unused-vars */
+
 export const mockCars = [
   {
     id: 'sc-001',

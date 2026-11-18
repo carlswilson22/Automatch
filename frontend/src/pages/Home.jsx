@@ -14,8 +14,8 @@ import {
   Sparkles, Calendar, Gauge, Palette,
   ShieldAlert, X
 } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
-import { useTour } from '../contexts/TourContext';
+import { useAuth } from '../contexts/useAuth';
+import { useTour } from '../contexts/useTour';
 import { stores } from '../data/inventoryData';
 import StoreIdentifier from '../components/ui/StoreIdentifier';
 import AutomatchLogo from '../components/ui/AutomatchLogo';
@@ -25,7 +25,7 @@ import { getNewCars } from '../data/newCarsManager';
 import { toggleFavorite, isFavorite, subscribeFavorites } from '../data/favoritesManager';
 import { getVehicleImageUrl, handleVehicleImageError } from '../utils/imageHelper';
 
-export const formatPrice = (val) => {
+const formatPrice = (val) => {
   if (val === undefined || val === null || val === '') return '';
   const num = typeof val === 'number' ? val : Number(String(val).replace(/[^0-9.-]+/g, ''));
   return isNaN(num) || num <= 0 ? '' : `R$ ${num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -105,7 +105,7 @@ const FeatureItem = ({ title, description }) => (
 const Home = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, isAuthenticated, canAccessB2B } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { openTourIntro } = useTour();
   const [allCars, setAllCars] = useState(showcaseCars);
   const [isChatOpen, setIsChatOpen] = useState(false);

@@ -74,7 +74,7 @@ function resolvePhotos360(raw) {
   }
 
   if (import.meta.env?.DEV) {
-    // eslint-disable-next-line no-console
+
     console.warn(`[Automatch 360°] photos360 não resolvido para id="${idStr}" — varredura orbital indisponível.`);
   }
 

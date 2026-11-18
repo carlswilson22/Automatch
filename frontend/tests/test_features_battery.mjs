@@ -899,15 +899,13 @@ describe('BATERIA DE TESTES 22: Selo Preço Baixou - Ausência de Porcentagem e 
   });
 
   test('22.2: PriceDropBadge.jsx NÃO deve renderizar ícone de estrela (ACH-08)', () => {
-    assert.ok(badgeContent.includes('isFeatured'), 'Deve aceitar prop isFeatured');
     assert.ok(!badgeContent.includes('<Star'), 'NÃO deve renderizar ícone Star dentro do badge de preço');
   });
 
-  test('22.3: ShowcaseCatalog.jsx deve passar prop isFeatured={car.featured} ao PriceDropBadge', () => {
-    assert.ok(
-      catalogContent.includes('isFeatured={car.featured}'),
-      'Catálogo deve fornecer isFeatured ao PriceDropBadge'
-    );
+  test('22.3: destaque do catálogo permanece separado do selo de preço', () => {
+    assert.ok(catalogContent.includes('car.featured'), 'Catálogo preserva o indicador de destaque');
+    assert.ok(catalogContent.includes('<PriceDropBadge originalPrice={car.originalPrice} currentPrice={car.price}'), 'Selo recebe os preços cadastrados');
+    assert.ok(!catalogContent.includes('isFeatured={car.featured}'), 'Selo de preço não recebe opção que não utiliza');
   });
 });
 
@@ -1359,7 +1357,7 @@ describe('BATERIA DE TESTES 32: Tarefa 1 (Remoção do Selo Destaque sobre Fotos
   });
 
   test('32.6: HowItWorksPage.jsx utiliza useAuth e condiciona recursos B2B estritamente a isB2BAuthorized', () => {
-    assert.ok(howItWorksPageContent.includes("import { useAuth } from '../contexts/AuthContext'"), 'Deve importar useAuth');
+    assert.ok(howItWorksPageContent.includes("import { useAuth } from '../contexts/useAuth'"), 'Deve importar useAuth');
     assert.ok(howItWorksPageContent.includes('isB2BAuthorized'), 'Deve calcular isB2BAuthorized');
     assert.ok(howItWorksPageContent.includes('{isB2BAuthorized &&'), 'Nota B2B e FAQ B2B devem ser renderizados apenas quando autorizado');
     assert.ok(howItWorksPageContent.includes('aria-expanded'), 'Acordeão deve possuir acessibilidade com aria-expanded');

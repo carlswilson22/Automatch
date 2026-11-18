@@ -11,8 +11,8 @@ import { createPortal } from 'react-dom';
 import {
   Compass, X, PlayCircle, Clock, Sparkles, ArrowRight
 } from 'lucide-react';
-import { useTour } from '../../contexts/TourContext';
-import { useAuth } from '../../contexts/AuthContext';
+import { useTour } from '../../contexts/useTour';
+import { useAuth } from '../../contexts/useAuth';
 import { getTourById } from '../../data/tourGuideData';
 import { lockScroll, unlockScroll } from '../../utils/scrollLockCore';
 
