@@ -1,3 +1,4 @@
+import { notifyFavoritesSession } from '../data/favoritesManager.js';
 import { api, isDemoModeEnabled } from '../services/apiClient';
 import { readSessionToken, canUseOfflineFallback } from '../services/sessionStorage';
 /**
@@ -51,18 +52,14 @@ export const AuthProvider = ({ children }) => {
    * localStorage é usado apenas para a lista de contas locais (fallback offline).
    */
   useEffect(() => {
-    const savedUser = sessionStorage.getItem('automatch_user');
-    if (savedUser) {
-      try {
-        const parsed = JSON.parse(savedUser);
-        if (parsed?.role === 'comprador' || parsed?.role === 'vendedor') {
-          parsed.role = 'comum';
-        }
+    try {
+      const parsed = JSON.parse(sessionStorage.getItem('automatch_user') || 'null');
+      if (parsed && typeof parsed === 'object') {
+        if (parsed.role === 'comprador' || parsed.role === 'vendedor') parsed.role = 'comum';
         setUser(parsed);
-      } catch (e) {
-        sessionStorage.removeItem('automatch_user');
-        sessionStorage.removeItem('automatch_token');
       }
+    } catch {
+      try { sessionStorage.removeItem('automatch_user'); sessionStorage.removeItem('automatch_token'); } catch { /* Storage may be unavailable. */ }
     }
     setLoading(false);
   }, []);
@@ -71,17 +68,25 @@ export const AuthProvider = ({ children }) => {
   // Helpers de persistência (sessionStorage)
   // ---------------------------------------------------------------------------
   const _persistSession = (userData) => {
-    sessionStorage.setItem('automatch_user', JSON.stringify(userData));
-    if (userData?.token) {
-      sessionStorage.setItem('automatch_token', userData.token);
-    } else {
-      sessionStorage.removeItem('automatch_token');
+    const previousUser = sessionStorage.getItem('automatch_user');
+    const previousToken = sessionStorage.getItem('automatch_token');
+    try {
+      sessionStorage.setItem('automatch_user', JSON.stringify(userData));
+      if (userData?.token) sessionStorage.setItem('automatch_token', userData.token);
+      else sessionStorage.removeItem('automatch_token');
+    } catch {
+      for (const [key, previous] of [['automatch_user', previousUser], ['automatch_token', previousToken]]) {
+        try { if (previous == null) sessionStorage.removeItem(key); else sessionStorage.setItem(key, previous); } catch { /* Preserve what the browser still permits. */ }
+      }
+      throw new Error('Não foi possível iniciar a sessão neste navegador. Tente entrar novamente.');
     }
+    notifyFavoritesSession();
   };
 
   const _clearSession = () => {
     sessionStorage.removeItem('automatch_user');
     sessionStorage.removeItem('automatch_token');
+    notifyFavoritesSession();
   };
 
   // ---------------------------------------------------------------------------
@@ -101,8 +106,8 @@ export const AuthProvider = ({ children }) => {
         accountType: effectiveRole === 'lojista' ? 'store' : (effectiveRole === 'admin' ? 'store' : 'buyer')
       };
 
-      setUser(resolvedUser);
       _persistSession(resolvedUser);
+      setUser(resolvedUser);
       return resolvedUser;
 
     } catch (error) {
@@ -121,8 +126,8 @@ export const AuthProvider = ({ children }) => {
           photo: 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&q=80&w=200',
           token: 'demo-admin-token'
         };
-        setUser(demoAdmin);
         _persistSession(demoAdmin);
+        setUser(demoAdmin);
         return demoAdmin;
       }
 
@@ -137,8 +142,8 @@ export const AuthProvider = ({ children }) => {
           );
           if (found) {
             const { password: _p, passwordHash: _ph, ...userData } = found;
-            setUser(userData);
             _persistSession(userData);
+            setUser(userData);
             return userData;
           }
         } catch (storageErr) {
@@ -185,8 +190,8 @@ export const AuthProvider = ({ children }) => {
         planId: extraData.planId || 'free'
       };
 
-      setUser(fullUser);
       _persistSession(fullUser);
+      setUser(fullUser);
 
       // Persiste conta local para fallback offline (sem expor senha)
       if (isDemoModeEnabled()) {
@@ -205,12 +210,15 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       // Fallback local resiliente (apenas em modo demo)
       if (!canUseOfflineFallback(error, isDemoModeEnabled())) throw error;
-      const accounts = JSON.parse(localStorage.getItem('@automatch:registered_users') || '[]');
-      if (accounts.some(account => account.email.toLowerCase() === cleanEmail)) {
-        throw new Error('Este e-mail já está cadastrado no sistema.');
+      let accounts;
+      try {
+        accounts = JSON.parse(localStorage.getItem('@automatch:registered_users') || '[]');
+        if (!Array.isArray(accounts) || accounts.some(account => !account || typeof account.email !== 'string')) throw new Error();
+      } catch {
+        throw new Error('Não foi possível ler as contas deste navegador. Os dados anteriores foram preservados.');
       }
+      if (accounts.some(account => account.email.toLowerCase() === cleanEmail)) throw new Error('Este e-mail já está cadastrado no sistema.');
 
-      console.warn('Modo cadastro local resiliente (demo):', error.message);
       const fallbackRole = mappedRole;
       const fallbackUser = {
         id: 'user-' + Date.now(),
@@ -228,16 +236,15 @@ export const AuthProvider = ({ children }) => {
         token: 'local-jwt-token-' + Date.now()
       };
 
+      const passwordHash = await hashPasswordLocal(password);
       try {
-        const localAccounts = JSON.parse(localStorage.getItem('@automatch:registered_users') || '[]');
-        const updated = localAccounts.filter(u => u.email.toLowerCase() !== cleanEmail);
-        const passwordHash = await hashPasswordLocal(password);
-        updated.push({ ...fallbackUser, passwordHash });
-        localStorage.setItem('@automatch:registered_users', JSON.stringify(updated));
-      } catch (e) { /* O recurso opcional mantém seu estado anterior. */ }
-
+        localStorage.setItem('@automatch:registered_users', JSON.stringify([...accounts, { ...fallbackUser, passwordHash }]));
+      } catch {
+        throw new Error('Não foi possível salvar sua conta neste navegador. Seus dados no formulário foram mantidos; tente novamente.');
+      }
+      try { _persistSession(fallbackUser); }
+      catch { throw new Error('Sua conta foi salva, mas não foi possível iniciar a sessão. Tente entrar novamente.'); }
       setUser(fallbackUser);
-      _persistSession(fallbackUser);
       return fallbackUser;
     }
   };
@@ -246,8 +253,8 @@ export const AuthProvider = ({ children }) => {
   // logout
   // ---------------------------------------------------------------------------
   const logout = () => {
-    setUser(null);
     _clearSession();
+    setUser(null);
   };
 
   // ---------------------------------------------------------------------------
@@ -258,16 +265,16 @@ export const AuthProvider = ({ children }) => {
       const updated = await api.put('/api/users/profile', updates);
       // Respostas de perfil não renovam o JWT. Não sobrescrever a sessão com token:null.
       const merged = { ...user, ...updated, token: updated.token || readSessionToken() };
-      setUser(merged);
       _persistSession(merged);
+      setUser(merged);
       return merged;
     } catch (error) {
       if (error.status === 401) logout();
       if (!canUseOfflineFallback(error, isDemoModeEnabled())) throw error;
       const safeUpdates = Object.fromEntries(Object.entries(updates).filter(([key]) => ['name', 'email', 'photo'].includes(key)));
       const merged = { ...user, ...safeUpdates };
-      setUser(merged);
       _persistSession(merged);
+      setUser(merged);
       return merged;
     }
   };

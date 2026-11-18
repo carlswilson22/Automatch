@@ -27,8 +27,9 @@ permanecem intactas.
 
 A [análise sobre o código `ffe60e2`](revisao-pendencias-demo-2026-11-17.md)
 registra cinco problemas reproduzidos, suas fontes e critérios de correção.
-Os testes atuais aprovados não cobrem integralmente esses casos. O backlog
-foi complementado; não houve correção funcional, deploy ou alteração do banco.
+O complemento de conclusão registra as cinco correções e seus testes permanentes.
+A versão atual passou em 287 testes frontend, 109 unittest backend e cinco jornadas;
+ver [evidências e limites](testes-e-evidencias.md). Sem deploy ou reformulação do banco.
 
 ## Documentação acadêmica e histórica
 

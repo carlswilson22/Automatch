@@ -1,3 +1,4 @@
+import { formatVehicleMileage } from '../utils/vehicleInformation.js';
 /**
  * ShowcaseCatalog.jsx — Catálogo completo de veículos da vitrine com busca e filtros dinâmicos.
  * 
@@ -29,14 +30,7 @@ import { api, isDemoModeEnabled } from '../services/apiClient';
 import { mapVehicleToViewModel } from '../utils/vehicleMapper';
 import { filterVehicles, PRICE_RANGES, KM_RANGES, normalizeString } from '../utils/filterVehicles';
 
-export const formatMileage = (val) => {
-  if (val === undefined || val === null) return '0 km';
-  if (typeof val === 'number') return `${val.toLocaleString('pt-BR')} km`;
-  const str = String(val).trim();
-  if (str.toLowerCase().endsWith('km')) return str;
-  const num = Number(str.replace(/\D/g, ''));
-  return isNaN(num) || num === 0 ? `${str} km` : `${num.toLocaleString('pt-BR')} km`;
-};
+export const formatMileage = formatVehicleMileage;
 
 export const formatPrice = (val) => {
   if (val === undefined || val === null || val === '') return '';

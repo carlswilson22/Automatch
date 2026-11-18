@@ -4,13 +4,12 @@ Atualizado em **17/11/2026**, após as melhorias demonstrativas sobre a base
 `444bc09`. Não altera issues ou o quadro acadêmico. Registros anteriores
 permanecem no histórico Git e nas [sprints](sprints/README.md).
 
-## Complemento da análise — código `ffe60e2`
+## Correções das pendências confirmadas
 
-A revisão posterior confirmou cinco caminhos ainda incorretos, apesar das
-melhorias registradas abaixo. São pendências da demonstração, sem depender de
-deploy ou de reformulação do banco. A atualização atual é documental; as
-correções funcionais ainda não foram feitas.
-Ver [reproduções, fontes e critérios](docs/revisao-pendencias-demo-2026-11-17.md).
+Os cinco problemas reproduzidos na base `ffe60e2`, registrados no commit
+documental `fd229c3`, foram corrigidos nesta implementação autorizada.
+O [relatório](docs/revisao-pendencias-demo-2026-11-17.md) preserva os achados
+originais e recebe um complemento de conclusão com testes permanentes.
 
 ## Escopo autorizado
 
@@ -26,23 +25,28 @@ nova autorização. Nenhuma entidade ORM, migração, banco real ou arquivo priv
 | --- | --- | --- |
 | DETRAN/placa | Origem explícita; amostras identificadas; placa desconhecida não recebe identificação ou regularidade inventada; cadastro local reflete edições | Sem fornecedor oficial |
 | FIPE/laudo | Sem cotação fixa de outro modelo; cache considera código e ano; preço não aprova estrutura; ausência fica indisponível | Referência cadastrada ou BrasilAPI, conforme o fluxo |
-| Consultor e dossiê | Consultores/gerador foram ajustados; anúncio, normalizadores e montagem do PDF ainda têm substituições indevidas (A1/A2) | Correção incompleta; exige conferência dos documentos originais |
+| Consultor e dossiê | Anúncio, comparador e PDF preservam laudo, débitos, leilão e ausência de FIPE; snapshot/validação não criam quitação | Dados do anunciante exigem conferência dos documentos originais |
 | Multicanal | Seleção de canais, prévia, histórico local por conta/veículo e download XML; resposta da API identifica simulação, sem URLs falsas de publicação | Nenhum anúncio enviado a provedores |
 | Feed de estoque | XML da API usa catálogo atual, filtro opcional por loja e exclui vendidos e campos privados de repasse; exemplo local usa o veículo escolhido | Sem homologação de importadores externos |
 | Radar de preço | Interesse local por conta na demonstração; cadastro confirmado pela API fora dela; simulação da queda mostra o aviso no próprio site | Sem monitoramento contínuo ou entrega WhatsApp/e-mail |
 | Diálogos | Semântica, nomes acessíveis, foco inicial/retorno, Tab, Escape e rolagem; requisições canceladas ao fechar | Inspeção visual e leitor de tela ainda manuais |
 | Manutenção | Removidos imports, estados e dados substitutos sem uso das telas alteradas | Limpeza por lotes; legado de pneus/acústica permanece inativo |
 
+## Pendências A1–A5 concluídas
+
+| Item | Comportamento corrigido | Evidência |
+| --- | --- | --- |
+| A1 | Mapeamento único preserva dados negativos e ausentes; cadastro começa sem aprovação presumida; anúncio/comparador usam os dados recebidos | Regressões de dados e componentes em `test_confirmed_pending_fixes.mjs` |
+| A2 | Rota completa não fabrica FIPE/código/quitação; cadastro prevalece sobre payload; snapshot e validação mantêm ausência e km zero | Seis testes HTTP/PDF em `test_confirmed_pending_fixes.py` |
+| A3 | Favoritos consomem os campos canônicos; 42.000 km permanecem iguais no anúncio e na comparação | Renderização dos favoritos e dados enviados ao comparador |
+| A4 | Listas por conta, atualização na troca de sessão e importação explícita; dados legados/visitante preservados | Login/logout, duas contas, importação na tela, evento de outra conta e falha de gravação |
+| A5 | Cadastro local só autentica depois de salvar conta e sessão; quota/corrupção não confirmam sucesso; cache opcional da API é distinto | Falha, repetição, login posterior, duplicata, recusa da API e rollback de sessão parcial |
+
 ## Pendências atuais da demonstração
 
 | Prioridade | Item | Critério de conclusão |
 | --- | --- | --- |
-| Alta | A1: preservar laudo, débitos e leilão cadastrados no anúncio e na normalização | Cadastro reprovado/com débitos/com leilão não recebe selos favoráveis; ausência fica não informada |
-| Alta | A2: retirar preço FIPE e regularidade inventados na rota do PDF | Testar a rota completa: sem FIPE cadastrada, snapshot/PDF não geram preço vezes 1,04 ou código fixo |
-| Média | A3: corrigir campos normalizados em favoritos | Veículo de 42.000 km conserva esse valor no anúncio, favoritos e comparação |
-| Média | A4: separar favoritos por conta | Troca de sessão não herda silenciosamente a lista de outra conta; preservar dados anteriores |
-| Média | A5: tratar falha de persistência do cadastro demo | Erro de quota não confirma conta salva; manter campos e permitir nova tentativa |
-| Média | Continuar a redução de avisos de manutenção | Remover código sem uso com verificações proporcionais, sem suprimir regras ou ativar legado |
+| Média | Continuar a redução de avisos de manutenção | Restam 161 avisos; remover código sem uso por lotes, sem suprimir regras ou ativar legado |
 | Média | Conferir acessibilidade e fluidez manualmente | Validar teclado/leitor de tela, contraste e comportamento nos dispositivos escolhidos; medir antes de otimizar |
 
 ## Integrações futuras, fora da implementação atual

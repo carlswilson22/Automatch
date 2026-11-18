@@ -1,3 +1,4 @@
+import { mapVehicleToViewModel } from '../src/utils/vehicleMapper.js';
 /**
  * test_novidade_and_price_drop.mjs — Testes das tags de veículos recém-chegados e promoções.
  * 
@@ -34,11 +35,12 @@ describe('BATERIA DE TESTES - TAREFA 2: Selos Novidade e Preço Baixou em Apenas
     );
   });
 
-  test('2.2: vehicleMapper.js define originalPrice estritamente quando maior que price', () => {
-    assert.ok(
-      mapperContent.includes('rawOriginal !== null && Number(rawOriginal) > price'),
-      'originalPrice deve ser estritamente superior ao preço atual'
-    );
+  test('2.2: preço anterior só existe quando informado e maior que o atual', () => {
+    for (const originalPrice of [null, 0, 90000, 100000, 'inválido']) {
+      assert.strictEqual(mapVehicleToViewModel({id:'price',price:100000,originalPrice}).originalPrice,null);
+    }
+    assert.strictEqual(mapVehicleToViewModel({id:'price',price:100000,original_price:'R$ 110.000,50'}).originalPrice,110000.5);
+    assert.deepStrictEqual(mapVehicleToViewModel({id:'price',price:100000}).priceHistory,[]);
   });
 
   test('2.3: showcaseData.js define Preço Baixou e Novidade exclusivamente para sc-001 e sc-002', async () => {

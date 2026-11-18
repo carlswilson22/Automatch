@@ -31,7 +31,36 @@ a chave Gemini do processo de teste e cria bancos SQLite/diretórios de mídia
 temporários. Executa descoberta unittest e cinco roteiros de jornada. Não
 substituí-lo pela execução indiscriminada de scripts antigos sobre o banco local.
 
-## Execução desta implementação — 17/11/2026
+## Correções A1–A5 — execução atual de 17/11/2026
+
+Base de início: `fd229c3`, posterior ao diagnóstico `ffe60e2`.
+
+- `npm test`: **287 testes aprovados**. Doze regressões novas exercitam mapper,
+  anúncio/comparador renderizados, favoritos com km, separação de contas/importação,
+  falhas de armazenamento, nova tentativa de cadastro e sucesso confirmado pela API. A validação pública renderizada também não
+  promete carimbo, assinatura ou hash inexistentes.
+- `npm run lint`: **zero erros, 161 avisos**: 148 declarações sem uso,
+  9 Fast Refresh, 2 dependências de efeitos em scanners legados e 2 diretivas
+  desnecessárias. Nenhuma regra foi suprimida para aprovar a mudança.
+- `VITE_DEMO_MODE=true VITE_BASE_PATH=/Automatch/ npm run build`: build local
+  concluído, incluindo cópia `404.html`. Sem deploy.
+- `python -X utf8 run_tests.py`: **109 unittest e cinco jornadas aprovados**;
+  seis testes novos exercitam HTTP → montagem → PDF → snapshot → validação.
+  São verificados dados negativos, ausência de FIPE, km zero, prioridade do
+  cadastro, prévia/amostra, reutilização de protocolo e snapshot anterior incompleto.
+- Armazenamento do navegador e API controlados nos testes frontend; SQLite em
+  memória/temporário e uploads descartáveis no backend. Sem banco real ou migrações.
+
+Na primeira execução completa, três testes antigos exigiam a chave global ou
+textos de implementação removidos; foram ajustados para verificar o contrato
+centralizado e a preservação do legado. A suíte final acima passou integralmente.
+O primeiro comando de build recebeu um argumento incompatível com o passo Node;
+o comando padrão foi repetido e concluiu as duas etapas.
+
+Os limites de Torch/YOLO, IA externa, inspeção visual e leitor de tela abaixo
+continuam válidos. Estes resultados não comprovam ausência de outros defeitos.
+
+## Execução anterior — melhorias sobre `444bc09` em 17/11/2026
 
 Ambiente: Windows/PowerShell, Node 22 e Python 3.11 em ambiente isolado via uv.
 Nenhum `.env` privado foi lido; bancos e uploads usados no backend são temporários.

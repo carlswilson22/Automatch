@@ -33,13 +33,13 @@ automáticas auxiliam a análise e não substituem inspeção profissional.
 | RF-16 | Novo anúncio | Formulário em etapas, mídia e análise assistida; conferir propriedade, dados e confirmação de gravação |
 | RF-17 | Exclusão de anúncio | Exige autorização e confirmação da API; falha não deve ocultar registro apenas localmente |
 | RF-18 | Lojas e estoque B2B | Vínculo à loja, parcerias, reserva temporária, fechamento e histórico persistidos pela API |
-| RF-19 | Autenticação | Cadastro/login JWT, PBKDF2, perfil e versão de sessão; não conceder privilégio por e-mail especial |
+| RF-19 | Autenticação | Cadastro/login JWT, PBKDF2, perfil e versão de sessão; demo local confirma cadastro após gravar conta/sessão; erro permite nova tentativa, sem conceder privilégio por e-mail especial |
 | RF-20 | Planos/checkout | Rota de planos redireciona ao catálogo; checkout simulado fora de produção, bloqueado em produção sem provedor |
 | RF-21 | PDF com QR Code | Relatório demonstrativo de dados fornecidos; snapshot/protocolo na API; sem certificação, preço substituto ou validação externa no PDF |
 | RF-22 | Validação pública | Consultar protocolo existente; inexistente não pode receber confirmação de autenticidade |
 | RF-23 | Recuperação OTP | Código com hash, expiração de 15 minutos e limitação de tentativas; produção depende de SMTP TLS e não devolve OTP |
 | RF-24 | Paginação | Listagem da API com `limit`/`offset` e navegação no frontend; conferir total, filtros e páginas vazias |
-| RF-25 | Favoritos | Área autenticada, persistência local e atualização por eventos; sem sincronização entre dispositivos via banco |
+| RF-25 | Favoritos | Área autenticada, lista local por conta, eventos de sessão e importação explícita de visitante/legado; falha preserva dados, sem sincronização via banco |
 | RF-26 | Auditoria de laudo anexado | Validar PDF/imagem e analisar por IA/heurística; divergência ou dado insuficiente exige conferência, não aprovação automática |
 | RF-27 | Vídeo de inspeção | Roteiro atual de 20 segundos, upload e player; ausência/erro pode exibir representação demonstrativa |
 | RF-28 | Comparação multidimensional | Dois a três veículos, cinco seções, tratamento de dados ausentes e navegação ao anúncio |

@@ -219,7 +219,7 @@ def gerar_dossie_pdf(car_data: Dict[str, Any], protocol: str) -> bytes:
                 Paragraph("Informações do anúncio. Não substitui vistoria, certidão ou consulta oficial.", styles["value"]), Spacer(1, 10),
                 Paragraph(f"Referência do exemplo: {text(protocol)}", styles["protocol_text"]), Spacer(1, 12)]
     fields = [("Marca", "brand"), ("Modelo", "model"), ("Ano/modelo", "year"), ("Quilometragem informada", "km"), ("Cor", "color"),
-              ("Combustível", "fuel"), ("Placa informada", "plate"), ("Débitos informados pelo anunciante", "debt_status"),
+              ("Combustível", "fuel"), ("Placa informada", "plate"), ("Laudo informado pelo anunciante", "laudo_status"), ("Débitos informados pelo anunciante", "debt_status"),
               ("Histórico de leilão informado", "auction_history"), ("Código FIPE informado", "fipe_code")]
     for label, key in fields:
         elements.append(Paragraph(f"<b>{label}:</b> {text(car_data.get(key))}", styles["value"]))

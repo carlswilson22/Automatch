@@ -38,11 +38,14 @@ describe('BATERIA DE TESTES - TAREFA 4: Correção Ortográfica e Filtro Sedan',
     );
   });
 
-  test('4.2: FavoritesPage.jsx e ShowcaseVehicleDetails.jsx usam "Sedan"', () => {
-    assert.ok(!favoritesContent.includes("'Seda'"), 'FavoritesPage não deve ter fallback Seda');
-    assert.ok(!detailsContent.includes("'Sedã'"), 'ShowcaseVehicleDetails não deve ter fallback Sedã');
-    assert.ok(favoritesContent.includes("'Sedan'"), 'FavoritesPage deve usar Sedan');
-    assert.ok(detailsContent.includes("'Sedan'"), 'ShowcaseVehicleDetails deve usar Sedan');
+  test('4.2: favoritos e anúncio usam o mapeamento canônico de carroceria', () => {
+    for (const content of [favoritesContent, detailsContent]) {
+      assert.ok(content.includes('mapVehicleToViewModel'), 'As páginas devem consumir a mesma normalização');
+    }
+    for (const bodyType of ['Seda', 'Sedã', 'Sedan']) {
+      assert.strictEqual(mapVehicleToViewModel({id:'body',bodyType}).bodyType, 'Sedan');
+    }
+    assert.strictEqual(mapVehicleToViewModel({id:'unknown'}).bodyType, 'Não informado');
   });
 
   test('4.3: normalizeBodyType canonicaliza variações ("Seda", "Sedã", "sedan") para "sedan"', () => {

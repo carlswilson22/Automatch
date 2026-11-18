@@ -71,9 +71,9 @@ const NewCarAdForm = () => {
     imagem: '',
     video_url: '',
     localizacao: '',
-    laudo: 'Aprovado',
-    debitos: 'Sem débitos',
-    leilao: 'Não',
+    laudo: 'Não informado',
+    debitos: 'Não informado',
+    leilao: 'Não informado',
     store_id: 'store-1',
     // B2B Estoque Compartilhado
     compartilhavel: false,
@@ -991,7 +991,7 @@ const NewCarAdForm = () => {
                 <div className="space-y-3">
                   <label className="text-sm font-bold text-slate-700">Laudo Cautelar *</label>
                   <div className="space-y-2">
-                    {['Aprovado', 'Aprovado com Apontamentos', 'Não possui'].map(opcao => (
+                    {['Não informado', 'Aprovado', 'Aprovado com Apontamentos', 'Reprovado', 'Não possui'].map(opcao => (
                       <label key={opcao} className="flex items-center gap-3 cursor-pointer group p-3 rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors">
                         <input required type="radio" name="laudo" value={opcao} checked={formData.laudo === opcao} onChange={handleChange} className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-slate-300" />
                         <span className="text-sm font-medium text-slate-700">{opcao}</span>
@@ -1192,7 +1192,7 @@ const NewCarAdForm = () => {
                 <div className="space-y-3">
                   <label className="text-sm font-bold text-slate-700">Débitos e Multas *</label>
                   <div className="space-y-2">
-                    {['Sem débitos', 'Com débitos'].map(opcao => (
+                    {['Não informado', 'Sem débitos', 'Com débitos'].map(opcao => (
                       <label key={opcao} className="flex items-center gap-3 cursor-pointer group p-3 rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors">
                         <input required type="radio" name="debitos" value={opcao} checked={formData.debitos === opcao} onChange={handleChange} className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-slate-300" />
                         <span className="text-sm font-medium text-slate-700">{opcao}</span>
@@ -1205,7 +1205,7 @@ const NewCarAdForm = () => {
                 <div className="space-y-3">
                   <label className="text-sm font-bold text-slate-700">Leilão ou Sinistro *</label>
                   <div className="space-y-2">
-                    {['Sim', 'Não'].map(opcao => (
+                    {['Não informado', 'Sim', 'Não'].map(opcao => (
                       <label key={opcao} className="flex items-center gap-3 cursor-pointer group p-3 rounded-xl border border-slate-200 hover:bg-slate-50 transition-colors">
                         <input required type="radio" name="leilao" value={opcao} checked={formData.leilao === opcao} onChange={handleChange} className="w-4 h-4 text-blue-600 focus:ring-blue-500 border-slate-300" />
                         <span className="text-sm font-medium text-slate-700">{opcao}</span>
@@ -1316,7 +1316,7 @@ const NewCarAdForm = () => {
                               </span>
                             ) : (
                               <span className="text-emerald-400 font-bold text-xs flex items-center gap-1">
-                                <CheckCircle2 className="w-4 h-4" /> Lataria 100% Íntegra
+                                <CheckCircle2 className="w-4 h-4" /> Sem avarias identificadas nesta imagem
                               </span>
                             )}
                             <span className="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-400">

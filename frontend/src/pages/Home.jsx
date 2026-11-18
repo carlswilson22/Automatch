@@ -22,7 +22,7 @@ import AutomatchLogo from '../components/ui/AutomatchLogo';
 import GlowButton from '../components/ui/GlowButton';
 import WipeButton from '../components/ui/WipeButton';
 import { getNewCars } from '../data/newCarsManager';
-import { toggleFavorite, isFavorite } from '../data/favoritesManager';
+import { toggleFavorite, isFavorite, subscribeFavorites } from '../data/favoritesManager';
 import { getVehicleImageUrl, handleVehicleImageError } from '../utils/imageHelper';
 
 export const formatPrice = (val) => {
@@ -49,6 +49,7 @@ const fadeIn = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { durat
 const HomeCarCard = ({ car }) => {
   const navigate = useNavigate();
   const [fav, setFav] = useState(() => isFavorite(car.id));
+  useEffect(() => subscribeFavorites(ids => setFav(ids.includes(String(car.id)))), [car.id]);
   const handleDetails = (e) => { e?.stopPropagation(); navigate(`/encontrar/${car.id}`); };
   const handleFavorite = (e) => { e.stopPropagation(); const updated = toggleFavorite(car.id); setFav(updated.includes(car.id)); };
   return (
@@ -202,7 +203,7 @@ const Home = () => {
           <motion.div variants={staggerContainer} initial="hidden" animate="show" className="max-w-3xl">
             <motion.div variants={fadeUp}>
               <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm text-emerald-400 font-medium text-sm mb-7">
-                <CheckCircle2 className="w-4 h-4" /><span>100% dos carros com Laudo Cautelar e Historico</span>
+                <CheckCircle2 className="w-4 h-4" /><span>Laudos e histórico conforme os dados cadastrados</span>
               </div>
             </motion.div>
             <motion.h1 variants={fadeUp} className="text-5xl md:text-7xl font-black text-white leading-tight mb-6 tracking-tight">

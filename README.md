@@ -1,9 +1,9 @@
 # Automatch — marketplace automotivo e análise assistida de veículos
 
-**Complemento de 17/11/2026:** a [revisão da demonstração](docs/revisao-pendencias-demo-2026-11-17.md)
-confirmou cinco pendências de comportamento em anúncios/PDF, favoritos e cadastro
-local. As melhorias anteriores foram parciais nesses caminhos; o backlog registra
-as correções ainda necessárias. Esta atualização não implementa essas correções.
+**Correções de 17/11/2026:** os cinco problemas da [revisão da demonstração](docs/revisao-pendencias-demo-2026-11-17.md)
+foram corrigidos com regressões permanentes: dados do anúncio/PDF, quilometragem,
+favoritos separados por conta e cadastro local sem falso sucesso. Sem deploy ou
+reformulação do banco; conferência visual e de acessibilidade permanece manual.
 
 Documentação revisada em **17/11/2026**, com melhorias demonstrativas sobre a base `444bc09`.
 Projeto Integrador de Análise e Desenvolvimento de Sistemas do CEUB.

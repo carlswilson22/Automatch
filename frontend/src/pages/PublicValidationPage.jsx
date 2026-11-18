@@ -1,3 +1,4 @@
+import { vehicleStatusValue } from '../utils/vehicleInformation.js';
 /**
  * PublicValidationPage.jsx — Página pública de verificação e auditoria de laudos periciais.
  * 
@@ -49,6 +50,7 @@ export default function PublicValidationPage() {
           throw new Error('Protocolo de laudo não encontrado ou inválido.');
         }
         const json = await res.json();
+        if (json.valido !== true) throw new Error('Protocolo de laudo não encontrado ou inválido.');
         setData(json);
       } catch (err) {
         setData(null);
@@ -90,7 +92,7 @@ export default function PublicValidationPage() {
         <div className="flex items-center gap-2">
           <AutomatchLogo theme="light" size="sm" showText={false} />
           <span className="text-[11px] font-black tracking-widest text-cyan-400 uppercase">
-            Autenticidade Notarial
+            Consulta de Protocolo
           </span>
         </div>
       </div>
@@ -105,10 +107,10 @@ export default function PublicValidationPage() {
               </div>
             </div>
             <h3 className="text-base font-black text-white tracking-tight mb-1">
-              Consultando Base Notarial Digital...
+              Consultando registro Automatch...
             </h3>
             <p className="text-xs text-slate-400">
-              Validando assinatura criptográfica e chave do protocolo #{protocolo}
+              Buscando os dados registrados para o protocolo #{protocolo}
             </p>
           </div>
         ) : error ? (
@@ -144,15 +146,15 @@ export default function PublicValidationPage() {
             <div className="text-center pb-6 border-b border-slate-800/80 mb-6">
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs font-bold tracking-wide uppercase mb-3 backdrop-blur-sm">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                <span>Certidão Autêntica Registrada</span>
+                <span>Registro Automatch localizado</span>
               </div>
               
               <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-                Validação de Laudo Cautelar
+                Consulta do relatório do veículo
               </h2>
               
               <p className="text-xs sm:text-sm text-slate-400 mt-1">
-                Documento autenticado e assinado digitalmente nos servidores Automatch
+                Dados registrados na emissão; não constituem certificação ou consulta externa.
               </p>
 
               {/* Protocol Highlight Box */}
@@ -183,32 +185,32 @@ export default function PublicValidationPage() {
                   <span>Dados Cadastrais do Veículo</span>
                 </div>
                 <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
-                  Verificado
+                  Dados informados
                 </span>
               </div>
 
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 <div className="bg-slate-950/70 p-3.5 rounded-2xl border border-slate-800/80">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-0.5">Marca / Fabricante</span>
-                  <span className="text-sm font-bold text-white">{data.veiculo?.marca}</span>
+                  <span className="text-sm font-bold text-white">{vehicleStatusValue(data.veiculo?.marca)}</span>
                 </div>
                 <div className="bg-slate-950/70 p-3.5 rounded-2xl border border-slate-800/80">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-0.5">Modelo</span>
-                  <span className="text-sm font-bold text-white truncate block" title={data.veiculo?.modelo}>
-                    {data.veiculo?.modelo}
+                  <span className="text-sm font-bold text-white truncate block" title={vehicleStatusValue(data.veiculo?.modelo)}>
+                    {vehicleStatusValue(data.veiculo?.modelo)}
                   </span>
                 </div>
                 <div className="bg-slate-950/70 p-3.5 rounded-2xl border border-slate-800/80">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-0.5">Ano Modelo</span>
-                  <span className="text-sm font-bold text-white">{data.veiculo?.ano}</span>
+                  <span className="text-sm font-bold text-white">{vehicleStatusValue(data.veiculo?.ano)}</span>
                 </div>
                 <div className="bg-slate-950/70 p-3.5 rounded-2xl border border-slate-800/80">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-0.5">Placa Registrada</span>
-                  <span className="text-sm font-black text-emerald-400 tracking-wider">{data.veiculo?.placa}</span>
+                  <span className="text-sm font-black text-emerald-400 tracking-wider">{vehicleStatusValue(data.veiculo?.placa)}</span>
                 </div>
                 <div className="bg-slate-950/70 p-3.5 rounded-2xl border border-slate-800/80 sm:col-span-2">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-0.5">Chassi (Protegido por LGPD)</span>
-                  <span className="text-sm font-bold text-slate-300 font-mono tracking-wider">{data.veiculo?.chassi_mascarado}</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block mb-0.5">Chassi mascarado</span>
+                  <span className="text-sm font-bold text-slate-300 font-mono tracking-wider">{vehicleStatusValue(data.veiculo?.chassi_mascarado)}</span>
                 </div>
               </div>
             </div>
@@ -219,7 +221,7 @@ export default function PublicValidationPage() {
               <div className="bg-slate-950/70 p-4 rounded-2xl border border-slate-800/80 space-y-1.5">
                 <div className="flex items-center gap-2 text-xs font-bold text-blue-400 uppercase tracking-wider">
                   <Tag className="w-3.5 h-3.5" />
-                  <span>Referência Oficial FIPE</span>
+                  <span>Referência FIPE informada</span>
                 </div>
                 <div className="text-xl font-black text-white">
                   {data.dados_fipe?.valor_referencia}
@@ -233,7 +235,7 @@ export default function PublicValidationPage() {
               <div className="bg-slate-950/70 p-4 rounded-2xl border border-slate-800/80 space-y-1.5">
                 <div className="flex items-center gap-2 text-xs font-bold text-emerald-400 uppercase tracking-wider">
                   <ShieldCheck className="w-3.5 h-3.5" />
-                  <span>Certidão DETRAN</span>
+                  <span>Informações cadastrais</span>
                 </div>
                 <div className="text-sm font-bold text-emerald-400 flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
@@ -249,10 +251,10 @@ export default function PublicValidationPage() {
             <div className="pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-slate-500">
               <div className="flex items-center gap-2">
                 <Lock className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
-                <span>Carimbo notarial com integridade criptográfica SHA-256</span>
+                <span>Registro demonstrativo, sem assinatura digital certificada</span>
               </div>
               <span className="text-[11px] font-mono text-slate-400 bg-slate-950 px-2 py-0.5 rounded border border-slate-800/60 self-start sm:self-auto">
-                Hash: {data.protocolo?.replace(/-/g, '').toLowerCase()}...9f2a
+                {data.origem === 'amostra' ? 'Amostra' : data.origem === 'previsualizacao' ? 'Prévia' : 'Dados do anunciante'}
               </span>
             </div>
           </motion.div>

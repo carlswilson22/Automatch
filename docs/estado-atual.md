@@ -1,9 +1,9 @@
 # Estado atual do Automatch
 
-**Complemento de 17/11/2026:** a [revisão da demonstração](revisao-pendencias-demo-2026-11-17.md)
-confirmou cinco pendências de comportamento em anúncios/PDF, favoritos e cadastro
-local. As melhorias anteriores foram parciais nesses caminhos; o backlog registra
-as correções ainda necessárias. Esta atualização não implementa essas correções.
+**Correções de 17/11/2026:** os cinco problemas da [revisão da demonstração](revisao-pendencias-demo-2026-11-17.md)
+foram corrigidos com regressões permanentes: dados do anúncio/PDF, quilometragem,
+favoritos separados por conta e cadastro local sem falso sucesso. Sem deploy ou
+reformulação do banco; conferência visual e de acessibilidade permanece manual.
 
 Atualizado em **17/11/2026**, melhorias demonstrativas sobre a base `444bc09`.
 Fonte: rotas e componentes versionados, manifests, Compose, migrações e
@@ -38,11 +38,11 @@ de ausência de dados. Diálogos de alerta/multicanal têm teclado e foco gerenc
 | Mídia | Galeria e sequência orbital por veículo; fotos disponíveis determinam os ângulos reais |
 | Scanner | Análise de fotos de lataria; cancelamento/respostas isolados por anúncio. Não atesta condição mecânica nem acurácia milimétrica |
 | Laudo anexado | Auditoria assistida PDF/imagem por IA/heurística, com ausência de dados exigindo conferência |
-| Dossiê PDF | Snapshot persistido e protocolo verificável; dados do cadastro prevalecem na emissão vinculada ao anúncio |
+| Dossiê PDF | Cadastro prevalece; valores ausentes permanecem ausentes no snapshot, PDF e validação; protocolo não certifica regularidade externa |
 | Vídeo | Player com roteiro nominal de 20 segundos; sem vídeo, há representação demonstrativa, não filmagem real |
 | Comparador | Dois a três veículos, preço/FIPE, uso, laudo, documentação e ficha; origem dos dados precisa ser considerada |
 | Financiamento/TCO/troca | Cálculos ilustrativos, sem consulta/aprovação de banco, transferência Pix ou proposta automática vinculante |
-| Favoritos | Persistência no navegador e atualização local entre componentes; não há backend de favoritos |
+| Favoritos | Listas no navegador por identificador de conta, eventos de sessão e importação explícita da lista de visitante/legada; sem backend ou sincronização entre dispositivos |
 | Chat público | Assistente contextual e encaminhamento ao vendedor; não há prova de central humana conectada nesse widget |
 | Chat B2B | Mensagens da negociação pela API, atualizadas por polling; sem WebSocket |
 | Parcerias/reservas | Proposta, aceite/encerramento, reserva temporária, pedido de fechamento e repasse com confirmação da API |

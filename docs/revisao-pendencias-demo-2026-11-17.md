@@ -5,6 +5,9 @@ Código examinado: `ffe60e226c81e6a44b45191456faa62788cabda2`, confirmado na
 anúncio, normalização de dados, favoritos, cadastro local, PDF, backlog e CI.
 Não é certificação de ausência de outros erros ou de cobertura integral.
 
+> Registro histórico da análise. As correções posteriores e os testes estão
+> no complemento de conclusão ao final deste documento.
+
 ## Situação dos modelos e do Automatch
 
 As últimas solicitações dos modelos do Sites-principal estão concluídas na
@@ -152,3 +155,42 @@ Integrações oficiais, entrega externa de alertas, publicação real em portais
 homologação operacional permanecem fora do escopo desta demonstração.
 Pneus/reescaneamento e diagnóstico acústico não integram as telas ativas.
 A inferência YOLO real e a inspeção visual não foram homologadas por esta análise.
+## Conclusão da implementação autorizada — 17/11/2026
+
+Este complemento se refere às correções sobre a base documental `fd229c3`.
+As reproduções acima descrevem o estado histórico `ffe60e2`; A1–A5 estão
+corrigidos nesta versão, com os seguintes controles permanentes:
+
+- **A1:** [mapeamento comum](../frontend/src/utils/vehicleMapper.js) preserva
+  campos de laudo, débitos, leilão, referência, histórico e especificações.
+  Anúncio, favoritos, normalizador e comparador o consomem. Ausência de km não
+  vira zero; ausência de avarias não aprova laudo. Cadastro começa como não informado.
+- **A2:** montagem da rota mantém campos ausentes; cadastro prevalece sobre o
+  payload enviado. PDF, snapshot e validação pública não geram FIPE de 4%,
+  código fixo ou quitação. Prévia/amostra têm origem explícita; protocolo apenas
+  localiza o registro, sem consulta externa ou reescrita de snapshots históricos.
+- **A3:** favoritos preservam os 42.000 km normalizados e os dados enviados à comparação.
+- **A4:** chave por identificador de conta, assinantes notificados no login/logout
+  e importação explícita na tela. A lista antiga e a de visitante continuam
+  preservadas; falha de gravação não substitui dados e eventos de outra conta
+  não são aceitos como a lista da sessão atual.
+- **A5:** conta local e sessão precisam ser gravadas antes de autenticar. Erros
+  de quota/corrupção são apresentados, duplicatas são preservadas e nova tentativa
+  funciona. Falha no cache opcional não invalida cadastro confirmado pela API;
+  recusa HTTP não dispara cadastro offline. Sessão parcialmente gravada é revertida.
+
+Regressões: [frontend](../frontend/tests/test_confirmed_pending_fixes.mjs) e
+[backend HTTP/PDF](../backend/test_confirmed_pending_fixes.py). Testes antigos
+que exigiam reconstrução nas páginas ou escrita na chave global foram atualizados
+para verificar os dados reais e a preservação do legado, mantendo seus cenários.
+
+Verificações desta implementação: **287 testes frontend**, **109 unittest
+backend e cinco jornadas aprovados**, com dados descartáveis; lint **zero erros
+e 161 avisos**. Build local demonstrativo com base `/Automatch/`, incluindo
+`404.html`. Inspeção visual/acessibilidade permanece manual; DLL de Torch/YOLO
+indisponível neste Windows não permite homologar inferência real. Ver
+[testes e limites](testes-e-evidencias.md).
+
+Não houve deploy, reformulação do banco, modificação de ORM/migrações nem
+alteração de `.env` privado. O envio deve manter o mesmo commit nas duas `main`,
+preservando as outras branches do secundário.

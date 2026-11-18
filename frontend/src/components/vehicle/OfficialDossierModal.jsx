@@ -1,3 +1,5 @@
+import { parseVehicleNumber } from '../../utils/vehicleNumbers.js';
+import { formatVehicleMileage } from '../../utils/vehicleInformation.js';
 import { dossierInspectionItems, vehicleReference, formatBrl } from '../../utils/demoTools';
 /**
  * OfficialDossierModal.jsx — Modal de visualização e download do Dossiê Cautelar Oficial Automatch™.
@@ -74,11 +76,11 @@ export default function OfficialDossierModal({ isOpen, onClose, car }) {
   const formattedKm = car.formattedMileage 
     ? car.formattedMileage 
     : (rawKm !== undefined && rawKm !== null && rawKm !== ''
-        ? `${Number(String(rawKm).replace(/\D/g, '') || 0).toLocaleString('pt-BR')} km` 
+        ? formatVehicleMileage(rawKm)
         : 'Não informado');
 
   const color = car.color || car.cor || 'Não informado';
-  const fuel = car.fuel || car.combustivel || car.specs?.combustivel || 'Flex';
+  const fuel = car.fuel || car.combustivel || car.specs?.combustivel || 'Não informado';
   const plate = car.plate || car.placa || 'Não informado';
 
   // Protocolo determinístico e único por anúncio
@@ -212,16 +214,17 @@ export default function OfficialDossierModal({ isOpen, onClose, car }) {
         body: JSON.stringify({
           brand,
           model,
-          year: Number(year) || 2024,
-          km: Number(String(rawKm).replace(/\D/g, '') || 0),
-          price: typeof rawPrice === 'number' ? rawPrice : Number(String(rawPrice).replace(/\D/g, '')) || 0,
+          year: parseVehicleNumber(car.year ?? car.ano, null),
+          km: parseVehicleNumber(rawKm, null),
+          price: parseVehicleNumber(rawPrice, null),
           color,
           fipe_price: typeof rawFipe === 'number' ? rawFipe : null,
-          fipe_code: car.fipeCode || car.fipe_code || 'ATM-FIPE',
+          fipe_code: car.fipeCode || car.fipe_code || null,
           fuel,
           plate,
-          debt_status: car.debtStatus || car.debt_status || 'Não informado',
-          auction_history: car.auctionHistory || car.auction_history || 'Não informado'
+          debt_status: car.debtStatus || car.debt_status || car.debitos || 'Não informado',
+          auction_history: car.auctionHistory || car.auction_history || car.leilao || 'Não informado',
+          laudo_status: car.laudoStatus || car.laudo_status || car.laudo || 'Não informado'
         })
       });
 

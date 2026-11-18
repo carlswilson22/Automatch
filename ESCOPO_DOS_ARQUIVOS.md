@@ -6,7 +6,7 @@ Não é uma medição de cobertura, precisão ou qualidade de cada módulo.
 
 ## Organização
 
-O catálogo contém 206 arquivos de código/configuração presentes na base
+O catálogo contém 209 arquivos de código/configuração presentes na base
 examinada. Imagens, vídeos, fixtures binárias, lockfile, licença e documentação
 são tratados separadamente; `git ls-files` é o inventário completo do checkout.
 Novos documentos desta revisão estão no [índice](docs/README.md).
@@ -266,3 +266,11 @@ têm função de empacotamento, e reexports de UI não devem ser removidos pelo 
 | [frontend/src/utils/useDialog.js](frontend/src/utils/useDialog.js) | Integra foco, fechamento e bloqueio de rolagem ao ciclo React. |
 | [frontend/tests/test_demo_tools.mjs](frontend/tests/test_demo_tools.mjs) | Regressões de dados e componentes dos exemplos interativos. |
 | [frontend/tests/test_dialog_focus.mjs](frontend/tests/test_dialog_focus.mjs) | Teclado, foco inicial/retorno e diálogos aninhados. |
+
+## Correções das pendências A1–A5
+
+| Arquivo | Responsabilidade / limite |
+| --- | --- |
+| [frontend/src/utils/vehicleInformation.js](frontend/src/utils/vehicleInformation.js) | Status informados e quilometragem sem substituir ausência por aprovação ou zero. |
+| [frontend/tests/test_confirmed_pending_fixes.mjs](frontend/tests/test_confirmed_pending_fixes.mjs) | Doze regressões de dados, anúncio, comparador, favoritos por conta e cadastro com falha. |
+| [backend/test_confirmed_pending_fixes.py](backend/test_confirmed_pending_fixes.py) | Seis testes HTTP/PDF com snapshot e validação em SQLite descartável. |

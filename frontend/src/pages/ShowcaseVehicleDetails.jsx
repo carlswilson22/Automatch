@@ -1,3 +1,4 @@
+import { getVehicleStatusRows, formatVehicleMileage } from '../utils/vehicleInformation.js';
 /**
  * ShowcaseVehicleDetails.jsx — Página de detalhes aprofundados e ficha técnica do veículo selecionado.
  *
@@ -39,14 +40,7 @@ import { demoDossier, demoRegistration } from '../utils/demoTools';
 import VehicleReferencePanel from '../components/vehicle/VehicleReferencePanel';
 import { mapVehicleToViewModel } from '../utils/vehicleMapper';
 
-export const formatMileage = (val) => {
-  if (val === undefined || val === null) return '0 km';
-  if (typeof val === 'number') return `${val.toLocaleString('pt-BR')} km`;
-  const str = String(val).trim();
-  if (str.toLowerCase().endsWith('km')) return str;
-  const num = Number(str.replace(/\D/g, ''));
-  return isNaN(num) || num === 0 ? `${str} km` : `${num.toLocaleString('pt-BR')} km`;
-};
+export const formatMileage = formatVehicleMileage;
 
 export const formatPrice = (val) => {
   if (val === undefined || val === null) return 'R$ 0';
@@ -110,115 +104,11 @@ export default function ShowcaseVehicleDetails() {
       return () => { unsubFav(); controller.abort(); };
     }
 
-    // 1. Tenta carregar dos mocks estáticos ou localStorage imediatamente
-    let found = showcaseCars.find(c => String(c.id) === String(id));
-    if (!found) {
-      const mock = mockCars.find(c => String(c.id) === String(id));
-      if (mock) {
-        found = {
-          id: mock.id,
-          name: `${mock.brand} ${mock.model}`,
-          brand: mock.brand,
-          model: mock.model,
-          year: mock.year,
-          price: mock.price,
-          originalPrice: mock.price * 1.05,
-          priceHistory: [
-            { date: '10/08/2026', price: Math.round(mock.price * 1.05), label: 'Preço Inicial' },
-            { date: '01/09/2026', price: mock.price, label: 'Preço Baixou' }
-          ],
-          fipePrice: mock.price * 1.05,
-          autoPrice: mock.price * 0.98,
-          color: 'Prata',
-          mileage: mock.mileage,
-          image: mock.images?.[0] || '/images/placeholder-carro.jpg',
-          bodyType: mock.metadata?.bodyType || 'Sedan',
-          storeId: mock.storeId || 'store-1',
-          damagePoints: mock.damagePoints || [],
-          description: 'Veículo com laudo cautelar aprovado e procedência garantida.',
-          fullDescription: 'Excelente estado de conservação, revisões em dia e garantia de procedência Automatch.',
-          tags: ['Garantia 1 Ano', 'Laudo Aprovado', 'IPVA Pago'],
-          specs: {
-            motor: mock.metadata?.engine || '1.5 Turbo',
-            cambio: mock.metadata?.transmission || 'Automático',
-            combustivel: mock.metadata?.fuel || 'Flex',
-            portas: '4 portas',
-            direcao: 'Elétrica',
-            freios: 'ABS com EBD',
-            airbags: '6 airbags',
-            tracao: 'Dianteira'
-          },
-          seller: {
-            name: 'Automatch Certified',
-            avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Automatch',
-            rating: 5.0,
-            ads: 42,
-            since: '2022'
-          }
-        };
-      } else {
-        const local = getNewCarById(id);
-        if (local) {
-          found = {
-            id: local.id,
-            name: `${local.marca} ${local.modelo}`,
-            brand: local.marca,
-            model: local.modelo,
-            year: local.ano,
-            price: local.preco,
-            originalPrice: local.preco * 1.04,
-            priceHistory: [
-              { date: '01/09/2026', price: Math.round(local.preco * 1.04), label: 'Anúncio Inicial' },
-              { date: '15/09/2026', price: local.preco, label: 'Preço Baixou' }
-            ],
-            fipePrice: local.preco * 1.04,
-            autoPrice: local.preco * 0.99,
-            color: local.cor || 'Preto',
-            mileage: local.km || 0,
-            image: local.imagem || '/images/placeholder-carro.jpg',
-            gallery: Array.isArray(local.gallery) && local.gallery.length > 0 ? local.gallery : (local.imagem ? [local.imagem] : []),
-            bodyType: 'Particular',
-            storeId: local.storeId || 'store-1',
-            laudoUrl: local.laudo_url || null,
-            laudoFeedback: local.laudo_feedback || null,
-            videoUrl: local.video_url || null,
-            timeline: [
-              { id: 't1', type: 'laudo', status: local.laudo === 'Não possui' ? 'attention' : 'approved', title: 'Laudo Cautelar', description: local.laudo || 'Aprovado' },
-              { id: 't2', type: 'debitos', status: local.debitos === 'Com débitos' ? 'attention' : 'approved', title: 'Multas e Débitos', description: local.debitos || 'Sem débitos' },
-              { id: 't3', type: 'leilao', status: local.leilao === 'Sim' ? 'danger' : 'approved', title: 'Passagem por Leilão', description: local.leilao === 'Sim' ? 'Consta passagem' : 'Sem registro de leilão' }
-            ],
-            opinions: {
-              owner: { text: local.descricao || "Carro muito bem cuidado de uso pessoal.", rating: 5, avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Owner" },
-              inspector: { text: "Veículo inspecionado e apto para comercialização.", rating: 4.8, avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Inspector" }
-            },
-            damagePoints: [],
-            description: local.descricao || 'Veículo anunciado pelo proprietário.',
-            fullDescription: local.descricao || 'Carro em excelente estado de conservação, sem batidas, documentação rigorosamente em dia.',
-            tags: [local.transmissao || 'Automático', 'Particular'],
-            specs: {
-              motor: 'Flex de Alta Eficiência',
-              cambio: local.transmissao || 'Automático',
-              combustivel: 'Flex',
-              portas: '4 portas',
-              direcao: 'Elétrica',
-              freios: 'ABS',
-              airbags: '4 airbags',
-              tracao: 'Dianteira'
-            },
-            seller: {
-              name: 'Proprietário Independente',
-              avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Particular',
-              rating: 4.9,
-              ads: 1,
-              since: '2024'
-            }
-          };
-        }
-      }
-    }
-
+    // Every source uses the same fields; local ads do not gain demo approvals.
+    const found = showcaseCars.find(c => String(c.id) === String(id))
+      || mockCars.find(c => String(c.id) === String(id)) || getNewCarById(id);
     if (found) {
-      setCar(found);
+      setCar(mapVehicleToViewModel(found));
       setIsLoadingCar(false);
     }
 
@@ -438,14 +328,14 @@ export default function ShowcaseVehicleDetails() {
   }
 
   const specItems = [
-    { icon: Settings, label: 'Motor', value: car.specs?.motor || '1.5 Turbo' },
-    { icon: Settings, label: 'Câmbio', value: car.specs?.cambio || 'Automático' },
-    { icon: Fuel, label: 'Combustível', value: car.specs?.combustivel || 'Flex' },
-    { icon: Car, label: 'Portas', value: car.specs?.portas || '4 portas' },
-    { icon: Settings, label: 'Direção', value: car.specs?.direcao || 'Elétrica' },
-    { icon: ShieldCheck, label: 'Freios', value: car.specs?.freios || 'ABS com EBD' },
-    { icon: ShieldCheck, label: 'Airbags', value: car.specs?.airbags || '6 airbags' },
-    { icon: Gauge, label: 'Tração', value: car.specs?.tracao || 'Dianteira' },
+    { icon: Settings, label: 'Motor', value: car.specs?.motor || 'Não informado' },
+    { icon: Settings, label: 'Câmbio', value: car.specs?.cambio || 'Não informado' },
+    { icon: Fuel, label: 'Combustível', value: car.specs?.combustivel || 'Não informado' },
+    { icon: Car, label: 'Portas', value: car.specs?.portas || 'Não informado' },
+    { icon: Settings, label: 'Direção', value: car.specs?.direcao || 'Não informado' },
+    { icon: ShieldCheck, label: 'Freios', value: car.specs?.freios || 'Não informado' },
+    { icon: ShieldCheck, label: 'Airbags', value: car.specs?.airbags || 'Não informado' },
+    { icon: Gauge, label: 'Tração', value: car.specs?.tracao || 'Não informado' },
   ];
 
   return (
@@ -462,7 +352,7 @@ export default function ShowcaseVehicleDetails() {
 
           <div className="flex items-center gap-2">
             <button
-              onClick={() => { const newVal = !liked; setLiked(newVal); toggleFavorite(id); }}
+              onClick={() => { toggleFavorite(id); }}
               title="Curtir veículo"
               className={`p-2.5 rounded-full border transition-all ${
                 liked
@@ -629,7 +519,7 @@ export default function ShowcaseVehicleDetails() {
                           ) : (
                             <>
                               <CheckCircle2 className="w-3 h-3" />
-                              Lataria 100% Íntegra • Score {aiDamageData.score_lataria || 98}%
+                              Sem avarias identificadas nesta análise • Score {aiDamageData.score_lataria || 98}%
                             </>
                           )}
                         </span>
@@ -770,17 +660,9 @@ export default function ShowcaseVehicleDetails() {
 
             {/* Sobre o Veículo — Nome, Metadados, Descrição e Ficha Técnica Consolidados */}
             <div className="bg-slate-900/90 backdrop-blur-md rounded-3xl p-6 sm:p-8 border border-slate-800/80 shadow-card hover:shadow-card-hover transition-all duration-300 space-y-6">
-              {/* Badges de Procedência */}
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 uppercase tracking-wider">
-                  <ShieldCheck className="w-3.5 h-3.5" /> {currentDamagePoints.length > 0 ? 'Laudo Aprovado c/ Apontamento Leve' : 'Laudo 100% Aprovado'}
-                </span>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-500/15 text-blue-400 border border-blue-500/30 uppercase tracking-wider">
-                  <CheckCircle2 className="w-3.5 h-3.5" /> Sem Passagem por Leilão
-                </span>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-slate-800 text-slate-300 border border-slate-700 uppercase tracking-wider">
-                  IPVA 2026 Quitado
-                </span>
+              {/* Situações informadas no cadastro; não representam consulta oficial. */}
+              <div className="flex flex-wrap items-center gap-2" data-vehicle-status>
+                {getVehicleStatusRows(car).map(([label, value]) => <span key={label} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-200 border border-slate-700">{label}: {value}</span>)}
               </div>
 
               {/* Nome do Veículo */}
@@ -804,7 +686,7 @@ export default function ShowcaseVehicleDetails() {
                     <Gauge className="w-4 h-4 text-blue-400" /> Km: <strong className="text-white font-bold ml-1">{formatMileage(car.mileage)}</strong>
                   </span>
                   <span className="flex items-center gap-1.5 bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800">
-                    <Settings className="w-4 h-4 text-blue-400" /> Câmbio: <strong className="text-white font-bold ml-1">{car.specs?.cambio || 'Automático'}</strong>
+                    <Settings className="w-4 h-4 text-blue-400" /> Câmbio: <strong className="text-white font-bold ml-1">{car.specs?.cambio || 'Não informado'}</strong>
                   </span>
                   <span className="flex items-center gap-1.5 bg-slate-950/80 px-3 py-1.5 rounded-xl border border-slate-800">
                     <Palette className="w-4 h-4 text-blue-400" /> Cor: <strong className="text-white font-bold ml-1">{car.color || 'Prata'}</strong>
@@ -825,7 +707,7 @@ export default function ShowcaseVehicleDetails() {
                   Descrição do Veículo
                 </span>
                 <p className="text-slate-200 text-sm leading-relaxed">
-                  {(car.fullDescription || car.description || car.descricao || 'Veículo inspecionado e auditado com laudo cautelar 100% aprovado pela plataforma Automatch.').slice(0, 240)}
+                  {(car.fullDescription || car.description || car.descricao || 'Descrição não informada pelo anunciante.').slice(0, 240)}
                   {(car.fullDescription || car.description || '').length > 240 ? '...' : ''}
                 </p>
               </div>
@@ -853,7 +735,7 @@ export default function ShowcaseVehicleDetails() {
                 <div>
                   <div className="flex flex-wrap items-center gap-2 mb-2" data-testid="laudo-ia-badge-container">
                     <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-black uppercase tracking-wider border border-emerald-500/20">
-                      <ShieldCheck className="w-4 h-4" /> Procedência 100% Auditada
+                      <ShieldCheck className="w-4 h-4" /> Informações do anunciante
                     </div>
                     {String(car.laudoStatus || car.laudo_status || '').toLowerCase().includes('reprovado') || String(car.laudoStatus || car.laudo_status || '').includes('RESTRICOES') ? (
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/15 text-rose-400 text-xs font-black uppercase tracking-wider border border-rose-500/30">
@@ -1012,7 +894,7 @@ export default function ShowcaseVehicleDetails() {
                     <TcoCalculatorCard
                       price={car.price}
                       fipePrice={car.fipePrice}
-                      fuelType={car.specs?.combustivel || car.fuel || 'Flex'}
+                      fuelType={car.specs?.combustivel || car.fuel || 'Não informado'}
                       carYear={car.year}
                       showHeader={false}
                     />

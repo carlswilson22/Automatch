@@ -1,5 +1,23 @@
 # Histórico de mudanças
 
+## 17/11/2026 — Correções dos cinco problemas confirmados
+
+- Centralizado o mapeamento dos veículos; anúncio/comparador preservam laudo,
+  débitos, leilão e campos ausentes, sem aprovação ou especificação presumida.
+- Corrigida a rota completa do PDF, snapshot e validação pública (incluindo
+  remoção de carimbo/assinatura/hash fictícios na tela): sem referência FIPE,
+  código ou quitação fabricados; cadastro prevalece sobre dados do cliente.
+- Favoritos preservam quilometragem e usam lista por conta. Login/logout atualizam
+  componentes; importação do legado/visitante exige ação explícita e preserva os dados.
+- Cadastro demo só autentica após salvar conta e sessão; quota/corrupção não
+  confirmam sucesso, permitem repetição e não apagam contas anteriores.
+- Doze regressões frontend e seis HTTP/PDF novas; testes antigos ajustados ao
+  contrato centralizado. Resultado: 287 frontend, 109 unittest e cinco jornadas
+  aprovados; build local completo; lint com zero erros e 161 avisos.
+- Backlog A1–A5 concluído e documentação atualizada, preservando o diagnóstico histórico.
+- Sem deploy, banco real, reformulação de entidades/migrações ou alteração de `.env`.
+  Mesma atualização nas duas `main`, preservando as demais branches secundárias.
+
 ## 17/11/2026 — Reanálise das pendências demonstrativas
 
 - Confirmado que as solicitações anteriores dos modelos foram concluídas.

@@ -1,3 +1,4 @@
+import { vehicleStatusValue } from './vehicleInformation.js';
 import { parseVehicleNumber } from './vehicleNumbers.js';
 /**
  * vehicleMapper.js — Mapeador de contratos de dados de veículos (Backend -> Frontend).
@@ -87,6 +88,7 @@ function resolveGallery(raw, mainImage) {
   if (Array.isArray(raw.gallery) && raw.gallery.length > 0) {
     return raw.gallery;
   }
+  if (Array.isArray(raw.images) && raw.images.length) return raw.images;
   if (typeof raw.tags === 'string' && raw.tags.startsWith('[')) {
     try {
       const parsed = JSON.parse(raw.tags);
@@ -102,92 +104,58 @@ function resolveGallery(raw, mainImage) {
  * Mapeia qualquer registro de veículo da API ou armazenamento local para o ViewModel da UI.
  */
 export function mapVehicleToViewModel(raw) {
-  if (!raw) return null;
-
-  const id = String(raw.id || '');
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const id = String(raw.id ?? '');
   const brand = raw.brand || raw.marca || 'Veículo';
   const model = raw.model || raw.modelo || '';
-  const name = raw.name || `${brand} ${model}`.trim();
-  const year = Number(raw.year || raw.ano || new Date().getFullYear());
   const price = parseVehicleNumber(raw.price ?? raw.preco);
-  const mileage = parseVehicleNumber(raw.km ?? raw.mileage);
-  const image = raw.image || raw.imagem || '/images/placeholder-carro.jpg';
-  const color = raw.color || raw.cor || 'Prata';
-  const rawBody = raw.body_type || raw.bodyType || 'Particular';
-  const bodyType = ['seda', 'sedã'].includes(String(rawBody).trim().toLowerCase()) ? 'Sedan' : rawBody;
-  const storeId = raw.store_id ? `store-${raw.store_id}` : (raw.storeId || 'store-1');
-  const photos360 = resolvePhotos360(raw);
-  const gallery = resolveGallery(raw, image);
-
-  const rawOriginal = raw.original_price ?? raw.originalPrice ?? null;
-  const originalPrice = (rawOriginal !== null && Number(rawOriginal) > price) ? Number(rawOriginal) : null;
-  const fipePrice = parseVehicleNumber(raw.fipe_price ?? raw.fipePrice, null);
-  const autoPrice = raw.auto_price || raw.autoPrice || null;
-
-  let priceHistory = [];
-  if (Array.isArray(raw.priceHistory)) {
-    priceHistory = raw.priceHistory;
-  } else if (typeof raw.price_history === 'string' && raw.price_history.startsWith('[')) {
-    try {
-      priceHistory = JSON.parse(raw.price_history);
-    } catch {
-      priceHistory = [];
-    }
+  const mileage = parseVehicleNumber(raw.mileage ?? raw.km, null);
+  const image = raw.image || raw.imagem || raw.images?.[0] || '/images/placeholder-carro.jpg';
+  const body = raw.bodyType || raw.body_type || raw.metadata?.bodyType || 'Não informado';
+  const specs = { ...(raw.specs || {}) };
+  const fuel = raw.fuel || raw.combustivel || specs.combustivel || raw.metadata?.fuel;
+  const transmission = raw.transmission || raw.transmissao || raw.cambio || specs.cambio || raw.metadata?.transmission;
+  if (!specs.motor && raw.metadata?.engine) specs.motor = raw.metadata.engine;
+  if (!specs.combustivel && fuel) specs.combustivel = fuel;
+  if (!specs.cambio && transmission) specs.cambio = transmission;
+  let tags = Array.isArray(raw.tags) ? raw.tags : [];
+  if (typeof raw.tags === 'string' && !raw.tags.startsWith('[')) tags = raw.tags.split(',').map(tag => tag.trim()).filter(Boolean);
+  let priceHistory = Array.isArray(raw.priceHistory) ? raw.priceHistory : [];
+  if (typeof raw.price_history === 'string') {
+    try { const parsed = JSON.parse(raw.price_history); if (Array.isArray(parsed)) priceHistory = parsed; } catch { /* Preserve missing history. */ }
   }
-
+  const rawOriginal = parseVehicleNumber(raw.originalPrice ?? raw.original_price, null);
+  const store = raw.storeId ?? raw.store_id;
   return {
-    id,
-    name,
-    brand,
-    model,
-    year,
-    price,
-    originalPrice,
+    ...raw,
+    id, brand, model, name: raw.name || `${brand} ${model}`.trim(),
+    year: parseVehicleNumber(raw.year ?? raw.ano, null), price, mileage,
+    originalPrice: rawOriginal != null && rawOriginal > price ? rawOriginal : null,
     priceHistory,
-    fipePrice,
-    autoPrice,
-    color,
-    mileage,
-    image,
-    gallery,
-    photos360,
-    bodyType,
-    icon: Car,
-    featured: Boolean(raw.featured ?? true),
-    storeId,
+    fipePrice: parseVehicleNumber(raw.fipePrice ?? raw.fipe_price, null),
+    fipeCode: raw.fipeCode || raw.fipe_code || null,
+    fipeReference: raw.fipeReference || raw.mes_referencia_fipe || null,
+    autoPrice: parseVehicleNumber(raw.autoPrice ?? raw.auto_price, null),
+    color: raw.color || raw.cor || 'Não informado', fuel: fuel || 'Não informado', transmission: transmission || 'Não informado',
+    image, gallery: resolveGallery(raw, image), photos360: resolvePhotos360(raw),
+    bodyType: ['seda', 'sedã'].includes(String(body).trim().toLowerCase()) ? 'Sedan' : body,
+    icon: Car, featured: Boolean(raw.featured ?? true),
+    storeId: store == null ? null : String(store).startsWith('store-') ? String(store) : `store-${store}`,
     plate: raw.plate || raw.placa || '',
-    fipeCode: raw.fipe_code || raw.fipeCode || '004487-3',
-    laudoUrl: raw.laudo_url || raw.laudoUrl || null,
-    laudoFeedback: raw.laudo_feedback || raw.laudoFeedback || null,
-    videoUrl: raw.video_url || raw.videoUrl || null,
-    description: raw.description || raw.descricao || 'Veículo com laudo cautelar aprovado e procedência garantida.',
-    fullDescription: raw.full_description || raw.fullDescription || raw.description || 'Veículo inspecionado e auditado com laudo cautelar 100% aprovado pela plataforma Automatch.',
-    tags: Array.isArray(raw.tags) 
-      ? raw.tags 
-      : (typeof raw.tags === 'string' && !raw.tags.startsWith('[') ? raw.tags.split(',').map(t => t.trim()).filter(Boolean) : [raw.transmission || 'Automático', 'Certificado']),
-    damagePoints: Array.isArray(raw.damagePoints) ? raw.damagePoints : [],
-    specs: raw.specs || {
-      motor: 'Flex de Alta Performance',
-      cambio: raw.transmission || 'Automático',
-      combustivel: raw.fuel || 'Flex',
-      portas: '4 portas',
-      direcao: 'Elétrica Progressiva',
-      freios: 'ABS com EBD',
-      airbags: '6 airbags',
-      tracao: 'Dianteira'
-    },
-    seller: raw.seller || {
-      name: 'Automatch Certified',
-      avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Automatch',
-      rating: 5.0,
-      ads: 12,
-      since: '2023'
-    },
-    // B2B Repasse
-    compartilhavel: raw.compartilhavel ?? 0,
-    valorMinimoRepasse: raw.valor_minimo_repasse ?? raw.valorMinimoRepasse ?? null,
-    comissaoFixa: raw.comissao_fixa ?? raw.comissaoFixa ?? null,
-    observacoesRepasse: raw.observacoes_repasse ?? raw.observacoesRepasse ?? null,
-    statusReserva: raw.status_reserva || raw.statusReserva || 'disponivel'
+    laudoUrl: raw.laudoUrl || raw.laudo_url || null,
+    laudoFeedback: raw.laudoFeedback || raw.laudo_feedback || null,
+    laudoStatus: vehicleStatusValue(raw.laudoStatus ?? raw.laudo_status ?? raw.laudo),
+    debtStatus: vehicleStatusValue(raw.debtStatus ?? raw.debt_status ?? raw.debitos),
+    auctionHistory: vehicleStatusValue(raw.auctionHistory ?? raw.auction_history ?? raw.leilao),
+    videoUrl: raw.videoUrl || raw.video_url || null,
+    description: raw.description || raw.descricao || '',
+    fullDescription: raw.fullDescription || raw.full_description || raw.description || raw.descricao || '',
+    tags, damagePoints: Array.isArray(raw.damagePoints) ? raw.damagePoints : [], specs,
+    seller: raw.seller || { name: 'Anunciante', avatar: 'https://api.dicebear.com/7.x/initials/svg?seed=Anunciante', rating: null, ads: null, since: 'Não informado' },
+    compartilhavel: raw.compartilhavel ?? false,
+    valorMinimoRepasse: raw.valorMinimoRepasse ?? raw.valor_minimo_repasse ?? null,
+    comissaoFixa: raw.comissaoFixa ?? raw.comissao_fixa ?? null,
+    observacoesRepasse: raw.observacoesRepasse ?? raw.observacoes_repasse ?? null,
+    statusReserva: raw.statusReserva || raw.status_reserva || 'disponivel'
   };
 }

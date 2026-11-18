@@ -82,81 +82,28 @@ class CarDossiePayload(BaseModel):
     fipe_code: Optional[str] = None
     debt_status: Optional[str] = None
     auction_history: Optional[str] = None
+    laudo_status: Optional[str] = None
 
 
 def _build_car_dict(car_id: str, db: Session, payload: Optional[CarDossiePayload] = None, **query_params) -> Dict[str, Any]:
-    # 3. Busca no banco de dados Postgres
     car = db.query(models.Car).filter(models.Car.id == car_id).first()
     if car:
-        return {
-            "id": car.id,
-            "brand": car.brand or "Não informado",
-            "model": car.model or "Não informado",
-            "year": car.year or 2024,
-            "km": car.km or 0,
-            "price": float(car.price) if car.price is not None else 0.0,
-            "color": car.color or "Prata",
-            "fuel": car.fuel or "Flex",
-            "plate": car.plate or "ATM2026",
-            "chassi": "9BRBL42EXN8192841",
-            "fipe_price": float(car.fipe_price) if car.fipe_price is not None else ((float(car.price) * 1.04) if car.price else 100000.0),
-            "fipe_code": car.fipe_code or "005391-0",
-            "debt_status": car.debt_status or "Sem débitos",
-            "auction_history": car.auction_history or "Não"
-        }
-
-    # Pré-visualização local, sem registro, apenas fora de produção.
+        data = {key: getattr(car, key, None) for key in (
+            "brand", "model", "year", "km", "color", "fuel", "plate", "fipe_code", "debt_status", "auction_history", "laudo_status"
+        )}
+        data.update(id=car.id, price=float(car.price) if car.price is not None else None,
+                    fipe_price=float(car.fipe_price) if car.fipe_price is not None else None,
+                    chassi=None, origem="cadastro")
+        return data
     import os
     if os.getenv("ENVIRONMENT", "development").strip().lower() == "production":
         raise HTTPException(status_code=404, detail="Veículo não encontrado.")
-
-    # 1. Se veio payload com dados explícitos, prioriza
-    if payload:
-        brand = payload.brand or query_params.get("brand")
-        model_name = payload.model or query_params.get("model")
-        year = payload.year or query_params.get("year", 2024)
-        km = payload.km or query_params.get("km", 0)
-        price = payload.price or query_params.get("price", 0.0)
-        color = payload.color or query_params.get("color", "Prata")
-        fuel = payload.fuel or query_params.get("fuel", "Flex")
-        plate = payload.plate or query_params.get("plate", "ATM2026")
-        chassi = payload.chassi or query_params.get("chassi", "9BRBL42EXN8192841")
-        fipe_price = payload.fipe_price or (price * 1.04 if price else 100000.0)
-        fipe_code = payload.fipe_code or "005391-0"
-        return {
-            "id": car_id, "brand": brand, "model": model_name, "year": int(year),
-            "km": int(km), "price": float(price), "color": color, "fuel": fuel,
-            "plate": plate, "chassi": chassi, "fipe_price": float(fipe_price),
-            "fipe_code": fipe_code, "debt_status": payload.debt_status or "Sem débitos",
-            "auction_history": payload.auction_history or "Não"
-        }
-
-    # 2. Se query params contêm marca/modelo
-    if query_params.get("brand") or query_params.get("model"):
-        price = float(query_params.get("price", 0) or 0)
-        return {
-            "id": car_id,
-            "brand": query_params.get("brand", "Não informado"),
-            "model": query_params.get("model", "Não informado"),
-            "year": int(query_params.get("year", 2024) or 2024),
-            "km": int(query_params.get("km", 0) or 0),
-            "price": price,
-            "color": query_params.get("color", "Prata"),
-            "fuel": query_params.get("fuel", "Flex"),
-            "plate": query_params.get("plate", "ATM2026"),
-            "chassi": "9BRBL42EXN8192841",
-            "fipe_price": float(query_params.get("fipe_price", 0) or (price * 1.04 if price else 100000.0)),
-            "fipe_code": query_params.get("fipe_code", "005391-0"),
-            "debt_status": "Sem débitos",
-            "auction_history": "Não"
-        }
-
-    # 4. Verifica se pertence aos carros estáticos da vitrine (sc-001 a sc-005)
+    if payload or query_params.get("brand") or query_params.get("model"):
+        values = payload.model_dump() if payload else {}
+        fields = ("brand", "model", "year", "km", "price", "color", "fuel", "plate", "chassi", "fipe_price", "fipe_code", "debt_status", "auction_history", "laudo_status")
+        return {"id": car_id, "origem": "previsualizacao", **{key: values[key] if values.get(key) is not None else query_params.get(key) for key in fields}}
     if car_id in SHOWCASE_CARS_MAP:
-        data = SHOWCASE_CARS_MAP[car_id].copy()
-        data["id"] = car_id
-        return data
-
+        return {**SHOWCASE_CARS_MAP[car_id], "id": car_id, "origem": "amostra"}
     raise HTTPException(status_code=404, detail="Veículo não encontrado.")
 
 
@@ -253,11 +200,11 @@ def validar_laudo_publico(protocolo: str, db: Session = Depends(get_db)) -> Dict
     except Exception:
         snapshot = {}
 
-    chassi_raw = snapshot.get("chassi", "9BRBL42EXN8192841")
-    chassi_masked = f"{chassi_raw[:3]}************{chassi_raw[-2:]}" if len(chassi_raw) >= 5 else "9BR************41"
+    chassi_raw = str(snapshot.get("chassi") or "")
+    chassi_masked = f"{chassi_raw[:3]}************{chassi_raw[-2:]}" if len(chassi_raw) >= 5 else "Não informado"
 
     fipe_price = snapshot.get("fipe_price", 0)
-    fipe_formatted = f"R$ {fipe_price:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".") if fipe_price else "Consulte tabela"
+    fipe_formatted = f"R$ {fipe_price:,.2f}".replace(",", "X").replace(".", ",").replace("X", ".") if fipe_price else "Não informado"
 
     return {
         "valido": True,
@@ -266,18 +213,20 @@ def validar_laudo_publico(protocolo: str, db: Session = Depends(get_db)) -> Dict
         "veiculo": {
             "marca": snapshot.get("brand", "Não informado"),
             "modelo": snapshot.get("model", "Não informado"),
-            "ano": snapshot.get("year", 2024),
+            "ano": snapshot.get("year"),
             "placa": snapshot.get("plate", "Não informada"),
             "chassi_mascarado": chassi_masked
         },
         "dados_fipe": {
-            "codigo_fipe": snapshot.get("fipe_code", "005391-0"),
+            "codigo_fipe": snapshot.get("fipe_code") or "Não informado",
             "valor_referencia": fipe_formatted
         },
         "dados_detran": {
-            "situacao_cadastral": "REGULAR (Em circulação)",
-            "debitos": snapshot.get("debt_status", "Sem débitos"),
-            "gravame": "Nenhuma alienação registrada"
+            "situacao_cadastral": "Não consultado",
+            "debitos": snapshot.get("debt_status") or "Não informado",
+            "gravame": "Não consultado",
+            "leilao_informado": snapshot.get("auction_history") or "Não informado"
         },
-        "situacao": "Documento Autêntico e Registrado com Sucesso"
+        "situacao": "Registro Automatch localizado; informações do anunciante, sem certificação externa",
+        "origem": snapshot.get("origem", "registro_anterior")
     }

@@ -1,3 +1,4 @@
+import { formatVehicleMileage } from '../utils/vehicleInformation.js';
 /**
  * FavoritesPage.jsx — Página dedicada à visualização dos veículos favoritados pelo cliente.
  * 
@@ -12,7 +13,7 @@ import {
   ArrowLeft, Heart, Trash2, Calendar, Gauge, Palette,
   Eye, ChevronRight, Car, Scale, Search, Sparkles
 } from 'lucide-react';
-import { getFavorites, removeFavorite, subscribeFavorites } from '../data/favoritesManager';
+import { getFavorites, removeFavorite, subscribeFavorites, getFavoriteOwnerKey, getGuestFavorites, importGuestFavorites } from '../data/favoritesManager';
 import { showcaseCars } from '../data/showcaseData';
 import { mockCars } from '../data/mockData';
 import { getNewCars } from '../data/newCarsManager';
@@ -37,16 +38,13 @@ const formatPrice = (val) => {
   return isNaN(num) || num <= 0 ? '' : `R$ ${num.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 };
 
-const formatMileage = (val) => {
-  if (val === undefined || val === null) return '0 km';
-  if (typeof val === 'number') return `${val.toLocaleString('pt-BR')} km`;
-  return String(val);
-};
+const formatMileage = formatVehicleMileage;
 
 export default function FavoritesPage() {
   const navigate = useNavigate();
   const [favoriteIds, setFavoriteIds] = useState([]);
   const [dbCars, setDbCars] = useState([]);
+  const [favoriteError, setFavoriteError] = useState('');
   const [isComparatorOpen, setIsComparatorOpen] = useState(false);
   const [selectedForCompare, setSelectedForCompare] = useState([]);
 
@@ -58,8 +56,11 @@ export default function FavoritesPage() {
       setSelectedForCompare(ids.slice(0, 2));
     }
 
+    let owner = getFavoriteOwnerKey();
     const unsub = subscribeFavorites ? subscribeFavorites((newIds) => {
       setFavoriteIds(newIds);
+      const nextOwner = getFavoriteOwnerKey();
+      if (owner !== nextOwner) { owner = nextOwner; setSelectedForCompare(newIds.slice(0, 2)); return; }
       setSelectedForCompare(previous => previous.filter(id => newIds.some(favorite => String(favorite) === String(id))));
     }) : () => {};
 
@@ -75,83 +76,17 @@ export default function FavoritesPage() {
     return () => { unsub(); controller.abort(); };
   }, []);
 
-  // Resolve car objects from all data sources including Postgres API
+  // Prefer the API record, then user-created data, then explicit sample catalogs.
+  const localCars = getNewCars();
   const favoriteCars = favoriteIds.map(id => {
-    // 1. Check showcaseData
-    let car = showcaseCars.find(c => String(c.id) === String(id));
-    if (car) return {
-      ...car,
-      source: 'showcase',
-      fipePrice: car.fipePrice || car.price * 1.05,
-      laudoStatus: car.laudoStatus || 'Aprovado 100%',
-      detranStatus: car.detranStatus || 'IPVA 2026 Quitado'
-    };
-
-    // 2. Check mockData
-    const mock = mockCars.find(c => String(c.id) === String(id));
-    if (mock) return {
-      id: mock.id,
-      name: `${mock.brand} ${mock.model}`,
-      brand: mock.brand,
-      model: mock.model,
-      year: mock.year,
-      price: mock.price,
-      mileage: mock.mileage,
-      image: mock.images?.[0] || '/images/placeholder-carro.jpg',
-      bodyType: mock.metadata?.bodyType || 'Sedan',
-      fuel: mock.metadata?.fuel || 'Flex',
-      transmission: mock.metadata?.transmission || 'Automatico',
-      fipePrice: mock.fipePrice || (mock.price ? mock.price * 1.04 : null),
-      laudoStatus: mock.laudoStatus || 'Aprovado 100%',
-      detranStatus: mock.detranStatus || 'Sem Pendencias',
-      source: 'mock'
-    };
-
-    // 3. Check localStorage (user-created)
-    const local = getNewCars().find(c => String(c.id) === String(id));
-    if (local) return {
-      id: local.id,
-      name: `${local.marca} ${local.modelo}`,
-      brand: local.marca,
-      model: local.modelo,
-      year: local.ano,
-      price: local.preco,
-      mileage: local.km || 0,
-      image: local.imagem || '/images/placeholder-carro.jpg',
-      bodyType: 'Particular',
-      fuel: 'Flex',
-      transmission: 'Automatico',
-      fipePrice: local.preco ? local.preco * 1.03 : null,
-      laudoStatus: 'Aprovado 100%',
-      detranStatus: 'Regularizado',
-      source: 'local'
-    };
-
-    // 4. Check PostgreSQL Database Cars
-    const dbCar = dbCars.find(c => String(c.id) === String(id));
-    if (dbCar) return {
-      id: dbCar.id,
-      name: `${dbCar.brand} ${dbCar.model}`,
-      brand: dbCar.brand,
-      model: dbCar.model,
-      year: dbCar.year,
-      price: typeof dbCar.price === 'number' ? dbCar.price : (parseFloat(dbCar.price) || 0),
-      mileage: dbCar.km || 0,
-      image: dbCar.image || '/images/placeholder-carro.jpg',
-      bodyType: dbCar.body_type || 'Particular',
-      fuel: dbCar.fuel || 'Flex',
-      transmission: dbCar.transmission || 'Automatico',
-      fipePrice: dbCar.price ? dbCar.price * 1.04 : null,
-      laudoStatus: 'Aprovado 100%',
-      detranStatus: 'Sem Pendencias',
-      source: 'database'
-    };
-
-    return null;
+    const matches = car => String(car.id) === String(id);
+    const source = dbCars.find(matches) || localCars.find(matches) || showcaseCars.find(matches) || mockCars.find(matches);
+    return source ? mapVehicleToViewModel(source) : null;
   }).filter(Boolean);
 
   const handleRemove = (carId) => {
-    removeFavorite(carId);
+    try { removeFavorite(carId); setFavoriteError(''); }
+    catch (error) { setFavoriteError(error.message); return; }
     setFavoriteIds(prev => prev.filter(id => String(id) !== String(carId)));
     setSelectedForCompare(prev => prev.filter(id => String(id) !== String(carId)));
   };
@@ -195,6 +130,12 @@ export default function FavoritesPage() {
           </div>
         </div>
       </nav>
+      {favoriteError && <p role="alert" className="max-w-5xl mx-auto px-6 py-3 text-sm text-rose-700">{favoriteError}</p>}
+      {getFavoriteOwnerKey() !== '@automatch:favorites:visitor' && getGuestFavorites().some(id => !favoriteIds.includes(id)) && <div className="max-w-5xl mx-auto px-6 py-4 flex flex-wrap items-center gap-3 text-sm text-slate-600">
+        <span>Há favoritos salvos como visitante neste navegador.</span>
+        <button type="button" className="min-h-11 rounded-xl border border-blue-300 px-4 font-semibold text-blue-700" onClick={() => { try { importGuestFavorites(); setFavoriteError(''); } catch (error) { setFavoriteError(error.message); } }}>Adicionar à minha lista</button>
+      </div>}
+
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
         {/* Breadcrumbs */}
@@ -346,11 +287,11 @@ export default function FavoritesPage() {
                       <div className="grid grid-cols-2 gap-2">
                         <div className="bg-slate-50 rounded-lg px-2 py-1.5 text-center border border-slate-100">
                           <p className="text-[10px] text-slate-400 font-medium">Combustivel</p>
-                          <p className="text-[11px] font-bold text-slate-700">{car.fuel || 'Flex'}</p>
+                          <p className="text-[11px] font-bold text-slate-700">{car.fuel || 'Não informado'}</p>
                         </div>
                         <div className="bg-slate-50 rounded-lg px-2 py-1.5 text-center border border-slate-100">
                           <p className="text-[10px] text-slate-400 font-medium">Cambio</p>
-                          <p className="text-[11px] font-bold text-slate-700">{car.transmission || 'Automatico'}</p>
+                          <p className="text-[11px] font-bold text-slate-700">{car.transmission || 'Não informado'}</p>
                         </div>
                       </div>
 

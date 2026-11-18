@@ -86,6 +86,7 @@ export function demoPlateLookup(plate) {
 
 export function dossierInspectionItems(car) {
   return [
+    { item: 'Laudo informado', result: car.laudoStatus || car.laudo_status || car.laudo || 'Não informado', observation: 'Confira o documento original; informação do anunciante.' },
     { item: 'Estrutura e Longarinas', result: 'Não vistoriado', observation: 'Confira o documento da vistoria; o cadastro não certifica integridade.' },
     { item: 'Pintura e Micragem', result: 'Não medida', observation: 'Não há medição de espessura realizada nesta demonstração.' },
     { item: 'Histórico de Leilão / Sinistro', result: car.auctionHistory || car.auction_history || car.leilao || 'Não informado', observation: 'Informação do anunciante; sem consulta externa.' },

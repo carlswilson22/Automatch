@@ -80,7 +80,9 @@ test('favorito com ID numérico pode ser desmarcado e removido da comparação',
  await act(async()=>selectors()[0].props.onClick());assert.deepEqual(selectors().map(content),['Comparar','Comparando']);
  await act(async()=>view.root.findAllByType('button').find(node=>node.props.title==='Remover dos favoritos').props.onClick());
  assert.equal(view.root.findAllByType('button').filter(node=>node.props.title==='Remover dos favoritos').length,1);
- assert.deepEqual(JSON.parse(localStorage.getItem('@automatch:favorites')),['102']);
+ const {getFavorites}=await server.ssrLoadModule('/src/data/favoritesManager.js');
+ assert.deepEqual(getFavorites(),['102']);
+ assert.deepEqual(JSON.parse(localStorage.getItem('@automatch:favorites')),['101','102']);
 });
 
 const inventoryCar={id:'car-1',brand:'Honda',model:'Civic',price:100000,year:2024,km:12000,valor_minimo_repasse:90000,store_name:'Parceiro'};

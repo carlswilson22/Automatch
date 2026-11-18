@@ -16,28 +16,22 @@ import {
 } from 'lucide-react';
 import { useScrollLock } from '../../utils/useScrollLock';
 import { getVehicleImageUrl, handleVehicleImageError } from '../../utils/imageHelper';
+import { mapVehicleToViewModel } from '../../utils/vehicleMapper.js';
+import { formatVehicleMileage, vehicleStatusValue } from '../../utils/vehicleInformation.js';
 import { showcaseCars } from '../../data/showcaseData';
 
 const CURRENT_YEAR = 2026;
 
-const normalizeCar = (car) => {
-  if (!car) return null;
-  const name = car.name || `${car.brand || ''} ${car.model || 'Veículo'}`.trim();
-  const price = Number(car.price) || 0;
-  const mileage = Number(car.mileage || car.km) || 0;
-  const image = car.image || car.imagem || '/images/placeholder-carro.jpg';
-  const year = Number(car.year) || CURRENT_YEAR;
-  return { ...car, name, price, mileage, image, year };
-};
+const normalizeCar = mapVehicleToViewModel;
 
 const formatMoney = (val) => {
-  if (!val || isNaN(val)) return 'R$ 0,00';
+  if (val == null || !Number.isFinite(Number(val))) return 'Não informado';
   return Number(val).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 };
 
 const calculateKmPerYear = (km, year) => {
-  const age = Math.max(1, CURRENT_YEAR - (year || CURRENT_YEAR));
-  return Math.round((km || 0) / age);
+  if (km == null || year == null || year > CURRENT_YEAR || year <= 0) return null;
+  return Math.round(km / Math.max(1, CURRENT_YEAR - year));
 };
 
 const calculateFipeDiff = (price, fipe) => {
@@ -144,9 +138,9 @@ export default function VehicleComparatorModal({
     return (selectedVehicles || []).map(rawCar => {
       const car = normalizeCar(rawCar);
       if (!car) return null;
-      const fipe = Number(car.fipePrice || car.fipe_price || (car.price * 1.04)) || 0;
+      const fipe = car.fipePrice;
       const fipeComparison = calculateFipeDiff(car.price, fipe);
-      const km = Number(car.mileage || car.km || 0);
+      const km = car.mileage;
       const kmPerYear = calculateKmPerYear(km, car.year);
       const monthlyPayment = estimateMonthlyPayment(car.price);
       return {
@@ -154,7 +148,7 @@ export default function VehicleComparatorModal({
         fipeComparison,
         km,
         kmPerYear,
-        isLowKm: kmPerYear <= 12000,
+        isLowKm: kmPerYear != null && kmPerYear <= 12000,
         monthlyPayment
       };
     });
@@ -163,23 +157,19 @@ export default function VehicleComparatorModal({
   // Veredito Inteligente do Consultor IA Automatch
   const aiVerdict = useMemo(() => {
     if (selectedVehicles.length < 2) return null;
-    const sortedByPrice = [...selectedVehicles].sort((a, b) => (a.price || 0) - (b.price || 0));
-    const sortedByKm = [...selectedVehicles].sort((a, b) => (Number(a.mileage || a.km || 0) - Number(b.mileage || b.km || 0)));
-    const sortedByYear = [...selectedVehicles].sort((a, b) => (Number(b.year || 0) - Number(a.year || 0)));
-
-    const bestPrice = sortedByPrice[0];
-    const lowestKm = sortedByKm[0];
-    const newest = sortedByYear[0];
-    const priceDiff = sortedByPrice[sortedByPrice.length - 1].price - bestPrice.price;
-
+    const priced = selectedVehicles.filter(car => car.price > 0).sort((a, b) => a.price - b.price);
+    const measured = selectedVehicles.filter(car => car.mileage != null).sort((a, b) => a.mileage - b.mileage);
+    const dated = selectedVehicles.filter(car => car.year != null).sort((a, b) => b.year - a.year);
+    const unknown = { name: 'Não informado', year: 'Não informado' };
     return {
-      bestPriceCar: bestPrice,
-      lowestKmCar: lowestKm,
-      newestCar: newest,
-      priceDiffFormatted: formatMoney(priceDiff),
-      recommendation: selectedVehicles.length === 2
-        ? `Se sua prioridade for economia imediata e menor parcela, o ${bestPrice.name} economiza ${formatMoney(priceDiff)} frente ao concorrente. Se valorizar menor quilometragem para rodar mais tempo sem manutenções pesadas, o ${lowestKm.name} (${Number(lowestKm.mileage || lowestKm.km || 0).toLocaleString('pt-BR')} km) é a compra mais equilibrada.`
-        : `Análise de 3 veículos: ${bestPrice.name} é o campeão em custo-benefício financeiro. O ${lowestKm.name} oferece a mecânica menos rodada, e o ${newest.name} entrega o pacote tecnológico mais atualizado.`
+      bestPriceCar: priced[0] || unknown,
+      lowestKmCar: measured[0] || unknown,
+      newestCar: dated[0] || unknown,
+      recommendation: [
+        priced.length >= 2 ? `Entre os preços informados, ${priced[0].name} tem o menor valor, com diferença de ${formatMoney(priced.at(-1).price - priced[0].price)} para o maior.` : 'Não há preços suficientes para comparar.',
+        measured.length >= 2 ? `A menor quilometragem informada é de ${measured[0].name}: ${formatVehicleMileage(measured[0].mileage)}.` : 'Não há quilometragens suficientes para comparar.',
+        'Resumo dos dados cadastrados; não substitui vistoria nem consulta oficial.'
+      ].join(' ')
     };
   }, [selectedVehicles]);
 
@@ -313,7 +303,7 @@ export default function VehicleComparatorModal({
                       {car.name || `${car.brand} ${car.model}`}
                     </h3>
                     <p className="text-xs text-slate-400 mb-2 font-medium">
-                      Ano {car.year} • {Number(car.mileage || car.km || 0).toLocaleString('pt-BR')} km
+                      Ano {car.year} • {formatVehicleMileage(car.mileage)}
                     </p>
                     <div className="text-lg font-black text-cyan-400">
                       {formatMoney(car.price)}
@@ -402,7 +392,7 @@ export default function VehicleComparatorModal({
                                 {c.name || `${c.brand} ${c.model}`}
                               </p>
                               <p className="text-[10px] text-slate-400">
-                                {c.year} • {Number(c.mileage || c.km || 0).toLocaleString('pt-BR')} km
+                                {c.year} • {formatVehicleMileage(c.mileage)}
                               </p>
                             </div>
                             <span className="text-xs font-black text-cyan-400 shrink-0">
@@ -501,7 +491,7 @@ export default function VehicleComparatorModal({
                             comp?.fipeComparison?.isBelow ? 'text-emerald-400' : 'text-slate-300'
                           }`}>
                             {comp?.fipeComparison?.isBelow ? <TrendingDown className="w-3.5 h-3.5" /> : <TrendingUp className="w-3.5 h-3.5" />}
-                            {comp?.fipeComparison?.label || 'Compatível'}
+                            {comp?.fipeComparison?.label || 'Referência não informada'}
                           </span>
                         </div>
                         <div className="flex justify-between text-xs pt-1 border-t border-slate-800/80">
@@ -548,11 +538,11 @@ export default function VehicleComparatorModal({
                       <div key={idx} className="space-y-1.5 p-3 rounded-xl bg-slate-900/60 border border-slate-800">
                         <div className="flex justify-between text-xs">
                           <span className="text-slate-400">Total Rodado:</span>
-                          <span className="font-bold text-white">{(comp?.km || 0).toLocaleString('pt-BR')} km</span>
+                          <span className="font-bold text-white">{formatVehicleMileage(comp?.km)}</span>
                         </div>
                         <div className="flex justify-between text-xs">
                           <span className="text-slate-400">Média Anual:</span>
-                          <span className="font-bold text-slate-200">{(comp?.kmPerYear || 0).toLocaleString('pt-BR')} km/ano</span>
+                          <span className="font-bold text-slate-200">{comp?.kmPerYear == null ? 'Não informado' : `${comp.kmPerYear.toLocaleString('pt-BR')} km/ano`}</span>
                         </div>
                         <div className="pt-1">
                           <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full inline-block ${
@@ -560,7 +550,7 @@ export default function VehicleComparatorModal({
                               ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' 
                               : 'bg-slate-800 text-slate-300'
                           }`}>
-                            {comp?.isLowKm ? '✓ Baixa Quilometragem Anual' : 'Uso Médio Convencional'}
+                            {comp?.kmPerYear == null ? 'Uso anual não informado' : comp.isLowKm ? '✓ Baixa Quilometragem Anual' : 'Acima de 12.000 km/ano'}
                           </span>
                         </div>
                       </div>
@@ -602,20 +592,20 @@ export default function VehicleComparatorModal({
                       <div className="flex justify-between text-xs">
                         <span className="text-slate-400">Veredito do Laudo:</span>
                         <span className="font-bold text-emerald-400 flex items-center gap-1">
-                          <CheckCircle2 className="w-3.5 h-3.5" /> Aprovado 100%
+                          {vehicleStatusValue(car.laudoStatus)}
                         </span>
                       </div>
                       <div className="flex justify-between text-xs">
                         <span className="text-slate-400">Estrutura & Longarinas:</span>
-                        <span className="font-medium text-slate-200">Sem Soldas / Original</span>
+                        <span className="font-medium text-slate-200">{vehicleStatusValue(car.specs?.estrutura)}</span>
                       </div>
                       <div className="flex justify-between text-xs">
-                        <span className="text-slate-400">Leilão / Sinistro:</span>
-                        <span className="font-bold text-emerald-400">Nenhum Registro</span>
+                        <span className="text-slate-400">Leilão informado:</span>
+                        <span className="font-bold text-emerald-400">{vehicleStatusValue(car.auctionHistory)}</span>
                       </div>
                       <div className="flex justify-between text-xs">
                         <span className="text-slate-400">Pintura Micrométrica:</span>
-                        <span className="font-medium text-slate-300">Padrão Original (115µm)</span>
+                        <span className="font-medium text-slate-300">{vehicleStatusValue(car.specs?.pintura)}</span>
                       </div>
                     </div>
                   ))}
@@ -653,16 +643,16 @@ export default function VehicleComparatorModal({
                   {selectedVehicles.map((car, idx) => (
                     <div key={idx} className="space-y-1.5 p-3 rounded-xl bg-slate-900/60 border border-slate-800">
                       <div className="flex justify-between text-xs">
-                        <span className="text-slate-400">IPVA / Licenciamento:</span>
-                        <span className="font-bold text-emerald-400">100% Quitado</span>
+                        <span className="text-slate-400">Débitos informados:</span>
+                        <span className="font-bold text-emerald-400">{vehicleStatusValue(car.debtStatus)}</span>
                       </div>
                       <div className="flex justify-between text-xs">
-                        <span className="text-slate-400">Multas e Débitos:</span>
-                        <span className="font-bold text-emerald-400">R$ 0,00 (Nada Consta)</span>
+                        <span className="text-slate-400">Consulta oficial:</span>
+                        <span className="font-bold text-emerald-400">Não consultado</span>
                       </div>
                       <div className="flex justify-between text-xs">
                         <span className="text-slate-400">Restrição Financeira:</span>
-                        <span className="font-medium text-slate-200">Sem Gravame (Livre)</span>
+                        <span className="font-medium text-slate-200">Não consultado</span>
                       </div>
                     </div>
                   ))}
@@ -701,37 +691,37 @@ export default function VehicleComparatorModal({
                     <div key={idx} className="space-y-2 p-3.5 rounded-xl bg-slate-900/60 border border-slate-800 text-xs">
                       <div className="flex justify-between">
                         <span className="text-slate-400">Carroceria:</span>
-                        <span className="font-bold text-white">{car.bodyType || 'SUV / Hatch'}</span>
+                        <span className="font-bold text-white">{vehicleStatusValue(car.bodyType)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-slate-400">Motorização:</span>
-                        <span className="font-medium text-slate-200">{car.specs?.motor || car.engine || '1.0 / 1.5 Turbo Flex'}</span>
+                        <span className="font-medium text-slate-200">{vehicleStatusValue(car.specs?.motor || car.engine)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-slate-400">Câmbio:</span>
-                        <span className="font-medium text-slate-200">{car.specs?.cambio || car.transmission || 'Automático'}</span>
+                        <span className="font-medium text-slate-200">{vehicleStatusValue(car.specs?.cambio || car.transmission)}</span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-slate-400">Consumo Inmetro:</span>
                         <span className="font-medium text-cyan-300">
-                          {car.specs?.combustivel?.includes('Híbrido') ? '17.8 km/l (Urbano)' : '12.4 km/l (Misto)'}
+                          {vehicleStatusValue(car.specs?.consumo)}
                         </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-slate-400">Porta-Malas:</span>
                         <span className="font-medium text-slate-200">
-                          {car.bodyType === 'SUV' ? '440 Litros' : '300 Litros'}
+                          {vehicleStatusValue(car.specs?.portaMalas)}
                         </span>
                       </div>
                       <div className="flex justify-between pt-1 border-t border-slate-800/80">
                         <span className="text-slate-400">Custo TCO Estimado:</span>
                         <span className="font-bold text-amber-300">
-                          {formatMoney((car.price || 100000) * 0.04 + 4800)}/ano
+                          {car.price > 0 ? `${formatMoney(car.price * 0.04 + 4800)}/ano (exemplo)` : 'Não informado'}
                         </span>
                       </div>
                       <div className="flex justify-between pt-1 text-[11px]">
                         <span className="text-slate-400">Garantia:</span>
-                        <span className="font-semibold text-emerald-400">Certificada Automatch</span>
+                        <span className="font-semibold text-emerald-400">{vehicleStatusValue(car.specs?.garantia)}</span>
                       </div>
                     </div>
                   ))}
