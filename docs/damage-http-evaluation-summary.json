@@ -1,0 +1,271 @@
+{
+  "experimental": true,
+  "annotation_review": "provisional",
+  "cases_per_model": 21,
+  "thresholds": [
+    {
+      "image_size": 416,
+      "experiment": "frozen-10-compatible",
+      "confidence_threshold": 0.25,
+      "iou": 0.5,
+      "tp": 0,
+      "fp": 0,
+      "fn": 5,
+      "precision": null,
+      "recall": 0.0
+    },
+    {
+      "image_size": 416,
+      "experiment": "frozen-10-compatible",
+      "confidence_threshold": 0.5,
+      "iou": 0.5,
+      "tp": 0,
+      "fp": 0,
+      "fn": 5,
+      "precision": null,
+      "recall": 0.0
+    },
+    {
+      "image_size": 416,
+      "experiment": "frozen-10-compatible",
+      "confidence_threshold": 0.8,
+      "iou": 0.5,
+      "tp": 0,
+      "fp": 0,
+      "fn": 5,
+      "precision": null,
+      "recall": 0.0
+    },
+    {
+      "image_size": 416,
+      "experiment": "frozen-10-compatible",
+      "confidence_threshold": 0.95,
+      "iou": 0.5,
+      "tp": 0,
+      "fp": 0,
+      "fn": 5,
+      "precision": null,
+      "recall": 0.0
+    },
+    {
+      "image_size": 416,
+      "experiment": "full-10-compatible",
+      "confidence_threshold": 0.25,
+      "iou": 0.5,
+      "tp": 0,
+      "fp": 0,
+      "fn": 5,
+      "precision": null,
+      "recall": 0.0
+    },
+    {
+      "image_size": 416,
+      "experiment": "full-10-compatible",
+      "confidence_threshold": 0.5,
+      "iou": 0.5,
+      "tp": 0,
+      "fp": 0,
+      "fn": 5,
+      "precision": null,
+      "recall": 0.0
+    },
+    {
+      "image_size": 416,
+      "experiment": "full-10-compatible",
+      "confidence_threshold": 0.8,
+      "iou": 0.5,
+      "tp": 0,
+      "fp": 0,
+      "fn": 5,
+      "precision": null,
+      "recall": 0.0
+    },
+    {
+      "image_size": 416,
+      "experiment": "full-10-compatible",
+      "confidence_threshold": 0.95,
+      "iou": 0.5,
+      "tp": 0,
+      "fp": 0,
+      "fn": 5,
+      "precision": null,
+      "recall": 0.0
+    },
+    {
+      "image_size": 416,
+      "experiment": "full-30-compatible",
+      "confidence_threshold": 0.25,
+      "iou": 0.5,
+      "tp": 0,
+      "fp": 16,
+      "fn": 5,
+      "precision": 0.0,
+      "recall": 0.0
+    },
+    {
+      "image_size": 416,
+      "experiment": "full-30-compatible",
+      "confidence_threshold": 0.5,
+      "iou": 0.5,
+      "tp": 0,
+      "fp": 5,
+      "fn": 5,
+      "precision": 0.0,
+      "recall": 0.0
+    },
+    {
+      "image_size": 416,
+      "experiment": "full-30-compatible",
+      "confidence_threshold": 0.8,
+      "iou": 0.5,
+      "tp": 0,
+      "fp": 0,
+      "fn": 5,
+      "precision": null,
+      "recall": 0.0
+    },
+    {
+      "image_size": 416,
+      "experiment": "full-30-compatible",
+      "confidence_threshold": 0.95,
+      "iou": 0.5,
+      "tp": 0,
+      "fp": 0,
+      "fn": 5,
+      "precision": null,
+      "recall": 0.0
+    },
+    {
+      "image_size": 640,
+      "experiment": "frozen-10-compatible",
+      "confidence_threshold": 0.25,
+      "iou": 0.5,
+      "tp": 0,
+      "fp": 0,
+      "fn": 5,
+      "precision": null,
+      "recall": 0.0
+    },
+    {
+      "image_size": 640,
+      "experiment": "frozen-10-compatible",
+      "confidence_threshold": 0.5,
+      "iou": 0.5,
+      "tp": 0,
+      "fp": 0,
+      "fn": 5,
+      "precision": null,
+      "recall": 0.0
+    },
+    {
+      "image_size": 640,
+      "experiment": "frozen-10-compatible",
+      "confidence_threshold": 0.8,
+      "iou": 0.5,
+      "tp": 0,
+      "fp": 0,
+      "fn": 5,
+      "precision": null,
+      "recall": 0.0
+    },
+    {
+      "image_size": 640,
+      "experiment": "frozen-10-compatible",
+      "confidence_threshold": 0.95,
+      "iou": 0.5,
+      "tp": 0,
+      "fp": 0,
+      "fn": 5,
+      "precision": null,
+      "recall": 0.0
+    },
+    {
+      "image_size": 640,
+      "experiment": "full-10-compatible",
+      "confidence_threshold": 0.25,
+      "iou": 0.5,
+      "tp": 0,
+      "fp": 0,
+      "fn": 5,
+      "precision": null,
+      "recall": 0.0
+    },
+    {
+      "image_size": 640,
+      "experiment": "full-10-compatible",
+      "confidence_threshold": 0.5,
+      "iou": 0.5,
+      "tp": 0,
+      "fp": 0,
+      "fn": 5,
+      "precision": null,
+      "recall": 0.0
+    },
+    {
+      "image_size": 640,
+      "experiment": "full-10-compatible",
+      "confidence_threshold": 0.8,
+      "iou": 0.5,
+      "tp": 0,
+      "fp": 0,
+      "fn": 5,
+      "precision": null,
+      "recall": 0.0
+    },
+    {
+      "image_size": 640,
+      "experiment": "full-10-compatible",
+      "confidence_threshold": 0.95,
+      "iou": 0.5,
+      "tp": 0,
+      "fp": 0,
+      "fn": 5,
+      "precision": null,
+      "recall": 0.0
+    },
+    {
+      "image_size": 640,
+      "experiment": "full-30-compatible",
+      "confidence_threshold": 0.25,
+      "iou": 0.5,
+      "tp": 0,
+      "fp": 24,
+      "fn": 5,
+      "precision": 0.0,
+      "recall": 0.0
+    },
+    {
+      "image_size": 640,
+      "experiment": "full-30-compatible",
+      "confidence_threshold": 0.5,
+      "iou": 0.5,
+      "tp": 0,
+      "fp": 4,
+      "fn": 5,
+      "precision": 0.0,
+      "recall": 0.0
+    },
+    {
+      "image_size": 640,
+      "experiment": "full-30-compatible",
+      "confidence_threshold": 0.8,
+      "iou": 0.5,
+      "tp": 0,
+      "fp": 0,
+      "fn": 5,
+      "precision": null,
+      "recall": 0.0
+    },
+    {
+      "image_size": 640,
+      "experiment": "full-30-compatible",
+      "confidence_threshold": 0.95,
+      "iou": 0.5,
+      "tp": 0,
+      "fp": 0,
+      "fn": 5,
+      "precision": null,
+      "recall": 0.0
+    }
+  ]
+}

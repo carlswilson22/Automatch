@@ -1,0 +1,522 @@
+{
+  "schema_version": 1,
+  "classes": [
+    "avaria"
+  ],
+  "purpose": "Experimental only; synthetic positives in training, original damaged vehicle held out. NOT validated for deployment.",
+  "entries": [
+    {
+      "source": "synthetic/dent.png",
+      "origin": "synthetic",
+      "group": "dent.png",
+      "split": "train",
+      "boxes": [
+        [
+          0.34,
+          0.45,
+          0.55,
+          0.65
+        ]
+      ],
+      "annotation": "Provisional visual annotation; user review pending",
+      "sha256": "49af3d0fef994ee248da8a642ee5ce66e5f68558a915cb1cd701d7dd1c4828da"
+    },
+    {
+      "source": "synthetic/scratch.png",
+      "origin": "synthetic",
+      "group": "scratch.png",
+      "split": "train",
+      "boxes": [
+        [
+          0.43,
+          0.435,
+          0.645,
+          0.57
+        ]
+      ],
+      "annotation": "Provisional visual annotation; user review pending",
+      "sha256": "b5fc4c2ce6df96ee9942ad7f333383e99d3005adf464e3ebf5d498b59bfcb345"
+    },
+    {
+      "source": "synthetic/bumper.png",
+      "origin": "synthetic",
+      "group": "bumper.png",
+      "split": "train",
+      "boxes": [
+        [
+          0.442,
+          0.545,
+          0.82,
+          0.84
+        ]
+      ],
+      "annotation": "Provisional visual annotation; user review pending",
+      "sha256": "ef18543511d51f60965a8cfb18d7bbef669d7b59cb995cf335a363090d7e7e86"
+    },
+    {
+      "source": "docs/evidencias-teste-scanner/02-gabarito-imagem-danos-frontal.jpg",
+      "origin": "project",
+      "group": "same-damaged-toyota",
+      "split": "val",
+      "boxes": [
+        [
+          0.64,
+          0.347,
+          0.84,
+          0.574
+        ],
+        [
+          0.883,
+          0.304,
+          0.93,
+          0.409
+        ]
+      ],
+      "annotation": "Visible damaged regions; provisional, not an expert inspection",
+      "sha256": "6b31b3f86a489f8b4fcd49cb03bdf98a2490c7aa4aa7a6350eeacfb6c6d72fd4"
+    },
+    {
+      "source": "docs/evidencias-teste-scanner/03-gabarito-imagem-danos-lateral.jpg",
+      "origin": "project",
+      "group": "same-damaged-toyota",
+      "split": "val",
+      "boxes": [
+        [
+          0.43,
+          0.305,
+          0.75,
+          0.59
+        ]
+      ],
+      "annotation": "Visible damaged regions; provisional, not an expert inspection",
+      "sha256": "733c170958341f77796429b6c4d54c7c61ab5ea552571a6af8bd22d8ecd3c748"
+    },
+    {
+      "source": "docs/evidencias-teste-scanner/04-gabarito-imagem-danos-traseira.jpg",
+      "origin": "project",
+      "group": "same-damaged-toyota",
+      "split": "val",
+      "boxes": [
+        [
+          0.407,
+          0.605,
+          0.598,
+          0.822
+        ],
+        [
+          0.753,
+          0.455,
+          0.88,
+          0.675
+        ]
+      ],
+      "annotation": "Visible damaged regions; provisional, not an expert inspection",
+      "sha256": "6588fd2c85858c8cf436da2ab5e6e8ccfebfc23a92648a912d9248563b172ceb"
+    },
+    {
+      "source": "frontend/public/images/FotoCorollaCross.jpg",
+      "origin": "project",
+      "group": "catalog-sc-001",
+      "split": "train",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "8a0dc6e3a7cb72b67d137058a6aec114f8edd652b634f9d2798b5d58eaef8c3a"
+    },
+    {
+      "source": "frontend/public/images/cars/sc-001/0.jpg",
+      "origin": "project",
+      "group": "catalog-sc-001",
+      "split": "train",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "8936e56ad0d3a49c8301b7544198647f5e2a598a69abbbb6222179cf5bac4084"
+    },
+    {
+      "source": "frontend/public/images/cars/sc-001/45.jpg",
+      "origin": "project",
+      "group": "catalog-sc-001",
+      "split": "train",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "138bad51dbfabc2277d182ffc8e5f19b59338dbbad52961abb11333ef07b4242"
+    },
+    {
+      "source": "frontend/public/images/cars/sc-001/90.jpg",
+      "origin": "project",
+      "group": "catalog-sc-001",
+      "split": "train",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "2405695228de1dc1e65c6ce2b0fabe992b84b1192c18f641c880c0ca6f24ee20"
+    },
+    {
+      "source": "frontend/public/images/cars/sc-001/135.jpg",
+      "origin": "project",
+      "group": "catalog-sc-001",
+      "split": "train",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "dc7d6f268bc7d5ec474233e29cd0a473e6bad1c5ffde109a4ba78e279e39b218"
+    },
+    {
+      "source": "frontend/public/images/cars/sc-001/180.jpg",
+      "origin": "project",
+      "group": "catalog-sc-001",
+      "split": "train",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "0ea6e4f2ee510141e98a87b4a60a09ae689dd99d6d7f7d5df022b0999e68325f"
+    },
+    {
+      "source": "frontend/public/images/cars/sc-001/225.jpg",
+      "origin": "project",
+      "group": "catalog-sc-001",
+      "split": "train",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "126bfe349c8d134dd1019edaa943efbd3f3f20063a43d8259360e031e95eb366"
+    },
+    {
+      "source": "frontend/public/images/cars/sc-001/270.jpg",
+      "origin": "project",
+      "group": "catalog-sc-001",
+      "split": "train",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "f06c80c23d528fd82cf610616ede0c991100acb47468d016d20053ea27be8a57"
+    },
+    {
+      "source": "frontend/public/images/cars/sc-001/315.jpg",
+      "origin": "project",
+      "group": "catalog-sc-001",
+      "split": "train",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "6beb175d9a903a852ec3aa0a1610ac342d6da9ed27a37ec6c0c2866b07d762c2"
+    },
+    {
+      "source": "frontend/public/images/FotoPoloTSI.jpg",
+      "origin": "project",
+      "group": "catalog-sc-002",
+      "split": "train",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "4e72ad2e99c6e3afe2ceac88e73cb1b2c4528faf2ae046edab62752165da1847"
+    },
+    {
+      "source": "frontend/public/images/cars/sc-002/0.jpg",
+      "origin": "project",
+      "group": "catalog-sc-002",
+      "split": "train",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "149011c34af360508b32bf0d1ad7d706a9822addeabd70ca1e1b9a53843fc4ee"
+    },
+    {
+      "source": "frontend/public/images/cars/sc-002/45.jpg",
+      "origin": "project",
+      "group": "catalog-sc-002",
+      "split": "train",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "43df548079edd7f6f37a5531fd2d46dae4f664457352c19518dd821818eabfb6"
+    },
+    {
+      "source": "frontend/public/images/cars/sc-002/90.jpg",
+      "origin": "project",
+      "group": "catalog-sc-002",
+      "split": "train",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "2111234031d0930b52c2c1e3ab56d62b445b364f0b4284ac75cee3df8a2e232c"
+    },
+    {
+      "source": "frontend/public/images/cars/sc-002/135.jpg",
+      "origin": "project",
+      "group": "catalog-sc-002",
+      "split": "train",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "5c4a3257efa2c3711d72a7a1eee48edb2900b9d2560dee5627e6d692545fec62"
+    },
+    {
+      "source": "frontend/public/images/cars/sc-002/180.jpg",
+      "origin": "project",
+      "group": "catalog-sc-002",
+      "split": "train",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "908b63de84e510196c5443f37d46292fbe5fc021f20ac1bc2ea4f8022e8ab707"
+    },
+    {
+      "source": "frontend/public/images/cars/sc-002/225.jpg",
+      "origin": "project",
+      "group": "catalog-sc-002",
+      "split": "train",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "96eb1b864aaa676f18335c7f63185ac17f2a190f581f8ead5efb99d1fa63a55a"
+    },
+    {
+      "source": "frontend/public/images/cars/sc-002/270.jpg",
+      "origin": "project",
+      "group": "catalog-sc-002",
+      "split": "train",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "7e11e66b8500c1d3ea7264e76796790c3faa7392ef368df430dbac7d5aba86a3"
+    },
+    {
+      "source": "frontend/public/images/cars/sc-002/315.jpg",
+      "origin": "project",
+      "group": "catalog-sc-002",
+      "split": "train",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "c44c90697582d00832281a6ce439a3405b89c71de84bb9e3b7837feda00f3ed0"
+    },
+    {
+      "source": "frontend/public/images/FotoHyundaiHB20.jpg",
+      "origin": "project",
+      "group": "catalog-sc-003",
+      "split": "val",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "ac97e32a6685495e03536e40f474493e3bd39d68db2001778c553549b4c4c0fa"
+    },
+    {
+      "source": "frontend/public/images/cars/sc-003/0.jpg",
+      "origin": "project",
+      "group": "catalog-sc-003",
+      "split": "val",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "1ff3bbcae44202ad882210ab982f39f66b2822c01ac93d4863921ad407b7924d"
+    },
+    {
+      "source": "frontend/public/images/cars/sc-003/45.jpg",
+      "origin": "project",
+      "group": "catalog-sc-003",
+      "split": "val",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "b1717227f6bbbe34f7afc3d62ff09e763a7f1255e62b15279ffaa13ab2901409"
+    },
+    {
+      "source": "frontend/public/images/cars/sc-003/90.jpg",
+      "origin": "project",
+      "group": "catalog-sc-003",
+      "split": "val",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "477c4845e5792f3226aca4f80f528380f80b1077dcd0319ee923fa515b051dd3"
+    },
+    {
+      "source": "frontend/public/images/cars/sc-003/135.jpg",
+      "origin": "project",
+      "group": "catalog-sc-003",
+      "split": "val",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "dd3c615f39a9e6d2175dded2e84458ab0a0a45eaa3a03f1baa92ba3c833eeccb"
+    },
+    {
+      "source": "frontend/public/images/cars/sc-003/180.jpg",
+      "origin": "project",
+      "group": "catalog-sc-003",
+      "split": "val",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "f20ef59a48cdcf4d209f2e2eb4d0e3a5a911b8ea1cf4d5895575efbb63ea99fc"
+    },
+    {
+      "source": "frontend/public/images/cars/sc-003/225.jpg",
+      "origin": "project",
+      "group": "catalog-sc-003",
+      "split": "val",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "73991bf0a0cbbc2ece47ad8434c466da97c95c093a8c9dc65a48c3f6ad40d780"
+    },
+    {
+      "source": "frontend/public/images/cars/sc-003/270.jpg",
+      "origin": "project",
+      "group": "catalog-sc-003",
+      "split": "val",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "b3c29dcc1f65032ef851010d87926cecb2866980bc35b88067ad9312d869a425"
+    },
+    {
+      "source": "frontend/public/images/cars/sc-003/315.jpg",
+      "origin": "project",
+      "group": "catalog-sc-003",
+      "split": "val",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "794a5e41e0c2f4efc7bb109fd6db2594c5307bf140e9e16d07a6f0d783375621"
+    },
+    {
+      "source": "frontend/public/images/FotoChevroletTracker.jpg",
+      "origin": "project",
+      "group": "catalog-sc-004",
+      "split": "val",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "1f1e37c9a34f76082b657362f0e5bd6c1cda2875b30c2e9f3e11f9ff0f4f0499"
+    },
+    {
+      "source": "frontend/public/images/cars/sc-004/0.jpg",
+      "origin": "project",
+      "group": "catalog-sc-004",
+      "split": "val",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "a6fc5826d8703b1afee9e586816ea98a8357334364dedc9ea0f62a0551aeed30"
+    },
+    {
+      "source": "frontend/public/images/cars/sc-004/45.jpg",
+      "origin": "project",
+      "group": "catalog-sc-004",
+      "split": "val",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "8acef02f82135410ba7184a70026f91b2d758c86029a44773d332190b78279a2"
+    },
+    {
+      "source": "frontend/public/images/cars/sc-004/90.jpg",
+      "origin": "project",
+      "group": "catalog-sc-004",
+      "split": "val",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "e1d8d382204be546b37a99d92a2655329d072ebae7b148ed47d47c8e4db3cc0d"
+    },
+    {
+      "source": "frontend/public/images/cars/sc-004/135.jpg",
+      "origin": "project",
+      "group": "catalog-sc-004",
+      "split": "val",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "5428e0b5daaa149b655badec1ef4b81de6f7c2b5ddf13927a25d6cb73741bdeb"
+    },
+    {
+      "source": "frontend/public/images/cars/sc-004/180.jpg",
+      "origin": "project",
+      "group": "catalog-sc-004",
+      "split": "val",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "e47889b5cd92633fb3349c1e6f4a70c2d434fb90dbeadfa42d1cfcc409bafa77"
+    },
+    {
+      "source": "frontend/public/images/cars/sc-004/225.jpg",
+      "origin": "project",
+      "group": "catalog-sc-004",
+      "split": "val",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "2b5f630f4416ad39ad7e9664c22364add12e388b77cb9def843db01931c95f21"
+    },
+    {
+      "source": "frontend/public/images/cars/sc-004/270.jpg",
+      "origin": "project",
+      "group": "catalog-sc-004",
+      "split": "val",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "edf878ae7f5d59f4c38744e413489a25189107987d3ad3464063da44f9b8cf44"
+    },
+    {
+      "source": "frontend/public/images/cars/sc-004/315.jpg",
+      "origin": "project",
+      "group": "catalog-sc-004",
+      "split": "val",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "9dceb26c223a0379c5d91c9f2a64ecf5257a980b144f04230d3063c219d8eaa0"
+    },
+    {
+      "source": "frontend/public/images/FotoFiatPulse.jpg",
+      "origin": "project",
+      "group": "catalog-sc-005",
+      "split": "train",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "8b86b9244cf23059eca40ef3d46b41529e9bdb2e23d8508427efdf7b5b639016"
+    },
+    {
+      "source": "frontend/public/images/cars/sc-005/0.jpg",
+      "origin": "project",
+      "group": "catalog-sc-005",
+      "split": "train",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "82d28378a83f7f99c0303ef69db0c544a63a6d037c8acd3e964d76a15aee2497"
+    },
+    {
+      "source": "frontend/public/images/cars/sc-005/45.jpg",
+      "origin": "project",
+      "group": "catalog-sc-005",
+      "split": "train",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "82f106b7b82fc9fd800b27cd5f8a79cf5c58861c83e4b435e3d02eb3c857102f"
+    },
+    {
+      "source": "frontend/public/images/cars/sc-005/90.jpg",
+      "origin": "project",
+      "group": "catalog-sc-005",
+      "split": "train",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "886f91a75be04c64c865dac242c233963149a7f543bf94dc8f274083c79b862d"
+    },
+    {
+      "source": "frontend/public/images/cars/sc-005/135.jpg",
+      "origin": "project",
+      "group": "catalog-sc-005",
+      "split": "train",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "97dd80e12542db450bae8c3b30aaea590414806c4c9afa362283aa5106691920"
+    },
+    {
+      "source": "frontend/public/images/cars/sc-005/180.jpg",
+      "origin": "project",
+      "group": "catalog-sc-005",
+      "split": "train",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "86f7586a6a072ab38754640dee4f6d4dfbaa3261d90f6a4f5d557e2ed9b23e92"
+    },
+    {
+      "source": "frontend/public/images/cars/sc-005/225.jpg",
+      "origin": "project",
+      "group": "catalog-sc-005",
+      "split": "train",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "90229e749912bbce9dcdc929fdfc18dd1fb8ded793c32b56cc945c9f483dee71"
+    },
+    {
+      "source": "frontend/public/images/cars/sc-005/270.jpg",
+      "origin": "project",
+      "group": "catalog-sc-005",
+      "split": "train",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "3997fbdd0958711e13ba21acc250473de223fc8285bf8e73ed17395ae32afecd"
+    },
+    {
+      "source": "frontend/public/images/cars/sc-005/315.jpg",
+      "origin": "project",
+      "group": "catalog-sc-005",
+      "split": "train",
+      "boxes": [],
+      "annotation": "No obvious damage at reviewed scale; provisional negative, not certified clean",
+      "sha256": "b681a0832c93250d486fc1ef75cbd8e6555af5803d5240fda9800f7c5c706dbb"
+    }
+  ]
+}

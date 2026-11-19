@@ -1,0 +1,55 @@
+{
+  "experimental": true,
+  "counts": {
+    "train": 30,
+    "val": 21
+  },
+  "limitation": "Tiny provisional dataset; no expert review or independent test set. Never deploy.",
+  "experiments": [
+    {
+      "name": "frozen-10-compatible",
+      "freeze": 10,
+      "epochs": 10,
+      "seed": 11,
+      "status": "completed",
+      "metrics": {
+        "metrics/precision(B)": 0.300636230693798,
+        "metrics/recall(B)": 0.2,
+        "metrics/mAP50(B)": 0.23723880597014924,
+        "metrics/mAP50-95(B)": 0.16082195740996533,
+        "fitness": 0.16082195740996533
+      },
+      "weight_sha256": "cb39b18e7528d5076818c1e8554450ea7abb8fba1ab6f601f6e02b05d7ac529a"
+    },
+    {
+      "name": "full-10-compatible",
+      "freeze": 0,
+      "epochs": 10,
+      "seed": 11,
+      "status": "completed",
+      "metrics": {
+        "metrics/precision(B)": 0.0025906735751295338,
+        "metrics/recall(B)": 0.6,
+        "metrics/mAP50(B)": 0.25343317972350227,
+        "metrics/mAP50-95(B)": 0.06434331797235024,
+        "fitness": 0.06434331797235024
+      },
+      "weight_sha256": "6fa288ee4008b73b8d383675a9046bb39cd9fbb70a3fa68f1e3551c8e85b3865"
+    },
+    {
+      "name": "full-30-compatible",
+      "freeze": 0,
+      "epochs": 30,
+      "seed": 29,
+      "status": "completed",
+      "metrics": {
+        "metrics/precision(B)": 0.006442248037923903,
+        "metrics/recall(B)": 0.2,
+        "metrics/mAP50(B)": 0.004370957613814756,
+        "metrics/mAP50-95(B)": 0.001208509110996813,
+        "fitness": 0.001208509110996813
+      },
+      "weight_sha256": "f15f7e15a649059e1c6b74dd48aba597fb70192f233aa1da8d22b4e0628c066b"
+    }
+  ]
+}

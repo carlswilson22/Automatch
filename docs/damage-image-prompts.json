@@ -1,0 +1,18 @@
+{
+  "tool": "image_gen (built-in)",
+  "transparent_background": false,
+  "prompts": [
+    {
+      "file": "dent.png",
+      "prompt": "Photorealistic synthetic vehicle damage training example, single image. Unbranded silver compact hatchback parked in ordinary overcast outdoor parking lot, side view at slight front angle, full vehicle visible with moderate margin. One clear localized dent in the center of the front passenger door, deformed painted metal, no scratches elsewhere, windows wheels lights intact. Realistic camera photo with natural reflections, no annotations, no text, no bounding boxes, no people. This is a synthetic experiment dataset, not evidence of a real vehicle. Make the dent clearly visible without extreme damage."
+    },
+    {
+      "file": "scratch.png",
+      "prompt": "Photorealistic synthetic vehicle damage training example, single image. Unbranded dark blue compact SUV photographed full vehicle rear three-quarter outdoors in flat daylight. One clear patch of multiple long pale scratches on painted rear quarter panel above rear wheel, scratches confined to that metal panel. Other parts intact. Natural background and realistic reflections, no text, no labels, no arrows, no people. Synthetic educational dataset, not a real vehicle inspection. Distinct from a dent or cracked bumper."
+    },
+    {
+      "file": "bumper.png",
+      "prompt": "Photorealistic synthetic vehicle damage training example, single image. Unbranded red sedan front three-quarter view parked in simple driveway, full vehicle visible, daylight. Clear cracked and displaced front bumper plastic on near corner below headlamp, with jagged split and small gap, headlamp intact, hood and doors intact. Realistic car geometry, no exaggeration, no smoke, no injuries, no people, no text, no labels, no bounding boxes. Synthetic educational training example, not evidence about an actual car."
+    }
+  ]
+}
