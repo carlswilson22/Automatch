@@ -298,3 +298,88 @@ docker exec automatch-syndcar-repro python -B /experiment/train.py
 Use a mesma imagem Docker, a variante compatível e os mesmos pesos para uma
 comparação; outras versões ou hardware podem produzir resultados diferentes.
 A seleção e a conversão não alteram a licença ou a atribuição da fonte.
+
+
+## Experimento com Damaged Cars Dataset (Harvard Dataverse)
+
+Foi executado um treino experimental por transferência de aprendizagem com o dataset
+público *Damaged Cars*, composto por fotografias reais de veículos com avarias anotadas.
+O objetivo foi verificar se uma base real com volume significativamente maior de
+exemplares permitiria obter um detector com precisão e revocação mensuráveis e seguras.
+**O modelo resultante NÃO foi ativado no scanner em produção**, pois seus índices de
+revocação não sustentam a regra de confiabilidade para liberação do scanner.
+
+Fonte e atribuição: Grec, Marcello; Perico, Danilo H. (2024). *Damaged Cars Dataset*.
+Harvard Dataverse, [DOI 10.7910/DVN/MV5EME](https://doi.org/10.7910/DVN/MV5EME),
+licença [CC0 1.0 Universal (Public Domain Dedication)](https://creativecommons.org/publicdomain/zero/1.0/).
+Arquivo original conferido: `damages.zip` (147.575.833 bytes), MD5 `ce8222848c070a8cc5c8777e76ae3968`,
+SHA-256 `77b6cf3dabc267c2568f7ea6bd2178eee3ae1951bc215c0c36d63e38da368c23`.
+
+### Dados e particionamento anti-vazamento
+
+- Total da base: 2.290 imagens e 4.859 caixas delimitadoras em 3 categorias:
+  - `Scratched` (riscos/arranhões): 3.467 caixas (71,35%)
+  - `Dented` (amassados): 867 caixas (17,84%)
+  - `Broken` (peças quebradas): 525 caixas (10,80%)
+- Prevenção de vazamento: As 2.290 imagens foram agrupadas em 1.666 clusters atômicos
+  (combinando índice sequencial de captura e resolução da câmera). A ordenação
+  determinística usou algoritmo Fisher-Yates com semente 42.
+- Controles negativos: 27 fotografias de veículos íntegros do catálogo histórico do
+  projeto foram incorporadas (com anotações vazias) para calibrar a taxa de falsos
+  positivos.
+- Divisão final dos conjuntos:
+  - **Treino**: 1.622 imagens (1.603 avariadas + 19 controles negativos), 3.430 caixas.
+  - **Validação**: 348 imagens (344 avariadas + 4 controles negativos), 722 caixas.
+  - **Teste cego independente**: 347 imagens (343 avariadas + 4 controles negativos), 707 caixas.
+- Verificação de vazamento: Conferência automatizada garantiu intersecção zero de
+  arquivos e hashes entre os três conjuntos.
+
+### Execução e ambiente de treinamento
+
+- Contêiner Docker Linux baseado em `automatch-backend:latest`, Python 3.11.18,
+  Torch 2.15.0, Ultralytics 8.4.201, CPU Intel Core i5-3330 (4 núcleos, 4 GiB de memória).
+- Dependências: O método interno de persistência de métricas do Ultralytics foi
+  compatibilizado para operar com `pandas 3.1.1` em substituição ao Polars (que exigia
+  instruções AVX2 não suportadas pela CPU).
+- Hiperparâmetros: Modelo base `backend/yolov8n.pt` (SHA-256: `f59b3d833e2ff32e194b5bb8e08d211dc7c5bdf144b90d2c8412c47ccfc83b36`),
+  5 épocas, resolução 416 px, batch 16, otimizador AdamW, semente 42.
+- Duração total do treino: 3.102,16 segundos (~51,7 minutos).
+- Checkpoint final (`best.pt`): 6.459.562 bytes, SHA-256:
+  `f209baa4dd62d83bbce0883bf12d5abc8d7ca9a5ae6fafd3d12c92dde884e52b`.
+
+### Resultados da avaliação cega no conjunto de teste independente
+
+Métricas calculadas no conjunto cego de teste (347 imagens, 707 instâncias, limiar conf=0,25, IoU=0,5):
+
+| Classe | Precisão (P) | Revocação (R) | mAP50 | mAP50–95 |
+| :--- | :---: | :---: | :---: | :---: |
+| **Geral (todas as classes)** | **0,2074** | **0,0183** | **0,0147** | **0,0063** |
+| Scratched (riscos) | 0,6222 | 0,0549 | 0,0441 | 0,0188 |
+| Dented (amassados) | 0,0000 | 0,0000 | 0,0000 | 0,0000 |
+| Broken (quebrados) | 0,0000 | 0,0000 | 0,0000 | 0,0000 |
+
+### Avaliação de especificidade nos controles negativos
+
+Nas 4 imagens de teste de veículos íntegros do catálogo histórico (`neg_047.jpg` a `neg_050.jpg`):
+- Falsos positivos com confiança >= 0,25: **0**
+- Falsos positivos com confiança >= 0,40: **0**
+- Taxa de falso alarme em veículos íntegros: **0,0%** (especificidade preservada).
+
+Arquivo com o resumo estruturado completo: `docs/damage-damagedcars-evaluation-summary.json`.
+
+### Conclusão técnica e decisão de produto
+
+1. **Evidência comprovada**: O modelo demonstrou alta especificidade (não gerou falsos
+   positivos em veículos íntegros) e uma precisão preliminar relevante em riscos
+   visíveis (`Scratched` P = 62,2%).
+2. **Limitação impeditiva**: A revocação global foi de apenas 1,83% (98,17% das avariadas
+   não foram detectadas), e as classes `Dented` e `Broken` não atingiram convergência
+   suficiente no treino de 5 épocas na CPU.
+3. **Decisão estrita**: O modelo **NÃO oferece cobertura ou confiabilidade suficiente**
+   para atuar de forma autônoma na liberação de laudos ou atestar que um veículo está livre
+   de danos.
+4. **Alinhamento ao contrato de inspeção**: O scanner do produto DEVE continuar
+   retornando categoricamente:
+   > *"Análise inconclusiva, confirme com vistoria presencial."*
+   Nenhum parecer de conformidade ou ausência de avarias é fabricado ou presumido.
+

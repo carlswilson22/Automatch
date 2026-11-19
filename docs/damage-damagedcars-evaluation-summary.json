@@ -1,0 +1,69 @@
+{
+  "experiment_name": "damagedcars-yolov8n",
+  "dataset": "Damaged Cars Dataset (Marcello Grec / CC0)",
+  "training": {
+    "initial_weights_sha256": "f59b3d833e2ff32e194b5bb8e08d211dc7c5bdf144b90d2c8412c47ccfc83b36",
+    "epochs": 5,
+    "imgsz": 416,
+    "batch": 16,
+    "device": "cpu",
+    "duration_seconds": 3102.16,
+    "best_weights_path": "/experiment/runs/damagedcars-yolov8n/weights/best.pt",
+    "best_weights_sha256": "f209baa4dd62d83bbce0883bf12d5abc8d7ca9a5ae6fafd3d12c92dde884e52b"
+  },
+  "test_evaluation": {
+    "all_classes": {
+      "precision": 0.2074,
+      "recall": 0.0183,
+      "map50": 0.0147,
+      "map50_95": 0.0063
+    },
+    "by_class": {
+      "Scratched": {
+        "precision": 0.6222,
+        "recall": 0.0549,
+        "map50": 0.0441,
+        "map50_95": 0.0188
+      },
+      "Dented": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "map50": 0.0,
+        "map50_95": 0.0
+      },
+      "Broken": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "map50": 0.0,
+        "map50_95": 0.0
+      }
+    }
+  },
+  "negative_control_evaluation": {
+    "negative_images_tested": 4,
+    "fp_at_conf_025": 0,
+    "fp_at_conf_040": 0,
+    "details": [
+      {
+        "image": "neg_047.jpg",
+        "boxes_conf_025": [],
+        "boxes_conf_040": []
+      },
+      {
+        "image": "neg_048.jpg",
+        "boxes_conf_025": [],
+        "boxes_conf_040": []
+      },
+      {
+        "image": "neg_049.jpg",
+        "boxes_conf_025": [],
+        "boxes_conf_040": []
+      },
+      {
+        "image": "neg_050.jpg",
+        "boxes_conf_025": [],
+        "boxes_conf_040": []
+      }
+    ]
+  }
+}
