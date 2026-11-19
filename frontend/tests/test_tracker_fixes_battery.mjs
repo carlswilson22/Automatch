@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { showcaseCars } from '../src/data/showcaseData.js';
 import { generateVehicleConsultantAnswer } from '../src/utils/aiConsultantCore.js';
-import { inspectionLabel, readVisualInspection, trustedDamagePoints, vehicleInspection } from '../src/utils/visualInspection.js';
+import { INSPECTION_LABELS, inspectionLabel, readVisualInspection, trustedDamagePoints, vehicleInspection } from '../src/utils/visualInspection.js';
 const tracker=showcaseCars.find(car=>car.id==='sc-004');
 const result={schema_version:2,analysis_state:'inconclusive',car_id:'sc-004',source_image:tracker.image};
 test('Tracker não possui medida inventada de risco nem hotspot fixo',()=>{
@@ -15,8 +15,9 @@ test('consultor não repete avaria herdada do cadastro',()=>{
 });
 test('estados são distintos e resultado sem validação não acusa dano',()=>{
  assert.match(inspectionLabel(result),/inconclusiva/);
- assert.equal(inspectionLabel({schema_version:2,analysis_state:'no_damage_detected',damage_detection_validated:true}),'Nenhuma avaria detectada na análise automática');
- assert.equal(inspectionLabel({schema_version:2,analysis_state:'damage_detected',damage_detection_validated:true}),'Avaria detectada (alta confiança)');
+ assert.equal(INSPECTION_LABELS.no_damage_detected,'Nenhuma avaria detectada na análise automática');
+ assert.equal(INSPECTION_LABELS.damage_detected,'Avaria detectada (alta confiança)');
+ assert.match(inspectionLabel({schema_version:2,analysis_state:'damage_detected',damage_detection_validated:true}),/inconclusiva/);
  const untrusted=readVisualInspection({schema_version:2,analysis_state:'damage_detected',pontos_avaria:[{x:35,y:55}]});
  assert.equal(untrusted.analysis_state,'inconclusive');assert.deepEqual(trustedDamagePoints(untrusted),[]);
 });

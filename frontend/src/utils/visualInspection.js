@@ -1,6 +1,13 @@
 /** Contrato único de inspeção visual. Resultados antigos não certificam lataria. */
 export const VISUAL_SCHEMA_VERSION = 2;
 export const VISUAL_NOTICE = 'Análise automática por imagens; não substitui a vistoria presencial.';
+export const INSPECTION_LABELS = {
+  damage_detected: 'Avaria detectada (alta confiança)',
+  inconclusive: 'Análise inconclusiva, confirme com vistoria presencial',
+  no_damage_detected: 'Nenhuma avaria detectada na análise automática',
+};
+// Nenhum método de dano foi homologado; um booleano enviado pelo cliente não basta.
+const calibratedMethods = new Set();
 const states = new Set(['damage_detected', 'inconclusive', 'no_damage_detected']);
 export function readVisualInspection(value) {
   if (typeof value === 'string') {
@@ -8,7 +15,7 @@ export function readVisualInspection(value) {
   }
   value = value?.visual_inspection || value;
   if (!value || value.schema_version !== VISUAL_SCHEMA_VERSION || !states.has(value.analysis_state)) return null;
-  if (value.analysis_state !== 'inconclusive' && value.damage_detection_validated !== true) {
+  if (value.analysis_state !== 'inconclusive' && (value.damage_detection_validated !== true || !calibratedMethods.has([value.modelo, value.method_version, value.calibration_id].join(':')))) {
     return { ...value, analysis_state: 'inconclusive', pontos_avaria: [], damage_confidence: null };
   }
   return value;
@@ -22,9 +29,7 @@ export function vehicleInspection(car) {
 export function inspectionLabel(value) {
   const inspection = readVisualInspection(value);
   if (!inspection) return 'Análise visual não realizada';
-  if (inspection.analysis_state === 'damage_detected') return 'Avaria detectada (alta confiança)';
-  if (inspection.analysis_state === 'no_damage_detected') return 'Nenhuma avaria detectada na análise automática';
-  return 'Análise inconclusiva, confirme com vistoria presencial';
+  return INSPECTION_LABELS[inspection.analysis_state];
 }
 export function trustedDamagePoints(value) {
   const result = readVisualInspection(value);
