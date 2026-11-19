@@ -1,3 +1,4 @@
+import { vehicleInspection, trustedDamagePoints } from './visualInspection.js';
 import { vehicleStatusValue } from './vehicleInformation.js';
 import { parseVehicleNumber } from './vehicleNumbers.js';
 /**
@@ -34,49 +35,21 @@ export function isComplete360Set(photos360) {
 
   // Garante que não é a mesma foto repetida em todos os ângulos
   const uniqueUrls = new Set(ORBITAL_ANGLES.map(a => photos360[a]));
-  return uniqueUrls.size >= 4; // Mínimo de 4 ângulos distintos para considerar varredura orbital real
+  return uniqueUrls.size === ORBITAL_ANGLES.length;
 }
 
 /**
  * Obtém conjunto oficial de photos360 caso o veículo seja um dos modelos homologados.
- * Suporta IDs no formato 'sc-001' (catálogo local) ou numérico 1–5 (API REST).
+ * Exige o identificador exato do anúncio; nomes e prefixos não associam mídias.
  */
 function resolvePhotos360(raw) {
   if (raw.photos360 && isComplete360Set(raw.photos360)) {
     return raw.photos360;
   }
 
-  // Normaliza id: aceita 'sc-001' ou numérico 1–5 → 'sc-001'
-  const idStr = String(raw.id || '');
-  const numericId = parseInt(idStr, 10);
-  const normalizedId = idStr.startsWith('sc-')
-    ? idStr
-    : (!isNaN(numericId) && numericId >= 1 && numericId <= 5)
-      ? `sc-00${numericId}`
-      : null;
-
-  if (normalizedId && ['sc-001', 'sc-002', 'sc-003', 'sc-004', 'sc-005'].includes(normalizedId)) {
-    const staticOfficial = showcaseCars.find(c => c.id === normalizedId);
-    if (staticOfficial?.photos360) {
-      return staticOfficial.photos360;
-    }
-  }
-
-  // Fallback por nome: resolve veículos cujo ID não segue a convenção mas o nome bate
-  if (raw.name || (raw.brand && raw.model)) {
-    const searchName = (raw.name || `${raw.brand || ''} ${raw.model || ''}`).toLowerCase().trim();
-    const byName = showcaseCars.find(c =>
-      c.name.toLowerCase().includes(searchName) || searchName.includes(c.name.toLowerCase())
-    );
-    if (byName?.photos360) {
-      return byName.photos360;
-    }
-  }
-
-  if (import.meta.env?.DEV) {
-
-    console.warn(`[Automatch 360°] photos360 não resolvido para id="${idStr}" — varredura orbital indisponível.`);
-  }
+  // Somente a identidade explícita do anúncio permite usar a mídia canônica.
+  const official = showcaseCars.find(car => String(car.id) === String(raw.id));
+  if (official?.photos360 && isComplete360Set(official.photos360)) return official.photos360;
 
   return null;
 }
@@ -150,7 +123,7 @@ export function mapVehicleToViewModel(raw) {
     videoUrl: raw.videoUrl || raw.video_url || null,
     description: raw.description || raw.descricao || '',
     fullDescription: raw.fullDescription || raw.full_description || raw.description || raw.descricao || '',
-    tags, damagePoints: Array.isArray(raw.damagePoints) ? raw.damagePoints : [], specs,
+    tags, visualInspection: vehicleInspection(raw), damagePoints: trustedDamagePoints(vehicleInspection(raw)), specs,
     seller: raw.seller || { name: 'Anunciante', avatar: 'https://api.dicebear.com/7.x/initials/svg?seed=Anunciante', rating: null, ads: null, since: 'Não informado' },
     compartilhavel: raw.compartilhavel ?? false,
     valorMinimoRepasse: raw.valorMinimoRepasse ?? raw.valor_minimo_repasse ?? null,

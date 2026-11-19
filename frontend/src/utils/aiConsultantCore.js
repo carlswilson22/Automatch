@@ -1,3 +1,4 @@
+import { vehicleInspection, inspectionLabel, VISUAL_NOTICE } from './visualInspection.js';
 /**
  * aiConsultantCore.js — Lógica de recomendação e cálculo de compatibilidade de veículos.
  * 
@@ -173,9 +174,7 @@ export function generateVehicleConsultantAnswer(userMsg, car) {
   };
   const answers = topics.map(topic => {
     if (topic === 'avarias') {
-      const damages = car.damagePoints || car.damages;
-      const details = Array.isArray(damages) ? damages.map(d => typeof d === 'string' ? d : [d.part, d.type, d.desc || d.description].filter(Boolean).join(': ')).join('; ') : '';
-      return details ? `Apontamentos informados no cadastro: ${details}. A gravidade e a estrutura exigem avaliação.` : 'Não há apontamentos informados no cadastro. Isso não comprova ausência de avarias; confira a vistoria.';
+      return `${inspectionLabel(vehicleInspection(car))}. ${VISUAL_NOTICE}`;
     }
     if (topic === 'documentacao') return 'DETRAN, IPVA, multas e gravames não foram consultados. Confira os documentos com o anunciante.';
     if (topic === 'financiamento') return 'Experimente o simulador do anúncio. Parcelas são estimativas; taxas, condições e aprovação dependem da instituição.';

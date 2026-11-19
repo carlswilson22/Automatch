@@ -31,7 +31,7 @@ class TestRound3Regressions(unittest.TestCase):
     def test_item1_scanner_ia_endpoint(self):
         """Item 1: Endpoint de perícia visual responde adequadamente"""
         payload = {
-            "imagem_url": "carro_frente.jpg",
+            "imageUrl": "/images/FotoCorollaCross.jpg",
             "modo": "completo"
         }
         resp = client.post("/api/analise-visual", json=payload)

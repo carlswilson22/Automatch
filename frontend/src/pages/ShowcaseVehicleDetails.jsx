@@ -1,3 +1,4 @@
+import { readVisualInspection, vehicleInspection, inspectionLabel, trustedDamagePoints, VISUAL_NOTICE } from '../utils/visualInspection.js';
 import { getVehicleStatusRows, formatVehicleMileage } from '../utils/vehicleInformation.js';
 /**
  * ShowcaseVehicleDetails.jsx — Página de detalhes aprofundados e ficha técnica do veículo selecionado.
@@ -9,7 +10,7 @@ import { getVehicleStatusRows, formatVehicleMileage } from '../utils/vehicleInfo
 import React, { useState, useRef, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShieldCheck, ArrowLeft, Calendar, Gauge, Palette, MapPin, Heart, MessageCircle, Bot, Star, ChevronRight, ChevronDown, Car, CheckCircle2, AlertTriangle, Fuel, Settings, Award, X, Calculator, Scan, Tag, RotateCw, Bell, Globe2, FileText, Video, Scale, Loader2 } from 'lucide-react';
+import { ShieldCheck, ArrowLeft, Calendar, Gauge, Palette, MapPin, Heart, MessageCircle, Bot, Star, ChevronRight, ChevronDown, Car, AlertTriangle, Fuel, Settings, Award, Calculator, Scan, Tag, RotateCw, Bell, Globe2, FileText, Video, Scale, Loader2 } from 'lucide-react';
 import StoreIdentifier from '../components/ui/StoreIdentifier';
 import AutomatchLogo from '../components/ui/AutomatchLogo';
 import { showcaseCars } from '../data/showcaseData';
@@ -55,6 +56,9 @@ export default function ShowcaseVehicleDetails() {
   const { isAuthenticated } = useAuth();
   const [car, setCar] = useState(null);
   const [isLoadingCar, setIsLoadingCar] = useState(true);
+  const [carLoadError, setCarLoadError] = useState(null);
+  const [loadAttempt, setLoadAttempt] = useState(0);
+  const [scanError, setScanError] = useState(false);
   const [allInventoryCars, setAllInventoryCars] = useState([]);
   const [isComparatorOpen, setIsComparatorOpen] = useState(false);
   const [isOpeningComparator, setIsOpeningComparator] = useState(false);
@@ -84,6 +88,7 @@ export default function ShowcaseVehicleDetails() {
     const controller = new AbortController();
     setCar(null);
     setIsLoadingCar(true);
+    setCarLoadError(null);
 
     setLiked(isFavorite(id));
     const unsubFav = subscribeFavorites((favs) => {
@@ -107,7 +112,7 @@ export default function ShowcaseVehicleDetails() {
     // Every source uses the same fields; local ads do not gain demo approvals.
     const found = showcaseCars.find(c => String(c.id) === String(id))
       || mockCars.find(c => String(c.id) === String(id)) || getNewCarById(id);
-    if (found) {
+    if (found && isDemoModeEnabled()) {
       setCar(mapVehicleToViewModel(found));
       setIsLoadingCar(false);
     }
@@ -122,22 +127,27 @@ export default function ShowcaseVehicleDetails() {
           }
         }
       })
-      .catch(() => {})
+      .catch(error => {
+        if (!controller.signal.aborted && !(found && isDemoModeEnabled())) {
+          setCar(null);
+          setCarLoadError(error.message || 'Verifique sua conexão e tente novamente.');
+        }
+      })
       .finally(() => {
         if (!controller.signal.aborted) setIsLoadingCar(false);
       });
 
     return () => { unsubFav(); controller.abort(); };
-  }, [id]);
+  }, [id, loadAttempt]);
 
   const [aiDamageData, setAiDamageData] = useState(null);
-  const [currentDamagePoints, setCurrentDamagePoints] = useState(car?.damagePoints || []);
+  const [currentDamagePoints, setCurrentDamagePoints] = useState([]);
 
   useEffect(() => {
-    setCurrentDamagePoints(Array.isArray(car?.damagePoints) ? car.damagePoints : []);
+    setCurrentDamagePoints(trustedDamagePoints(vehicleInspection(car)));
     setActiveDamage(null);
     setAiDamageData(null);
-  }, [car?.id, car?.damagePoints]);
+  }, [car]);
 
   const compressImage = (src, maxDim = 1024, quality = 0.8) => {
     return new Promise((resolve) => {
@@ -207,7 +217,7 @@ export default function ShowcaseVehicleDetails() {
     setAnalysisResult('');
     setIsAnalyzing(false);
     return () => { scope.active = false; scope.controller.abort(); };
-  }, [id]);
+  }, [id, car?.image]);
 
   const toggleAccordion = async (tipo) => {
     if (activeAccordion === tipo) {
@@ -255,53 +265,54 @@ export default function ShowcaseVehicleDetails() {
 
   const analisarFotoDoCarro = async () => {
     const scope = analysisScopeRef.current;
-    if (!scope?.active || isAnalyzing) return;
+    if (!scope?.active || isAnalyzing || !car?.image) return;
     setIsAnalyzing(true);
+    setScanError(false);
     setAiDamageData(null);
+    setCurrentDamagePoints([]);
     setAnalysisResult('');
-
     try {
-      const vehicleImg = car.image || car.imagem || '/images/carro_lataria_amassada.jpg';
-      // 1. Pré-compressão rápida client-side
+      const vehicleImg = getVehicleImageUrl(car.image);
       const compressedB64 = await compressImage(vehicleImg, 1024, 0.8);
       if (!scope.active) return;
-
-      // 2. Chamada assíncrona para o endpoint de perícia visual
       const response = await fetch('/api/analise-visual', {
-        method: 'POST',
-        signal: scope.controller.signal,
+        method: 'POST', signal: scope.controller.signal,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          imageUrl: vehicleImg,
-          imageBase64: compressedB64,
-          car_context: {
-            brand: car.brand || car.marca,
-            model: car.model || car.modelo,
-            year: car.year || car.ano,
-            color: car.color || car.cor,
-            damages: currentDamagePoints.map(d => d.description || d.type)
-          }
+          imageUrl: vehicleImg, imageBase64: compressedB64,
+          car_context: { id: car.id, brand: car.brand, model: car.model, year: car.year, color: car.color }
         }),
       });
       const data = await response.json();
       if (!scope.active) return;
-      if (!response.ok) throw new Error(data.error || 'Erro ao conectar à IA.');
-
-      setAnalysisResult(data.resposta || 'Análise pericial concluída com sucesso.');
-      setAiDamageData(data);
-
-      if (Array.isArray(data.pontos_avaria)) {
-        setCurrentDamagePoints(data.pontos_avaria);
-        setActiveDamage(data.pontos_avaria[0]?.id ?? null);
+      if (!response.ok || data.status === 'error') throw new Error(data.detail || 'Não foi possível analisar a foto.');
+      const inspection = readVisualInspection(data);
+      if (!inspection || (inspection.car_id && String(inspection.car_id) !== String(car.id))) {
+        throw new Error('O serviço retornou uma análise sem evidência compatível com o anúncio.');
       }
-    } catch (error) {
+      setAiDamageData({ ...inspection, source_image: car.image });
+      setAnalysisResult(inspection.resposta || inspectionLabel(inspection));
+      setCurrentDamagePoints(trustedDamagePoints(inspection));
+      setActiveDamage(null);
+    } catch {
       if (!scope.active) return;
-      console.warn('Falha na chamada da IA:', error);
+      setScanError(true);
       setAnalysisResult('Não foi possível concluir a análise visual. Tente novamente.');
     } finally {
       if (scope.active) setIsAnalyzing(false);
     }
   };
+
+  if (carLoadError) {
+    return <main className="min-h-screen bg-slate-950 text-white flex items-center justify-center p-6">
+      <div role="alert" className="max-w-md text-center space-y-4">
+        <h1 className="text-xl font-bold">Não foi possível carregar o anúncio</h1>
+        <p>{carLoadError}</p>
+        <button type="button" className="rounded-xl bg-blue-600 px-5 py-3 font-bold"
+          onClick={() => setLoadAttempt(value => value + 1)}>Tentar novamente</button>
+      </div>
+    </main>;
+  }
 
   if (isLoadingCar) {
     return (
@@ -326,6 +337,9 @@ export default function ShowcaseVehicleDetails() {
       </div>
     );
   }
+
+  const visualInspection = readVisualInspection(aiDamageData) || vehicleInspection(car);
+  const inspectedCar = { ...car, visualInspection, damagePoints: trustedDamagePoints(visualInspection) };
 
   const specItems = [
     { icon: Settings, label: 'Motor', value: car.specs?.motor || 'Não informado' },
@@ -476,7 +490,7 @@ export default function ShowcaseVehicleDetails() {
 
             {inspectionTab === '360' && (
               <div data-tour="detalhes-varredura-360"><Vehicle360Viewer
-                car={car}
+                car={inspectedCar}
                 vehicleImage={car.image || car.imagem}
                 carName={car.name || `${car.brand} ${car.model}`}
                 gallery={car.gallery}
@@ -501,36 +515,15 @@ export default function ShowcaseVehicleDetails() {
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="text-sm font-black text-white tracking-wide">Scanner Pericial IA</h3>
                       {isAnalyzing ? (
-                        <span className="text-[11px] bg-cyan-500/10 text-cyan-300 border border-cyan-500/30 px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1.5 animate-pulse">
-                          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400"></span>
-                          Varredura em andamento...
-                        </span>
-                      ) : aiDamageData ? (
-                        <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border flex items-center gap-1.5 ${
-                          aiDamageData.tem_avarias
-                            ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                            : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
-                        }`}>
-                          {aiDamageData.tem_avarias ? (
-                            <>
-                              <AlertTriangle className="w-3 h-3" />
-                              {currentDamagePoints.length} Avaria(s) Mapeada(s) • Lataria {aiDamageData.score_lataria}%
-                            </>
-                          ) : (
-                            <>
-                              <CheckCircle2 className="w-3 h-3" />
-                              Sem avarias identificadas nesta análise • Score {aiDamageData.score_lataria || 98}%
-                            </>
-                          )}
-                        </span>
+                        <span role="status" className="text-xs text-cyan-300 animate-pulse">Analisando foto...</span>
                       ) : (
-                        <span className="text-[11px] bg-slate-800 text-slate-400 border border-slate-700 px-2.5 py-0.5 rounded-full font-medium">
-                          Pronto para inspeção
+                        <span role="status" className={visualInspection?.analysis_state === 'damage_detected' ? 'text-xs text-amber-300' : 'text-xs text-slate-300'}>
+                          {inspectionLabel(visualInspection)}
                         </span>
                       )}
                     </div>
                     <p className="text-[11px] text-slate-400 mt-0.5">
-                      Verificação pericial de riscos, amassados e conformidade da lataria por Visão Computacional.
+                      Avalia??o por imagens com evid?ncias e recomenda??o de vistoria.
                     </p>
                   </div>
                 </div>
@@ -544,7 +537,7 @@ export default function ShowcaseVehicleDetails() {
                   className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 shadow-lg shadow-blue-900/30 transition-all transform active:scale-95 disabled:opacity-50"
                 >
                   <Bot className={`w-4 h-4 text-cyan-200 ${isAnalyzing ? 'animate-spin' : ''}`} />
-                  <span>{isAnalyzing ? "Escanando Imagem..." : (analysisResult ? "Refazer Scanner de IA" : "Scanner de IA")}</span>
+                  <span>{isAnalyzing ? "Escanando Imagem..." : (scanError ? "Tentar novamente" : (analysisResult ? "Refazer Scanner de IA" : "Scanner de IA"))}</span>
                 </button>
               </div>
 
@@ -621,40 +614,14 @@ export default function ShowcaseVehicleDetails() {
                 ))}
               </div>
 
-              {/* Perícia AI Result Details Box */}
-              <AnimatePresence>
-                {analysisResult && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: 'auto' }}
-                    className="p-5 bg-slate-950 border-t border-slate-800 space-y-3"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-2.5">
-                        <div className={`p-2 rounded-xl ${!aiDamageData || aiDamageData.tem_avarias ? 'bg-amber-500/20 text-amber-400' : 'bg-emerald-500/20 text-emerald-400'}`}>
-                          {!aiDamageData || aiDamageData.tem_avarias ? <AlertTriangle className="w-5 h-5" /> : <CheckCircle2 className="w-5 h-5" />}
-                        </div>
-                        <div>
-                          <h4 className="text-white font-bold text-sm flex items-center gap-2">
-                            {aiDamageData ? `Laudo Técnico do Scanner Pericial IA (${aiDamageData.modelo || 'Automatch Vision'})` : 'Análise visual indisponível'}
-                          </h4>
-                          {aiDamageData?.score_lataria !== undefined && (
-                            <p className="text-[11px] text-slate-400 mt-0.5">
-                              Integridade da Lataria: <strong className="text-blue-400">{aiDamageData.score_lataria}%</strong> • Condição: <strong className={aiDamageData.tem_avarias ? "text-amber-400" : "text-emerald-400"}>{aiDamageData.condicao_geral || (aiDamageData.tem_avarias ? "Avarias Leves Identificadas" : "Excelente")}</strong>
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      <button onClick={() => setAnalysisResult('')} className="text-slate-400 hover:text-white p-1">
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                    <div className="p-3.5 bg-slate-900 rounded-xl border border-slate-800 text-xs text-slate-200 leading-relaxed whitespace-pre-wrap">
-                      {analysisResult}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              {/* Resultado único, sem score artificial de lataria. */}
+              {analysisResult && (
+                <div role={scanError ? 'alert' : 'status'} className="p-5 bg-slate-950 border-t border-slate-800 space-y-2">
+                  <h4 className="text-sm font-bold text-white">{scanError ? 'Análise indisponível' : inspectionLabel(visualInspection)}</h4>
+                  <p className="text-sm text-slate-300">{analysisResult}</p>
+                  <p className="text-xs text-slate-400">{VISUAL_NOTICE}</p>
+                </div>
+              )}
             </div>
             )}
 
@@ -849,13 +816,13 @@ export default function ShowcaseVehicleDetails() {
                 <p role="alert" className="p-4 rounded-2xl bg-amber-950/30 border border-amber-700/40 text-sm text-amber-300">{integrationError.message}</p>
               )}
               <AccordionPanel isOpen={activeAccordion === 'laudo' && !!laudoData}>
-                <VehicleReferencePanel type="laudo" car={car} data={laudoData} />
+                <VehicleReferencePanel type="laudo" car={inspectedCar} data={laudoData} />
               </AccordionPanel>
               <AccordionPanel isOpen={activeAccordion === 'detran' && !!detranData}>
-                <VehicleReferencePanel type="detran" car={car} data={detranData} />
+                <VehicleReferencePanel type="detran" car={inspectedCar} data={detranData} />
               </AccordionPanel>
               <AccordionPanel isOpen={activeAccordion === 'fipe'}>
-                <VehicleReferencePanel type="fipe" car={car} />
+                <VehicleReferencePanel type="fipe" car={inspectedCar} />
               </AccordionPanel>
             </div>
             {/* Simulador de Custo Mensal */}
@@ -982,7 +949,7 @@ export default function ShowcaseVehicleDetails() {
                 </button>
               </div>
 
-              {activeChat === 'ai' ? <AIChatBox car={car} /> : <SellerChat seller={car.seller} />}
+              {activeChat === 'ai' ? <AIChatBox car={inspectedCar} /> : <SellerChat seller={car.seller} />}
             </div>
 
           </div>
@@ -995,7 +962,7 @@ export default function ShowcaseVehicleDetails() {
           <PriceAlertModal
             isOpen={isAlertModalOpen}
             onClose={() => setIsAlertModalOpen(false)}
-            car={car}
+            car={inspectedCar}
           />
         )}
 
@@ -1003,7 +970,7 @@ export default function ShowcaseVehicleDetails() {
           <MultichannelSyncModal
             isOpen={isSyncModalOpen}
             onClose={() => setIsSyncModalOpen(false)}
-            car={car}
+            car={inspectedCar}
           />
         )}
 
@@ -1030,7 +997,7 @@ export default function ShowcaseVehicleDetails() {
       <OfficialDossierModal
         isOpen={isDossierModalOpen}
         onClose={() => setIsDossierModalOpen(false)}
-        car={car}
+        car={inspectedCar}
       />
     </div>
   );

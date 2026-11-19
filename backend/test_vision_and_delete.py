@@ -132,8 +132,9 @@ def run_tests():
     data3 = resp3.json()
     print("Pontos de Avaria Detectados:")
     print(json.dumps(data3.get("pontos_avaria"), indent=2, ensure_ascii=False))
-    assert data3.get("tem_avarias") is True, "Deve identificar tem_avarias = True"
-    assert len(data3.get("pontos_avaria")) >= 2, "Deve retornar pelo menos 2 pontos de avaria"
+    assert data3.get("tem_avarias") is None, "Contexto textual não é evidência de dano"
+    assert data3.get("pontos_avaria") == [], "Não deve fabricar coordenadas"
+    assert data3.get("analysis_state") == "inconclusive"
     print("✅ TESTE 3 PASSOU COM SUCESSO!")
 
     # -------------------------------------------------------------------------
@@ -238,7 +239,8 @@ def run_tests():
     print(f"Total Ângulos Mapeados: {data7.get('total_angulos')} | Score 360: {data7.get('score_geral_360')}%")
     assert data7.get("status") == "success"
     assert data7.get("total_angulos") == 8
-    assert len(data7.get("hotspots_360")) == 1
+    assert data7.get("hotspots_360") == []
+    assert data7.get("analysis_state") == "inconclusive"
     print("✅ TESTE 7 PASSOU COM SUCESSO!")
 
     # -------------------------------------------------------------------------

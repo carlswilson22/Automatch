@@ -106,7 +106,8 @@ class DemoToolsTests(unittest.TestCase):
             self.assertNotIn('115 micras',answer)
             self.assertIn('sem certificação',answer)
         answer = generate_semantic_reply('avarias',{'damagePoints':[{'part':'Teto','desc':'Amassado'}]})
-        self.assertIn('Amassado',answer)
+        self.assertNotIn('Amassado',answer)
+        self.assertIn('não realizada',answer)
         self.assertNotIn('leve',answer)
 
     def test_pdf_uses_only_supplied_data_without_fake_reference_or_certificate(self):

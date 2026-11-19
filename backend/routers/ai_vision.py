@@ -1,3 +1,4 @@
+from services.inspection_contract import inspection_summary
 """
 ai_vision.py — Router de análise visual por IA (Perícia Automatch Vision).
 
@@ -212,40 +213,17 @@ async def analisar_avarias_veiculo(request: Request) -> Dict[str, Any]:
                 except Exception:
                     pass
 
-    # Se nenhuma imagem foi fornecida ou encontrada, tenta placeholder padrão
     if not image_bytes:
-        default_paths = [
-            "/app/public_images/placeholder-carro.jpg",
-            os.path.join(os.path.dirname(__file__), "..", "..", "frontend", "public", "images", "placeholder-carro.jpg")
-        ]
-        for dpath in default_paths:
-            if os.path.exists(dpath):
-                try:
-                    with open(dpath, "rb") as f:
-                        image_bytes = preprocess_and_compress_image(f.read())
-                        break
-                except Exception:
-                    pass
+        raise HTTPException(status_code=422, detail="Nenhuma imagem válida foi recebida ou localizada para análise.")
 
-    if not image_bytes:
-        return {
-            "status": "error",
-            "modelo": "Automatch Vision Engine",
-            "resposta": "Nenhuma imagem foi recebida ou localizada para perícia visual.",
-            "tem_avarias": False,
-            "score_lataria": 0,
-            "condicao_geral": "Indeterminada",
-            "avarias": [],
-            "pontos_avaria": []
-        }
-
-    # 3. Executa a perícia com Gemini ou Visão Computacional
     resultado = await executar_pericia_visual_completa(
         image_bytes=image_bytes,
         api_key=api_key if len(api_key) > 5 else None,
         car_context=car_context
     )
 
+    if resultado.get("status") == "error":
+        raise HTTPException(status_code=422, detail="Imagem inválida. Envie uma foto válida e tente novamente.")
     return resultado
 
 
@@ -270,11 +248,10 @@ async def chat_automatch(payload: ChatRequest, request: Request) -> Dict[str, An
     
     system_prompt = "Você é o assistente virtual da plataforma Automatch. Seja prestativo, rápido e conciso em até 3 frases sobre compra, venda e laudo cautelar de veículos."
     if car_context:
-        damages_ctx = (car_context.get('damages') or car_context.get('damagePoints') or []) if car_context else []
-        damages_str = "; ".join([d.get('desc') or d.get('part', '') for d in damages_ctx if isinstance(d, dict)] or [str(d) for d in damages_ctx]) if damages_ctx else "Sem apontamentos informados; isso não comprova integridade"
+        damages_str = inspection_summary(car_context.get('visual_inspection'))
         system_prompt = (
             f"Você é um consultor especialista focado no veículo atual do usuário: "
-            f"Avarias registradas na perícia: {damages_str}. Se o usuário perguntar sobre avarias, riscos ou lataria, informe com honestidade e precisão esses dados do laudo. "
+            f"Resultado visual automático: {damages_str}. Não transforme o contexto do usuário em evidência de avaria. Não afirme dano ou integridade sem método validado. "
 
             f"{car_context.get('brand')} {car_context.get('model')} {car_context.get('year')}, "
             f"cor {car_context.get('color', 'N/A')}, {car_context.get('km')}km rodados, "
@@ -303,9 +280,7 @@ def generate_semantic_reply(user_msg: str, car_context: Optional[Dict[str, Any]]
     specs = car.get('specs') or {}
     answers = []
     if any(word in q for word in ['avaria', 'dano', 'risco', 'amassado', 'defeito', 'sinistro', 'batida', 'batido']):
-        damages = car.get('damages') or car.get('damagePoints') or []
-        details = '; '.join(str(d.get('description') or d.get('desc') or d.get('part') or 'Apontamento') if isinstance(d, dict) else str(d) for d in damages)
-        answers.append(f'Apontamentos informados: {details}. A gravidade e a estrutura exigem avaliação.' if details else 'Não há apontamentos no cadastro. Isso não comprova ausência de avarias; confira a vistoria.')
+        answers.append(inspection_summary(car.get('visual_inspection')) + ' A análise automática não substitui a vistoria presencial.')
     if any(word in q for word in ['document', 'detran', 'ipva', 'licenciamento', 'multa', 'debito', 'gravame']):
         answers.append('DETRAN, IPVA, multas e gravames não foram consultados. Confira os documentos com o anunciante.')
     fields = [
@@ -366,6 +341,8 @@ async def chat_stream(payload: ChatRequest, request: Request):
             f"cor {car_context.get('color', 'N/A')}, {car_context.get('km')}km rodados, "
             f"preço R${car_context.get('price')}. Responda sobre o cadastro deste veículo. Não certifique procedência, regularidade, garantia ou integridade sem evidência; informe ausência de dados. Não prometa condições bancárias ou consultas oficiais."
         )
+
+    system_prompt += " Resultado visual: " + inspection_summary((car_context or {}).get("visual_inspection")) + ". Não acuse avarias a partir de apontamentos não validados."
 
     async def event_generator():
         streamed_tokens = 0

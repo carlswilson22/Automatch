@@ -1,3 +1,4 @@
+import { readVisualInspection, inspectionLabel, VISUAL_NOTICE } from '../utils/visualInspection.js';
 import { readSessionToken } from '../services/sessionStorage';
 import { api, isDemoModeEnabled } from '../services/apiClient';
 import { demoPlateLookup } from '../utils/demoTools';
@@ -166,6 +167,14 @@ const NewCarAdForm = () => {
   const [kmDivergenceAlert, setKmDivergenceAlert] = useState(null);
   const [photoAiScanStatus, setPhotoAiScanStatus] = useState('idle'); // 'idle' | 'scanning' | 'done' | 'error'
   const [photoAiResult, setPhotoAiResult] = useState(null);
+  const scanRequestRef = useRef(0);
+  useEffect(() => {
+    scanRequestRef.current += 1;
+    setPhotoAiResult(null);
+    setPhotoAiScanStatus('idle');
+    return () => { scanRequestRef.current += 1; };
+  }, [formData.imagem]);
+
 
   // ── ESTADOS DE UPLOAD DE VÍDEO PERICIAL (TAREFA 1) ───────────────────────
   const [videoFile, setVideoFile] = useState(null);
@@ -306,6 +315,7 @@ const NewCarAdForm = () => {
   const scanCarPhotoAi = async (imageSrc) => {
     const targetImage = imageSrc || formData.imagem;
     if (!targetImage) return;
+    const requestId = ++scanRequestRef.current;
     setPhotoAiScanStatus('scanning');
     setPhotoAiResult(null);
     try {
@@ -324,12 +334,17 @@ const NewCarAdForm = () => {
       });
       if (response.ok) {
         const data = await response.json();
-        setPhotoAiResult(data);
+        if (requestId !== scanRequestRef.current) return;
+        const result = readVisualInspection(data);
+        if (!result || data.status === 'error') throw new Error('Análise inválida');
+        setPhotoAiResult({ ...result, source_image: targetImage });
         setPhotoAiScanStatus('done');
       } else {
+        if (requestId !== scanRequestRef.current) return;
         setPhotoAiScanStatus('error');
       }
     } catch {
+      if (requestId !== scanRequestRef.current) return;
       setPhotoAiScanStatus('error');
     }
   };
@@ -548,15 +563,12 @@ const NewCarAdForm = () => {
       : null;
 
     // A1: Combina feedback de laudo PDF ou de análise visual pericial para persistência no banco
-    const activeLaudoFeedback = iaFeedback || laudoFeedback || (photoAiResult ? {
-      scanner_ia: true,
-      modelo: photoAiResult.modelo,
-      tem_avarias: photoAiResult.tem_avarias,
-      score_lataria: photoAiResult.score_lataria,
-      condicao_geral: photoAiResult.condicao_geral,
-      avarias: photoAiResult.avarias || [],
-      laudo_resumo: photoAiResult.resposta
-    } : null);
+    const combinedFeedback = {
+      ...(iaFeedback || laudoFeedback || {}),
+      ...(photoAiResult ? { visual_inspection: photoAiResult } : {})
+    };
+    const activeLaudoFeedback = Object.keys(combinedFeedback).length ? combinedFeedback : null;
+
 
     const payload = {
       brand: formData.marca,
@@ -1250,7 +1262,7 @@ const NewCarAdForm = () => {
                     </div>
                     <div>
                       <p className="font-bold text-slate-900 text-xs">Inspeção e Scanner de Avarias por IA</p>
-                      <p className="text-[11px] text-slate-600">Ao enviar a foto, a inteligência artificial analisa a integridade da lataria e verifica conformidade estrutural.</p>
+                      <p className="text-[11px] text-slate-600">A análise automática da foto não comprova integridade estrutural. Confirme com vistoria presencial.</p>
                     </div>
                   </div>
 
@@ -1310,17 +1322,8 @@ const NewCarAdForm = () => {
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-2">
-                            {photoAiResult.tem_avarias ? (
-                              <span className="text-amber-400 font-bold text-xs flex items-center gap-1">
-                                <AlertTriangle className="w-4 h-4" /> Avarias Detectadas
-                              </span>
-                            ) : (
-                              <span className="text-emerald-400 font-bold text-xs flex items-center gap-1">
-                                <CheckCircle2 className="w-4 h-4" /> Sem avarias identificadas nesta imagem
-                              </span>
-                            )}
-                            <span className="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-400">
-                              Score: {photoAiResult.score_lataria}%
+                            <span role="status" className="text-slate-200 font-bold text-xs">
+                              {inspectionLabel(photoAiResult)}
                             </span>
                           </div>
                           <button type="button" onClick={() => setPhotoAiResult(null)} className="text-slate-400 hover:text-white text-xs">
@@ -1328,7 +1331,7 @@ const NewCarAdForm = () => {
                           </button>
                         </div>
                         <p className="text-xs text-slate-300 leading-relaxed">
-                          {photoAiResult.resposta}
+                          {VISUAL_NOTICE}
                         </p>
                       </motion.div>
                     )}

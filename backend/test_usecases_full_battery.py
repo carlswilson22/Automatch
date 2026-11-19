@@ -9,6 +9,7 @@ Objetivo e Motivo da Criação:
 import os
 import sys
 import base64
+from pathlib import Path
 from typing import Dict, Any
 
 from fastapi.testclient import TestClient
@@ -52,7 +53,7 @@ def run_full_battery_usecases():
     # -------------------------------------------------------------------------
     print("\n[UC-01] TESTE PERICIAL: Scanner de Lataria Amassada & Motor AutoPrice")
     # 1.1 Teste com foto de lataria amassada
-    sample_b64 = "data:image/jpeg;base64," + base64.b64encode(b"SIMULACAO_IMAGEM_LATARIA_AMASSADA").decode("utf-8")
+    sample_b64 = "data:image/jpeg;base64," + base64.b64encode((Path(__file__).resolve().parent / "public_images/FotoCorollaCross.jpg").read_bytes()).decode("utf-8")
     resp_scan = client.post("/api/analise-visual", json={
         "imageUrl": "/images/carro_lataria_amassada.jpg",
         "imageBase64": sample_b64,
@@ -102,7 +103,8 @@ def run_full_battery_usecases():
     assert resp_360.status_code == 200, f"Falha na rota 360: {resp_360.text}"
     data_360 = resp_360.json()
     assert data_360.get("total_angulos") == 8
-    assert len(data_360.get("hotspots_360", [])) == 2
+    assert data_360.get("hotspots_360") == []
+    assert data_360.get("analysis_state") == "inconclusive"
     print(f"  -> Visor 360°: 8 quadrantes configurados (0° a 315°) com 2 hotspots periciais mapeados. Score 360: {data_360.get('score_geral_360')}/100")
     results["UC-02: Visor Orbital 360° e Hotspots"] = "PASS"
 

@@ -4,7 +4,7 @@ ai_service.py — Serviço central de inteligência artificial multimodal (Perí
 Objetivo e Motivo da Criação:
   - Criado para alimentar os recursos de visão computacional e consultor inteligente do Automatch.
   - Conecta à API do Google Gemini (gemini-1.5-flash / gemini-2.0) com streaming e fallback resiliente.
-  - Executa análise de avarias em fotos de veículos (riscos, amassados, desalinhamento de peças, desgaste).
+  - Reconhece veículos; sem detector de danos calibrado, responde inconclusiva.
   - Provê o assistente de negociação e suporte com respostas contextuais aos dados do veículo.
 """
 import os
@@ -19,7 +19,7 @@ import asyncio
 from typing import Any, Dict, Optional, List
 
 import httpx
-from PIL import Image
+from PIL import Image, ImageOps
 
 logger = logging.getLogger("automatch")
 
@@ -30,7 +30,7 @@ def preprocess_and_compress_image(image_bytes: bytes, max_dim: int = 1024, quali
     minimizando latência de rede e tempo de processamento.
     """
     try:
-        img = Image.open(io.BytesIO(image_bytes))
+        img = ImageOps.exif_transpose(Image.open(io.BytesIO(image_bytes)))
         if img.mode in ("RGBA", "P"):
             img = img.convert("RGB")
         img.thumbnail((max_dim, max_dim), Image.Resampling.LANCZOS)
@@ -238,439 +238,68 @@ async def stream_gemini_generate(
             continue
 
 
-async def analyze_vehicle_damage_gemini(
-    api_key: str,
-    image_bytes: bytes,
-    car_context: Optional[Dict[str, Any]] = None
-) -> Optional[Dict[str, Any]]:
-    """
-    Executa perícia visual completa utilizando Gemini Vision multimodal.
-    Solicita saída estruturada com laudo e pontos de avaria.
-    """
-    b64_img = base64.b64encode(image_bytes).decode("utf-8")
-    
-    ctx_info = ""
-    if car_context:
-        ctx_info = (
-            f"Veículo sob análise: {car_context.get('brand', '')} {car_context.get('model', '')} "
-            f"{car_context.get('year', '')}, cor {car_context.get('color', '')}."
-        )
-
-    prompt = (
-        f"Você é um perito automotivo sênior da Automatch. Analise detalhadamente a foto deste veículo. {ctx_info}\n"
-        "Identifique cuidadosamente a integridade da lataria, para-choques, faróis, capô e vidros.\n"
-        "Retorne OBRIGATORIAMENTE um JSON válido com o seguinte formato exato:\n"
-        "{\n"
-        '  "laudo_resumo": "Texto pericial conciso de 2 a 3 frases avaliando a conservação da lataria, alinhamento de peças e se há ou não avarias visíveis.",\n'
-        '  "tem_avarias": false,\n'
-        '  "score_lataria": 95,\n'
-        '  "condicao_geral": "Excelente",\n'
-        '  "avarias": [],\n'
-        '  "pontos_avaria": [\n'
-        '    {\n'
-        '      "id": 1,\n'
-        '      "x": 35.0,\n'
-        '      "y": 62.5,\n'
-        '      "type": "arranhão",\n'
-        '      "severity": "low",\n'
-        '      "description": "Arranhão superficial no para-choque",\n'
-        '      "repairCost": 300\n'
-        '    }\n'
-        '  ]\n'
-        "}\n"
-        "Regras:\n"
-        "- Se o veículo estiver íntegro, 'tem_avarias' deve ser false, 'avarias' vazia e 'pontos_avaria' vazio.\n"
-        "- Se houver avarias visíveis (arranhão, risco, amassado, mossa, trinca de farol), informe 'tem_avarias': true, liste em 'avarias', e forneça as coordenadas relativas aproximadas em porcentagem (x de 0 a 100, y de 0 a 100) em 'pontos_avaria'.\n"
-        "- Valores de reparo sugeridos: arranhão R$ 300, amassado R$ 1.200, farol quebrado R$ 800, trinca de pintura R$ 500.\n"
-        "- Responda apenas o bloco JSON sem crases ou markdown."
-    )
-
-    contents = [{
-        "parts": [
-            {"text": prompt},
-            {"inlineData": {"mimeType": "image/jpeg", "data": b64_img}}
-        ]
-    }]
-
-    gemini_output = await call_gemini_generate(api_key, contents, max_tokens=600, temperature=0.1)
-    if not gemini_output:
-        return None
-
-    try:
-        clean_json = gemini_output.strip()
-        if clean_json.startswith("```"):
-            clean_json = re.sub(r"^```(?:json)?", "", clean_json)
-            clean_json = re.sub(r"```$", "", clean_json).strip()
-        data = json.loads(clean_json)
-        return data
-    except Exception as parse_err:
-        logger.warning("Erro ao parsear JSON do Gemini: %s. Output: %s", parse_err, gemini_output[:200])
-        has_damage = any(w in gemini_output.lower() for w in ["avaria", "arranh", "amass", "trinc", "risco", "quebrad"])
-        return {
-            "laudo_resumo": gemini_output,
-            "tem_avarias": has_damage,
-            "score_lataria": 80 if has_damage else 96,
-            "condicao_geral": "Avarias Leves" if has_damage else "Excelente",
-            "avarias": ["detalhe na lataria"] if has_damage else [],
-            "pontos_avaria": []
-        }
-
-
 # ==============================================================================
 # YOLOv8 & OpenCV Computer Vision Analysis Engine
 # ==============================================================================
 
 _yolo_model = None
+_yolo_attempted = False
 
 def get_yolo_model() -> Any:
     """Lazy load para o modelo YOLOv8 com tratamento de fallback."""
-    global _yolo_model
-    if _yolo_model is None:
+    global _yolo_model, _yolo_attempted
+    if not _yolo_attempted:
+        _yolo_attempted = True
         try:
             from ultralytics import YOLO
-            _yolo_model = YOLO('yolov8n.pt')
+            from pathlib import Path
+            weights = Path(__file__).resolve().parent.parent / 'yolov8n.pt'
+            if not weights.is_file():
+                logger.warning('Pesos locais indisponíveis; download automático desabilitado.')
+                return None
+            _yolo_model = YOLO(str(weights))
         except Exception as e:
             logger.warning("YOLOv8 indisponível no ambiente: %s", e)
             return None
     return _yolo_model
 
 
-def run_yolo_inference(file_path_str: str) -> Dict[str, Any]:
-    """Roda inferência e extrai classes e confidence de forma síncrona."""
-    model = get_yolo_model()
-    if not model:
-        return {"error": "YOLOv8 não está disponível."}
-    
-    try:
-        results = model.predict(source=file_path_str, conf=0.25, verbose=False)
-        if not results or len(results) == 0:
-            return {"detected_items": ["Nenhum objeto detectado"], "confidence": "0%"}
-            
-        result = results[0]
-        detected_classes = set()
-        max_conf = 0.0
-        
-        for box in result.boxes:
-            conf = float(box.conf[0])
-            cls_id = int(box.cls[0])
-            cls_name = result.names[cls_id]
-            detected_classes.add(cls_name)
-            if conf > max_conf:
-                max_conf = conf
-                
-        if detected_classes:
-            return {
-                "detected_items": list(detected_classes),
-                "confidence": f"{max_conf:.2%}"
-            }
-    except Exception as e:
-        logger.warning("Erro durante inferência YOLO: %s", e)
-        
-    return {"detected_items": ["Nenhum objeto detectado"], "confidence": "0%"}
-
-
 def analyze_vehicle_damage_cv(
     image_bytes: bytes,
     car_context: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
-    """
-    Motor local de Visão Computacional pericial da Automatch:
-    Analisa a imagem usando PIL, detecção de veículos e processamento de contraste/bordas
-    para identificar integridade da lataria e possíveis anomalias visuais.
-    """
-    try:
-        img = Image.open(io.BytesIO(image_bytes))
-        width, height = img.size
-    except Exception as e:
-        logger.warning("Erro ao abrir imagem no motor CV: %s", e)
-        return {
-            "laudo_resumo": "Não foi possível carregar a imagem do anúncio para análise pericial.",
-            "tem_avarias": False,
-            "score_lataria": 0,
-            "condicao_geral": "Indeterminada",
-            "avarias": [],
-            "pontos_avaria": []
-        }
+    """Reconhece o veículo, sem inferir avarias a partir de textura ou do cadastro.
 
-    # 1. Tenta validação de classe veicular via YOLO
+    O checkpoint COCO existente não possui classes de avaria. Regiões Canny/
+    Laplaciano não são um detector de lataria calibrado. Essa incapacidade é
+    expressa no contrato, em vez de inventar pontos, custos ou score.
+    """
+    from services.inspection_contract import inconclusive
+    try:
+        img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    except Exception:
+        return inconclusive(image_bytes, reason="invalid_image", status="error")
+
     model = get_yolo_model()
-    vehicle_type = "Automóvel"
-    yolo_conf = 0.90
-    found_vehicles = []
-    vehicle_bbox = None
-
-    if model:
-        try:
-            with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
-                temp_path = temp_file.name
-            img.save(temp_path, format="JPEG", quality=85)
-            yolo_res = model.predict(source=temp_path, conf=0.15, verbose=False)
-            if yolo_res and len(yolo_res) > 0:
-                boxes = yolo_res[0].boxes
-                names = yolo_res[0].names
-                for box in boxes:
-                    cname = names[int(box.cls[0])]
-                    if cname in ["car", "truck", "bus", "motorcycle"]:
-                        found_vehicles.append((cname, float(box.conf[0]), box.xyxy[0].tolist()))
-                if found_vehicles:
-                    # Seleciona o veículo de maior área na imagem
-                    found_vehicles.sort(key=lambda x: (x[2][2] - x[2][0]) * (x[2][3] - x[2][1]), reverse=True)
-                    v_name, v_conf, v_coords = found_vehicles[0]
-                    v_translate = {"car": "Carro", "truck": "Caminhonete/SUV", "bus": "Ônibus", "motorcycle": "Motocicleta"}
-                    vehicle_type = v_translate.get(v_name, "Automóvel")
-                    yolo_conf = v_conf
-                    vehicle_bbox = v_coords
-            try:
-                if os.path.exists(temp_path):
-                    os.remove(temp_path)
-            except Exception:
-                pass
-        except Exception as ye:
-            logger.debug("YOLO check skipped: %s", ye)
-
-    # DEF-02 (CT-C06): Se o modelo YOLO executou e NÃO detectou nenhum veículo na imagem
-    if model and not found_vehicles:
-        return {
-            "status": "rejected",
-            "modelo": "Automatch Vision Engine (CV + YOLOv8)",
-            "resposta": "A imagem enviada não aparenta conter um veículo automotor reconhecível. Por favor, envie uma foto clara de um automóvel.",
-            "tem_avarias": False,
-            "score_lataria": 0,
-            "condicao_geral": "Não Identificado como Veículo",
-            "avarias": [],
-            "pontos_avaria": [],
-            "confianca_ia": "0.0%"
-        }
-
-    # 2. Análise pericial adaptativa de 5 zonas anatômicas veiculares (OpenCV + Pillow)
-    damage_points: List[Dict[str, Any]] = []
-    avarias_detectadas: List[str] = []
-    score_lataria = 98
-
-    # Se car_context já possui danos conhecidos (ex: laudo prévio ou vistoria), incorpora
-    preexisting_damages = car_context.get("damages", []) if car_context else []
-    if preexisting_damages:
-        for idx, d_desc in enumerate(preexisting_damages):
-            damage_type = "arranhão"
-            cost = 350
-            if "amassad" in d_desc.lower() or "mossa" in d_desc.lower():
-                damage_type = "amassado"
-                cost = 1200
-            elif "farol" in d_desc.lower():
-                damage_type = "farol trincado"
-                cost = 850
-            elif "parachoque" in d_desc.lower() or "para-choque" in d_desc.lower():
-                damage_type = "parachoque"
-                cost = 750
-
-            avarias_detectadas.append(d_desc)
-            damage_points.append({
-                "id": idx + 1,
-                "x": round(35.0 + (idx * 25.0) % 50.0, 1),
-                "y": round(55.0 + (idx * 15.0) % 30.0, 1),
-                "type": damage_type,
-                "severity": "high" if cost > 1000 else ("medium" if cost > 500 else "low"),
-                "description": d_desc,
-                "repairCost": cost
-            })
-        score_lataria = max(65, 100 - (len(damage_points) * 9))
-
-    # Análise de 5 zonas anatômicas na lataria usando OpenCV / Pillow
+    if model is None:
+        return inconclusive(image_bytes, reason="vehicle_model_unavailable",
+                            method="YOLOv8 COCO indisponível")
     try:
-        import cv2
-        import numpy as np
-
-        np_arr = np.frombuffer(image_bytes, np.uint8)
-        cv_img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
-
-        if cv_img is not None:
-            h, w = cv_img.shape[:2]
-            gray = cv2.cvtColor(cv_img, cv2.COLOR_BGR2GRAY)
-
-            # Define as 5 zonas relativas ao veículo detectado (se disponível) para evitar ruído de fundo
-            if vehicle_bbox:
-                vx1, vy1, vx2, vy2 = vehicle_bbox
-                vx1, vy1 = max(0, int(vx1)), max(0, int(vy1))
-                vx2, vy2 = min(w, int(vx2)), min(h, int(vy2))
-                vw = max(10, vx2 - vx1)
-                vh = max(10, vy2 - vy1)
-                zones = [
-                    {
-                        "name": "Capô e Teto",
-                        "bbox": (int(vx1 + vw * 0.25), int(vy1 + vh * 0.10), int(vx1 + vw * 0.75), int(vy1 + vh * 0.45)),
-                        "center_x": round(((vx1 + vw * 0.5) / w) * 100, 1),
-                        "center_y": round(((vy1 + vh * 0.28) / h) * 100, 1),
-                        "default_type": "amassado"
-                    },
-                    {
-                        "name": "Para-choque Dianteiro",
-                        "bbox": (int(vx1 + vw * 0.20), int(vy1 + vh * 0.60), int(vx1 + vw * 0.80), int(vy1 + vh * 0.95)),
-                        "center_x": round(((vx1 + vw * 0.5) / w) * 100, 1),
-                        "center_y": round(((vy1 + vh * 0.78) / h) * 100, 1),
-                        "default_type": "parachoque"
-                    },
-                    {
-                        "name": "Lateral Esquerda",
-                        "bbox": (int(vx1 + vw * 0.05), int(vy1 + vh * 0.25), int(vx1 + vw * 0.40), int(vy1 + vh * 0.75)),
-                        "center_x": round(((vx1 + vw * 0.22) / w) * 100, 1),
-                        "center_y": round(((vy1 + vh * 0.5) / h) * 100, 1),
-                        "default_type": "arranhão"
-                    },
-                    {
-                        "name": "Lateral Direita",
-                        "bbox": (int(vx1 + vw * 0.60), int(vy1 + vh * 0.25), int(vx1 + vw * 0.95), int(vy1 + vh * 0.75)),
-                        "center_x": round(((vx1 + vw * 0.78) / w) * 100, 1),
-                        "center_y": round(((vy1 + vh * 0.5) / h) * 100, 1),
-                        "default_type": "arranhão"
-                    },
-                    {
-                        "name": "Traseira e Tampa do Porta-Malas",
-                        "bbox": (int(vx1 + vw * 0.25), int(vy1 + vh * 0.35), int(vx1 + vw * 0.75), int(vy1 + vh * 0.80)),
-                        "center_x": round(((vx1 + vw * 0.5) / w) * 100, 1),
-                        "center_y": round(((vy1 + vh * 0.58) / h) * 100, 1),
-                        "default_type": "amassado"
-                    }
-                ]
-            else:
-                zones = [
-                    {
-                        "name": "Capô e Teto",
-                        "bbox": (int(w * 0.30), int(h * 0.15), int(w * 0.70), int(h * 0.45)),
-                        "center_x": 50.0, "center_y": 30.0,
-                        "default_type": "amassado"
-                    },
-                    {
-                        "name": "Para-choque Dianteiro",
-                        "bbox": (int(w * 0.25), int(h * 0.65), int(w * 0.75), int(h * 0.90)),
-                        "center_x": 48.0, "center_y": 74.0,
-                        "default_type": "parachoque"
-                    },
-                    {
-                        "name": "Lateral Esquerda",
-                        "bbox": (int(w * 0.08), int(h * 0.30), int(w * 0.35), int(h * 0.70)),
-                        "center_x": 22.0, "center_y": 52.0,
-                        "default_type": "arranhão"
-                    },
-                    {
-                        "name": "Lateral Direita",
-                        "bbox": (int(w * 0.65), int(h * 0.30), int(w * 0.92), int(h * 0.70)),
-                        "center_x": 78.0, "center_y": 52.0,
-                        "default_type": "arranhão"
-                    },
-                    {
-                        "name": "Traseira e Tampa do Porta-Malas",
-                        "bbox": (int(w * 0.30), int(h * 0.40), int(w * 0.70), int(h * 0.75)),
-                        "center_x": 50.0, "center_y": 58.0,
-                        "default_type": "amassado"
-                    }
-                ]
-
-            zone_metrics = []
-            for z in zones:
-                x1, y1, x2, y2 = z["bbox"]
-                if x2 > x1 and y2 > y1:
-                    roi = gray[y1:y2, x1:x2]
-                    # Variância Laplaciana (nitidez/rugosidade)
-                    lap_var = float(cv2.Laplacian(roi, cv2.CV_64F).var())
-                    # Gradiente Sobel para medir descontinuidade estrutural
-                    sobelx = cv2.Sobel(roi, cv2.CV_64F, 1, 0, ksize=3)
-                    sobely = cv2.Sobel(roi, cv2.CV_64F, 0, 1, ksize=3)
-                    sobel_mag = float(np.mean(np.sqrt(sobelx**2 + sobely**2)))
-                    # Densidade Canny
-                    canny_roi = cv2.Canny(roi, 100, 200)
-                    canny_density = float(np.sum(canny_roi > 0)) / (roi.shape[0] * roi.shape[1])
-
-                    # Localiza o ponto de maior descontinuidade no ROI
-                    min_val, max_val, min_loc, max_loc = cv2.minMaxLoc(canny_roi)
-                    pt_x = round(((x1 + max_loc[0]) / w) * 100.0, 1) if max_val > 0 else z["center_x"]
-                    pt_y = round(((y1 + max_loc[1]) / h) * 100.0, 1) if max_val > 0 else z["center_y"]
-
-                    zone_metrics.append({
-                        "name": z["name"],
-                        "lap_var": lap_var,
-                        "sobel_mag": sobel_mag,
-                        "canny_density": canny_density,
-                        "x": pt_x,
-                        "y": pt_y,
-                        "default_type": z["default_type"]
-                    })
-
-            # Se não tínhamos danos pré-existentes, avalia a integridade global e os quadrantes calculados
-            if not damage_points and zone_metrics:
-                # Medição global de integridade superficial (descontinuidades de textura e bordas de colisão)
-                global_canny = cv2.Canny(gray, 100, 200)
-                global_canny_density = float(np.sum(global_canny > 0)) / (gray.shape[0] * gray.shape[1])
-                global_lap_var = float(cv2.Laplacian(gray, cv2.CV_64F).var())
-
-                # DEF-02 (CT-C05): Detecção precisa: veículo com avarias reais apresenta alta densidade de descontinuidade
-                is_vehicle_damaged = (global_canny_density >= 0.115 and global_lap_var > 950) or (global_lap_var > 2200)
-
-                if is_vehicle_damaged:
-                    # Ordena por maior índice de descontinuidade
-                    zone_metrics.sort(key=lambda m: (m["lap_var"] * 0.4 + m["sobel_mag"] * 0.6), reverse=True)
-
-                    detected_count = 0
-                    for idx, m in enumerate(zone_metrics):
-                        if (m["canny_density"] >= 0.08 or m["lap_var"] > 850) and detected_count < 3:
-                            detected_count += 1
-                            if m["lap_var"] > 1800:
-                                sev = "high"
-                                cost = 1200
-                                d_type = "amassado"
-                                desc = f"Amassado com deformação de superfície identificado no(a) {m['name']}"
-                            elif m["lap_var"] > 1100 or m["canny_density"] >= 0.12:
-                                sev = "medium"
-                                cost = 750
-                                d_type = m["default_type"]
-                                desc = f"Desalinhamento/avaria moderada detectada no(a) {m['name']}"
-                            else:
-                                sev = "low"
-                                cost = 350
-                                d_type = "arranhão"
-                                desc = f"Micro-risco na superfície da pintura no(a) {m['name']}"
-
-                            avarias_detectadas.append(desc)
-                            damage_points.append({
-                                "id": len(damage_points) + 1,
-                                "x": m["x"],
-                                "y": m["y"],
-                                "type": d_type,
-                                "severity": sev,
-                                "description": desc,
-                                "repairCost": cost
-                            })
-
-                if damage_points:
-                    score_lataria = max(68, 100 - (len(damage_points) * 11))
-    except Exception as cve:
-        logger.debug("OpenCV 5-zone filter skipped or failed: %s", cve)
-
-    has_damages = len(damage_points) > 0
-    if has_damages:
-        condicao = "Avarias Leves Identificadas" if score_lataria >= 85 else "Avarias Moderadas"
-        laudo_text = (
-            f"IA Automatch Vision: Identificadas {len(damage_points)} avaria(s) visual(is) na lataria do veículo. "
-            f"Pontos marcados para vistoria com reparo estimado em R$ {sum(d['repairCost'] for d in damage_points):,.2f}. "
-            f"Conformidade estrutural geral em {score_lataria}%."
+        predictions = model.predict(source=img, conf=0.15, verbose=False)
+        vehicles = []
+        for result in predictions or []:
+            for box in result.boxes:
+                if result.names[int(box.cls[0])] in ("car", "truck", "bus", "motorcycle"):
+                    vehicles.append(float(box.conf[0]))
+        return inconclusive(
+            image_bytes, method="YOLOv8 COCO (reconhecimento de veículo)",
+            reason="unvalidated_damage_method" if vehicles else "vehicle_not_recognized",
+            vehicle_confidence=max(vehicles) if vehicles else None,
+            vehicle_detected=bool(vehicles),
         )
-    else:
-        condicao = "Excelente (Pintura e Lataria Íntegras)"
-        score_lataria = 98
-        laudo_text = (
-            f"IA Automatch Vision ({vehicle_type}): Veículo com pintura uniforme, faróis alinhados "
-            "e sem sinais aparentes de colisões, amassados ou deformidades estruturais na lataria."
-        )
-
-    return {
-        "status": "success",
-        "laudo_resumo": laudo_text,
-        "tem_avarias": has_damages,
-        "score_lataria": score_lataria,
-        "condicao_geral": condicao,
-        "avarias": avarias_detectadas,
-        "pontos_avaria": damage_points,
-        "confianca_ia": f"{yolo_conf * 100:.1f}%"
-    }
+    except Exception as error:
+        logger.warning("Reconhecimento do veículo indisponível: %s", type(error).__name__)
+        return inconclusive(image_bytes, reason="vehicle_inference_failed")
 
 
 async def executar_pericia_visual_completa(
@@ -678,86 +307,36 @@ async def executar_pericia_visual_completa(
     api_key: Optional[str] = None,
     car_context: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
-    """
-    Executa a perícia visual com Gemini Vision se a chave estiver configurada;
-    caso contrário, utiliza o motor local de Visão Computacional.
-    """
-    if api_key:
-        logger.info("Iniciando Perícia Visual com Google Gemini Vision...")
-        gemini_result = await analyze_vehicle_damage_gemini(api_key, image_bytes, car_context)
-        if gemini_result and gemini_result.get("laudo_resumo"):
-            return {
-                "status": "success",
-                "modelo": "Google Gemini 1.5 Flash Vision",
-                "resposta": gemini_result.get("laudo_resumo"),
-                "tem_avarias": gemini_result.get("tem_avarias", False),
-                "score_lataria": gemini_result.get("score_lataria", 95),
-                "condicao_geral": gemini_result.get("condicao_geral", "Excelente"),
-                "avarias": gemini_result.get("avarias", []),
-                "pontos_avaria": gemini_result.get("pontos_avaria", [])
-            }
-        logger.warning("Gemini Vision não respondeu satisfatoriamente. Utilizando Motor Pericial Local Automatch Vision.")
+    """Devolve evidência rastreável; não há detector de danos calibrado instalado."""
+    from services.inspection_contract import inconclusive
+    try:
+        img = Image.open(io.BytesIO(image_bytes))
+        img.verify()
+    except Exception:
+        return inconclusive(image_bytes, reason="invalid_image", status="error")
+    # O Gemini genérico também não dispõe de calibração de dano no projeto.
+    # Não faz uma chamada paga que não possa sustentar a decisão solicitada.
+    result = analyze_vehicle_damage_cv(image_bytes)
+    if car_context:
+        result["car_id"] = str(car_context.get("id") or "")
+    return result
 
-    cv_result = analyze_vehicle_damage_cv(image_bytes, car_context)
-    return {
-        "status": cv_result.get("status", "success"),
-        "modelo": cv_result.get("modelo", "Automatch Vision Engine (CV + YOLOv8)"),
-        "resposta": cv_result.get("laudo_resumo"),
-        "tem_avarias": cv_result.get("tem_avarias", False),
-        "score_lataria": cv_result.get("score_lataria", 98),
-        "condicao_geral": cv_result.get("condicao_geral", "Excelente"),
-        "avarias": cv_result.get("avarias", []),
-        "pontos_avaria": cv_result.get("pontos_avaria", []),
-        "confianca_ia": cv_result.get("confianca_ia", "92.0%")
-    }
-
-
-# ==============================================================================
-# Compilação do mapa visual 360°
-# ==============================================================================
 
 def compilar_laudo_360(
     car_context: Optional[Dict[str, Any]] = None,
     preexisting_damages: Optional[List[Dict[str, Any]]] = None
 ) -> Dict[str, Any]:
-    """
-    Compila o mapa 360° do veículo distribuindo marcadores de avaria
-    por quadrantes angulares (0° = Frente, 90° = Lateral Direita, 180° = Traseira, 270° = Lateral Esquerda).
-    """
-    angulos = [
-        {"angle": 0, "label": "Frente / Capô", "icon": "front"},
-        {"angle": 45, "label": "Diagonal Dianteira Direita", "icon": "front-right"},
-        {"angle": 90, "label": "Lateral Direita", "icon": "right"},
-        {"angle": 135, "label": "Diagonal Traseira Direita", "icon": "rear-right"},
-        {"angle": 180, "label": "Traseira / Porta-Malas", "icon": "rear"},
-        {"angle": 225, "label": "Diagonal Traseira Esquerda", "icon": "rear-left"},
-        {"angle": 270, "label": "Lateral Esquerda", "icon": "left"},
-        {"angle": 315, "label": "Diagonal Dianteira Esquerda", "icon": "front-left"}
-    ]
-
-    hotspots = []
-    if preexisting_damages:
-        for idx, d in enumerate(preexisting_damages):
-            # Mapeia ângulo baseado no índice ou tipo de avaria
-            angle = (idx * 90) % 360
-            hotspots.append({
-                "id": d.get("id", idx + 1),
-                "angle": angle,
-                "x": d.get("x", 50.0),
-                "y": d.get("y", 50.0),
-                "type": d.get("type", "arranhão"),
-                "severity": d.get("severity", "low"),
-                "description": d.get("description", "Avaria detectada"),
-                "repairCost": d.get("repairCost", 300)
-            })
-
+    """Um mapa de ângulos não é uma nova análise nem redistribui danos por índice."""
+    from services.inspection_contract import inconclusive
     return {
-        "status": "success",
-        "modelo": "Automatch 360 Vision Engine",
-        "angulos_disponiveis": angulos,
-        "total_angulos": len(angulos),
-        "hotspots_360": hotspots,
-        "score_geral_360": 98 if len(hotspots) == 0 else max(70, 100 - (len(hotspots) * 10))
+        **inconclusive(reason="no_photo_analysis"),
+        "angulos_disponiveis": [
+            {"angle": angle, "label": label}
+            for angle, label in [(0, "Frente"), (45, "Diagonal dianteira"),
+                (90, "Lateral A"), (135, "Diagonal traseira"), (180, "Traseira"),
+                (225, "Diagonal traseira"), (270, "Lateral B"), (315, "Diagonal dianteira")]
+        ],
+        "total_angulos": 8, "hotspots_360": [], "score_geral_360": None,
     }
 
 

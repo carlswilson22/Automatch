@@ -1,3 +1,4 @@
+from services.inspection_contract import inspection_from_feedback
 """
 laudos_export.py — Router de exportação e download de laudos periciais e dossiês veiculares.
 
@@ -83,24 +84,27 @@ class CarDossiePayload(BaseModel):
     debt_status: Optional[str] = None
     auction_history: Optional[str] = None
     laudo_status: Optional[str] = None
+    visual_inspection: Optional[Dict[str, Any]] = None
 
 
 def _build_car_dict(car_id: str, db: Session, payload: Optional[CarDossiePayload] = None, **query_params) -> Dict[str, Any]:
     car = db.query(models.Car).filter(models.Car.id == car_id).first()
     if car:
         data = {key: getattr(car, key, None) for key in (
-            "brand", "model", "year", "km", "color", "fuel", "plate", "fipe_code", "debt_status", "auction_history", "laudo_status"
+            "brand", "model", "year", "km", "color", "fuel", "plate", "fipe_code", "debt_status", "auction_history", "laudo_status", "laudo_feedback"
         )}
         data.update(id=car.id, price=float(car.price) if car.price is not None else None,
                     fipe_price=float(car.fipe_price) if car.fipe_price is not None else None,
-                    chassi=None, origem="cadastro")
+                    chassi=None, origem="cadastro", visual_inspection=inspection_from_feedback(car.laudo_feedback))
+        if payload and payload.visual_inspection:
+            data["visual_inspection"] = inspection_from_feedback(payload.visual_inspection)
         return data
     import os
     if os.getenv("ENVIRONMENT", "development").strip().lower() == "production":
         raise HTTPException(status_code=404, detail="Veículo não encontrado.")
     if payload or query_params.get("brand") or query_params.get("model"):
         values = payload.model_dump() if payload else {}
-        fields = ("brand", "model", "year", "km", "price", "color", "fuel", "plate", "chassi", "fipe_price", "fipe_code", "debt_status", "auction_history", "laudo_status")
+        fields = ("brand", "model", "year", "km", "price", "color", "fuel", "plate", "chassi", "fipe_price", "fipe_code", "debt_status", "auction_history", "laudo_status", "visual_inspection")
         return {"id": car_id, "origem": "previsualizacao", **{key: values[key] if values.get(key) is not None else query_params.get(key) for key in fields}}
     if car_id in SHOWCASE_CARS_MAP:
         return {**SHOWCASE_CARS_MAP[car_id], "id": car_id, "origem": "amostra"}

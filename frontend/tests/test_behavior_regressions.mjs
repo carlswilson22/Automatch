@@ -1,3 +1,4 @@
+import { showcaseCars } from '../src/data/showcaseData.js';
 import { test, before, after, beforeEach, afterEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { createServer } from 'vite';
@@ -187,7 +188,7 @@ async function mountDetails(id='sc-004'){
 test('avarias atualizam quando a API hidrata o mesmo veículo e somem quando deixam de existir',async()=>{
  const pending=deferred();
  globalThis.fetch=async url=>url==='/api/cars/sc-004'?pending.promise:Response.json([]);
- await mountDetails();assert.match(text(view),/dp-tracker-1/);
+ await mountDetails();assert.match(text(view),/Carregando dados/);assert.doesNotMatch(text(view),/dp-tracker-1/);
  await act(async()=>{pending.resolve(Response.json({id:'sc-004',brand:'Chevrolet',model:'Tracker',price:100000,damagePoints:[]}));await tick();});
  assert.doesNotMatch(text(view),/dp-tracker-1/);
 });
@@ -195,7 +196,7 @@ test('avarias atualizam quando a API hidrata o mesmo veículo e somem quando dei
 test('resposta atrasada da análise visual não contamina o próximo anúncio',async()=>{
  const pending=deferred();let analysisSignal;
  globalThis.Image=class{set src(_value){queueMicrotask(()=>this.onerror());}};
- globalThis.fetch=async(url,options)=>{if(url==='/api/analise-visual'){analysisSignal=options.signal;return pending.promise;}return Response.json(url.startsWith('/api/cars/')?null:[]);};
+ globalThis.fetch=async(url,options)=>{if(url==='/api/analise-visual'){analysisSignal=options.signal;return pending.promise;}return Response.json(url.startsWith('/api/cars/')?showcaseCars.find(car=>car.id===url.split('/').at(-1)):[]);};
  const navigate=await mountDetails();
  await act(async()=>{void view.root.findByProps({id:'scanner-ia-action-btn'}).props.onClick();await tick();});
  await act(async()=>navigate('/encontrar/sc-002'));
@@ -206,15 +207,26 @@ test('resposta atrasada da análise visual não contamina o próximo anúncio',a
 
 test('falha na análise visual exibe indisponibilidade sem inventar aprovação',async()=>{
  globalThis.Image=class{set src(_value){queueMicrotask(()=>this.onerror());}};
- globalThis.fetch=async url=>url==='/api/analise-visual'?Response.json({error:'Indisponível'},{status:503}):Response.json(url.startsWith('/api/cars/')?null:[]);
+ globalThis.fetch=async url=>url==='/api/analise-visual'?Response.json({error:'Indisponível'},{status:503}):Response.json(url.startsWith('/api/cars/')?showcaseCars.find(car=>car.id===url.split('/').at(-1)):[]);
  await mountDetails();await act(async()=>view.root.findByProps({id:'scanner-ia-action-btn'}).props.onClick());
  assert.match(text(view),/Não foi possível concluir a análise visual/);assert.doesNotMatch(text(view),/Lataria com pintura uniforme/);
 });
 
 test('consulta cautelar indisponível não gera um laudo aprovado fictício',async()=>{
- globalThis.fetch=async url=>url.includes('/integracoes/laudo-cautelar/')?Response.json({detail:'Indisponível'},{status:503}):Response.json(url.startsWith('/api/cars/')?null:[]);
+ globalThis.fetch=async url=>url.includes('/integracoes/laudo-cautelar/')?Response.json({detail:'Indisponível'},{status:503}):Response.json(url.startsWith('/api/cars/')?showcaseCars.find(car=>car.id===url.split('/').at(-1)):[]);
  await mountDetails();
  const consult=button(view,'Laudo Cautelar');assert.ok(consult);
  await act(async()=>consult.props.onClick());
  assert.match(text(view),/Não foi possível consultar o laudo cautelar/);assert.doesNotMatch(text(view),/Resultado da Perícia Cautelar/);
+});
+
+
+test('API indisponível fora da demonstração exibe erro e permite tentar novamente',async()=>{
+ let failed=true;
+ globalThis.fetch=async url=>url.startsWith('/api/cars/')?(failed?Response.json({detail:'Falha de consulta'},{status:422}):Response.json(showcaseCars[3])):Response.json([]);
+ await mountDetails();
+ assert.match(text(view),/Não foi possível carregar o anúncio/);
+ assert.ok(button(view,'Tentar novamente'));assert.doesNotMatch(text(view),/dp-tracker-1/);
+ failed=false;await act(async()=>{button(view,'Tentar novamente').props.onClick();await tick();});
+ assert.ok(view.root.findByProps({id:'scanner-ia-action-btn'}));
 });

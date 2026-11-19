@@ -150,7 +150,7 @@ class TestAuditFullBattery(unittest.TestCase):
     def test_02_360_scan_and_damage_analysis(self):
         """Cenário 2: Validação de perícia visual com IA e detecção de avarias"""
         payload = {
-            "imagem_url": "carro_lateral.jpg",
+            "imageUrl": "/images/FotoCorollaCross.jpg",
             "modo": "completo"
         }
         resp = client.post("/api/analise-visual", json=payload)
@@ -159,7 +159,8 @@ class TestAuditFullBattery(unittest.TestCase):
         self.assertIn("score_lataria", data)
         self.assertIn("tem_avarias", data)
         self.assertIn("avarias", data)
-        self.assertIsInstance(data["score_lataria"], (int, float))
+        self.assertIsNone(data["score_lataria"])
+        self.assertEqual(data["analysis_state"], "inconclusive")
         print(f"✓ Cenário 2 (Varredura 360° e Scanner): Score de Lataria apurado: {data['score_lataria']}%")
 
     # ──────────────────────────────────────────────────────────────────────────

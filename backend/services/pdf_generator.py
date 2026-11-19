@@ -1,3 +1,4 @@
+from services.inspection_contract import inspection_summary, DISCLAIMER
 """
 pdf_generator.py — Gerador de Dossiê Cautelar Oficial em PDF (ReportLab).
 
@@ -229,6 +230,9 @@ def gerar_dossie_pdf(car_data: Dict[str, Any], protocol: str) -> bytes:
     elements.append(Paragraph(f"<b>Referência de preço informada:</b> {text(fipe_text)}", styles["value"]))
     elements.append(Spacer(1, 12))
     elements.append(Paragraph("DETRAN, gravames, multas, estrutura, micragem e mecânica: não consultados ou medidos por este relatório.", styles["value"]))
+    elements.append(Spacer(1, 12))
+    elements.append(Paragraph("<b>Análise visual automática:</b> " + text(inspection_summary(car_data.get("visual_inspection") or car_data.get("laudo_feedback"))), styles["value"]))
+    elements.append(Paragraph(text(DISCLAIMER), styles["footer"]))
     feedback = car_data.get("laudo_feedback")
     if feedback:
         try:

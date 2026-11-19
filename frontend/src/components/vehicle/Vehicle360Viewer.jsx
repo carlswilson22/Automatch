@@ -1,3 +1,4 @@
+import { vehicleInspection, trustedDamagePoints, inspectionLabel, VISUAL_NOTICE } from '../../utils/visualInspection.js';
 /**
  * Vehicle360Viewer.jsx — Visualizador panorâmico interativo 360 graus do exterior do veículo.
  * 
@@ -36,7 +37,6 @@ const Vehicle360Viewer = ({
   carName = 'Veículo',
   gallery = null,
   photos360 = null,
-  damagePoints = null,
   onOpenLaudo = null
 }) => {
   const [currentAngle, setCurrentAngle] = useState(0);
@@ -55,11 +55,8 @@ const Vehicle360Viewer = ({
 
 
   // Pontos de avaria/laudo cautelar mapeados
-  const effectiveDamagePoints = useMemo(() => {
-    if (Array.isArray(damagePoints)) return damagePoints;
-    if (Array.isArray(car?.damagePoints)) return car.damagePoints;
-    return [];
-  }, [damagePoints, car?.damagePoints]);
+  const visualInspection = vehicleInspection(car);
+  const effectiveDamagePoints = trustedDamagePoints(visualInspection);
 
   // Pontos de avaria visíveis no ângulo atual
   const activeAngleDamagePoints = useMemo(() => {
@@ -243,7 +240,7 @@ const Vehicle360Viewer = ({
               {effectiveDamagePoints.length === 0 ? (
                 <span className="text-[10px] bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1 shadow-sm">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-                  100% Íntegro: Nenhuma avaria ou retoque detectado
+                  {inspectionLabel(visualInspection)}
                 </span>
               ) : (
                 <button
@@ -272,7 +269,7 @@ const Vehicle360Viewer = ({
             <p className="text-[11px] text-slate-400 mt-0.5">
               {effectiveDamagePoints.length > 0
                 ? 'Varredura orbital com marcadores periciais interativos (Carvana Benchmark). Clique nos pontos para inspecionar em alta definição.'
-                : 'Varredura com inspeção pericial 100% íntegra. Carroceria sem retoques ou avarias registradas.'}
+                : 'Análise automática por imagens; não substitui a vistoria presencial.'}
             </p>
           </div>
         </div>
@@ -511,7 +508,7 @@ const Vehicle360Viewer = ({
                   </p>
                   <div className="pt-2 flex items-center justify-between text-[10px] text-slate-500 border-t border-slate-800/80">
                     <span className="flex items-center gap-1 text-emerald-400 font-semibold">
-                      <CheckCircle2 className="w-3 h-3" /> Estrutura Monobloco 100% Intacta
+                      <CheckCircle2 className="w-3 h-3" /> {VISUAL_NOTICE}
                     </span>
                     <span>{selectedHotspot.inspector || 'Perito Cautelar Homologado'}</span>
                   </div>

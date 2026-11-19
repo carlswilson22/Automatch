@@ -1,3 +1,4 @@
+import { vehicleInspection, inspectionLabel, VISUAL_NOTICE } from '../../utils/visualInspection.js';
 import { parseVehicleNumber } from '../../utils/vehicleNumbers.js';
 import { formatVehicleMileage } from '../../utils/vehicleInformation.js';
 import { dossierInspectionItems, vehicleReference, formatBrl } from '../../utils/demoTools';
@@ -51,6 +52,7 @@ export default function OfficialDossierModal({ isOpen, onClose, car }) {
 
   if (!isOpen || !car) return null;
 
+  const visualInspection = vehicleInspection(car);
   const parsedIa = parseInspectionFeedback(car.laudoFeedback ?? car.laudo_feedback);
   const iaClassificacao = parsedIa?.classificacao_geral;
   const iaResumo = parsedIa?.resumo_executivo;
@@ -168,7 +170,7 @@ export default function OfficialDossierModal({ isOpen, onClose, car }) {
     </div>
   </div>
 
-  <div class="sec-title">Checagem Pericial e Estrutural</div>
+  <div class="sec-title">Análise visual automática</div>\n  <p>${escapeHtml(inspectionLabel(visualInspection))}</p><p>${escapeHtml(VISUAL_NOTICE)}</p>\n  <div class="sec-title">Checagem Pericial e Estrutural</div>
   <table>
     <thead>
       <tr>
@@ -212,6 +214,7 @@ export default function OfficialDossierModal({ isOpen, onClose, car }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          visual_inspection: visualInspection,
           brand,
           model,
           year: parseVehicleNumber(car.year ?? car.ano, null),
@@ -406,8 +409,14 @@ export default function OfficialDossierModal({ isOpen, onClose, car }) {
               </p>
             </div>
 
+            <section role="status" className="rounded-xl bg-slate-50 p-4 space-y-2">
+              <h4 className="font-bold text-slate-800">Análise visual automática</h4>
+              <p className="text-sm text-slate-700">{inspectionLabel(visualInspection)}</p>
+              <p className="text-xs text-slate-500">{VISUAL_NOTICE}</p>
+            </section>
+
             {/* Painel Pericial Exclusivo: Auditoria de IA Multimodal (Gemini 1.5 Flash) */}
-            {parsedIa && (
+            {iaClassificacao && (
               <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-blue-50/70 via-indigo-50/40 to-slate-50 border border-blue-200/80 space-y-4" data-testid="dossie-ia-painel">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-blue-200/60 pb-3">
                   <div className="flex items-center gap-2">

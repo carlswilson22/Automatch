@@ -165,22 +165,9 @@ Impulsionado pelo potente motor 1.2 Turbo flex de 133 cv acoplado ao câmbio aut
 
 Equipado com o assistente de estacionamento semiautônomo Easy Park (estaciona sozinho em vagas paralelas e perpendiculares), alerta de colisão frontal com frenagem autônoma de emergência, sensor de ponto cego nos retrovisores, ar-condicionado digital automático e Wi-Fi embarcado com conexão para até 7 aparelhos simultâneos.
 
-Carro de único proprietário, revisado em concessionária, Laudo pericial atesta estrutura e mecânica 100% íntegras, com apontamento estético leve de 1.8cm na carcaça do retrovisor externo direito mapeado no laudo.`,
+Carro de único proprietário, revisado em concessionária, Conservação e procedência devem ser confirmadas na vistoria e nos documentos originais.`,
     tags: ['1.2 Turbo', 'Teto Panorâmico', 'Easy Park', 'Wi-Fi Nativo', 'Alerta Ponto Cego'],
-    damagePoints: [
-      {
-        id: 'dp-tracker-1',
-        angle: 90,
-        x: 42,
-        y: 46,
-        part: 'Retrovisor Externo Direito',
-        type: 'Pequeno Risco Superficial',
-        severity: 'Estético Leve (Superficial)',
-        desc: 'Pequeno risco superficial de 1.8cm na carcaça plástica do retrovisor. Mecanismo elétrico de rebatimento e lente sem danos.',
-        inspector: 'Perito Cautelar Automatch',
-        macroImage: '/images/FotoChevroletTracker.jpg'
-      }
-    ],
+    damagePoints: [],
     specs: { motor: '1.2 Turbo Flex 133cv', cambio: 'Automático de 6 marchas', combustivel: 'Flex', portas: '4 portas', direcao: 'Elétrica', freios: 'Discos dianteiros com ABS/ESC', airbags: '6 airbags', tracao: 'Dianteira', consumoInmetro: '12,4 km/l (urbano) e 13,9 km/l (rodoviário) com gasolina' },
     seller: { name: 'AutoShop Prime', avatar: 'https://images.unsplash.com/photo-1543610892-0b1f7e6d8ac1?auto=format&fit=crop&w=100&h=100', rating: 4.9, ads: 28, since: '2020', bio: 'Loja matriz oficial certificada AutoShop Prime.' },
   },
@@ -208,20 +195,7 @@ No volante em couro com base achatada, o botão vermelho "Poison" ativa o mapeam
 
 Veículo com apenas 3.200 km, impecável, sem detalhes. Laudo cautelar com conformidade total, IPVA 2026 quitado e garantia integral de fábrica.`,
     tags: ['Abarth Oficial', 'Turbo 270 (185cv)', 'Modo Poison', 'Escapamento Duplo', 'Apenas 3.200 km'],
-    damagePoints: [
-      {
-        id: 'dp-pulse-1',
-        angle: 45,
-        x: 68,
-        y: 76,
-        part: 'Spoiler Dianteiro Inferior',
-        type: 'Ralado Superficial de Guia',
-        severity: 'Estético Leve (Superficial)',
-        desc: 'Pequeno raspado superficial de 3cm no acabamento plástico inferior do spoiler dianteiro, proveniente de guia de calçada. Estrutura e sensores 100% íntegros.',
-        inspector: 'Perito Cautelar Automatch',
-        macroImage: '/images/FotoFiatPulse.jpg'
-      }
-    ],
+    damagePoints: [],
     specs: { motor: '1.3 Turbo 270 Flex 185cv', cambio: 'Automático esportivo 6 marchas', combustivel: 'Flex', portas: '4 portas', direcao: 'Elétrica calibragem esportiva', freios: 'Discos dianteiros de 305mm com ABS', airbags: '4 airbags', tracao: 'Dianteira esportiva', consumoInmetro: '10,2 km/l (urbano) e 12,1 km/l (rodoviário) com gasolina' },
     seller: { name: 'Motors Campinas', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&h=100', rating: 4.8, ads: 19, since: '2021', bio: 'Motors Campinas - Especialista em esportivos e exclusivos.' },
   },

@@ -1,3 +1,4 @@
+import { vehicleInspection } from '../../utils/visualInspection.js';
 /**
  * AIChatBox.jsx — Caixa de chat contextualizada com o veículo em exibição.
  * 
@@ -106,6 +107,8 @@ const AIChatBox = ({ car }) => {
       .map(m => ({ from: m.from, text: m.text }));
 
     const fullCarContext = {
+      id: car?.id,
+      visual_inspection: vehicleInspection(car),
       brand: car?.brand || '',
       model: car?.name || car?.model || '',
       year: car?.year || '',
@@ -117,7 +120,7 @@ const AIChatBox = ({ car }) => {
       specs: car?.specs || {},
       description: car?.description || '',
       fullDescription: car?.fullDescription || '',
-      laudoStatus: car?.timeline?.find(t => t.type === 'laudo')?.status || 'approved'
+      laudoStatus: car?.laudoStatus || car?.laudo_status || 'Não informado'
     };
 
     // Índice da mensagem de streaming

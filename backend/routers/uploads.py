@@ -23,7 +23,7 @@ from fastapi.responses import FileResponse
 from sqlalchemy.orm import Session
 
 from services.ai_service import (
-    run_yolo_inference, 
+    executar_pericia_visual_completa,
     analisar_laudo_cautelar_pdf,
     extrair_imagens_pdf,
     analisar_fotos_periciais_pdf_yolo,
@@ -145,43 +145,36 @@ async def upload_laudo(
     laudo_feedback = None
 
     if file_ext in {".jpg", ".jpeg", ".png"}:
-        try:
-            yolo_feedback = await asyncio.to_thread(run_yolo_inference, str(file_path))
-            detected = yolo_feedback.get("detected_items", [])
-            conf = yolo_feedback.get("confidence", "90%")
-            laudo_feedback = {
-                "veredito": "Aprovado",
-                "score_procedencia": 95,
-                "resumo": f"Inspeção visual preliminar concluída. Elementos identificados: {', '.join(detected)} (Confiança: {conf}).",
-                "itens_auditados": [
-                    {"item": "Conformidade Visual de Lataria", "status": "Conforme", "detalhe": f"Identificados: {', '.join(detected)}"},
-                    {"item": "Alinhamento de Peças e Faróis", "status": "Conforme", "detalhe": "Peças alinhadas conforme padrão"},
-                    {"item": "Resolução e Legibilidade da Imagem", "status": "Conforme", "detalhe": f"Imagem nítida ({len(content)//1024} KB)"},
-                    {"item": "Procedência do Documento", "status": "Conforme", "detalhe": "Registro fotográfico anexado com sucesso"}
-                ],
-                "alertas": [],
-                "modelo_ia": "YOLOv8 + OpenCV Vision"
-            }
-        except Exception as e:
-            logger.warning("Erro ao executar task YOLO: %s", e)
-            yolo_feedback = {"error": "Falha na inferência da IA."}
+        visual = await executar_pericia_visual_completa(content, car_context={"id": car_id} if car_id else None)
+        feedback = {"visual_inspection": visual}
+        if car_id and db:
+            car_db = db.query(models.Car).filter(models.Car.id == car_id).first()
+            if car_db:
+                try:
+                    previous = json.loads(car_db.laudo_feedback or "{}")
+                except (ValueError, TypeError):
+                    previous = {}
+                if not isinstance(previous, dict):
+                    previous = {}
+                car_db.laudo_feedback = json.dumps({**previous, **feedback}, ensure_ascii=False)
+                db.commit()
+        return {
+            "status": "success", "id": file_id, "filename": safe_filename,
+            "original_name": file.filename, "size_bytes": len(content),
+            "content_type": file.content_type,
+            "url": f"/api/v1/laudos/files/{safe_filename}",
+            "visual_inspection": visual, "yolo_feedback": None,
+            "laudo_feedback": feedback, "ia_feedback": None,
+        }
     elif file_ext == ".pdf":
         try:
             laudo_feedback = await analisar_laudo_cautelar_pdf(content, filename=file.filename)
         except Exception as e:
             logger.warning("Erro ao auditar PDF do laudo: %s", e)
             laudo_feedback = {
-                "veredito": "Aprovado com Apontamento",
-                "score_procedencia": 88,
-                "resumo": "Laudo recebido e salvo com sucesso. Verificação pericial preliminar concluída sem inconformidades críticas.",
-                "itens_auditados": [
-                    {"item": "Identificação (Chassi / Motor)", "status": "Conforme", "detalhe": "Documento aceito para processamento"},
-                    {"item": "Estrutura e Longarinas", "status": "Conforme", "detalhe": "Monobloco cadastrado no sistema"},
-                    {"item": "Histórico de Leilão / Sinistro", "status": "Conforme", "detalhe": "Verificação preliminar concluída"},
-                    {"item": "Pintura e Repintura", "status": "Conforme", "detalhe": "Padrão de inspeção aceito"}
-                ],
-                "alertas": ["Processamento via módulo de contingência."],
-                "modelo_ia": "Automatch Fallback Engine"
+                "veredito": "Não avaliado", "score_procedencia": None,
+                "resumo": "Análise indisponível. Confira o documento original.",
+                "itens_auditados": [], "alertas": ["Requer conferência manual."],
             }
 
         # Auditoria de Fotos Periciais e Cross-Check via YOLOv8
