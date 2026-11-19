@@ -148,7 +148,7 @@ def run_full_system_review():
     video_data = video_upload_resp.json()
     assert video_data.get("status") == "success"
     assert video_data.get("duracao_estimada_segundos") == 20
-    assert len(video_data.get("checklist_inspecao", [])) == 4
+    assert [stage["tempo"] for stage in video_data["checklist_inspecao"]] == ["0s - 5s", "5s - 15s", "15s - 20s"]
     print(f"Vídeo Registrado: {video_data.get('filename')} | Checkpoints Sincronizados: {len(video_data.get('checklist_inspecao'))}")
     results["4. Vídeo Pericial 20s da Carroceria"] = "PASS"
     print("✅ SUÍTE 4 CONCLUÍDA COM SUCESSO!")

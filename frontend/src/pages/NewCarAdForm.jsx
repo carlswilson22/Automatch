@@ -1,3 +1,4 @@
+import { VIDEO_SUMMARY } from '../data/pericialTimeline.generated.js';
 import { readVisualInspection, inspectionLabel, VISUAL_NOTICE } from '../utils/visualInspection.js';
 import { readSessionToken } from '../services/sessionStorage';
 import { api, isDemoModeEnabled } from '../services/apiClient';
@@ -1468,7 +1469,7 @@ const NewCarAdForm = () => {
                     Vídeo Pericial de Vistoria (Upload de Vídeo)
                   </label>
                   <p className="text-xs text-slate-500 mt-0.5">
-                    Envie um vídeo demonstrando o funcionamento do motor, interior e lataria para a aba pericial do anúncio.
+                    {VIDEO_SUMMARY}
                   </p>
                 </div>
                 {videoUploadStatus === 'uploaded' && (

@@ -198,7 +198,7 @@ def run_tests():
     print(f"Vídeo Gerado: {data5.get('filename')} | Duração Estimada: {data5.get('duracao_estimada_segundos')}s")
     assert data5.get("status") == "success"
     assert data5.get("duracao_estimada_segundos") == 20
-    assert len(data5.get("checklist_inspecao", [])) == 4
+    assert [stage["tempo"] for stage in data5["checklist_inspecao"]] == ["0s - 5s", "5s - 15s", "15s - 20s"]
     print("✅ TESTE 5 PASSOU COM SUCESSO!")
 
     # -------------------------------------------------------------------------

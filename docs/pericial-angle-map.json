@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "review": "Inspeção visual das pranchas em 19/11/2026; A/B evitam afirmar esquerda/direita anatômica não comprovada em imagens sintéticas.",
+  "vehicles": [
+    {
+      "id": "sc-001",
+      "valid": true,
+      "views": {
+        "front": "/images/cars/sc-001/0.jpg",
+        "side_a": "/images/cars/sc-001/90.jpg",
+        "side_b": "/images/cars/sc-001/270.jpg",
+        "rear": "/images/cars/sc-001/180.jpg"
+      }
+    },
+    {
+      "id": "sc-002",
+      "valid": true,
+      "views": {
+        "front": "/images/cars/sc-002/0.jpg",
+        "side_a": "/images/cars/sc-002/90.jpg",
+        "side_b": "/images/cars/sc-002/270.jpg",
+        "rear": "/images/cars/sc-002/180.jpg"
+      }
+    },
+    {
+      "id": "sc-003",
+      "valid": true,
+      "views": {
+        "front": "/images/cars/sc-003/0.jpg",
+        "side_a": "/images/cars/sc-003/90.jpg",
+        "side_b": "/images/cars/sc-003/270.jpg",
+        "rear": "/images/cars/sc-003/180.jpg"
+      }
+    },
+    {
+      "id": "sc-004",
+      "valid": true,
+      "views": {
+        "front": "/images/cars/sc-004/0.jpg",
+        "side_a": "/images/cars/sc-004/90.jpg",
+        "side_b": "/images/cars/sc-004/270.jpg",
+        "rear": "/images/cars/sc-004/180.jpg"
+      }
+    },
+    {
+      "id": "sc-005",
+      "valid": false,
+      "reason": "A sequência não contém traseira válida; não gerar nem vincular vídeo até substituir as imagens."
+    }
+  ]
+}

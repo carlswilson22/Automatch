@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "car_id": "sc-001",
+  "timeline_sha256": "a6491839ebb2eefc3ce89904f733d97fc23cfe2a17a7f94d85c183a3c839929f",
+  "duration": 20.0,
+  "fps": 24,
+  "video_sha256": "a6b703aa7367cac62f76eca9332a51665f86265b5db85c54bc44c1bafd50719f",
+  "bytes": 378208,
+  "shots": [
+    {
+      "start": 0,
+      "end": 5,
+      "view": "front",
+      "angle": 0,
+      "image": "/images/cars/sc-001/0.jpg",
+      "image_sha256": "8936e56ad0d3a49c8301b7544198647f5e2a598a69abbbb6222179cf5bac4084"
+    },
+    {
+      "start": 5,
+      "end": 10,
+      "view": "side_a",
+      "angle": 90,
+      "image": "/images/cars/sc-001/90.jpg",
+      "image_sha256": "2405695228de1dc1e65c6ce2b0fabe992b84b1192c18f641c880c0ca6f24ee20"
+    },
+    {
+      "start": 10,
+      "end": 15,
+      "view": "side_b",
+      "angle": 270,
+      "image": "/images/cars/sc-001/270.jpg",
+      "image_sha256": "f06c80c23d528fd82cf610616ede0c991100acb47468d016d20053ea27be8a57"
+    },
+    {
+      "start": 15,
+      "end": 20,
+      "view": "rear",
+      "angle": 180,
+      "image": "/images/cars/sc-001/180.jpg",
+      "image_sha256": "0ea6e4f2ee510141e98a87b4a60a09ae689dd99d6d7f7d5df022b0999e68325f"
+    }
+  ],
+  "transitions": "Fade through black at 5s/15s; lateral-only crossfade at 9.875-10.125s; no image crosses the front/laterals/rear boundaries."
+}

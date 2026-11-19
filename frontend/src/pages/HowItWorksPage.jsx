@@ -1,3 +1,4 @@
+import { VIDEO_SUMMARY } from '../data/pericialTimeline.generated.js';
 /**
  * HowItWorksPage.jsx — Página interativa de introdução e tour guiado do Automatch.
  * 
@@ -214,7 +215,7 @@ export default function HowItWorksPage() {
                 Varredura 360° & Vídeo de 20s
               </h3>
               <p className="text-xs sm:text-sm text-slate-600 leading-relaxed font-light">
-                Gire o veículo em 8 ângulos reais de 45° e confira o laudo audiovisual gravado em alta definição.
+                Veja as fotos disponíveis e a sequência do vídeo: {VIDEO_SUMMARY}
               </p>
             </div>
 

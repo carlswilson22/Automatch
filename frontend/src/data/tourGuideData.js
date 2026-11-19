@@ -1,3 +1,4 @@
+import { VIDEO_SUMMARY } from './pericialTimeline.generated.js';
 /**
  * tourGuideData.js — Base de dados estruturada e configurações dos tours guiados interativos do Automatch.
  * 
@@ -78,7 +79,7 @@ export const TOURS_CONFIG = [
         targetAnchor: TOUR_ANCHORS.DETAILS_GALLERY_360,
         targetRoute: '/encontrar/sc-001',
         title: 'Inspeção Visual Completa',
-        text: 'Gire o veículo em 8 ângulos reais de 45° ou assista à filmagem pericial de 20s com foco em pintura e estrutura.',
+        text: VIDEO_SUMMARY,
         placement: 'bottom',
       },
       {
@@ -121,7 +122,7 @@ export const TOURS_CONFIG = [
         targetAnchor: TOUR_ANCHORS.AD_FORM_MEDIA,
         targetRoute: '/novo-anuncio',
         title: 'Galeria e Vídeo de 20s',
-        text: 'Envie fotos nítidas e adicione um vídeo pericial curto para valorizar a proposta do seu carro.',
+        text: VIDEO_SUMMARY,
         placement: 'bottom',
       },
       {

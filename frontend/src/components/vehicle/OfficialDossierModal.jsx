@@ -1,3 +1,4 @@
+import { VIDEO_SUMMARY } from '../../data/pericialTimeline.generated.js';
 import { vehicleInspection, inspectionLabel, VISUAL_NOTICE } from '../../utils/visualInspection.js';
 import { parseVehicleNumber } from '../../utils/vehicleNumbers.js';
 import { formatVehicleMileage } from '../../utils/vehicleInformation.js';
@@ -411,6 +412,7 @@ export default function OfficialDossierModal({ isOpen, onClose, car }) {
 
             <section role="status" className="rounded-xl bg-slate-50 p-4 space-y-2">
               <h4 className="font-bold text-slate-800">Análise visual automática</h4>
+              <p className="text-xs text-slate-500">Vídeo: {VIDEO_SUMMARY}</p>
               <p className="text-sm text-slate-700">{inspectionLabel(visualInspection)}</p>
               <p className="text-xs text-slate-500">{VISUAL_NOTICE}</p>
             </section>

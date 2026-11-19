@@ -1,3 +1,4 @@
+from pericial_timeline import CHECKPOINTS
 """
 uploads.py — Router de upload assíncrono e gestão de arquivos de mídia (imagens e documentos).
 
@@ -319,7 +320,7 @@ async def upload_pericia_video(
     current_user: models.User = Depends(get_current_user_from_header)
 ) -> Dict[str, Any]:
     """
-    Endpoint de Upload de Vídeo Pericial de Vistoria (15s):
+    Endpoint de Upload de Vídeo Pericial de Vistoria (20s):
     Recebe vídeo curto nos formatos MP4/WebM/MOV (máx 40MB),
     valida integridade e armazena na pasta de uploads da plataforma.
     """
@@ -399,10 +400,8 @@ async def upload_pericia_video(
         "duracao_real_segundos": round(detected_duration, 1) if detected_duration else 20.0,
         "tipo": "video_pericial_20s",
         "checklist_inspecao": [
-            {"tempo": "0s - 5s", "foco": "Lataria Frontal, Para-choque e Conjunto Óptico"},
-            {"tempo": "5s - 10s", "foco": "Linha de Cintura Lateral, Portas e Pneus"},
-            {"tempo": "10s - 15s", "foco": "Traseira e Vão do Porta-Malas"},
-            {"tempo": "15s - 20s", "foco": "Interior, Painel de Instrumentos e Vão do Motor"}
+            {"tempo": f"{stage['start']}s - {stage['end']}s", "foco": stage["title"]}
+            for stage in CHECKPOINTS
         ]
     }
 

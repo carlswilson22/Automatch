@@ -175,7 +175,7 @@ Carro de único proprietário, revisado em concessionária, Conservação e proc
     id: 'sc-005', name: 'Fiat Pulse Abarth', brand: 'Fiat', model: 'Pulse Abarth',
     year: 2024, price: 145000, fipePrice: 149900, color: 'Vermelho',
     mileage: 3200, image: '/images/FotoFiatPulse.jpg',
-    video_url: '/videos/pericial/sc-005-pericial.mp4',
+    video_url: null,
     gallery: [
       '/images/cars/sc-005/0.jpg',
       '/images/cars/sc-005/45.jpg',

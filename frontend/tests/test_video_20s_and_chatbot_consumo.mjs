@@ -31,50 +31,16 @@ function assert(condition, msg) {
 console.log('\n🎬 TAREFA 6 — Vídeo Pericial: duração 20s');
 console.log('=' .repeat(60));
 
-const videoSrc = readFileSync(resolve(root, 'src/components/vehicle/PericialVideoViewer.jsx'), 'utf-8');
-
-assert(videoSrc.includes('VIDEO_DURATION = 20'), 'VIDEO_DURATION constante definida como 20');
-assert(!videoSrc.includes('VIDEO_DURATION = 15'), 'Não existe VIDEO_DURATION = 15');
-assert(videoSrc.includes('Vídeo Pericial Oficial de 20s'), 'Header exibe "20s"');
-assert(!videoSrc.includes('Vídeo Pericial Oficial de 15s'), 'Não existe header "15s"');
-assert(videoSrc.includes('Reiniciar vídeo (20s)'), 'Tooltip exibe "20s"');
-assert(!videoSrc.includes('Reiniciar vídeo (15s)'), 'Não existe tooltip "15s"');
-assert(videoSrc.includes('Frente (5s), Linha de Cintura & 4 Pneus (10s), Traseira (5s)'), 'Header exibe divisão 5s / 10s / 5s');
-assert(videoSrc.includes('Fase {activeSegment + 1}/3'), 'Fase X/3');
-assert(videoSrc.includes("import { getVideoUrl } from '../../utils/imageHelper';"), 'Importa getVideoUrl de imageHelper');
-assert(videoSrc.includes('getVideoUrl(videoUrl)'), 'Aplica getVideoUrl no elemento video');
-
-// Verify 3 checkpoints: 0-5s, 5-15s, 15-20s
-const checkpointMatches = videoSrc.match(/start:\s*\d+,\s*\n\s*end:\s*\d+/g);
-assert(checkpointMatches && checkpointMatches.length === 3, `3 CHECKPOINTS definidos (encontrados: ${checkpointMatches ? checkpointMatches.length : 0})`);
-assert(videoSrc.includes('start: 0') && videoSrc.includes('end: 5'), 'Frente: 0s a 5s');
-assert(videoSrc.includes('start: 5') && videoSrc.includes('end: 15'), 'Linha de cintura e 4 pneus: 5s a 15s (10s de duração)');
-assert(videoSrc.includes('start: 15') && videoSrc.includes('end: 20'), 'Traseira: 15s a 20s (5s de duração)');
-
-// Verify progress bar has dividers at 25% (5s) and 75% (15s)
-assert(videoSrc.includes('left-[25%]'), 'Divider em 25% (5s)');
-assert(videoSrc.includes('left-[75%]'), 'Divider em 75% (15s)');
-assert(!videoSrc.includes('left-[33.33%]'), 'Sem divider antigo 33%');
-assert(!videoSrc.includes('left-[50%]'), 'Sem divider em 50% (agora fase 2 dura 10s de 25% a 75%)');
-
-// Verify label na página de detalhes
-const detailsSrc = readFileSync(resolve(root, 'src/pages/ShowcaseVehicleDetails.jsx'), 'utf-8');
-assert(detailsSrc.includes('Vídeo Pericial 20s'), 'Tab de detalhes exibe "20s"');
-assert(!detailsSrc.includes('Vídeo Pericial 15s'), 'Sem label antigo "15s" na tab');
-
-// No hardcoded 15 remaining (excluding line numbers, comments about checkpoints at 15s)
-const hardcoded15Regex = /\b15\b/g;
-const videoLines = videoSrc.split('\n');
-let hardcoded15Count = 0;
-for (const line of videoLines) {
-  const stripped = line.trim();
-  // Ignore: checkpoint end: 15 (valid!), checkpoint start: 15 (valid!), "Checkpoint 15s" (valid!)
-  if (stripped.includes('end: 15') || stripped.includes('start: 15') || stripped.includes('Checkpoint 15s')) continue;
-  if (stripped.includes('useState(15)') || stripped.includes('>= 15') || stripped.includes('/ 15') || stripped.includes('* 15') || stripped.includes('de 15s') || stripped.includes('(15s)')) {
-    hardcoded15Count++;
-  }
+const { pericialTimeline, CHECKPOINTS, VIDEO_DURATION } = await import('../src/data/pericialTimeline.generated.js');
+assert(VIDEO_DURATION === 20, 'Dura??o vem do cronograma');
+assert(JSON.stringify(CHECKPOINTS.map(stage=>[stage.start,stage.end])) === '[[0,5],[5,15],[15,20]]', 'Fases exatas');
+for(const [time,index] of [[0,0],[4.999,0],[5,1],[14.999,1],[15,2],[19.999,2]]) {
+ assert(CHECKPOINTS.findIndex(stage=>time>=stage.start && time<stage.end)===index, 'Legenda na fronteira temporal '+time);
 }
-assert(hardcoded15Count === 0, `Sem referências hardcoded de "15" (encontradas: ${hardcoded15Count})`);
+assert(pericialTimeline.shots.map(shot=>shot.angle).join(',')==='0,90,270,180','Ordem das vistas vem da mesma configura??o');
+const videoSrc = readFileSync(resolve(root,'src/components/vehicle/PericialVideoViewer.jsx'),'utf8');
+assert(videoSrc.includes('pericialTimeline.generated.js'), 'Player consome configura??o gerada');
+assert(!videoSrc.includes('const CHECKPOINTS = ['),'Sem cronograma duplicado no player');
 
 // =====================================================
 // TAREFA 7 — Chatbot Consumo com km/l

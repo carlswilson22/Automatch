@@ -1,3 +1,4 @@
+import { VIDEO_DURATION, VIDEO_SUMMARY, CHECKPOINTS } from '../../data/pericialTimeline.generated.js';
 /**
  * PericialVideoViewer.jsx — Reprodutor interativo de vídeo da vistoria pericial do veículo.
  * 
@@ -7,34 +8,7 @@
  */
 import React, { useState, useRef, useEffect } from 'react';
 import { getVideoUrl } from '../../utils/imageHelper';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Pause, RotateCcw, ShieldCheck, CheckCircle2, Clock, Video, Sparkles, Check, Volume2, VolumeX } from 'lucide-react';
-
-const VIDEO_DURATION = 20;
-
-const CHECKPOINTS = [
-  {
-    start: 0,
-    end: 5,
-    title: 'Frente & Conjunto Óptico',
-    detail: 'Alinhamento minucioso de para-choque, capô, faróis Full LED, grade e ausência de deformações frontais.',
-    color: 'emerald'
-  },
-  {
-    start: 5,
-    end: 15,
-    title: 'Linha de Cintura & 4 Pneus',
-    detail: 'Tempo dedicado de 10s: filmagem das laterais direita e esquerda, colunas A, B e C, e inspeção dos 4 pneus com sulcos e rodas sem empeno.',
-    color: 'cyan'
-  },
-  {
-    start: 15,
-    end: 20,
-    title: 'Traseira & Porta-Malas',
-    detail: 'Painel traseiro íntegro, lanternas, tampa do porta-malas, para-choque sem deformações, estepe e lacres de fábrica.',
-    color: 'blue'
-  }
-];
+import { Play, Pause, RotateCcw, ShieldCheck, Clock, Video, Check, Volume2, VolumeX } from 'lucide-react';
 
 export default function PericialVideoViewer({
   videoUrl,
@@ -45,81 +19,53 @@ export default function PericialVideoViewer({
   const [currentTime, setCurrentTime] = useState(0);
   const [isMuted, setIsMuted] = useState(true);
   const [activeSegment, setActiveSegment] = useState(0);
-  const [simulatedProgress, setSimulatedProgress] = useState(0);
   const [videoError, setVideoError] = useState(false);
-  const isSimulated = !videoUrl || videoError;
+  const isUnavailable = !videoUrl || videoError;
 
   // Reseta estado ao alternar de veiculo ou URL
   useEffect(() => {
     setVideoError(false);
     setIsPlaying(false);
     setCurrentTime(0);
-    setSimulatedProgress(0);
   }, [videoUrl]);
 
-  // Se não houver videoUrl real fornecido ou der erro, usa simulação interativa de 20s de alta fidelidade
-  useEffect(() => {
-    let timer;
-    if (isSimulated && isPlaying) {
-      timer = setInterval(() => {
-        setSimulatedProgress(prev => {
-          const next = prev + 0.1;
-          if (next >= VIDEO_DURATION) {
-            setIsPlaying(false);
-            return VIDEO_DURATION;
-          }
-          return next;
-        });
-      }, 100);
-    }
-    return () => clearInterval(timer);
-  }, [isSimulated, isPlaying]);
-
-  const effectiveTime = isSimulated ? simulatedProgress : currentTime;
+  const effectiveTime = currentTime;
 
   useEffect(() => {
     const segIdx = CHECKPOINTS.findIndex(cp => effectiveTime >= cp.start && effectiveTime < cp.end);
     setActiveSegment(segIdx >= 0 ? segIdx : CHECKPOINTS.length - 1);
   }, [effectiveTime]);
 
-  const togglePlay = () => {
-    if (isSimulated) {
-      if (simulatedProgress >= VIDEO_DURATION) setSimulatedProgress(0);
-      setIsPlaying(!isPlaying);
-      return;
-    }
-
-    if (videoRef.current) {
-      if (isPlaying) {
-        videoRef.current.pause();
-      } else {
-        videoRef.current.play().catch(() => {});
-      }
-      setIsPlaying(!isPlaying);
+  const togglePlay = async () => {
+    if (!videoRef.current) return;
+    if (isPlaying) {
+      videoRef.current.pause(); setIsPlaying(false);
+    } else {
+      try { await videoRef.current.play(); setIsPlaying(true); }
+      catch { setVideoError(true); }
     }
   };
-
-  const jumpToTime = (seconds) => {
-    if (isSimulated) {
-      setSimulatedProgress(seconds);
-    } else if (videoRef.current) {
-      videoRef.current.currentTime = seconds;
-      setCurrentTime(seconds);
-    }
+  const jumpToTime = seconds => {
+    if (!videoRef.current) return;
+    videoRef.current.currentTime = seconds; setCurrentTime(seconds);
   };
-
-  const handleRestart = () => {
-    if (isSimulated) {
-      setSimulatedProgress(0);
-      setIsPlaying(true);
-    } else if (videoRef.current) {
-      videoRef.current.currentTime = 0;
-      videoRef.current.play().catch(() => {});
-      setIsPlaying(true);
-    }
+  const handleRestart = async () => {
+    if (!videoRef.current) return;
+    videoRef.current.currentTime = 0;
+    try { await videoRef.current.play(); setIsPlaying(true); }
+    catch { setVideoError(true); }
   };
 
   const progressPercent = Math.min(100, (effectiveTime / VIDEO_DURATION) * 100);
+  if (isUnavailable) return (
+    <section role="status" className="rounded-2xl border border-slate-800 bg-slate-900 p-6 text-slate-200 space-y-2">
+      <h3 className="font-bold">Vídeo indisponível</h3>
+      <p>Este anúncio ainda não possui um vídeo válido disponível para reprodução.</p>
+      <p className="text-xs text-slate-400">{VIDEO_SUMMARY}</p>
+      {videoError && <button type="button" onClick={() => setVideoError(false)} className="text-cyan-300">Tentar novamente</button>}
+    </section>
+  );
+
 
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl">
@@ -133,11 +79,11 @@ export default function PericialVideoViewer({
             <div className="flex items-center gap-2 flex-wrap">
               <h3 className="text-sm font-black text-white tracking-wide">Vídeo Pericial Oficial de 20s</h3>
               <span className="text-[11px] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1.5">
-                <ShieldCheck className="w-3.5 h-3.5" /> Laudo Audiovisual Verificado
+                <ShieldCheck className="w-3.5 h-3.5" /> Sequência demonstrativa
               </span>
             </div>
             <p className="text-xs text-slate-400 mt-0.5">
-              Vistoria pericial em alta definição: Frente (5s), Linha de Cintura & 4 Pneus (10s), Traseira (5s)
+              {carName} - {VIDEO_SUMMARY}
             </p>
           </div>
         </div>
@@ -151,7 +97,6 @@ export default function PericialVideoViewer({
 
       {/* Video Viewport Container */}
       <div className="relative aspect-video bg-slate-950 flex items-center justify-center overflow-hidden group">
-        {videoUrl && !videoError ? (
           <video
             ref={videoRef}
             src={getVideoUrl(videoUrl)}
@@ -168,43 +113,6 @@ export default function PericialVideoViewer({
               }
             }}
           />
-        ) : (
-          /* High-Fidelity Interactive Video Simulation Canvas */
-          <div className="w-full h-full relative flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-            <div className="absolute inset-0 opacity-20 bg-[radial-gradient(#06b6d4_1px,transparent_1px)] [background-size:16px_16px]"></div>
-
-            {/* Simulated Stage Visuals depending on segment */}
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeSegment}
-                initial={{ opacity: 0, scale: 0.96 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 1.04 }}
-                transition={{ duration: 0.35 }}
-                className="relative z-10 text-center px-6 max-w-lg"
-              >
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider mb-3 bg-cyan-500/10 border border-cyan-500/30 text-cyan-300">
-                  <Clock className="w-3.5 h-3.5" /> {CHECKPOINTS[activeSegment].title} (Fase {activeSegment + 1}/3)
-                </div>
-                <h4 className="text-xl md:text-2xl font-black text-white mb-2">
-                  {carName}
-                </h4>
-                <p className="text-sm text-slate-300 leading-relaxed bg-slate-900/80 p-3.5 rounded-2xl border border-slate-800 backdrop-blur-md">
-                  {CHECKPOINTS[activeSegment].detail}
-                </p>
-                <div className="mt-4 flex items-center justify-center gap-4 text-xs text-slate-400">
-                  <span className="flex items-center gap-1 text-emerald-400 font-semibold">
-                    <CheckCircle2 className="w-4 h-4" /> Vistoria Conforme
-                  </span>
-                  <span className="flex items-center gap-1 text-cyan-400 font-semibold">
-                    <Sparkles className="w-4 h-4" /> 1080p 60fps
-                  </span>
-                </div>
-              </motion.div>
-            </AnimatePresence>
-
-          </div>
-        )}
 
         {/* Watermark Overlay (ativo tanto no vídeo real quanto na simulação) */}
         <div className="absolute top-4 left-4 z-20 flex items-center gap-2 bg-black/60 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 pointer-events-none">

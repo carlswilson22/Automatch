@@ -241,7 +241,7 @@ def seed_db():
                 "fipe_price": 149900.0,
                 "original_price": 145000.0,
                 "image": "/images/FotoFiatPulse.jpg",
-                "video_url": "/videos/pericial/sc-005-pericial.mp4",
+                "video_url": None,
                 "store_id": store_map[2].id,
                 "color": "Vermelho",
                 "fuel": "Flex",
