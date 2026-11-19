@@ -29,7 +29,7 @@ def main():
             clip=work/(car_id+"-"+str(index)+".mp4")
             frames=round((stage["end"]-stage["start"])*config["fps"]) + (3 if index in (1,2) else 0)
             filters=f"scale=1280:720:force_original_aspect_ratio=increase,crop=1280:720,zoompan=z='1+0.00015*on':x='iw/2-iw/zoom/2':y='ih/2-ih/zoom/2':d={frames}:s=1280x720:fps={config['fps']}"
-            if index in (0,1): filters += ",fade=t=in:st=0:d=0.125"
+            if index in (0,1,3): filters += ",fade=t=in:st=0:d=0.125"
             if index in (0,3): filters += ",fade=t=out:st=4.875:d=0.125"
             if index == 2: filters += ",fade=t=out:st=5:d=0.125"
             run(["ffmpeg","-y","-threads","1","-filter_threads","1","-loop","1","-i",str(source),"-vf",filters,"-frames:v",str(frames),"-an","-c:v","libx264","-threads","1","-preset","veryfast","-crf","26","-pix_fmt","yuv420p",str(clip)])
