@@ -1289,8 +1289,8 @@ const NewCarAdForm = () => {
                     <div className="flex items-center gap-2">
                       <Bot className="w-5 h-5 text-blue-600" />
                       <div>
-                        <p className="text-xs font-bold text-slate-800">Perícia Pericial de Avarias por IA</p>
-                        <p className="text-[11px] text-slate-500">Analise a imagem para confirmar integridade da lataria antes de publicar.</p>
+                        <p className="text-xs font-bold text-slate-800">Análise visual automática</p>
+                        <p className="text-[11px] text-slate-500">Consulte a análise da foto; confirme a condição do veículo na vistoria presencial.</p>
                       </div>
                     </div>
                     <button
@@ -1307,12 +1307,15 @@ const NewCarAdForm = () => {
                       ) : (
                         <>
                           <Scan className="w-3.5 h-3.5" />
-                          <span>Verificar Avarias com IA</span>
+                          <span>{photoAiScanStatus === 'error' ? 'Tentar novamente' : 'Verificar foto com IA'}</span>
                         </>
                       )}
                     </button>
                   </div>
 
+                  {photoAiScanStatus === 'error' && (
+                    <p role="alert" className="text-sm text-red-700">Não foi possível analisar a foto. Tente novamente.</p>
+                  )}
                   {/* Resultado da Perícia IA */}
                   <AnimatePresence>
                     {photoAiResult && (
