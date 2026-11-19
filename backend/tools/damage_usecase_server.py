@@ -15,6 +15,7 @@ from typing import Literal
 from sqlalchemy.orm import Session
 import hashlib,json
 from ultralytics import YOLO
+from tools.damage_provenance import verify_sha256
 import torch
 torch.set_num_threads(1)
 cache={}
@@ -43,9 +44,18 @@ def experimental_damage(payload:Probe,db:Session=Depends(get_db)):
         base=Path("/project/frontend/public/images")
         image=(base/source.removeprefix("/images/")).resolve()
     if not image.is_relative_to(base) or not image.is_file():raise HTTPException(422,"Foto local inválida")
-    if chosen["name"] not in cache:cache[chosen["name"]]=YOLO(chosen["weights"])
-    output=cache[chosen["name"]].predict(str(image),conf=payload.confidence,verbose=False,device="cpu",imgsz=payload.image_size)
+    weights = Path(chosen["weights"]).resolve()
+    if not weights.is_relative_to(Path("/experiment/runs").resolve()):
+        raise HTTPException(409, "Checkpoint fora da pasta de experimentos")
+    try:
+        weight_sha256 = verify_sha256(weights, chosen["weight_sha256"], "checkpoint")
+    except (OSError, ValueError) as error:
+        raise HTTPException(409, "Checkpoint indisponivel ou divergente") from error
+    cache_key = (chosen["name"], weight_sha256)
+    if cache_key not in cache:
+        cache[cache_key] = YOLO(str(weights))
+    output=cache[cache_key].predict(str(image),conf=payload.confidence,verbose=False,device="cpu",imgsz=payload.image_size)
     boxes=[{"xyxy":box.xyxy[0].tolist(),"confidence":float(box.conf[0]),"class_id":int(box.cls[0])} for prediction in output for box in prediction.boxes]
     return {"experimental":True,"validated":False,"car_id":car.id,"image_sha256":hashlib.sha256(image.read_bytes()).hexdigest(),
-        "image_size":payload.image_size,"experiment":chosen["name"],"weight_sha256":chosen["weight_sha256"],"raw_predictions":boxes,
+        "image_size":payload.image_size,"experiment":chosen["name"],"weight_sha256":weight_sha256,"raw_predictions":boxes,
         "notice":"Predições experimentais; não são laudo nem detecção validada de avarias."}

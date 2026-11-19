@@ -135,10 +135,10 @@ locais, hashes de origem e saída externa ao repositório.
 `evaluate_damage_models_http.py` compara os modelos. Nenhuma ferramenta foi
 adicionada ao fluxo publicado ou à inicialização normal da API.
 
-Exemplo dentro do contêiner de experimento, com as montagens já verificadas:
+Para uma nova execução, monte o projeto em `/project` e a pasta anterior de imagens sintéticas em `/existing-experiment`, ambos somente para leitura. Monte uma pasta de saída nova e vazia em `/experiment`, separada das imagens originais. Se necessário para esta CPU, monte também a pasta de compatibilidade anteriormente preparada, somente para leitura, em `/experiment/compat`. Exemplo dentro do contêiner de experimento:
 
 ```text
-python -B /project/backend/tools/train_damage_experiment.py   --project /project --synthetic /experiment --output /experiment   --weights /project/backend/yolov8n.pt
+python -B /project/backend/tools/train_damage_experiment.py --project /project --synthetic /existing-experiment --output /experiment --weights /project/backend/yolov8n.pt
 ```
 
 Não repetir o comando no mesmo diretório de resultados sem escolher uma saída
@@ -162,3 +162,39 @@ independentes. Só então decidir método e limiar de alta confiança. A API do
 produto permanece inconclusiva e não afirma ausência de avaria.
 
 Referências do procedimento: [treinamento Ultralytics](https://docs.ultralytics.com/modes/train/), [transferência de aprendizagem](https://docs.ultralytics.com/guides/finetuning-guide/) e [separação e pré-processamento de dados](https://docs.ultralytics.com/guides/preprocessing-annotated-data/). As métricas deste relatório vêm das execuções locais, não dessas páginas.
+
+## Complemento: rastreabilidade do pipeline
+
+O preparador valida origem, grupo, hash e caixas das imagens antes de criar o
+dataset. Ele recusa reutilizar uma pasta que já contenha o dataset, as execuções
+ou os resultados de um treino; uma tentativa interrompida também deve ser
+preservada. O registro inclui o hash dos pesos de partida e identifica os pesos
+salvos pelo diretório efetivamente usado pelo treinador. Isso evita associar
+métricas novas a checkpoints antigos.
+
+Na avaliação HTTP, o servidor experimental confere o hash do checkpoint antes
+da inferência e o avaliador confere os hashes da imagem e dos pesos, além do
+modelo e da resolução informados na resposta. Relatórios anteriores não são
+sobrescritos: escolha um caminho inédito dentro da pasta do experimento com
+`--report`. No contêiner de avaliação, monte a nova saída em `/experiment` e
+crie `/experiment/synthetic` para as cópias das imagens de validação. O uso
+do servidor e da avaliação continua restrito à cópia de auditoria exigida pelo
+código, não ao banco real. Por exemplo, após preparar e iniciar o ambiente
+isolado descrito acima:
+
+```text
+python -B /project/backend/tools/evaluate_damage_models_http.py --experiment-root /experiment --image-size 416 --report /experiment/http-evaluation-nova-416.json
+```
+
+Essas proteções melhoram a reprodução e a identificação dos artefatos; não
+alteram as métricas históricas nem validam o detector para uso no produto.
+
+### Possíveis fontes de dados para pesquisa futura
+
+O [CarDD](https://cardd-ustc.github.io/) fornece um conjunto de fotografias e
+anotações de danos, mas os autores exigem solicitação de acesso e análise das
+condições aplicáveis às imagens. O [RTDETR-VD](https://github.com/jeiva2000/RTDETR-VD)
+descreve vídeos anotados mediante solicitação; sua licença para os dados é
+CC BY-NC 4.0, com condições específicas para uso comercial. São apenas
+perspectivas a avaliar: esses conjuntos não foram incorporados ou usados nos
+resultados deste relatório.
