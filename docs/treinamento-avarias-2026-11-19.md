@@ -198,3 +198,103 @@ descreve vídeos anotados mediante solicitação; sua licença para os dados é
 CC BY-NC 4.0, com condições específicas para uso comercial. São apenas
 perspectivas a avaliar: esses conjuntos não foram incorporados ou usados nos
 resultados deste relatório.
+
+
+## Experimento adicional com SYNDCAR
+
+Foi executado um novo treino experimental com uma amostra do SYNDCAR. O conjunto
+contém fotografias de veículo com danos simulados digitalmente; os exemplos
+examinados incluem várias vistas do mesmo veículo. A amostra não comprova
+diversidade de veículos e seus prefixos não identificam veículos de forma
+confiável. O checkpoint **não foi ativado** no produto.
+
+Fonte e atribuição: Loureiro, Cátia; Dixe, Sandra; Neto, Cristiana; Silva,
+Antonio; Miranda, Beatriz; Rodrigues, Ricardo; Costa, Nuno; Ferreira, Diana;
+Ferreira, Carlos; Machado, José; Fernandes, Duarte (2025). *SYNDCAR: Synthetic
+Vehicle Damage Detection and Parts Segmentation Dataset*. Mendeley Data,
+versão 1, [DOI 10.17632/hzpj48krdt.1](https://doi.org/10.17632/hzpj48krdt.1),
+licença [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). O conjunto
+original não foi modificado: foram selecionadas 20 imagens e suas anotações,
+convertidas em cópia de quatro classes para a classe única `avaria`.
+
+### Dados e integridade
+
+- Treino: 20 imagens SYNDCAR, incluindo duas sem caixas, e os mesmos 27
+  negativos provisórios de catálogo dos experimentos anteriores. Os três
+  positivos sintéticos anteriores não foram incluídos.
+- SYNDCAR forneceu 108 caixas: 24 de vidro quebrado, 32 de trincas, 24 de
+  riscos e 28 de luzes quebradas. Essa amostra não garante cobertura de
+  amassados ou de todas as condições reais.
+- Validação: as mesmas 21 imagens anteriores, com cinco regiões selecionadas
+  em três vistas de um único veículo danificado. As anotações são
+  provisórias e não exaustivas; não há teste independente.
+- Os 20 pares foram conferidos por CRC32 e tamanho contra o diretório do ZIP
+  original e por SHA-256 contra o registro independente da extração. O
+  preparador verificou também as imagens históricas e rejeitou hashes
+  compartilhados entre treino e validação. Não se presumiu independência
+  entre veículos do próprio SYNDCAR.
+
+O primeiro resumo da preparação contou por engano negativos de outros
+grupos como se fossem SYNDCAR. O resumo foi corrigido para dois; a versão
+inicial foi preservada. As imagens, rótulos e divisões não foram alterados
+por essa correção de contagem.
+
+### Execução e resultados
+
+O treinamento foi executado em contêiner Linux sem rede nem banco, com
+projeto, dados e dependências montados somente para leitura: YOLOv8n local,
+10 épocas, 416 px, lote 2, AdamW, semente 11 e CPU limitada a dois núcleos.
+Torch 2.15.0, Ultralytics 8.4.201 e `polars[rtcompat]` 2.1.0 já estavam
+disponíveis; não foram baixados pesos ou instalados pacotes. A imagem Docker
+utilizada tinha ID `sha256:276467430d88a2b1e6b7532f484dadb01e2c9f2c65503ea3426765b5a4d7f8ad`.
+A CPU informou indisponibilidade de NNPACK e a execução prosseguiu pelo
+caminho disponível. O hash SHA-256 dos pesos iniciais era
+`f59b3d833e2ff32e194b5bb8e08d211dc7c5bdf144b90d2c8412c47ccfc83b36`;
+o hash do melhor checkpoint salvo foi
+`e3eea249b2b90109b98192e9046a2162cd823fc89db310f0428e580cad340716`.
+
+| Confiança | IoU | TP | FP | FN | Precisão | Revocação |
+| ---: | ---: | ---: | ---: | ---: | --- | ---: |
+| 0,25 | 0,5 | 0 | 0 | 5 | Indefinida: sem previsões | 0 |
+| 0,5 | 0,5 | 0 | 0 | 5 | Indefinida: sem previsões | 0 |
+
+As métricas nativas do Ultralytics, calculadas segundo seu procedimento
+interno, foram precisão 0,000689, revocação 0,2, mAP50 0,000148 e
+mAP50–95 0,0000148. Elas usam um procedimento de limiares diferente das duas
+linhas acima e não são precisão ou recall validados para o produto. Em ambos
+os limiares fixos não houve detecções correspondentes às cinco regiões;
+os ensaios anteriores também não encontraram essas regiões nesses limiares.
+A amostra é pequena, o domínio dos danos simulados difere do cenário real e
+a validação também seleciona o melhor checkpoint. Assim, o experimento não
+demonstra generalização nem autoriza ativar o detector.
+
+### Reprodução com os artefatos preservados
+
+Os scripts temporários `prepare.py` e `train.py`, o manifesto de seleção,
+hashes, dados de auditoria, previsões brutas, `results.csv` e pesos ficaram
+fora do Git, nas pastas locais preservadas do experimento e da amostra. Os
+arquivos grandes e os checkpoints não foram enviados aos repositórios. Para
+repetir, use cópias desses dois scripts, a amostra conferida e uma saída nova
+vazia. A amostra deve conter `sample-selection.json`, `sample/images` e
+`sample/labels_damage`; o projeto deve conter o manifesto histórico e os pesos
+YOLO locais indicados no script. Os exemplos a seguir usam variáveis para
+evitar registrar caminhos privados:
+
+```powershell
+# Defina $Repository, $Sample, $Compat, $Scripts e $Output com caminhos locais.
+# $Output deve ser uma pasta nova e vazia; mantenha os artefatos anteriores.
+Copy-Item -LiteralPath "$Scripts\prepare.py" -Destination "$Output\prepare.py"
+Copy-Item -LiteralPath "$Scripts\train.py" -Destination "$Output\train.py"
+docker run -d --name automatch-syndcar-repro --network none --cpus 2 --memory 3g `
+  --mount "type=bind,source=$Repository,target=/project,readonly" `
+  --mount "type=bind,source=$Sample,target=/syndcar,readonly" `
+  --mount "type=bind,source=$Compat,target=/compat,readonly" `
+  --mount "type=bind,source=$Output,target=/experiment" `
+  automatch-backend:latest sleep infinity
+docker exec automatch-syndcar-repro python -B /experiment/prepare.py
+docker exec automatch-syndcar-repro python -B /experiment/train.py
+```
+
+Use a mesma imagem Docker, a variante compatível e os mesmos pesos para uma
+comparação; outras versões ou hardware podem produzir resultados diferentes.
+A seleção e a conversão não alteram a licença ou a atribuição da fonte.
