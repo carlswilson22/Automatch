@@ -99,3 +99,7 @@ Definir backup, retenção, restauração, acesso, segredos, proteção das míd
 regras de exportação/anonimização. Não há cifragem integral do banco ou rotina
 automática de backup comprovada apenas pelo ORM. Ver [segurança](SECURITY.md),
 [arquitetura](docs/arquitetura.md) e [execução](docs/configuracao-e-execucao.md).
+
+## Verificação e correções autorizadas — 19/11/2026
+
+O banco Docker `automatch` foi verificado e atualizado após backup e ensaio em cópia. Migração atual: `008_safe_account_defaults`. Quinze tabelas; alertas de preço e versão de sessão presentes. Dez contas comuns perderam apenas o subpapel de loja indevido. O vínculo de vídeo inválido do Pulse foi retirado de forma reversível. Nenhum cadastro foi excluído. [Consultas, contagens, backups e limites](docs/verificacao-banco.md).

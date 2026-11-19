@@ -170,3 +170,7 @@ A [sincronização](sincronizacao-repositorios.md) não replica segredos ou perm
 Em alterações apenas documentais, conferir links, fontes, inventário e
 preservação de registros/licenças. Não relatar execução de suítes da aplicação
 quando somente a documentação foi verificada.
+
+## Complemento executado — 19/11/2026
+
+Baterias antes/depois de banco, scanner, vídeo e experimentos: resultado final 288 testes frontend, 124 unittest backend e cinco jornadas isoladas. Lint/build executados; mensagem de configuração de versão do plugin React ainda é emitida, sem avisos de código. Vinte cenários HTTP protegidos passaram e três modelos foram avaliados por HTTP em dois tamanhos explícitos; sucesso HTTP não significa acerto de IA. PDF renderizado e quadros de vídeo inspecionados; navegação visual continua pendente por host de automação indisponível. [Relatório e evidências](auditoria-scanner-video-2026-11-19.md).

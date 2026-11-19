@@ -85,3 +85,6 @@ Ver [testes e limites](docs/testes-e-evidencias.md),
 Publicar o mesmo resultado nas duas `main`, preservando todas as demais branches
 do secundário, conforme o [procedimento](docs/sincronizacao-repositorios.md).
 Enviar commits não autoriza acionar o workflow manual de Pages.
+## Complemento autorizado — 19/11/2026
+
+As migrações e correções pontuais do PostgreSQL foram autorizadas e aplicadas com backup; ver [verificação](docs/verificacao-banco.md). O scanner deixa de produzir avarias sem evidência. Treinos de transferência de aprendizagem são experimentais: ainda faltam marcações revisadas, diversidade de danos reais, teste independente e calibração antes de ativar detecção no produto. O Pulse aguarda imagens válidas de traseira. Navegação visual manual permanece pendente por indisponibilidade do host de automação.

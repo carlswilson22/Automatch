@@ -40,7 +40,7 @@ Para experimentar as amostras, use o modo demo descrito em
 | Contas | Cadastro/login, perfil, JWT, recuperação OTP; produção exige SMTP para entregar o código |
 | Favoritos | Área autenticada com persistência no navegador; sem sincronização de favoritos em banco |
 | Visualização 360° | Sequência fotográfica por veículo; depende das imagens disponíveis, não é reconstrução 3D |
-| Scanner de lataria | Análise de imagem por serviços de visão/IA e alternativas locais; sem precisão pericial certificada |
+| Scanner de lataria | Análise visual com rastreabilidade; inconclusiva sem método de dano calibrado. Treinamento experimental separado, sem ativação automática |
 | Laudos enviados | PDF/imagem, validação de conteúdo e análise assistida; resultado requer conferência humana |
 | PDF e validação pública | Documento Automatch com protocolo/snapshot registrado; não é laudo oficial de órgão público |
 | Comparação, financiamento e TCO | Comparação de dados e estimativas ilustrativas; sem aprovação bancária ou cotação vinculante |
@@ -131,3 +131,7 @@ catálogo de arquivos, decisões, sprints, entregas e relatórios históricos.
 - [Contribuição](CONTRIBUTING.md) e [sincronização](docs/sincronizacao-repositorios.md).
 - [Segurança](SECURITY.md) e [código de conduta](CODE_OF_CONDUCT.md).
 - [Changelog](CHANGELOG.md), [licença MIT](LICENSE) e [atribuições de terceiros](NOTICE).
+
+## Auditoria de 19/11/2026
+
+Correções de banco, scanner e vídeos: [relatório](docs/auditoria-scanner-video-2026-11-19.md), [PostgreSQL](docs/verificacao-banco.md) e [experimentos de treinamento](docs/treinamento-avarias-2026-11-19.md). Sem deploy; merge/push das main exigem confirmação nesta etapa.

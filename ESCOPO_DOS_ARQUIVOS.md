@@ -168,7 +168,7 @@ componentes de UI foram preservados quando possuem consumidores.
 | [frontend/src/components/vehicle/MarketPriceIndicator.jsx](frontend/src/components/vehicle/MarketPriceIndicator.jsx) | Componente da interface; presença no catálogo não comprova uso em uma rota ativa. |
 | [frontend/src/components/vehicle/MultichannelSyncModal.jsx](frontend/src/components/vehicle/MultichannelSyncModal.jsx) | Componente da interface; presença no catálogo não comprova uso em uma rota ativa. |
 | [frontend/src/components/vehicle/OfficialDossierModal.jsx](frontend/src/components/vehicle/OfficialDossierModal.jsx) | Exibição do dossiê Automatch e download; nome interno não indica certificação oficial. |
-| [frontend/src/components/vehicle/PericialVideoViewer.jsx](frontend/src/components/vehicle/PericialVideoViewer.jsx) | Player/roteiro de 20 s e representação demonstrativa quando não há vídeo. |
+| [frontend/src/components/vehicle/PericialVideoViewer.jsx](frontend/src/components/vehicle/PericialVideoViewer.jsx) | Player com cronograma gerado e tratamento explícito de mídia indisponível. |
 | [frontend/src/components/vehicle/PriceAlertModal.jsx](frontend/src/components/vehicle/PriceAlertModal.jsx) | Componente da interface; presença no catálogo não comprova uso em uma rota ativa. |
 | [frontend/src/components/vehicle/PriceDropBadge.jsx](frontend/src/components/vehicle/PriceDropBadge.jsx) | Componente da interface; presença no catálogo não comprova uso em uma rota ativa. |
 | [frontend/src/components/vehicle/SellerChat.jsx](frontend/src/components/vehicle/SellerChat.jsx) | Componente da interface; presença no catálogo não comprova uso em uma rota ativa. |
@@ -278,3 +278,12 @@ continuam no histórico Git; [relatório de limpeza](docs/limpeza-arquivos-2026-
 | --- | --- |
 | [frontend/scripts/check-source-usage.mjs](frontend/scripts/check-source-usage.mjs) | Auditoria de imports/dependências a partir da aplicação; executada por `npm test`. |
 | [backend/test_cleanup_regressions.py](backend/test_cleanup_regressions.py) | Contrato HTTP da retirada de pneus/acústica e preservação da análise visual. |
+
+## Arquivos da auditoria — 19/11/2026
+
+- `shared/pericial-timeline.json`: fonte única das fases e tomadas; consumidores gerados para os contextos separados.
+- `scripts/sync_pericial_timeline.py`: gera/confere consumidores; `scripts/generate_demo_videos.py`: MP4 e manifestos por anúncio.
+- `backend/services/inspection_contract.py` e `frontend/src/utils/visualInspection.js`: evidência, estado e consumo coerente da inspeção visual.
+- `backend/profile_repair.py`, `demo_media_repair.py`, `maintenance_cli.py` e CLIs: reparos com guardas, backup e reversão explícitos.
+- `backend/tools/`: treino, servidor experimental restrito à cópia, casos HTTP e avaliação exploratória; não importados no produto nem acionados no CI.
+- `docs/damage-training-manifest.json`: proveniência, marcações provisórias e separação por veículo. Imagens sintéticas grandes e pesos ficam fora do Git.

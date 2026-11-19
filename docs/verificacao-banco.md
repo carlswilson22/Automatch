@@ -122,5 +122,30 @@ bancos descartáveis; três regressões novas de migração/reparo incluídas ne
 contagem backend. Lint inicial: zero erros/avisos. Não confundir esses testes
 com homologação visual, acurácia do scanner ou publicação do site.
 
-A cópia será removida ao final das modificações, conforme autorização
-posterior do responsável. O backup externo será preservado.
+A cópia foi removida em 19/11/2026, conforme autorização, após os experimentos, backup final e encerramento das conexões. O banco real foi reconsultado e continua saudável. Backups, contêineres e volume foram preservados.
+
+## Complemento final — 19/11/2026
+
+Esquema real após as correções: 15 tabelas, 145 colunas, 72 índices e 40 constraints. Vinte e cinco FKs verificadas por consulta com LEFT JOIN, todas com zero órfãos. As contagens das tabelas anteriores permaneceram idênticas; price_alerts=0. Nenhum preço/ano fora do domínio pesquisado; zero contas comuns com subpapel de loja. Os dois anúncios, quatro usuários e duas lojas [TESTE] preexistentes permanecem na origem.
+
+O Pulse sc-005 teve somente video_url removido, por ausência de traseira válida. O reparo foi aplicado/revertido/reaplicado na cópia e depois aplicado uma vez na origem; nenhuma linha foi excluída. Quatro vínculos de vídeo permanecem ativos. Nenhum laudo_feedback estava preenchido na origem, portanto não havia resultados visuais salvos a reprocessar.
+
+Reparo versionado: `backend/demo_media_repair.py`; CLI `backend/repair_demo_media.py`. Os controles comuns de backup e criação exclusiva do manifesto estão em `backend/maintenance_cli.py`. Os comandos --apply/--report e --rollback exigem backup externo como no reparo de perfis. A CLI sem --apply é somente leitura.
+
+Backups desta etapa:
+
+| Finalidade | Arquivo externo | SHA256 |
+| --- | --- | --- |
+| Antes do reparo de mídia em automatch_audit_20261118_35737885 | automatch-copy-before-media-20261119.dump | 260d1baa1606c250f25a2442f1743b28c4861ab646e6699b5ad7a4abd7d00d83 |
+| Antes do reparo de mídia em automatch | automatch-real-before-media-20261119.dump | 3f72b0ddb59560702bf3b798f79b74889746c754a773c0346e9c5fd8be3087e9 |
+| Antes da remoção da cópia | automatch-copy-final-experiments-20261119.dump | 7c184685299b4d1a4738eb138b107f45e2ec743b6d07dcb7fde59f44e8db1bf4 |
+
+Os casos HTTP escreveram somente na cópia, protegida por guarda de nome de banco, com prefixo [TESTE]. A cópia `automatch_audit_20261118_35737885` foi removida por dropdb explícito, sem --force, somente após zero conexões e backup PGDMP. `automatch` continuou presente e pg_isready confirmou disponibilidade. Não foram removidos contêineres, imagens, volumes ou uploads.
+
+A consulta repetível está em [verify_database_readonly.sql](../scripts/verify_database_readonly.sql), com transação READ ONLY e inventário/contagens via catálogo. Verificação final adicional usou reflexão SQLAlchemy e SELECT/LEFT JOIN nas 25 FKs; o JSON de contagens e o roteiro estão fora do Git. O banco foi consultado novamente depois da exclusão da cópia. Não houve teste de crescimento ao longo do tempo: tamanho/conexões são fotografias, não tendência.
+
+O banco ainda não possui CHECKs de domínio adicionais; as validações atuais de preço/ano na API não equivalem a restrições SQL. Oito grupos de anúncios semelhantes continuam candidatos a duplicidade, sem prova suficiente para exclusão. Não reformular essas entidades nem apagar candidatos automaticamente.
+
+Validação final de código: 124 unittest backend + cinco jornadas em bancos descartáveis e 288 testes frontend; lint e build executados. Treino real executado no Linux; navegador indisponível. Ver [relatório](auditoria-scanner-video-2026-11-19.md) e [experimentos](treinamento-avarias-2026-11-19.md).
+
+Fotografia de saúde após remover a cópia: PostgreSQL healthy, pg_isready disponível, 9.624.935 bytes, uma conexão de auditoria, UTF8 e UTC. Antes: 9.592.167 bytes. A diferença pontual de 32.768 bytes após migrações não caracteriza uma tendência de crescimento anormal.

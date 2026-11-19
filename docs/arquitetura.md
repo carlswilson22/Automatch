@@ -99,3 +99,7 @@ Ver [estado atual](estado-atual.md), [banco](../DOCUMENTACAO_BANCO_DE_DADOS.md),
 Nesta etapa não há deploy nem reformulação de entidades/migrações. O workflow
 de Pages é exclusivamente manual. A mudança do banco para a futura execução
 local depende de autorização específica.
+
+## Complemento de 19/11/2026
+
+A auditoria autorizada aplicou as migrações 006–008 e reparos pontuais após backup/ensaio, sem reformulação de entidades. Contratos de inspeção v2 substituem scores/pontos fabricados; COCO não é detector de avarias. Cronograma canônico em `shared/pericial-timeline.json`, com consumidores gerados por contexto Docker existente. As ferramentas de treino/HTTP em `backend/tools` não são importadas na API publicada. [Relatório atual](auditoria-scanner-video-2026-11-19.md).

@@ -1,10 +1,19 @@
 # Documentação do Automatch
 
-Revisão documental: **17/11/2026**. Melhorias demonstrativas sobre a base `444bc09`.
+Revisão documental: **19/11/2026**. Auditoria e correções sobre a base `f45498b`.
 O principal é [carlswilson22/Automatch](https://github.com/carlswilson22/Automatch);
 o secundário é [CAMPUSCEUB/ADS-AUTOMATCH](https://github.com/CAMPUSCEUB/ADS-AUTOMATCH).
 Ambos devem receber a mesma atualização na `main`; outras branches do secundário
 permanecem intactas.
+
+## Auditoria de banco, scanner e vídeo — 19/11/2026
+
+- [Relatório de correções](auditoria-scanner-video-2026-11-19.md).
+- [Verificação do PostgreSQL](verificacao-banco.md).
+- [Treinamento experimental](treinamento-avarias-2026-11-19.md).
+- [Cronograma canônico](../shared/pericial-timeline.json).
+
+Merge e push das main aguardam confirmação, conforme instrução específica desta auditoria. Nenhum deploy.
 
 ## Referências atuais
 

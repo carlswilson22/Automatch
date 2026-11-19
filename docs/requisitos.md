@@ -15,7 +15,7 @@ automáticas auxiliam a análise e não substituem inspeção profissional.
 
 | ID | Recurso | Situação e critério verificável |
 | --- | --- | --- |
-| RF-01 | Scanner de carroceria | Ativo com API de imagem; conferir dados retornados, erro e cancelamento. Sem acurácia milimétrica comprovada |
+| RF-01 | Scanner de carroceria | API com contrato de evidência v2, estados claros e associação por anúncio/foto. Detector genérico não acusa avarias; treino experimental sem homologação |
 | RF-02 | Visualização 360° | Fotográfica; abrir ângulos cadastrados do veículo, arrastar/girar e tratar mídia ausente |
 | RF-03 | Diagnóstico acústico | Fora do escopo ativo; componentes/endpoints legados não entregam diagnóstico ao usuário |
 | RF-04 | Scanner de pneus | Fora do escopo ativo; não há scanner ou reescaneamento de pneus na interface |
@@ -41,7 +41,7 @@ automáticas auxiliam a análise e não substituem inspeção profissional.
 | RF-24 | Paginação | Listagem da API com `limit`/`offset` e navegação no frontend; conferir total, filtros e páginas vazias |
 | RF-25 | Favoritos | Área autenticada, lista local por conta, eventos de sessão e importação explícita de visitante/legado; falha preserva dados, sem sincronização via banco |
 | RF-26 | Auditoria de laudo anexado | Validar PDF/imagem e analisar por IA/heurística; divergência ou dado insuficiente exige conferência, não aprovação automática |
-| RF-27 | Vídeo de inspeção | Roteiro atual de 20 segundos, upload e player; ausência/erro pode exibir representação demonstrativa |
+| RF-27 | Vídeo de inspeção | Cronograma único de 20 segundos, quatro demonstrações regeneradas e tratamento de indisponibilidade; Pulse aguarda traseira válida |
 | RF-28 | Comparação multidimensional | Dois a três veículos, cinco seções, tratamento de dados ausentes e navegação ao anúncio |
 
 RF-03 e RF-04 registram propostas antigas, sem compromisso de implementação no

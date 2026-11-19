@@ -1,5 +1,15 @@
 # Histórico de mudanças
 
+## 19/11/2026 — Auditoria de banco, scanner e vídeos
+
+- Migrações 006–008 e reparo reversível de dez perfis comuns aplicados ao PostgreSQL real, após backup/ensaio; cadastros preservados.
+- Retirada fabricação de pontos, scores e confiança de dano a partir de COCO/contexto; contrato v2 comum a anúncio, foto anexada, 360°, consultor e dossiê/PDF.
+- Associação 360° exige ID exato; respostas antigas e fotos alteradas não reutilizam resultados do scanner.
+- Fonte única de cronograma e quatro vídeos de 20,0 s; Pulse sem vídeo até obter traseira válida.
+- Três configurações de treino com YOLOv8n local, exemplos sintéticos identificados e casos HTTP/PostgreSQL em cópia. Pesos experimentais não ativados no produto.
+- Sem alteração de Docker/CI, regras de upload, deploy ou envio às main. [Evidências e limites](docs/auditoria-scanner-video-2026-11-19.md).
+
+
 ## 18/11/2026 — Limpeza de código sem consumidores
 
 - Removidos 15 módulos frontend fora do fluxo ativo; aliases de logotipo passam

@@ -5,10 +5,10 @@ foram corrigidos com regressões permanentes: dados do anúncio/PDF, quilometrag
 favoritos separados por conta e cadastro local sem falso sucesso. Sem deploy ou
 reformulação do banco; conferência visual e de acessibilidade permanece manual.
 
-Atualizado em **18/11/2026**, melhorias demonstrativas sobre a base `444bc09`.
+Atualizado em **19/11/2026**, correções sobre a base `f45498b`.
 Fonte: rotas e componentes versionados, manifests, Compose, migrações e
 [auditoria anterior](auditoria-2026-11-16.md). Esta revisão não refez uma
-homologação integral nem mediu precisão de IA ou desempenho em aparelhos reais.
+homologação integral. Mediu métricas exploratórias de treino em dados provisórios, sem homologar acurácia do produto ou desempenho em aparelhos reais.
 
 ## Limpeza de arquivos — 18/11/2026
 
@@ -27,8 +27,7 @@ acústica continuam fora das telas. Ver [relatório](manutencao-avisos-2026-11-1
 ## Escopo desta etapa
 
 Somente demonstração, sem deploy. Pages passou a acionamento manual; nenhum
-workflow de publicação foi iniciado. A reformulação do banco para a futura
-execução local aguarda autorização; ORM e migrações existentes foram preservados.
+workflow de publicação foi iniciado. A auditoria recebeu autorização específica para aplicar as migrações pendentes e corrigir perfis no banco real, após backup e ensaio em cópia; ver [verificação](verificacao-banco.md).
 Os consultores locais e o PDF não certificam integridade ou regularidade a partir
 de ausência de dados. Diálogos de alerta/multicanal têm teclado e foco gerenciados.
 
@@ -41,6 +40,10 @@ de ausência de dados. Diálogos de alerta/multicanal têm teclado e foco gerenc
 3. **Serviços externos:** exigem configuração, disponibilidade e homologação
    próprias. Um botão ou resposta de exemplo não prova integração real.
 
+## Auditoria de 19/11/2026
+
+Migrações 006–008 aplicadas no PostgreSQL real; dez subpapéis de contas comuns corrigidos sem excluir cadastros. Scanner, consumidores e mídias corrigidos. Resultados detalhados no [relatório](auditoria-scanner-video-2026-11-19.md). Treinamento experimental não equivale a detector homologado.
+
 ## Recursos ativos
 
 | Jornada | Implementação e limite |
@@ -50,10 +53,10 @@ de ausência de dados. Diálogos de alerta/multicanal têm teclado e foco gerenc
 | Lojista/admin | Dashboard e rede B2B, conforme vínculo e autorização verificados na API |
 | Catálogo | API paginada; demonstração pode usar catálogo estático. Cache local não é fonte oficial de propriedade |
 | Mídia | Galeria e sequência orbital por veículo; fotos disponíveis determinam os ângulos reais |
-| Scanner | Análise de fotos de lataria; cancelamento/respostas isolados por anúncio. Não atesta condição mecânica nem acurácia milimétrica |
+| Scanner | Contrato de evidência v2. COCO reconhece veículos, não avarias; resultado inconclusivo enquanto não houver detector calibrado. Sem pontos herdados ou score fictício. Treinos separados, experimentais |
 | Laudo anexado | Auditoria assistida PDF/imagem por IA/heurística, com ausência de dados exigindo conferência |
 | Dossiê PDF | Cadastro prevalece; valores ausentes permanecem ausentes no snapshot, PDF e validação; protocolo não certifica regularidade externa |
-| Vídeo | Player com roteiro nominal de 20 segundos; sem vídeo, há representação demonstrativa, não filmagem real |
+| Vídeo | Cronograma único e quatro MP4 de 20,0 s regenerados; Pulse indisponível por falta de traseira válida. Ausência/erro exibe indisponibilidade, sem vídeo simulado |
 | Comparador | Dois a três veículos, preço/FIPE, uso, laudo, documentação e ficha; origem dos dados precisa ser considerada |
 | Financiamento/TCO/troca | Cálculos ilustrativos, sem consulta/aprovação de banco, transferência Pix ou proposta automática vinculante |
 | Favoritos | Listas no navegador por identificador de conta, eventos de sessão e importação explícita da lista de visitante/legada; sem backend ou sincronização entre dispositivos |
