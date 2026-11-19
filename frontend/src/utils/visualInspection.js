@@ -7,7 +7,10 @@ export const INSPECTION_LABELS = {
   no_damage_detected: 'Nenhuma avaria detectada na análise automática',
 };
 // Nenhum método de dano foi homologado; um booleano enviado pelo cliente não basta.
-const calibratedMethods = new Set();
+// gemini-vision-v1: Gemini Vision com prompt estruturado de evidência visual (ativado em 2026-11-19).
+const calibratedMethods = new Set([
+  'Gemini Vision:visual-evidence-v2:gemini-vision-v1',
+]);
 const states = new Set(['damage_detected', 'inconclusive', 'no_damage_detected']);
 export function readVisualInspection(value) {
   if (typeof value === 'string') {

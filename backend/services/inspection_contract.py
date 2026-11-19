@@ -41,6 +41,59 @@ def inspection_from_feedback(value):
     return result
 
 
+
+GEMINI_CALIBRATION_ID = "gemini-vision-v1"
+
+
+def gemini_visual_result(
+    image_bytes: bytes,
+    damage_points: list,
+    gemini_raw_text: str,
+    *,
+    car_id: str = None,
+    vehicle_confidence: float = None,
+):
+    """
+    Monta contrato válido SOMENTE quando o Gemini retornou pontos de dano
+    com evidência visual estruturada (damage_points não vazio).
+    Caso contrário, retorna inconclusive.
+    """
+    if not damage_points:
+        return inconclusive(image_bytes, reason="gemini_no_damage_found",
+                            method="Gemini Vision",
+                            vehicle_confidence=vehicle_confidence)
+    result = {
+        "schema_version": SCHEMA_VERSION,
+        "analysis_state": "damage_detected",
+        "status": "success",
+        "modelo": "Gemini Vision",
+        "method_version": METHOD_VERSION,
+        "calibration_id": GEMINI_CALIBRATION_ID,
+        "reason": "gemini_visual_evidence",
+        "resposta": (
+            "Possíveis avarias identificadas pela análise de imagem. "
+            "Confirme com vistoria presencial."
+        ),
+        "disclaimer": DISCLAIMER,
+        "tem_avarias": True,
+        "score_lataria": None,
+        "condicao_geral": "Avaria identificada (análise por imagem)",
+        "avarias": [p.get("descricao", p.get("description", "")) for p in damage_points],
+        "pontos_avaria": damage_points,
+        "damage_confidence": None,       # Gemini não produz probabilidade calibrada
+        "confianca_ia": None,
+        "vehicle_confidence": vehicle_confidence,
+        "vehicle_detected": True,
+        "image_sha256": hashlib.sha256(image_bytes).hexdigest() if image_bytes else None,
+        "analyzed_at": datetime.now(timezone.utc).isoformat(),
+        "damage_detection_validated": True,
+        "gemini_raw_response": gemini_raw_text[:2000] if gemini_raw_text else None,
+    }
+    if car_id:
+        result["car_id"] = str(car_id)
+    return result
+
+
 def inspection_summary(value):
     result = inspection_from_feedback(value)
     return result.get("resposta", "Análise inconclusiva, confirme com vistoria presencial.") if result else "Análise visual não realizada."
