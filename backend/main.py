@@ -120,8 +120,8 @@ async def lifespan(app: FastAPI):
         if "users" in inspector.get_table_names():
             existing_user_cols = {c["name"] for c in inspector.get_columns("users")}
             user_cols_to_add = [
-                ("role", "VARCHAR(32) DEFAULT 'lojista'"),
-                ("sub_role", "VARCHAR(32) DEFAULT 'owner'"),
+                ("role", "VARCHAR(32) DEFAULT 'comum'"),
+                ("sub_role", "VARCHAR(32)"),
                 ("store_id", "INTEGER"),
                 ("token_version", "INTEGER NOT NULL DEFAULT 0")
             ]
