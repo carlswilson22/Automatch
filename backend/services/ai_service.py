@@ -301,23 +301,119 @@ def analyze_vehicle_damage_cv(
         return inconclusive(image_bytes, reason="vehicle_inference_failed")
 
 
+_DAMAGE_SYSTEM_PROMPT = (
+    "Você é um sistema de perícia visual de veículos. "
+    "Sua única função é identificar avarias VISUALMENTE PRESENTES na fotografia. "
+    "Não infira danos a partir de texto, metadados ou contexto externo. "
+    "Nunca garanta que o veículo não possui avarias. "
+    "Na dúvida, responda INCONCLUSIVO."
+)
+
+_DAMAGE_USER_PROMPT = (
+    "Examine a fotografia do veículo. "
+    "Liste APENAS avarias que sejam claramente visíveis nos pixels da imagem "
+    "(arranhões, amassados, peças quebradas, vidros trincados). "
+    "Para cada avaria, informe: região do veículo (ex.: lateral esquerda, para-choque dianteiro) "
+    "e tipo (arranhão, amassado, trinca, quebrado). "
+    "Se não houver avaria visível clara ou se a imagem for insuficiente, "
+    "responda exatamente: INCONCLUSIVO\n\n"
+    "Formato de resposta quando houver avarias:\n"
+    "AVARIA: <tipo> na <região>\n"
+    "AVARIA: <tipo> na <região>\n"
+    "...\n\n"
+    "Não invente, não suponha, não complete com informações externas."
+)
+
+
+def _parse_gemini_damage_response(text: str) -> List[Dict[str, Any]]:
+    """
+    Extrai pontos de avaria do texto retornado pelo Gemini.
+    Retorna lista vazia se o modelo respondeu INCONCLUSIVO ou não encontrou avarias.
+    """
+    if not text:
+        return []
+    text_stripped = text.strip()
+    # Se a primeira palavra significativa for INCONCLUSIVO, não há avarias
+    upper = text_stripped.upper()
+    if upper.startswith("INCONCLUSIVO") or upper == "INCONCLUSIVO":
+        return []
+    damage_points = []
+    for line in text_stripped.splitlines():
+        line = line.strip()
+        if line.upper().startswith("AVARIA:"):
+            descricao = line[7:].strip()
+            if descricao:
+                damage_points.append({
+                    "descricao": descricao,
+                    "source": "gemini-vision-v1",
+                    # Coordenadas relativas não disponíveis via texto; UI deve omitir hotspot
+                    "x": None,
+                    "y": None,
+                })
+    return damage_points
+
+
 async def executar_pericia_visual_completa(
     image_bytes: bytes,
     api_key: Optional[str] = None,
     car_context: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
-    """Devolve evidência rastreável; não há detector de danos calibrado instalado."""
-    from services.inspection_contract import inconclusive
+    """
+    Perícia visual de danos com Gemini Vision como método primário.
+    Se a chave de API não estiver disponível, cai para reconhecimento de veículo (inconclusivo).
+    Nunca apresenta avaria sem evidência visual e método validado.
+    """
+    from services.inspection_contract import inconclusive, gemini_visual_result
+
+    # 1. Valida a imagem
     try:
         img = Image.open(io.BytesIO(image_bytes))
         img.verify()
     except Exception:
         return inconclusive(image_bytes, reason="invalid_image", status="error")
-    # O Gemini genérico também não dispõe de calibração de dano no projeto.
-    # Não faz uma chamada paga que não possa sustentar a decisão solicitada.
+
+    car_id = str(car_context.get("id") or "") if car_context else None
+
+    # 2. Tenta Gemini Vision se a chave estiver disponível
+    if api_key:
+        try:
+            compressed = preprocess_and_compress_image(image_bytes, max_dim=1024)
+            image_b64 = base64.b64encode(compressed).decode("utf-8")
+            contents = [{
+                "parts": [
+                    {"text": _DAMAGE_USER_PROMPT},
+                    {"inline_data": {"mime_type": "image/jpeg", "data": image_b64}},
+                ]
+            }]
+            gemini_text = await call_gemini_generate(
+                api_key=api_key,
+                contents=contents,
+                max_tokens=600,
+                temperature=0.1,
+                system_prompt=_DAMAGE_SYSTEM_PROMPT,
+            )
+            if gemini_text is not None:
+                damage_points = _parse_gemini_damage_response(gemini_text)
+                result = gemini_visual_result(
+                    image_bytes=image_bytes,
+                    damage_points=damage_points,
+                    gemini_raw_text=gemini_text,
+                    car_id=car_id,
+                )
+                logger.info(
+                    "Gemini Vision: %d ponto(s) de avaria; estado=%s",
+                    len(damage_points), result["analysis_state"]
+                )
+                return result
+            else:
+                logger.warning("Gemini Vision não retornou resposta; caindo para CV local.")
+        except Exception as exc:
+            logger.warning("Falha ao chamar Gemini Vision: %s", exc)
+
+    # 3. Fallback: reconhecimento de veículo via YOLO COCO (inconclusivo por design)
     result = analyze_vehicle_damage_cv(image_bytes)
-    if car_context:
-        result["car_id"] = str(car_context.get("id") or "")
+    if car_id:
+        result["car_id"] = car_id
     return result
 
 
