@@ -1,18 +1,18 @@
 /**
- * LaudoFeedbackCard.jsx — Card de feedback e avaliação pericial do laudo por IA (Gemini 1.5 Flash & YOLOv8).
+ * LaudoFeedbackCard.jsx — Card de feedback documental e imagens extraídas do laudo.
  * 
  * Objetivo e Motivo da Criação:
  *   - Processa obrigatoriamente três camadas de informação pericial:
  *     1. Conferência de Dados (Cross-Check): Placa, Chassi, Marca/Modelo, Ano e Quilometragem.
  *     2. Matriz de Riscos e Pontos de Atenção: Leilão, Sinistro, Remarcação, Restrição Judicial e Estrutura.
  *     3. Classificação Geral: Tag semafórica (Sem Ressalvas, Com Atenção, Com Restrições) e Resumo Executivo.
- *   - Suporta visualização de fotos periciais auditadas por visão computacional (YOLOv8).
+ *   - Exibe imagens extraídas para conferência manual, sem concluir sobre avarias.
  */
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShieldCheck, AlertTriangle, XCircle, CheckCircle2, Sparkles, FileCheck2, Cpu, ExternalLink,
-  Camera, ZoomIn, X, Eye, Info, AlertOctagon, SearchCheck, ShieldAlert
+  Camera, ZoomIn, X, Info, AlertOctagon, SearchCheck, ShieldAlert
 } from 'lucide-react';
 
 export default function LaudoFeedbackCard({ feedback, pdfUrl, fileName, yoloFeedback, iaFeedback: directIaFeedback }) {
@@ -306,172 +306,68 @@ export default function LaudoFeedbackCard({ feedback, pdfUrl, fileName, yoloFeed
               })}
             </div>
           ) : (
-            <div className="p-3.5 rounded-xl bg-emerald-50/70 border border-emerald-200/80 flex items-center gap-2.5 text-emerald-800 text-xs">
-              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-              <span>
-                <strong>Nenhum risco detectado:</strong> Sem apontamentos de leilão, sinistro, corte de longarina, remarcação de chassi ou restrições judiciais.
-              </span>
+            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center gap-2.5 text-slate-700 text-xs">
+              <Info className="w-4 h-4 shrink-0" />
+              <span>Nenhum apontamento listado nesta análise. Confira o documento original.</span>
             </div>
           )}
         </div>
 
-        {/* EVIDÊNCIAS FOTOGRÁFICAS AUDITADAS VIA YOLOV8 (SE HOUVER) */}
+        {/* As imagens extraídas são exibidas somente para conferência humana. */}
         {activeYolo && (
           <div className="mt-5 pt-5 border-t border-slate-100">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
-              <div className="flex items-center gap-2">
-                <Camera className="w-4 h-4 text-indigo-600" />
-                <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                  Evidências Fotográficas Auditadas por Visão Computacional (YOLOv8)
-                </span>
-              </div>
-
-              {activeYolo.cross_check_status && (
-                <div className="flex items-center gap-1.5">
-                  {activeYolo.cross_check_status === 'Concordante' ? (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-emerald-50 text-emerald-700 px-2.5 py-1 rounded-lg border border-emerald-200">
-                      <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                      Cross-Check: Concordante
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 text-[11px] font-semibold bg-amber-50 text-amber-700 px-2.5 py-1 rounded-lg border border-amber-200">
-                      <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
-                      Cross-Check: Divergência Apontada
-                    </span>
-                  )}
-                </div>
-              )}
+            <div className="flex items-center gap-2 mb-3">
+              <Camera className="w-4 h-4 text-indigo-600" />
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-700">Imagens extraídas do documento</span>
             </div>
-
-            {activeYolo.imagens_inspecionadas && activeYolo.imagens_inspecionadas.length > 0 ? (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 gap-3">
-                {activeYolo.imagens_inspecionadas.map((imgItem) => (
-                  <motion.div
-                    key={imgItem.id}
-                    whileHover={{ scale: 1.02 }}
-                    transition={{ duration: 0.2 }}
-                    onClick={() => setSelectedImage(imgItem)}
-                    className="group relative cursor-pointer overflow-hidden rounded-xl border border-slate-200 bg-slate-50 hover:border-indigo-300 hover:shadow-md transition-all flex flex-col"
-                  >
+            <p className="text-xs text-slate-700 mb-3">
+              Análise visual inconclusiva. As imagens não confirmam nem contestam o parecer; confira o documento manualmente.
+            </p>
+            {activeYolo.imagens_inspecionadas?.length > 0 ? (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                {activeYolo.imagens_inspecionadas.map((imgItem, index) => (
+                  <button type="button" key={imgItem.id}
+                    onClick={() => setSelectedImage({ ...imgItem, titulo: 'Imagem ' + (index + 1) + ' do documento' })}
+                    className="group overflow-hidden rounded-xl border border-slate-200 bg-slate-50 text-left hover:border-indigo-300">
                     <div className="relative aspect-[4/3] w-full overflow-hidden bg-slate-900">
                       {imgItem.thumbnail_b64 ? (
-                        <img
-                          src={imgItem.thumbnail_b64}
-                          alt={imgItem.titulo}
-                          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-                        />
+                        <img src={imgItem.thumbnail_b64} alt={'Imagem ' + (index + 1) + ' do documento'} className="h-full w-full object-cover" />
                       ) : (
-                        <div className="flex h-full w-full items-center justify-center text-slate-500">
-                          <Camera className="w-8 h-8 opacity-40" />
-                        </div>
+                        <div className="flex h-full w-full items-center justify-center text-slate-500"><Camera className="w-8 h-8 opacity-40" /></div>
                       )}
-
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
-                        <ZoomIn className="w-5 h-5 drop-shadow-md" />
-                      </div>
-
-                      <span className="absolute bottom-1.5 right-1.5 text-[9px] font-bold bg-black/70 backdrop-blur-xs text-white px-1.5 py-0.5 rounded">
-                        {imgItem.confianca}
-                      </span>
-                    </div>
-
-                    <div className="p-2 flex-1 flex flex-col justify-between">
-                      <span className="text-[11px] font-bold text-slate-800 line-clamp-1">
-                        {imgItem.titulo}
-                      </span>
-                      <div className="flex items-center justify-between gap-1 mt-1">
-                        <span className="text-[10px] text-slate-500 truncate">
-                          {imgItem.classe_detectada}
-                        </span>
-                        <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded shrink-0 ${
-                          imgItem.status_peca === 'Conforme'
-                            ? 'bg-emerald-100 text-emerald-800'
-                            : 'bg-amber-100 text-amber-800'
-                        }`}>
-                          {imgItem.status_peca}
-                        </span>
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center text-white">
+                        <ZoomIn className="w-5 h-5" />
                       </div>
                     </div>
-                  </motion.div>
+                    <span className="block p-2 text-xs font-semibold text-slate-800">Imagem {index + 1}</span>
+                  </button>
                 ))}
               </div>
             ) : (
-              <div className="text-center py-3 bg-slate-50/60 rounded-xl border border-dashed border-slate-200 text-slate-500 text-xs">
-                Auditoria pericial documental concluída. Nenhuma fotografia embutida identificada.
+              <div className="text-center py-3 bg-slate-50 rounded-xl border border-dashed border-slate-200 text-slate-500 text-xs">
+                Nenhuma imagem disponível para exibição.
               </div>
             )}
           </div>
         )}
       </motion.div>
 
-      {/* Modal Lightbox de Inspeção Ampliada */}
       <AnimatePresence>
         {selectedImage && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
-            onClick={() => setSelectedImage(null)}
-          >
-            <motion.div
-              initial={{ scale: 0.95, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.95, opacity: 0 }}
-              onClick={(e) => e.stopPropagation()}
-              className="relative max-w-xl w-full bg-white rounded-2xl overflow-hidden shadow-2xl border border-slate-100 p-5"
-            >
-              <button
-                onClick={() => setSelectedImage(null)}
-                className="absolute top-4 right-4 p-1.5 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-
-              <div className="flex items-center gap-2 mb-3">
-                <Eye className="w-4 h-4 text-indigo-600" />
-                <h3 className="text-sm font-bold text-slate-900">
-                  {selectedImage.titulo}
-                </h3>
-              </div>
-
+            onClick={() => setSelectedImage(null)}>
+            <motion.div onClick={(event) => event.stopPropagation()}
+              className="relative max-w-xl w-full bg-white rounded-2xl overflow-hidden shadow-2xl border border-slate-100 p-5">
+              <button type="button" aria-label="Fechar imagem" onClick={() => setSelectedImage(null)}
+                className="absolute top-4 right-4 p-1.5 rounded-full bg-slate-100 text-slate-600"><X className="w-4 h-4" /></button>
+              <h3 className="text-sm font-bold text-slate-900 mb-3">{selectedImage.titulo}</h3>
               <div className="relative aspect-video w-full rounded-xl overflow-hidden bg-slate-950 flex items-center justify-center mb-4">
                 {selectedImage.thumbnail_b64 ? (
-                  <img
-                    src={selectedImage.thumbnail_b64}
-                    alt={selectedImage.titulo}
-                    className="max-h-full max-w-full object-contain"
-                  />
-                ) : (
-                  <Camera className="w-12 h-12 text-slate-600" />
-                )}
+                  <img src={selectedImage.thumbnail_b64} alt={selectedImage.titulo} className="max-h-full max-w-full object-contain" />
+                ) : <Camera className="w-12 h-12 text-slate-600" />}
               </div>
-
-              <div className="space-y-2 text-xs">
-                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                  <span className="text-slate-500 font-medium">Elemento Identificado (YOLOv8):</span>
-                  <strong className="text-slate-800 uppercase font-semibold">{selectedImage.classe_detectada}</strong>
-                </div>
-                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                  <span className="text-slate-500 font-medium">Grau de Confiança do Modelo:</span>
-                  <strong className="text-indigo-600 font-bold">{selectedImage.confianca}</strong>
-                </div>
-                <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                  <span className="text-slate-500 font-medium">Parecer de Conformidade:</span>
-                  <span className={`font-bold px-2 py-0.5 rounded ${
-                    selectedImage.status_peca === 'Conforme'
-                      ? 'bg-emerald-100 text-emerald-800'
-                      : 'bg-amber-100 text-amber-800'
-                  }`}>
-                    {selectedImage.status_peca}
-                  </span>
-                </div>
-                {selectedImage.detalhe && (
-                  <p className="text-slate-600 pt-1 leading-relaxed">
-                    <strong>Observação Técnica:</strong> {selectedImage.detalhe}
-                  </p>
-                )}
-              </div>
+              <p className="text-xs text-slate-600">Imagem para conferência manual; a análise visual de avarias é inconclusiva.</p>
             </motion.div>
           </motion.div>
         )}

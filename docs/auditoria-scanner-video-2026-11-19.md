@@ -229,3 +229,11 @@ instalado e backup preservado. Não executar ferramentas experimentais na origem
 4. Conferência visual manual do site, enquanto a automação estiver indisponível.
 5. Aprovar merge e push para as duas main. Os hashes remotos continuam `f45498b`;
    a branch extra do secundário foi preservada. Nenhum deploy foi acionado.
+
+## Complemento de 19/11/2026 — imagens extraídas de laudos em PDF
+
+A análise fotográfica do PDF atribuía peça, conformidade e confiança de 92% sem evidência, inclusive quando o modelo genérico estava indisponível; o cruzamento também afirmava concordância sem uma avaliação visual validada. A extração agora apresenta somente miniaturas para conferência humana, com cruzamento inconclusivo inclusive em caso de erro. Não há inferência de integridade, confirmação de parecer ou medição de confiança.
+
+O cartão desconsidera títulos, classes, confiança, detalhes e estados visuais de resultados anteriores, preservando a exibição das miniaturas sem reproduzir conclusões não validadas. Uma lista vazia de apontamentos documentais não é apresentada como ausência comprovada de riscos.
+
+A verificação direcionada executada no frontend, com renderização do componente, passou em dois cenários: dados visuais legados e falha de extração; o primeiro também verifica abertura e fechamento da imagem. Testes de backend foram atualizados para cobrir estados inconclusivos, imagem inválida e erro de extração.

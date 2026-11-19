@@ -8,6 +8,7 @@ Objetivo e Motivo da Criação:
 import os
 import io
 import unittest
+from unittest.mock import patch
 from PIL import Image
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
@@ -89,7 +90,9 @@ class TestLaudoYoloFeedback(unittest.TestCase):
         assert "classe_detectada" in foto1
         assert "confianca" in foto1
         assert "status_peca" in foto1
-        assert foto1["status_peca"] in ["Conforme", "Atenção", "Inconforme"]
+        assert foto1["status_peca"] == "Inconclusivo"
+        assert foto1["confianca"] is None
+        assert foto1["classe_detectada"] is None
         assert foto1["thumbnail_b64"].startswith("data:image/jpeg;base64,")
 
     def test_analisar_fotos_periciais_pdf_yolo_vazio(self):
@@ -97,28 +100,24 @@ class TestLaudoYoloFeedback(unittest.TestCase):
         assert resultado["total_imagens_extraidas"] == 0
         assert resultado["imagens_inspecionadas"] == []
 
-    def test_executar_cross_check_concordante(self):
-        laudo_texto = {"veredito": "Aprovado", "score_procedencia": 96}
-        yolo_result = {
-            "total_imagens_extraidas": 1,
-            "imagens_inspecionadas": [
-                {"id": 1, "status_peca": "Conforme", "classe_detectada": "car"}
-            ]
-        }
-        cross = executar_cross_check_laudo(laudo_texto, yolo_result)
-        assert cross["cross_check_status"] == "Concordante"
-        assert "confirmam" in cross["cross_check_mensagem"]
+    def test_cross_check_nunca_afirma_confirmacao_sem_detector_validado(self):
+        for veredito in ("Aprovado", "Reprovado", "Não avaliado"):
+            for fotos in ([], [{"status_peca": "Conforme"}], [{"status_peca": "Inconforme"}]):
+                cross = executar_cross_check_laudo(
+                    {"veredito": veredito},
+                    {"total_imagens_extraidas": len(fotos), "imagens_inspecionadas": fotos},
+                )
+                assert cross["cross_check_status"] == "Inconclusivo"
+                assert "não confirmam nem contestam" in cross["cross_check_mensagem"]
 
-    def test_executar_cross_check_divergencia_detectada(self):
-        laudo_texto = {"veredito": "Aprovado", "score_procedencia": 95}
-        yolo_result = {
-            "total_imagens_extraidas": 1,
-            "imagens_inspecionadas": [
-                {"id": 1, "status_peca": "Inconforme", "classe_detectada": "damaged_part"}
-            ]
-        }
-        cross = executar_cross_check_laudo(laudo_texto, yolo_result)
-        assert cross["cross_check_status"] == "Divergência Detectada"
+    def test_imagem_invalida_nao_inventa_confianca_ou_integridade(self):
+        with patch("services.ai_service.get_yolo_model", side_effect=AssertionError("modelo não deve ser chamado")):
+            result = analisar_fotos_periciais_pdf_yolo([{"id": 1, "data": b"invalid"}])
+        foto = result["imagens_inspecionadas"][0]
+        assert foto["thumbnail_b64"] == ""
+        assert foto["confianca"] is None
+        assert foto["classe_detectada"] is None
+        assert foto["status_peca"] == "Inconclusivo"
 
     def test_api_upload_laudo_pdf_endpoint_integrado(self):
         client = TestClient(app)
@@ -161,4 +160,12 @@ class TestLaudoYoloFeedback(unittest.TestCase):
         assert "cross_check_status" in yolo
         assert yolo["total_imagens_extraidas"] >= 1
         assert len(yolo["imagens_inspecionadas"]) >= 1
+        assert yolo["cross_check_status"] == "Inconclusivo"
+        assert yolo["imagens_inspecionadas"][0]["confianca"] is None
 
+        with patch("routers.uploads.extrair_imagens_pdf", side_effect=RuntimeError("falha simulada")):
+            response = client.post(" /api/v1/laudos/upload".strip(), files=files, headers=headers)
+        assert response.status_code == 200
+        fallback = response.json()["yolo_feedback"]
+        assert fallback["cross_check_status"] == "Inconclusivo"
+        assert "indisponível" in fallback["cross_check_mensagem"]

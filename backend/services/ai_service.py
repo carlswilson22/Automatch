@@ -9,7 +9,6 @@ Objetivo e Motivo da Criação:
 """
 import os
 import io
-import tempfile
 import json
 import logging
 import base64
@@ -625,93 +624,35 @@ def analisar_fotos_periciais_pdf_yolo(
     imagens: List[Dict[str, Any]],
     car_context: Optional[Dict[str, Any]] = None
 ) -> Dict[str, Any]:
-    """
-    Audita fotos periciais extraídas do PDF usando o modelo YOLOv8 da plataforma.
-    Gera miniaturas em Base64 leves, detecta componentes e estabelece conformidade.
-    """
-    if not imagens:
-        return {
-            "total_imagens_extraidas": 0,
-            "imagens_inspecionadas": [],
-            "resumo_visual": "Nenhuma imagem pericial identificada no PDF."
-        }
-
-    titulos_catalogo = [
-        "Estrutura Dianteira / Longarina",
-        "Painel Frontal e Capô",
-        "Caixa de Roda e Para-choque",
-        "Caixa de Estepe / Traseira",
-        "Gravação de Chassi / Torre",
-        "Coluna Estrutural / Teto"
-    ]
-
-    model = get_yolo_model()
+    """Extrai miniaturas para revisão humana, sem inferir avarias ou integridade."""
     inspecionadas = []
-
-    for idx, item in enumerate(imagens):
-        img_bytes = item["data"]
-        titulo = titulos_catalogo[idx % len(titulos_catalogo)]
-
-        # Gera miniatura Base64 otimizada (máx 320px)
+    for item in imagens:
         thumbnail_b64 = ""
         try:
-            thumb_pil = Image.open(io.BytesIO(img_bytes))
-            if thumb_pil.mode in ("RGBA", "P"):
-                thumb_pil = thumb_pil.convert("RGB")
-            thumb_pil.thumbnail((320, 240), Image.Resampling.LANCZOS)
-            thumb_buf = io.BytesIO()
-            thumb_pil.save(thumb_buf, format="JPEG", quality=75)
-            thumbnail_b64 = "data:image/jpeg;base64," + base64.b64encode(thumb_buf.getvalue()).decode("utf-8")
-        except Exception as e:
-            logger.debug("Erro ao gerar miniatura Base64: %s", e)
-
-        # Inferência com YOLOv8
-        classe_detectada = "veículo / estrutura"
-        confianca = 0.92
-        status_peca = "Conforme"
-        detalhe = "Integridade preservada sem avarias ou soldas visíveis"
-
-        if model:
-            try:
-                with tempfile.NamedTemporaryFile(suffix=".jpg", delete=False) as temp_file:
-                    temp_path = temp_file.name
-                with open(temp_path, "wb") as f:
-                    f.write(img_bytes)
-                results = model.predict(source=temp_path, conf=0.18, verbose=False)
-                if results and len(results) > 0:
-                    r = results[0]
-                    found = []
-                    for b in r.boxes:
-                        cname = r.names[int(b.cls[0])]
-                        c_conf = float(b.conf[0])
-                        found.append(cname)
-                        if c_conf > confianca:
-                            confianca = c_conf
-                    if found:
-                        classe_detectada = found[0]
-                        detalhe = f"Componente ({', '.join(set(found))}) alinhado e íntegro"
-                if os.path.exists(temp_path):
-                    try:
-                        os.remove(temp_path)
-                    except Exception:
-                        pass
-            except Exception as e:
-                logger.debug("YOLOv8 inferência pericial falhou: %s", e)
-
+            with Image.open(io.BytesIO(item["data"])) as source:
+                thumb = source.convert("RGB")
+                thumb.thumbnail((320, 240), Image.Resampling.LANCZOS)
+                buffer = io.BytesIO()
+                thumb.save(buffer, format="JPEG", quality=75)
+                thumbnail_b64 = "data:image/jpeg;base64," + base64.b64encode(buffer.getvalue()).decode("utf-8")
+        except Exception as error:
+            logger.debug("Não foi possível gerar miniatura do PDF: %s", error)
         inspecionadas.append({
             "id": item["id"],
-            "titulo": f"Foto {item['id']:02d}: {titulo}",
-            "classe_detectada": classe_detectada,
-            "confianca": f"{confianca * 100:.1f}%",
-            "status_peca": status_peca,
-            "detalhe": detalhe,
-            "thumbnail_b64": thumbnail_b64
+            "titulo": f"Imagem {item['id']:02d} do documento",
+            "classe_detectada": None,
+            "confianca": None,
+            "status_peca": "Inconclusivo",
+            "detalhe": "Imagem para conferência manual; não há detector validado de avarias.",
+            "thumbnail_b64": thumbnail_b64,
         })
-
     return {
         "total_imagens_extraidas": len(imagens),
         "imagens_inspecionadas": inspecionadas,
-        "resumo_visual": f"{len(inspecionadas)} fotografias periciais auditadas com sucesso pelo YOLOv8."
+        "resumo_visual": (
+            "Imagens extraídas para conferência manual; análise de avarias inconclusiva."
+            if imagens else "Nenhuma imagem extraída; análise visual inconclusiva."
+        ),
     }
 
 
@@ -719,35 +660,11 @@ def executar_cross_check_laudo(
     laudo_textual: Dict[str, Any],
     yolo_result: Dict[str, Any]
 ) -> Dict[str, str]:
-    """
-    Cruza o parecer textual com a inspeção visual realizada pelo YOLOv8.
-    Retorna o status de concordância e parecer explicativo.
-    """
-    total_imgs = yolo_result.get("total_imagens_extraidas", 0)
-    if total_imgs == 0:
-        return {
-            "cross_check_status": "Concordante",
-            "cross_check_mensagem": "Auditoria documental concluída. Nenhuma fotografia pericial embutida neste PDF."
-        }
-
-    veredito_texto = laudo_textual.get("veredito", "Aprovado")
-    fotos = yolo_result.get("imagens_inspecionadas", [])
-    tem_foto_inconforme = any(f.get("status_peca") == "Inconforme" for f in fotos)
-
-    if veredito_texto == "Aprovado" and tem_foto_inconforme:
-        return {
-            "cross_check_status": "Divergência Detectada",
-            "cross_check_mensagem": "Atenção: O parecer textual declara aprovação, porém a auditoria visual apontou inconformidade em componentes fotografados."
-        }
-    elif veredito_texto == "Reprovado" and not tem_foto_inconforme:
-        return {
-            "cross_check_status": "Concordante",
-            "cross_check_mensagem": "Restrições do laudo textual corroboradas com histórico documental e vistoria pericial."
-        }
-    else:
-        return {
-            "cross_check_status": "Concordante",
-            "cross_check_mensagem": "As evidências fotográficas auditadas pelo YOLOv8 confirmam integralmente o parecer textual do perito."
-        }
-
-
+    """Não cruza parecer documental com detector visual não validado."""
+    return {
+        "cross_check_status": "Inconclusivo",
+        "cross_check_mensagem": (
+            "As imagens não confirmam nem contestam o parecer documental. "
+            "É necessária conferência manual."
+        ),
+    }

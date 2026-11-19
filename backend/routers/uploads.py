@@ -178,7 +178,7 @@ async def upload_laudo(
                 "itens_auditados": [], "alertas": ["Requer conferência manual."],
             }
 
-        # Auditoria de Fotos Periciais e Cross-Check via YOLOv8
+        # Extração de imagens do PDF para conferência manual
         try:
             fotos_extraidas = await asyncio.to_thread(extrair_imagens_pdf, content, 6)
             if fotos_extraidas:
@@ -197,20 +197,20 @@ async def upload_laudo(
                 "veredito": laudo_feedback.get("veredito"),
                 "score": laudo_feedback.get("score_procedencia"),
                 "total_imagens_extraidas": yolo_res.get("total_imagens_extraidas", 0),
-                "cross_check_status": cross_check.get("cross_check_status", "Concordante"),
+                "cross_check_status": cross_check.get("cross_check_status", "Inconclusivo"),
                 "cross_check_mensagem": cross_check.get("cross_check_mensagem", ""),
                 "imagens_inspecionadas": yolo_res.get("imagens_inspecionadas", []),
                 "resumo_visual": yolo_res.get("resumo_visual", "")
             }
         except Exception as e:
-            logger.warning("Erro ao processar fotos periciais e YOLO no laudo PDF: %s", e)
+            logger.warning("Erro ao extrair imagens do laudo PDF: %s", e)
             yolo_feedback = {
                 "pdf_audit": True,
                 "veredito": laudo_feedback.get("veredito"),
                 "score": laudo_feedback.get("score_procedencia"),
                 "total_imagens_extraidas": 0,
-                "cross_check_status": "Concordante",
-                "cross_check_mensagem": "Auditoria documental concluída com sucesso.",
+                "cross_check_status": "Inconclusivo",
+                "cross_check_mensagem": "Análise visual indisponível. Confira o documento manualmente.",
                 "imagens_inspecionadas": []
             }
 
