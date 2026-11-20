@@ -15,6 +15,27 @@ JOURNEYS = (
     "test_persistent_fixes.py", "test_usecases_full_battery.py", "test_vision_and_delete.py",
 )
 
+DISCOVER_BOOTSTRAP = '''
+import unittest, sys
+from database import Base, engine
+import models
+from seed import seed_db
+
+Base.metadata.create_all(bind=engine)
+seed_db()
+
+loader = unittest.TestLoader()
+suite = loader.discover(".", pattern="test*.py")
+runner = unittest.TextTestRunner(verbosity=2)
+result = runner.run(suite)
+if not result.wasSuccessful():
+    for test, err in result.failures:
+        print(f"::error title={test}::{err.strip().splitlines()[-1]}", file=sys.stderr)
+    for test, err in result.errors:
+        print(f"::error title={test}::{err.strip().splitlines()[-1]}", file=sys.stderr)
+    sys.exit(1)
+'''
+
 BOOTSTRAP = '''
 import runpy, sys
 from database import Base, engine, SessionLocal
@@ -29,7 +50,7 @@ def run_tests():
     failures = []
     with tempfile.TemporaryDirectory(prefix="automatch-tests-") as directory:
         temporary = Path(directory)
-        commands = [("unittest", ["-m", "unittest", "discover", "-p", "test*.py"])]
+        commands = [("unittest", ["-c", DISCOVER_BOOTSTRAP])]
         commands += [(name, ["-c", BOOTSTRAP, name]) for name in JOURNEYS]
         for index, (name, args) in enumerate(commands):
             env = {
