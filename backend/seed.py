@@ -260,13 +260,22 @@ def seed_db():
             }
         ]
 
+        # Campos operacionais que podem ser editados por usuários/lojistas:
+        # o seed NUNCA deve sobrescrevê-los em canônicos existentes.
+        OPERATIONAL_FIELDS = {
+            "price", "status_reserva", "image", "laudo_status",
+            "laudo_url", "laudo_feedback", "debt_status", "auction_history",
+            "auto_price", "observacoes_repasse",
+        }
+
         for c_data in cars_data:
             existing_car = db.query(models.Car).filter(models.Car.id == c_data["id"]).first()
             if not existing_car:
                 db.add(models.Car(**c_data))
             else:
                 for key, val in c_data.items():
-                    setattr(existing_car, key, val)
+                    if key not in OPERATIONAL_FIELDS:
+                        setattr(existing_car, key, val)
         db.commit()
 
         # 4. Saneamento e Reconciliação Idempotente da Vitrine Digital
