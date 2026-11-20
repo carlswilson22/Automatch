@@ -21,10 +21,18 @@ class PericialTimelineTests(unittest.TestCase):
         config = json.loads(source.read_text(encoding="utf8"))
         self.assertEqual(TIMELINE, config)
         self.assertEqual([(p["start"], p["end"]) for p in CHECKPOINTS], [(0, 5), (5, 15), (15, 20)])
-        digest = hashlib.sha256(source.read_bytes()).hexdigest()
+        # Normaliza quebras de linha para garantir resultado consistente entre sistemas operacionais (CRLF no Windows vs LF no Linux)
+        raw = source.read_bytes()
+        digest_lf = hashlib.sha256(raw.replace(b"\r\n", b"\n")).hexdigest()
+        digest_crlf = hashlib.sha256(raw.replace(b"\r\n", b"\n").replace(b"\n", b"\r\n")).hexdigest()
+        digests = {digest_lf, digest_crlf, hashlib.sha256(raw).hexdigest()}
         gen_path = root / "frontend/src/data/pericialTimeline.generated.js"
         if gen_path.exists():
-            self.assertIn(digest, gen_path.read_text(encoding="utf8"))
+            content = gen_path.read_text(encoding="utf8")
+            self.assertTrue(
+                any(d in content for d in digests),
+                f"Nenhum digest esperado ({digests}) encontrado em {gen_path}"
+            )
 
     def test_each_generated_video_has_correct_source_and_duration(self):
         root = _find_root()
