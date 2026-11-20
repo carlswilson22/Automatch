@@ -293,10 +293,10 @@ def seed_db():
 
 def sanitize_database(db: Session) -> dict:
     """
-    Saneamento e reconciliação idempotente da vitrine digital (Fase A/E):
-    - Garante que apenas os veículos canônicos (sc-001 a sc-005) e novos cadastros legítimos existam.
-    - Remove resíduos de testes temporários ([TESTE]%, etc.) e registros legados órfãos.
-    - Limpa com segurança as chaves estrangeiras filhas em laudo_protocols, watchlist, etc.
+    Saneamento e reconciliação idempotente da vitrine digital:
+    - Apenas os 5 veículos canônicos (sc-001 a sc-005) são permitidos.
+    - Todo carro cujo ID não comece com "sc-" é removido, sem exceção.
+    - Limpa as chaves estrangeiras filhas antes de deletar.
     """
     canonical_ids = {"sc-001", "sc-002", "sc-003", "sc-004", "sc-005"}
     all_cars = db.query(models.Car).all()
@@ -305,21 +305,8 @@ def sanitize_database(db: Session) -> dict:
     for car in all_cars:
         if car.id in canonical_ids:
             continue
-
-        is_test_artifact = (
-            (car.model and "[TESTE]" in car.model.upper())
-            or (car.model and "QA" in car.model.upper())
-            or (car.model and "CAUTELAR" in car.model.upper())
-        )
-        is_legacy_orphan = (
-            car.user_id is None
-            or car.id in ("1", "2")
-            or car.user_id == "user-1"
-            or (isinstance(car.id, str) and len(car.id) == 36 and not car.store_id)
-        )
-
-        if is_test_artifact or is_legacy_orphan:
-            cars_to_remove.append(car.id)
+        # Regra única: somente IDs canônicos são aceitos na vitrine
+        cars_to_remove.append(car.id)
 
     removed_count = 0
     if cars_to_remove:
