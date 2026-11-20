@@ -1,4 +1,4 @@
-﻿import { readVisualInspection, vehicleInspection, inspectionLabel, trustedDamagePoints, VISUAL_NOTICE } from '../utils/visualInspection.js';
+import { readVisualInspection, vehicleInspection, inspectionLabel, trustedDamagePoints, VISUAL_NOTICE } from '../utils/visualInspection.js';
 import { getVehicleStatusRows, formatVehicleMileage } from '../utils/vehicleInformation.js';
 /**
  * ShowcaseVehicleDetails.jsx — Página de detalhes aprofundados e ficha técnica do veículo selecionado.
@@ -523,7 +523,7 @@ export default function ShowcaseVehicleDetails() {
                       )}
                     </div>
                     <p className="text-[11px] text-slate-400 mt-0.5">
-                      Avalia\u00e7\u00e3o por imagens com evid\u00eancias e recomenda\u00e7\u00e3o de vistoria.
+                      Avaliação por imagens com evidências e recomendação de vistoria.
                     </p>
                   </div>
                 </div>
