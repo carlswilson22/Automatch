@@ -47,10 +47,10 @@ def preprocess_and_compress_image(image_bytes: bytes, max_dim: int = 1024, quali
 
 GEMINI_MODELS = [
     "gemini-3.5-flash",
-    "gemini-3.8-flash",
+    "gemini-3-flash-preview",
+    "gemini-flash-lite-latest",
+    "gemini-3.1-flash-lite",
     "gemini-flash-latest",
-    "gemini-2.5-flash",
-    "gemini-1.5-flash"
 ]
 
 # Timeout adequado para payloads de imagem multimodal
@@ -389,7 +389,7 @@ async def executar_pericia_visual_completa(
             gemini_text = await call_gemini_generate(
                 api_key=api_key,
                 contents=contents,
-                max_tokens=600,
+                max_tokens=1500,
                 temperature=0.1,
                 system_prompt=_DAMAGE_SYSTEM_PROMPT,
             )

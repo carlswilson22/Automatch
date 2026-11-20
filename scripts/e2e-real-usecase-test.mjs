@@ -155,11 +155,23 @@ async function main() {
     
     const inspection = readVisualInspection(rawData);
     assert.ok(inspection);
-    // Sem chave Gemini no container, responde inconclusivo (não inventa falso positivo)
-    assert.equal(inspection.analysis_state, 'inconclusive');
-    assert.equal(inspectionLabel(inspection), 'Análise inconclusiva, confirme com vistoria presencial');
-    assert.deepEqual(trustedDamagePoints(inspection), []);
-    return `Contrato validado: integridade pericial preservada sem alucinação`;
+    if (inspection.analysis_state === 'damage_detected') {
+      // Quando Gemini Vision está ativo e detecta avaria real
+      assert.equal(inspection.calibration_id, 'gemini-vision-v1');
+      assert.equal(inspection.tem_avarias, true);
+      assert.equal(inspection.damage_detection_validated, true);
+      assert.equal(inspection.score_lataria, null, 'score_lataria não pode ser inventado');
+      assert.ok(inspection.pontos_avaria.length > 0, 'deve conter pontos de avaria reais');
+      const label = inspectionLabel(inspection);
+      assert.ok(label.includes('Avaria') || label.includes('avaria'), 'rótulo deve indicar avaria');
+      return `Detecção pericial Gemini Vision ativa: ${inspection.pontos_avaria.length} avaria(s) identificada(s) com evidência visual`;
+    } else {
+      // Quando cai em fallback inconclusivo
+      assert.equal(inspection.analysis_state, 'inconclusive');
+      assert.equal(inspectionLabel(inspection), 'Análise inconclusiva, confirme com vistoria presencial');
+      assert.deepEqual(trustedDamagePoints(inspection), []);
+      return `Contrato validado: integridade pericial preservada sem alucinação`;
+    }
   });
 
   // 7. Teste do Consultor IA em Streaming (SSE)

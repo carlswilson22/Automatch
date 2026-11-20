@@ -59,9 +59,12 @@ def gemini_visual_result(
     Caso contrário, retorna inconclusive.
     """
     if not damage_points:
-        return inconclusive(image_bytes, reason="gemini_no_damage_found",
+        res = inconclusive(image_bytes, reason="gemini_no_damage_found",
                             method="Gemini Vision",
                             vehicle_confidence=vehicle_confidence)
+        if car_id:
+            res["car_id"] = str(car_id)
+        return res
     result = {
         "schema_version": SCHEMA_VERSION,
         "analysis_state": "damage_detected",
