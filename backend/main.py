@@ -214,9 +214,6 @@ async def lifespan(app: FastAPI):
     # Pre-warm do YOLO em background (não bloqueia o startup)
     asyncio.create_task(_prewarm_yolo())
 
-    # Garante que o filtro de logs de acesso esteja ativo
-    logging.getLogger("uvicorn.access").addFilter(EndpointFilter())
-
     # Banner visual de inicialização com links diretos de acesso
     logger.info(
         "\n" + "=" * 72 + "\n"
