@@ -294,18 +294,29 @@ def seed_db():
 def sanitize_database(db: Session) -> dict:
     """
     Saneamento e reconciliação idempotente da vitrine digital:
-    - Apenas os 5 veículos canônicos (sc-001 a sc-005) são permitidos.
-    - Todo carro cujo ID não comece com "sc-" é removido, sem exceção.
-    - Limpa as chaves estrangeiras filhas antes de deletar.
+    1. Preserva integralmente os 5 veículos canônicos (sc-001 a sc-005).
+    2. Preserva anúncios legítimos de clientes particulares e fixtures de auditoria (audit-car).
+    3. Expurga resíduos de testes temporários, demonstrações órfãs e legados do antigo admin.
+    4. Limpa chaves estrangeiras dependentes antes da exclusão.
     """
     canonical_ids = {"sc-001", "sc-002", "sc-003", "sc-004", "sc-005"}
     all_cars = db.query(models.Car).all()
     cars_to_remove = []
 
     for car in all_cars:
+        # 1. Canônicos oficiais da vitrine
         if car.id in canonical_ids:
             continue
-        # Regra única: somente IDs canônicos são aceitos na vitrine
+
+        # 2. Anúncios legítimos de usuários particulares e fixtures de teste de auditoria
+        is_protected_user_ad = (
+            car.id == "audit-car"
+            or (car.user_id and car.user_id != "user-1" and car.store_id is None)
+        )
+        if is_protected_user_ad:
+            continue
+
+        # 3. Qualquer outro registro é artefato residual espúrio
         cars_to_remove.append(car.id)
 
     removed_count = 0

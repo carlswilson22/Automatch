@@ -169,6 +169,15 @@ for line in stream_resp.iter_lines():
 
 print(f"    «{''.join(full_ai_response)}»")
 
+# 8. Teardown defensivo: Removendo anuncio de demonstracao do banco
+print(f"\n[8] 🧹 Teardown defensivo: Removendo anúncio de demonstração do banco:")
+try:
+    del_resp = requests.delete(f"{BASE}/api/cars/{car_id}", headers=headers, timeout=10)
+    if del_resp.status_code == 200:
+        print(f"    ✓ Anúncio {car_id} excluído com sucesso. Vitrine mantida limpa e idempotente!")
+except Exception as e:
+    print(f"    ⚠️ Erro no teardown do anúncio: {e}")
+
 print("\n" + "=" * 80)
 print("🎉 FLUXO E2E CONCLUÍDO COM SUCESSO NO BANCO DE DADOS E DOCKER!")
 print("=" * 80)
