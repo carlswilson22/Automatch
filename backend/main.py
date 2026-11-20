@@ -25,7 +25,7 @@ import asyncio
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
@@ -36,6 +36,23 @@ from routers import auth, cars, detran, ai_vision, uploads, alerts, integrations
 import security
 
 logger = logging.getLogger("automatch")
+
+class EndpointFilter(logging.Filter):
+    """
+    Filtro de log de acesso do Uvicorn:
+    Silencia sondas de saúde do Docker (/api/health) e requisições espúrias do host (/clients),
+    mantendo os logs de rotas de negócio e inicialização limpos e destacados.
+    """
+    def __init__(self, excluded_paths=("/api/health", "/clients")):
+        super().__init__()
+        self.excluded_paths = excluded_paths
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        msg = record.getMessage()
+        return not any(path in msg for path in self.excluded_paths)
+
+# Instala o filtro no logger de acesso do Uvicorn
+logging.getLogger("uvicorn.access").addFilter(EndpointFilter())
 
 # Diretório de uploads de laudos e vídeos
 from media_storage import UPLOADS_DIR
@@ -197,6 +214,22 @@ async def lifespan(app: FastAPI):
     # Pre-warm do YOLO em background (não bloqueia o startup)
     asyncio.create_task(_prewarm_yolo())
 
+    # Garante que o filtro de logs de acesso esteja ativo
+    logging.getLogger("uvicorn.access").addFilter(EndpointFilter())
+
+    # Banner visual de inicialização com links diretos de acesso
+    logger.info(
+        "\n" + "=" * 72 + "\n"
+        "🚗  AUTOMATCH — AMBIENTE DE DESENVOLVIMENTO INICIADO COM SUCESSO\n"
+        "=" * 72 + "\n"
+        "👉  Vitrine Digital (Ponto de Entrada Oficial): http://localhost\n"
+        "👉  Porta Alternativa do Gateway:              http://localhost:3000\n"
+        "👉  Documentação Interativa da API (Swagger):  http://localhost/docs\n"
+        "👉  Catálogo Oficial (JSON da Vitrine):        http://localhost/api/cars\n"
+        "👉  Sonda de Saúde do Sistema (Healthcheck):   http://localhost/api/health\n"
+        "=" * 72
+    )
+
     yield  # Aplicação rodando
 
     # ── Shutdown ───────────────────────────────────────────────────────────────
@@ -287,6 +320,12 @@ from fastapi.responses import JSONResponse
 async def health_liveness():
     """Liveness probe: indica que o processo FastAPI está rodando."""
     return {"status": "ok"}
+
+
+@app.get("/clients", include_in_schema=False)
+async def handle_spurious_clients():
+    """Tratador silencioso para sondas externas da máquina host na porta 8000."""
+    return Response(status_code=204)
 
 
 @app.get("/api/health/ready", tags=["Health"])
