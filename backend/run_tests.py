@@ -40,14 +40,13 @@ def run_tests():
             }
             print(f"\n=== {name} (banco isolado) ===", flush=True)
             try:
-                result = subprocess.run([sys.executable, *args], cwd=ROOT, env=env, capture_output=True, text=True, encoding="utf-8", timeout=180)
-                print(result.stdout)
-                print(result.stderr, file=sys.stderr)
+                result = subprocess.run([sys.executable, *args], cwd=ROOT, env=env, timeout=180)
                 if result.returncode:
                     failures.append(name)
+                    print(f"::error::{name} falhou com código {result.returncode}", file=sys.stderr)
             except subprocess.TimeoutExpired:
                 failures.append(name)
-                print("Tempo de execução excedido.", file=sys.stderr)
+                print(f"::error::{name} excedeu tempo limite de 180s", file=sys.stderr)
     if failures:
         print("Falharam: " + ", ".join(failures), file=sys.stderr)
         return 1
