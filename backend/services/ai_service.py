@@ -46,14 +46,15 @@ def preprocess_and_compress_image(image_bytes: bytes, max_dim: int = 1024, quali
 # ==============================================================================
 
 GEMINI_MODELS = [
-    "gemini-1.5-flash",
-    "gemini-2.0-flash",
+    "gemini-3.5-flash",
+    "gemini-3.8-flash",
+    "gemini-flash-latest",
     "gemini-2.5-flash",
-    "gemini-1.5-flash-latest"
+    "gemini-1.5-flash"
 ]
 
-# Timeout reduzido para evitar travamento do Event Loop em caso de overload
-_GEMINI_TIMEOUT = 6.0
+# Timeout adequado para payloads de imagem multimodal
+_GEMINI_TIMEOUT = 15.0
 # Máximo de retentativas por modelo em caso de 503
 _GEMINI_MAX_RETRIES = 2
 
