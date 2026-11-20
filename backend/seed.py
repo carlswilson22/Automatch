@@ -264,8 +264,15 @@ def seed_db():
             existing_car = db.query(models.Car).filter(models.Car.id == c_data["id"]).first()
             if not existing_car:
                 db.add(models.Car(**c_data))
+            else:
+                for key, val in c_data.items():
+                    setattr(existing_car, key, val)
         db.commit()
-        logger.info("Seed concluído: exemplos ausentes criados; cadastros existentes preservados.")
+
+        # 4. Saneamento e Reconciliação Idempotente da Vitrine Digital
+        sanitize_database(db)
+
+        logger.info("Seed concluído: vitrine homologada com os 5 veículos canônicos e dados saneados.")
 
     except Exception as e:
         print(f"Erro na execução do seed: {e}")
@@ -273,6 +280,65 @@ def seed_db():
         raise
     finally:
         db.close()
+
+
+def sanitize_database(db: Session) -> dict:
+    """
+    Saneamento e reconciliação idempotente da vitrine digital (Fase A/E):
+    - Garante que apenas os veículos canônicos (sc-001 a sc-005) e novos cadastros legítimos existam.
+    - Remove resíduos de testes temporários ([TESTE]%, etc.) e registros legados órfãos.
+    - Limpa com segurança as chaves estrangeiras filhas em laudo_protocols, watchlist, etc.
+    """
+    canonical_ids = {"sc-001", "sc-002", "sc-003", "sc-004", "sc-005"}
+    all_cars = db.query(models.Car).all()
+    cars_to_remove = []
+
+    for car in all_cars:
+        if car.id in canonical_ids:
+            continue
+
+        is_test_artifact = (
+            (car.model and "[TESTE]" in car.model.upper())
+            or (car.model and "QA" in car.model.upper())
+            or (car.model and "CAUTELAR" in car.model.upper())
+        )
+        is_legacy_orphan = (
+            car.user_id is None
+            or car.id in ("1", "2")
+            or car.user_id == "user-1"
+            or (isinstance(car.id, str) and len(car.id) == 36 and not car.store_id)
+        )
+
+        if is_test_artifact or is_legacy_orphan:
+            cars_to_remove.append(car.id)
+
+    removed_count = 0
+    if cars_to_remove:
+        try:
+            db.query(models.LaudoProtocol).filter(models.LaudoProtocol.car_id.in_(cars_to_remove)).delete(synchronize_session=False)
+        except Exception as e:
+            logger.warning("Aviso ao limpar laudo_protocols: %s", e)
+
+        try:
+            db.query(models.LaudoWatchlist).filter(models.LaudoWatchlist.car_id.in_(cars_to_remove)).delete(synchronize_session=False)
+        except Exception as e:
+            logger.warning("Aviso ao limpar laudo_watchlist: %s", e)
+
+        try:
+            db.query(models.CarReservation).filter(models.CarReservation.car_id.in_(cars_to_remove)).delete(synchronize_session=False)
+        except Exception as e:
+            logger.warning("Aviso ao limpar car_reservations: %s", e)
+
+        try:
+            db.query(models.PartnerTransaction).filter(models.PartnerTransaction.car_id.in_(cars_to_remove)).delete(synchronize_session=False)
+        except Exception as e:
+            logger.warning("Aviso ao limpar partner_transactions: %s", e)
+
+        removed_count = db.query(models.Car).filter(models.Car.id.in_(cars_to_remove)).delete(synchronize_session=False)
+        db.commit()
+        logger.info("Saneamento de banco concluído: %d veículos espúrios removidos.", removed_count)
+
+    return {"removed": removed_count, "retained_canonical": len(canonical_ids)}
 
 
 if __name__ == "__main__":

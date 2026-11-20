@@ -69,6 +69,8 @@ def get_cars(
     Envelope: { items: [...], total: N, page: P, pages: T, limit: L }
     """
     query = db.query(models.Car)
+    # Salvaguarda: descartar artefatos de teste da vitrine publica
+    query = query.filter(~models.Car.model.ilike("[TESTE]%"))
     
     if store_id is not None:
         query = query.filter(models.Car.store_id == store_id)
