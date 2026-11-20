@@ -23,6 +23,7 @@ let savedScrollY = 0;
 
 const isIOS = () =>
   typeof window !== 'undefined' &&
+  typeof navigator !== 'undefined' &&
   /iPad|iPhone|iPod/.test(navigator.userAgent) &&
   !window.MSStream;
 

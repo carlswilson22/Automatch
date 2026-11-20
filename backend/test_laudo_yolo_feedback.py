@@ -124,6 +124,8 @@ class TestLaudoYoloFeedback(unittest.TestCase):
         pdf_bytes = _gerar_pdf_com_foto_teste()
 
         # Obtém ou cria usuário válido para gerar token JWT
+        from database import Base, engine
+        Base.metadata.create_all(bind=engine)
         db = SessionLocal()
         try:
             user = db.query(models.User).first()
