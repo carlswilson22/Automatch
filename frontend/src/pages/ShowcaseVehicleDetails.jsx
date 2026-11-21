@@ -655,34 +655,19 @@ export default function ShowcaseVehicleDetails() {
                 ))}
               </div>
 
-              {/* Resultado único, sem score artificial de lataria. */}
+              {/* Resultado único e objetivo, sem redundâncias textuais. */}
               {analysisResult && (
-                <div role={scanError ? 'alert' : 'status'} className="p-5 bg-slate-950/90 border-t border-slate-800 space-y-2.5">
-                  <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                      <Bot className="w-4 h-4 text-cyan-400" />
-                      {scanError ? 'Análise indisponível' : 'Parecer da Inspeção Visual por IA'}
-                    </h4>
-                    {!scanError && (
-                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                        visualInspection?.analysis_state === 'damage_detected'
-                          ? 'bg-amber-500/10 text-amber-300 border border-amber-500/30'
-                          : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-                      }`}>
-                        {visualInspection?.analysis_state === 'damage_detected' ? <AlertTriangle className="w-3 h-3 text-amber-400" /> : <ShieldCheck className="w-3 h-3 text-emerald-400" />}
-                        {inspectionLabel(visualInspection)}
-                      </span>
-                    )}
-                  </div>
+                <div role={scanError ? 'alert' : 'status'} className="p-5 bg-slate-950/90 border-t border-slate-800 space-y-2">
+                  <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                    <Bot className="w-4 h-4 text-cyan-400" />
+                    {scanError ? 'Análise indisponível' : 'Parecer da Inspeção Visual por IA'}
+                  </h4>
                   <p className="text-sm text-slate-300 leading-relaxed">
                     {analysisResult && analysisResult.replace(/\.$/, '').trim() === inspectionLabel(visualInspection).replace(/\.$/, '').trim()
                       ? (visualInspection?.analysis_state === 'damage_detected'
                           ? 'Foram identificados indícios de avarias aparentes nos pixels da imagem. Confirme os pontos na inspeção detalhada.'
                           : 'Varredura de superfície em alta definição concluída. Não foram detectadas avarias estéticas evidentes nos ângulos analisados.')
                       : analysisResult}
-                  </p>
-                  <p className="text-xs text-slate-400 pt-1 border-t border-slate-800/60">
-                    {VISUAL_NOTICE}
                   </p>
                 </div>
               )}
