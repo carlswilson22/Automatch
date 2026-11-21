@@ -26,9 +26,9 @@ Ele não executa FastAPI, banco, uploads ou IA no servidor. A aplicação comple
 exige backend e banco próprios. A documentação distingue operação com API,
 amostras locais, integrações simuladas e recursos fora do escopo ativo.
 
-A etapa atual é apenas demonstrativa: **sem deploy e sem reformulação do banco**.
+A etapa atual da demonstração conta com **Continuous Deployment (CD) automatizado no GitHub Pages** para o repositório principal e **sem reformulação do banco**.
 A reformulação para a futura execução local aguarda autorização específica.
-O workflow de Pages é manual; enviar commits às duas `main` não publica o site.
+O workflow de Pages publica o site automaticamente a cada commit integrado na `main` do repositório principal (com acionamento manual disponível para contingência).
 Para experimentar as amostras, use o modo demo descrito em
 [configuração e execução](docs/configuracao-e-execucao.md).
 

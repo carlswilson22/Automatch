@@ -126,10 +126,8 @@ de instalação/operação acima permanecem referência técnica para a etapa fu
 
 ## GitHub Pages e verificações
 
-O workflow de Pages é exclusivamente manual e não deve ser acionado nesta etapa.
-Enviar commits não faz deploy. Quando autorizado, Pages do principal compila somente frontend com base do
-repositório e modo
-demo explícito. Sem API hospedada, não usar esse ambiente como prova de login,
+O workflow de Pages conta com publicação contínua automatizada a cada commit integrado na branch `main` do repositório principal (mantendo `workflow_dispatch` como contingência).
+O Pages do principal compila o frontend com base do repositório e modo demo explícito. Sem API hospedada, não usar esse ambiente como prova de login,
 IA, laudo persistido, pagamento ou reserva operacional em servidor.
 
 Executar [testes e verificações](testes-e-evidencias.md) conforme o impacto.

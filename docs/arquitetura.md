@@ -96,9 +96,7 @@ Os [ADRs](decisoes/README.md) preservam decisões históricas com complementos.
 Ver [estado atual](estado-atual.md), [banco](../DOCUMENTACAO_BANCO_DE_DADOS.md),
 [execução](configuracao-e-execucao.md) e [segurança](../SECURITY.md).
 
-Nesta etapa não há deploy nem reformulação de entidades/migrações. O workflow
-de Pages é exclusivamente manual. A mudança do banco para a futura execução
-local depende de autorização específica.
+O repositório principal conta com deploy automatizado da demonstração no GitHub Pages a cada commit integrado na branch `main` (com disparo manual como contingência). Não há reformulação de entidades/migrações de banco antes de nova autorização.
 
 ## Complemento de 19/11/2026
 

@@ -3,12 +3,18 @@
 #
 # Objetivo e Motivo da Criação:
 #   - Compila o frontend do Automatch e faz o deploy automatizado para a visualização pública
-#     estática no GitHub Pages somente por acionamento manual autorizado.
+#     estática no GitHub Pages em pushes na branch main do repositório principal ou via disparo manual.
 # ==============================================================================
-name: Publicar demonstracao no Pages (manual)
+name: Publicar demonstracao no Pages
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'frontend/**'
+      - '.github/workflows/static.yml'
 
 permissions:
   contents: read

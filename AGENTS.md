@@ -29,7 +29,7 @@
 
 ## Escopo demonstrativo autorizado
 
-- Não realizar deploy. Pages deve permanecer com acionamento exclusivamente manual.
+- Deploy no GitHub Pages: O repositório principal `carlswilson22/Automatch` conta com Continuous Deployment (CD) automatizado no GitHub Pages para commits enviados à branch `main`. O acionamento manual (`workflow_dispatch`) permanece disponível como contingência.
+- Repositório secundário: Em `CAMPUSCEUB/ADS-AUTOMATCH`, modificar exclusivamente a branch `main` e preservar integralmente a branch `ProfFlavioCesar-patch-1`. Nenhum deploy de Pages deve ser executado no secundário.
 - Não reformular banco, entidades ou migrações para execução local antes de nova autorização.
 - Exemplos devem permitir interação no site sem alegar envio externo ou certificação inexistente.
-- Enviar os commits às duas main continua autorizado; não acionar o workflow de publicação.

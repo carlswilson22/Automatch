@@ -26,8 +26,7 @@ acústica continuam fora das telas. Ver [relatório](manutencao-avisos-2026-11-1
 
 ## Escopo desta etapa
 
-Somente demonstração, sem deploy. Pages passou a acionamento manual; nenhum
-workflow de publicação foi iniciado. A auditoria recebeu autorização específica para aplicar as migrações pendentes e corrigir perfis no banco real, após backup e ensaio em cópia; ver [verificação](verificacao-banco.md).
+Demonstração com Continuous Deployment (CD) automatizado no GitHub Pages a partir da branch `main` do repositório principal, mantendo opção manual de contingência. A auditoria recebeu autorização específica para aplicar as migrações pendentes e corrigir perfis no banco real, após backup e ensaio em cópia; ver [verificação](verificacao-banco.md).
 Os consultores locais e o PDF não certificam integridade ou regularidade a partir
 de ausência de dados. Diálogos de alerta/multicanal têm teclado e foco gerenciados.
 
