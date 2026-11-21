@@ -85,7 +85,8 @@ export function mapVehicleToViewModel(raw) {
   const mileage = parseVehicleNumber(raw.mileage ?? raw.km, null);
   const image = raw.image || raw.imagem || raw.images?.[0] || '/images/placeholder-carro.jpg';
   const body = raw.bodyType || raw.body_type || raw.metadata?.bodyType || 'Não informado';
-  const specs = { ...(raw.specs || {}) };
+  const canonical = showcaseCars.find(car => String(car.id) === id);
+  const specs = { ...(canonical?.specs || {}), ...(raw.specs || {}) };
   const fuel = raw.fuel || raw.combustivel || specs.combustivel || raw.metadata?.fuel;
   const transmission = raw.transmission || raw.transmissao || raw.cambio || specs.cambio || raw.metadata?.transmission;
   if (!specs.motor && raw.metadata?.engine) specs.motor = raw.metadata.engine;
@@ -117,9 +118,9 @@ export function mapVehicleToViewModel(raw) {
     plate: raw.plate || raw.placa || '',
     laudoUrl: raw.laudoUrl || raw.laudo_url || null,
     laudoFeedback: raw.laudoFeedback || raw.laudo_feedback || null,
-    laudoStatus: vehicleStatusValue(raw.laudoStatus ?? raw.laudo_status ?? raw.laudo),
-    debtStatus: vehicleStatusValue(raw.debtStatus ?? raw.debt_status ?? raw.debitos),
-    auctionHistory: vehicleStatusValue(raw.auctionHistory ?? raw.auction_history ?? raw.leilao),
+    laudoStatus: vehicleStatusValue(raw.laudoStatus ?? raw.laudo_status ?? raw.laudo ?? canonical?.laudoStatus),
+    debtStatus: vehicleStatusValue(raw.debtStatus ?? raw.debt_status ?? raw.debitos ?? canonical?.debtStatus),
+    auctionHistory: vehicleStatusValue(raw.auctionHistory ?? raw.auction_history ?? raw.leilao ?? canonical?.auctionHistory),
     videoUrl: raw.videoUrl || raw.video_url || null,
     description: raw.description || raw.descricao || '',
     fullDescription: raw.fullDescription || raw.full_description || raw.description || raw.descricao || '',

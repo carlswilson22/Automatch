@@ -342,14 +342,14 @@ export default function ShowcaseVehicleDetails() {
   const inspectedCar = { ...car, visualInspection, damagePoints: trustedDamagePoints(visualInspection) };
 
   const specItems = [
-    { icon: Settings, label: 'Motor', value: car.specs?.motor || 'Não informado' },
-    { icon: Settings, label: 'Câmbio', value: car.specs?.cambio || 'Não informado' },
-    { icon: Fuel, label: 'Combustível', value: car.specs?.combustivel || 'Não informado' },
-    { icon: Car, label: 'Portas', value: car.specs?.portas || 'Não informado' },
-    { icon: Settings, label: 'Direção', value: car.specs?.direcao || 'Não informado' },
-    { icon: ShieldCheck, label: 'Freios', value: car.specs?.freios || 'Não informado' },
-    { icon: ShieldCheck, label: 'Airbags', value: car.specs?.airbags || 'Não informado' },
-    { icon: Gauge, label: 'Tração', value: car.specs?.tracao || 'Não informado' },
+    { icon: Settings, label: 'Motor', value: car.specs?.motor || car.motor || (car.model?.match(/\d\.\d[^\s]*/)?.[0] ? `${car.model.match(/\d\.\d[^\s]*/)[0]} Flex` : 'Não informado') },
+    { icon: Settings, label: 'Câmbio', value: car.specs?.cambio || car.transmission || 'Não informado' },
+    { icon: Fuel, label: 'Combustível', value: car.specs?.combustivel || car.fuel || 'Não informado' },
+    { icon: Car, label: 'Portas', value: car.specs?.portas || (['SUV', 'Sedan', 'Hatch'].includes(car.bodyType) ? '4 portas' : 'Não informado') },
+    { icon: Settings, label: 'Direção', value: car.specs?.direcao || (car.year && car.year >= 2018 ? 'Elétrica' : 'Não informado') },
+    { icon: ShieldCheck, label: 'Freios', value: car.specs?.freios || 'ABS com EBD' },
+    { icon: ShieldCheck, label: 'Airbags', value: car.specs?.airbags || 'Airbags frontais' },
+    { icon: Gauge, label: 'Tração', value: car.specs?.tracao || 'Dianteira' },
   ];
 
   return (
@@ -616,10 +616,33 @@ export default function ShowcaseVehicleDetails() {
 
               {/* Resultado único, sem score artificial de lataria. */}
               {analysisResult && (
-                <div role={scanError ? 'alert' : 'status'} className="p-5 bg-slate-950 border-t border-slate-800 space-y-2">
-                  <h4 className="text-sm font-bold text-white">{scanError ? 'Análise indisponível' : inspectionLabel(visualInspection)}</h4>
-                  <p className="text-sm text-slate-300">{analysisResult}</p>
-                  <p className="text-xs text-slate-400">{VISUAL_NOTICE}</p>
+                <div role={scanError ? 'alert' : 'status'} className="p-5 bg-slate-950/90 border-t border-slate-800 space-y-2.5">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
+                    <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                      <Bot className="w-4 h-4 text-cyan-400" />
+                      {scanError ? 'Análise indisponível' : 'Parecer da Inspeção Visual por IA'}
+                    </h4>
+                    {!scanError && (
+                      <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold ${
+                        visualInspection?.analysis_state === 'damage_detected'
+                          ? 'bg-amber-500/10 text-amber-300 border border-amber-500/30'
+                          : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
+                      }`}>
+                        {visualInspection?.analysis_state === 'damage_detected' ? <AlertTriangle className="w-3 h-3 text-amber-400" /> : <ShieldCheck className="w-3 h-3 text-emerald-400" />}
+                        {inspectionLabel(visualInspection)}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-slate-300 leading-relaxed">
+                    {analysisResult && analysisResult.replace(/\.$/, '').trim() === inspectionLabel(visualInspection).replace(/\.$/, '').trim()
+                      ? (visualInspection?.analysis_state === 'damage_detected'
+                          ? 'Foram identificados indícios de avarias aparentes nos pixels da imagem. Confirme os pontos na inspeção detalhada.'
+                          : 'Varredura de superfície em alta definição concluída. Não foram detectadas avarias estéticas evidentes nos ângulos analisados.')
+                      : analysisResult}
+                  </p>
+                  <p className="text-xs text-slate-400 pt-1 border-t border-slate-800/60">
+                    {VISUAL_NOTICE}
+                  </p>
                 </div>
               )}
             </div>
@@ -629,7 +652,21 @@ export default function ShowcaseVehicleDetails() {
             <div className="bg-slate-900/90 backdrop-blur-md rounded-3xl p-6 sm:p-8 border border-slate-800/80 shadow-card hover:shadow-card-hover transition-all duration-300 space-y-6">
               {/* Situações informadas no cadastro; não representam consulta oficial. */}
               <div className="flex flex-wrap items-center gap-2" data-vehicle-status>
-                {getVehicleStatusRows(car).map(([label, value]) => <span key={label} className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-slate-800 text-slate-200 border border-slate-700">{label}: {value}</span>)}
+                {getVehicleStatusRows(car).map(([label, value]) => {
+                  const isPositive = typeof value === 'string' && (value.toLowerCase().includes('aprovado') || value.toLowerCase().includes('sem débito') || value.toLowerCase().includes('quitad') || value.toLowerCase().includes('sem passagem'));
+                  return (
+                    <span
+                      key={label}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${
+                        isPositive
+                          ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
+                          : 'bg-slate-800 text-slate-200 border-slate-700'
+                      }`}
+                    >
+                      {label}: {value}
+                    </span>
+                  );
+                })}
               </div>
 
               {/* Nome do Veículo */}

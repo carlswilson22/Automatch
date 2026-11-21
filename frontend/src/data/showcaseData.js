@@ -47,6 +47,9 @@ O pacote de segurança ativa Toyota Safety Sense inclui controle de cruzeiro ada
 
 Laudo cautelar 100% aprovado, sem qualquer retoque de funilaria ou histórico de sinistro/leilão. Garantia de fábrica vigente de 5 anos no veículo e 8 anos no sistema híbrido. Possui manual, chave reserva presencial e IPVA 2026 totalmente quitado.`,
     tags: ['Novidade', 'Híbrido Flex', 'Teto Solar', 'Safety Sense', 'Único Dono', 'Garantia de Fábrica'],
+    laudoStatus: 'Aprovado sem apontamentos',
+    debtStatus: 'Sem débitos / IPVA quitado',
+    auctionHistory: 'Sem passagem por leilão',
     isNew: true,
     specs: { motor: '1.8 Híbrido Flex', cambio: 'Automático CVT', combustivel: 'Flex / Elétrico Híbrido', portas: '4 portas', direcao: 'Elétrica Progressiva', freios: 'ABS com EBD nas 4 rodas', airbags: '7 airbags (frontais, laterais, cortina e joelho)', tracao: 'Dianteira', consumoInmetro: '18,1 km/l (urbano) e 17,7 km/l (rodoviário) com gasolina' },
     seller: { name: 'AutoShop Prime', avatar: 'https://images.unsplash.com/photo-1543610892-0b1f7e6d8ac1?auto=format&fit=crop&w=100&h=100', rating: 4.9, ads: 28, since: '2020', bio: 'Loja matriz oficial certificada AutoShop Prime.' },
@@ -89,6 +92,9 @@ Veículo de uso estritamente particular, com todas as revisões periódicas efet
 
 Acompanha laudo pericial cautelar sem apontamentos, manual do proprietário com carimbos de revisão, chave presencial e documentação 2026 totalmente liberada para transferência imediata.`,
     tags: ['Novidade', '1.0 Turbo TSI', 'Painel Digital', 'VW Play', 'Câmbio Automático 6M', 'Laudo Aprovado'],
+    laudoStatus: 'Aprovado sem apontamentos',
+    debtStatus: 'Sem débitos / Licenciado',
+    auctionHistory: 'Sem passagem por leilão',
     isNew: true,
     damagePoints: [],
     specs: { motor: '1.0 Turbo TSI Flex', cambio: 'Automático Tiptronic 6 marchas', combustivel: 'Flex', portas: '4 portas', direcao: 'Elétrica', freios: 'Discos ventilados com ABS e ESC', airbags: '4 airbags', tracao: 'Dianteira', consumoInmetro: '14,1 km/l (urbano) e 16,8 km/l (rodoviário) com gasolina' },
@@ -127,6 +133,9 @@ Vem equipado de série com câmera de ré com guias ativas, sensores de estacion
 
 Veículo com procedência certificada de único dono, selo de vistoria cautelar 100% aprovada e garantia total de fábrica Hyundai até 2029. Não possui qualquer detalhe estético ou mecânico.`,
     tags: ['1.0 TGDI Turbo', 'SmartSense', 'Chave Presencial', 'Garantia até 2029', 'Apenas 5.000 km'],
+    laudoStatus: 'Aprovado 100%',
+    debtStatus: 'Sem débitos',
+    auctionHistory: 'Sem passagem por leilão',
     specs: { motor: '1.0 TGDI Turbo Flex', cambio: 'Automático de 6 marchas', combustivel: 'Flex', portas: '4 portas', direcao: 'Elétrica progressiva', freios: 'ABS com EBD e controle de tração', airbags: '6 airbags', tracao: 'Dianteira', consumoInmetro: '13,3 km/l (urbano) e 14,5 km/l (rodoviário) com gasolina' },
     seller: { name: 'Concessionária Alpha', avatar: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=100&h=100', rating: 4.9, ads: 15, since: '2022', bio: 'Concessionária Alpha - Veículos periciados com garantia.' },
   },
@@ -167,6 +176,9 @@ Equipado com o assistente de estacionamento semiautônomo Easy Park (estaciona s
 
 Carro de único proprietário, revisado em concessionária, Conservação e procedência devem ser confirmadas na vistoria e nos documentos originais.`,
     tags: ['1.2 Turbo', 'Teto Panorâmico', 'Easy Park', 'Wi-Fi Nativo', 'Alerta Ponto Cego'],
+    laudoStatus: 'Aprovado com apontamento estético',
+    debtStatus: 'Sem débitos / Licenciado',
+    auctionHistory: 'Sem passagem por leilão',
     damagePoints: [],
     specs: { motor: '1.2 Turbo Flex 133cv', cambio: 'Automático de 6 marchas', combustivel: 'Flex', portas: '4 portas', direcao: 'Elétrica', freios: 'Discos dianteiros com ABS/ESC', airbags: '6 airbags', tracao: 'Dianteira', consumoInmetro: '12,4 km/l (urbano) e 13,9 km/l (rodoviário) com gasolina' },
     seller: { name: 'AutoShop Prime', avatar: 'https://images.unsplash.com/photo-1543610892-0b1f7e6d8ac1?auto=format&fit=crop&w=100&h=100', rating: 4.9, ads: 28, since: '2020', bio: 'Loja matriz oficial certificada AutoShop Prime.' },
@@ -195,6 +207,9 @@ No volante em couro com base achatada, o botão vermelho "Poison" ativa o mapeam
 
 Veículo com apenas 3.200 km, impecável, sem detalhes. Laudo cautelar com conformidade total, IPVA 2026 quitado e garantia integral de fábrica.`,
     tags: ['Abarth Oficial', 'Turbo 270 (185cv)', 'Modo Poison', 'Escapamento Duplo', 'Apenas 3.200 km'],
+    laudoStatus: 'Aprovado sem apontamentos',
+    debtStatus: 'Sem débitos',
+    auctionHistory: 'Sem passagem por leilão',
     damagePoints: [],
     specs: { motor: '1.3 Turbo 270 Flex 185cv', cambio: 'Automático esportivo 6 marchas', combustivel: 'Flex', portas: '4 portas', direcao: 'Elétrica calibragem esportiva', freios: 'Discos dianteiros de 305mm com ABS', airbags: '4 airbags', tracao: 'Dianteira esportiva', consumoInmetro: '10,2 km/l (urbano) e 12,1 km/l (rodoviário) com gasolina' },
     seller: { name: 'Motors Campinas', avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=100&h=100', rating: 4.8, ads: 19, since: '2021', bio: 'Motors Campinas - Especialista em esportivos e exclusivos.' },

@@ -144,6 +144,9 @@ def seed_db():
                 "fipe_code": "004487-3",
                 "description": "SUV híbrido flex topo de linha, teto solar elétrico, pacote Toyota Safety Sense e revisões em concessionária.",
                 "tags": "Híbrido Flex, Teto Solar, Safety Sense, Único Dono, Garantia de Fábrica",
+                "laudo_status": "Aprovado sem apontamentos",
+                "debt_status": "Sem débitos / IPVA quitado",
+                "auction_history": "Sem passagem por leilão",
                 "compartilhavel": True,
                 "valor_minimo_repasse": 166500.0,
                 "comissao_fixa": 3500.0,
@@ -171,6 +174,9 @@ def seed_db():
                 "fipe_code": "005398-8",
                 "description": "Hatch esportivo e econômico com motor 1.0 TSI Turbo, painel 100% digital Active Info Display e VW Play.",
                 "tags": "1.0 Turbo TSI, Painel Digital, VW Play, Câmbio Automático 6M, Laudo Aprovado",
+                "laudo_status": "Aprovado sem apontamentos",
+                "debt_status": "Sem débitos / Licenciado",
+                "auction_history": "Sem passagem por leilão",
                 "compartilhavel": True,
                 "valor_minimo_repasse": 88200.0,
                 "comissao_fixa": 2500.0,
@@ -198,6 +204,9 @@ def seed_db():
                 "fipe_code": "015190-4",
                 "description": "Versão Platinum com motor TGDI Turbo, pacote Hyundai SmartSense de segurança e apenas 5.000 km rodados.",
                 "tags": "1.0 TGDI Turbo, SmartSense, Chave Presencial, Garantia até 2029, Apenas 5.000 km",
+                "laudo_status": "Aprovado 100%",
+                "debt_status": "Sem débitos",
+                "auction_history": "Sem passagem por leilão",
                 "compartilhavel": True,
                 "valor_minimo_repasse": 94500.0,
                 "comissao_fixa": 3000.0,
@@ -225,6 +234,9 @@ def seed_db():
                 "fipe_code": "004512-8",
                 "description": "SUV Premier com teto solar panorâmico, motor 1.2 Turbo, assistente de estacionamento autônomo e Wi-Fi nativo.",
                 "tags": "1.2 Turbo, Teto Panorâmico, Easy Park, Wi-Fi Nativo, Alerta Ponto Cego",
+                "laudo_status": "Aprovado com apontamento estético",
+                "debt_status": "Sem débitos / Licenciado",
+                "auction_history": "Sem passagem por leilão",
                 "compartilhavel": True,
                 "valor_minimo_repasse": 136800.0,
                 "comissao_fixa": 3500.0,
@@ -252,6 +264,9 @@ def seed_db():
                 "fipe_code": "001550-4",
                 "description": "O puro esportivo da divisão do escorpião com motor Turbo 270 de 185 cv, modo Poison e escape esportivo duplo.",
                 "tags": "Abarth Oficial, Turbo 270 (185cv), Modo Poison, Escapamento Duplo, Apenas 3.200 km",
+                "laudo_status": "Aprovado sem apontamentos",
+                "debt_status": "Sem débitos",
+                "auction_history": "Sem passagem por leilão",
                 "compartilhavel": True,
                 "valor_minimo_repasse": 130500.0,
                 "comissao_fixa": 3000.0,
@@ -275,6 +290,8 @@ def seed_db():
             else:
                 for key, val in c_data.items():
                     if key not in OPERATIONAL_FIELDS:
+                        setattr(existing_car, key, val)
+                    elif getattr(existing_car, key, None) is None and val is not None:
                         setattr(existing_car, key, val)
         db.commit()
 
