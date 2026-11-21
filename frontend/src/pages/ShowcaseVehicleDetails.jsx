@@ -272,8 +272,10 @@ export default function ShowcaseVehicleDetails() {
     setCurrentDamagePoints([]);
     setAnalysisResult('');
 
-    const isGithubPages = typeof window !== 'undefined' && typeof window.location?.hostname === 'string' && (
-      window.location.hostname.includes('github.io') || window.location.hostname.includes('pages.dev') || Boolean(window.__AUTOMATCH_DEMO_SCAN__)
+    const isGithubPages = typeof window !== 'undefined' && (
+      (typeof window.location?.hostname === 'string' && (window.location.hostname.includes('github.io') || window.location.hostname.includes('pages.dev'))) ||
+      (typeof window.location?.search === 'string' && (window.location.search.includes('demo=pages') || window.location.search.includes('demo=github'))) ||
+      Boolean(window.__AUTOMATCH_DEMO_SCAN__)
     );
 
     const deliverDemoInspection = () => {
