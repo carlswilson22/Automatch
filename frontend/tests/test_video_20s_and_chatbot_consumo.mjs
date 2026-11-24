@@ -2,100 +2,99 @@
  * test_video_20s_and_chatbot_consumo.mjs — Testes do tempo de vídeo de vistoria e respostas de consumo.
  * 
  * Objetivo e Motivo da Criação:
- *   - Criado para validar que vídeos periciais cumpram a meta de 20s e o chatbot retorne médias de consumo confiáveis.
- */
-/**
- * test_video_20s_and_chatbot_consumo.mjs
- * Testes das Tarefas 6 e 7:
- *   - Vídeo pericial deve ser 20s (não 15s)
- *   - Chatbot "Consumo" deve retornar km/l para TODOS os veículos
+ *   - Valida que vídeos periciais cumpram a meta de 20s e o chatbot retorne médias de consumo confiáveis (km/l).
+ *   - Padronizado na API nativa node:test e node:assert/strict para integração no CI.
  */
 
-import { readFileSync } from 'fs';
-import { resolve } from 'path';
-import { fileURLToPath } from 'url';
+import { describe, test } from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const root = resolve(__dirname, '..');
 
-let passed = 0;
-let failed = 0;
-function assert(condition, msg) {
-  if (condition) { passed++; console.log(`  ✅ ${msg}`); }
-  else { failed++; console.error(`  ❌ ${msg}`); }
-}
+describe('TAREFA 6 — Vídeo Pericial (20s e Cronograma)', () => {
+  test('6.1: Duração do vídeo pericial é de 20s vinda do cronograma', async () => {
+    const { VIDEO_DURATION } = await import('../src/data/pericialTimeline.generated.js');
+    assert.equal(VIDEO_DURATION, 20, 'Duração deve vir do cronograma e ser de exatamente 20s');
+  });
 
-// =====================================================
-// TAREFA 6 — Vídeo Pericial 20s
-// =====================================================
-console.log('\n🎬 TAREFA 6 — Vídeo Pericial: duração 20s');
-console.log('=' .repeat(60));
+  test('6.2: Fases temporais e checkpoints cumprem intervalos exatos', async () => {
+    const { CHECKPOINTS } = await import('../src/data/pericialTimeline.generated.js');
+    assert.deepEqual(
+      CHECKPOINTS.map(stage => [stage.start, stage.end]),
+      [[0, 5], [5, 15], [15, 20]],
+      'Intervalos temporais das etapas periciais devem ser [[0,5],[5,15],[15,20]]'
+    );
 
-const { pericialTimeline, CHECKPOINTS, VIDEO_DURATION } = await import('../src/data/pericialTimeline.generated.js');
-assert(VIDEO_DURATION === 20, 'Dura??o vem do cronograma');
-assert(JSON.stringify(CHECKPOINTS.map(stage=>[stage.start,stage.end])) === '[[0,5],[5,15],[15,20]]', 'Fases exatas');
-for(const [time,index] of [[0,0],[4.999,0],[5,1],[14.999,1],[15,2],[19.999,2]]) {
- assert(CHECKPOINTS.findIndex(stage=>time>=stage.start && time<stage.end)===index, 'Legenda na fronteira temporal '+time);
-}
-assert(pericialTimeline.shots.map(shot=>shot.angle).join(',')==='0,90,270,180','Ordem das vistas vem da mesma configura??o');
-const videoSrc = readFileSync(resolve(root,'src/components/vehicle/PericialVideoViewer.jsx'),'utf8');
-assert(videoSrc.includes('pericialTimeline.generated.js'), 'Player consome configura??o gerada');
-assert(!videoSrc.includes('const CHECKPOINTS = ['),'Sem cronograma duplicado no player');
+    for (const [time, index] of [[0, 0], [4.999, 0], [5, 1], [14.999, 1], [15, 2], [19.999, 2]]) {
+      assert.equal(
+        CHECKPOINTS.findIndex(stage => time >= stage.start && time < stage.end),
+        index,
+        'Legenda na fronteira temporal ' + time
+      );
+    }
+  });
 
-// =====================================================
-// TAREFA 7 — Chatbot Consumo com km/l
-// =====================================================
-console.log('\n🤖 TAREFA 7 — Chatbot IA: resposta de "Consumo" com km/l');
-console.log('=' .repeat(60));
+  test('6.3: Ordem das tomadas segue 0, 90, 270, 180 graus', async () => {
+    const { pericialTimeline } = await import('../src/data/pericialTimeline.generated.js');
+    assert.equal(
+      pericialTimeline.shots.map(shot => shot.angle).join(','),
+      '0,90,270,180',
+      'Ordem das vistas deve vir da mesma configuração pericial'
+    );
+  });
 
-const aiCoreSrc = readFileSync(resolve(root, 'src/utils/aiConsultantCore.js'), 'utf-8');
-const showcaseSrc = readFileSync(resolve(root, 'src/data/showcaseData.js'), 'utf-8');
+  test('6.4: PericialVideoViewer consome pericialTimeline.generated.js sem duplicidade', () => {
+    const videoSrc = readFileSync(resolve(root, 'src/components/vehicle/PericialVideoViewer.jsx'), 'utf8');
+    assert.ok(videoSrc.includes('pericialTimeline.generated.js'), 'Player consome configuração gerada');
+    assert.ok(!videoSrc.includes('const CHECKPOINTS = ['), 'Sem cronograma duplicado no player');
+  });
+});
 
-// Verifica que aiConsultantCore prioriza consumoInmetro
-assert(aiCoreSrc.includes('specs.consumoInmetro'), 'aiConsultantCore verifica specs.consumoInmetro');
-assert(aiCoreSrc.includes('INMETRO'), 'Resposta menciona INMETRO');
+describe('TAREFA 7 — Chatbot IA (Consumo com km/l e conformidade INMETRO)', () => {
+  test('7.1: aiConsultantCore prioriza specs.consumoInmetro e cita INMETRO', () => {
+    const aiCoreSrc = readFileSync(resolve(root, 'src/utils/aiConsultantCore.js'), 'utf-8');
+    assert.ok(aiCoreSrc.includes('specs.consumoInmetro'), 'aiConsultantCore verifica specs.consumoInmetro');
+    assert.ok(aiCoreSrc.includes('INMETRO'), 'Resposta do chatbot menciona INMETRO');
+  });
 
-// Verifica que cada veículo possui consumoInmetro nos specs
-const vehicles = [
-  { id: 'sc-001', name: 'Toyota Corolla Cross XRX' },
-  { id: 'sc-002', name: 'Volkswagen Polo TSI' },
-  { id: 'sc-003', name: 'Hyundai HB20 Platinum' },
-  { id: 'sc-004', name: 'Chevrolet Tracker Premier' },
-  { id: 'sc-005', name: 'Fiat Pulse Abarth' },
-];
+  test('7.2: Todos os veículos possuem consumoInmetro nos dados de showcase', () => {
+    const showcaseSrc = readFileSync(resolve(root, 'src/data/showcaseData.js'), 'utf-8');
+    const vehicles = [
+      { id: 'sc-001', name: 'Toyota Corolla Cross XRX' },
+      { id: 'sc-002', name: 'Volkswagen Polo TSI' },
+      { id: 'sc-003', name: 'Hyundai HB20 Platinum' },
+      { id: 'sc-004', name: 'Chevrolet Tracker Premier' },
+      { id: 'sc-005', name: 'Fiat Pulse Abarth' },
+    ];
 
-for (const v of vehicles) {
-  const hasConsumo = showcaseSrc.includes(`consumoInmetro:`);
-  assert(hasConsumo, `${v.name} (${v.id}): campo consumoInmetro existe`);
-}
+    for (const v of vehicles) {
+      assert.ok(showcaseSrc.includes('consumoInmetro:'), `${v.name} (${v.id}): campo consumoInmetro deve existir`);
+    }
+  });
 
-// Verificar valores específicos de km/l por veículo
-const consumoMap = {
-  'sc-001': '18,1 km/l',
-  'sc-002': '14,1 km/l',
-  'sc-003': '13,3 km/l',
-  'sc-004': '12,4 km/l',
-  'sc-005': '10,2 km/l',
-};
+  test('7.3: Veículos do catálogo possuem médias de km/l esperadas', () => {
+    const showcaseSrc = readFileSync(resolve(root, 'src/data/showcaseData.js'), 'utf-8');
+    const consumoMap = {
+      'sc-001': '18,1 km/l',
+      'sc-002': '14,1 km/l',
+      'sc-003': '13,3 km/l',
+      'sc-004': '12,4 km/l',
+      'sc-005': '10,2 km/l',
+    };
 
-for (const [id, expectedKmL] of Object.entries(consumoMap)) {
-  const name = vehicles.find(v => v.id === id)?.name;
-  assert(showcaseSrc.includes(expectedKmL), `${name}: consumo inclui ${expectedKmL}`);
-}
+    for (const [id, expectedKmL] of Object.entries(consumoMap)) {
+      assert.ok(showcaseSrc.includes(expectedKmL), `Veículo ${id}: consumo deve incluir ${expectedKmL}`);
+    }
+  });
 
-// Verifica que a lógica de fallback genérico ainda existe
-const { generateVehicleConsultantAnswer } = await import('../src/utils/aiConsultantCore.js');
-const unknownConsumption = generateVehicleConsultantAnswer('consumo', {id:'sem-consumo'});
-assert(unknownConsumption.includes('não informado'), 'Consumo ausente deve permanecer não informado');
-assert(!unknownConsumption.includes('excelente rendimento'), 'Não inventar avaliação energética');
-
-// =====================================================
-// RESUMO
-// =====================================================
-console.log('\n' + '=' .repeat(60));
-console.log(`📊 RESULTADO FINAL: ${passed} passed, ${failed} failed de ${passed + failed} total`);
-if (failed > 0) {
-  process.exit(1);
-} else {
-  console.log('🎉 Todas as verificações das Tarefas 6 e 7 passaram!\n');
-}
+  test('7.4: Fallback de veículo sem consumo permanece como não informado sem alucinação', async () => {
+    const { generateVehicleConsultantAnswer } = await import('../src/utils/aiConsultantCore.js');
+    const unknownConsumption = generateVehicleConsultantAnswer('consumo', { id: 'sem-consumo' });
+    assert.ok(unknownConsumption.includes('não informado'), 'Consumo ausente deve permanecer não informado');
+    assert.ok(!unknownConsumption.includes('excelente rendimento'), 'Não inventar avaliação energética');
+  });
+});
