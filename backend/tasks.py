@@ -78,7 +78,9 @@ def start_scheduler():
             'interval',
             seconds=60,
             id='watchlist_detran_job',
-            replace_existing=True
+            replace_existing=True,
+            coalesce=True,
+            misfire_grace_time=300
         )
         scheduler.start()
         logger.info("🚀 [APScheduler] Agendador de tarefas iniciado com sucesso (intervalo: 60s).")
