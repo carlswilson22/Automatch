@@ -164,6 +164,56 @@ describe('BATERIA DE TESTES - AUDITORIA DE LAUDOS CAUTELARES POR IA (GEMINI 1.5 
     assert.ok(evalContent.includes('class LaudoIAFeedbackResponse'), 'Deve definir LaudoIAFeedbackResponse');
     assert.ok(upContent.includes('/laudos/poc-test'), 'Deve expor rota de teste /laudos/poc-test');
     assert.ok(upContent.includes('ia_feedback'), 'Upload deve incluir ia_feedback no response');
+    assert.ok(upContent.includes('_merge_car_laudo_feedback'), 'Upload de PDF deve preservar visual_inspection via merge');
+  });
+
+  test('LAUDO-06: classifyVehicleCompliance, formatLaudoStatusLabel e getStatusTone evitam falso positivo de "sem apontamentos"', async () => {
+    const {
+      classifyVehicleCompliance,
+      formatLaudoStatusLabel,
+      getStatusTone,
+      getVehicleStatusRows,
+    } = await import('../src/utils/vehicleInformation.js');
+
+    // "Aprovado sem apontamentos" NÃO deve ser classificado como "Com Apontamento"
+    const clean = classifyVehicleCompliance({
+      laudoStatus: 'Aprovado sem apontamentos',
+      visualInspection: { analysis_state: 'no_damage_detected' },
+    });
+    assert.strictEqual(clean.level, 'approved');
+    assert.strictEqual(clean.badgeLabel, 'Laudo Verificado por IA: Sem Ressalvas');
+    assert.strictEqual(getStatusTone('Laudo informado', 'Aprovado sem apontamentos'), 'positive');
+
+    // "Aprovado com apontamento estético" deve ser warning (não positive!)
+    const minorWarning = classifyVehicleCompliance({ laudoStatus: 'Aprovado com apontamento estético' });
+    assert.strictEqual(minorWarning.level, 'warning');
+    assert.strictEqual(minorWarning.badgeLabel, 'Laudo Verificado por IA: Com Apontamento');
+    assert.strictEqual(getStatusTone('Laudo informado', 'Aprovado com apontamento estético'), 'warning');
+
+    // Cruzamento: laudo limpo + Scanner Visual detectando avaria deve alertar como Com Apontamento
+    const scannerConflict = classifyVehicleCompliance({
+      laudoStatus: 'Aprovado sem apontamentos',
+      visualInspection: { analysis_state: 'damage_detected' },
+    });
+    assert.strictEqual(scannerConflict.level, 'warning');
+    assert.strictEqual(scannerConflict.badgeLabel, 'Laudo Verificado por IA: Com Apontamento');
+
+    // Cruzamento: laudo limpo + PDF IA com restrições críticas deve prevalecer como critical
+    const criticalPdf = classifyVehicleCompliance({
+      laudoStatus: 'Aprovado sem apontamentos',
+      parsedIa: { classificacao_geral: 'COM_RESTRICOES' },
+    });
+    assert.strictEqual(criticalPdf.level, 'critical');
+    assert.strictEqual(criticalPdf.badgeLabel, 'Laudo: Restrições Críticas');
+
+    // Normalização de enums crus em rótulos humanos
+    assert.strictEqual(formatLaudoStatusLabel('SEM_RESSALVAS'), 'Aprovado sem ressalvas');
+    assert.strictEqual(formatLaudoStatusLabel('COM_ATENCAO'), 'Aprovado com apontamento');
+    assert.strictEqual(formatLaudoStatusLabel('COM_RESTRICOES'), 'Reprovado / Com restrições');
+    assert.strictEqual(formatLaudoStatusLabel('approved_100'), 'Aprovado 100%');
+
+    const rows = getVehicleStatusRows({ laudo_status: 'SEM_RESSALVAS', debt_status: 'Sem débitos', auction_history: 'Sem passagem por leilão' });
+    assert.strictEqual(rows[0][1], 'Aprovado sem ressalvas');
   });
 
 });

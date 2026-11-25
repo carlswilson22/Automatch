@@ -15,7 +15,8 @@ import {
 import { useScrollLock } from '../../utils/useScrollLock';
 import { getVehicleImageUrl, handleVehicleImageError } from '../../utils/imageHelper';
 import { mapVehicleToViewModel } from '../../utils/vehicleMapper.js';
-import { formatVehicleMileage, vehicleStatusValue } from '../../utils/vehicleInformation.js';
+import { formatVehicleMileage, vehicleStatusValue, formatLaudoStatusLabel, classifyVehicleCompliance } from '../../utils/vehicleInformation.js';
+import { parseInspectionFeedback } from '../../utils/inspectionData.js';
 import { showcaseCars } from '../../data/showcaseData';
 
 const CURRENT_YEAR = 2026;
@@ -585,12 +586,25 @@ export default function VehicleComparatorModal({
               </button>
               {openSections.laudo && (
                 <div className={`grid gap-4 mt-3 ${selectedVehicles.length === 3 ? 'grid-cols-3' : 'grid-cols-2'}`}>
-                  {selectedVehicles.map((car, idx) => (
+                  {selectedVehicles.map((car, idx) => {
+                    const comp = classifyVehicleCompliance({
+                      laudoStatus: car.laudoStatus,
+                      parsedIa: parseInspectionFeedback(car.laudoFeedback ?? car.laudo_feedback),
+                      visualInspection: car.visualInspection,
+                    });
+                    const laudoColorClass = comp.level === 'critical'
+                      ? 'text-rose-400'
+                      : comp.level === 'warning'
+                        ? 'text-amber-400'
+                        : comp.level === 'approved'
+                          ? 'text-emerald-400'
+                          : 'text-slate-300';
+                    return (
                     <div key={idx} className="space-y-1.5 p-3 rounded-xl bg-slate-900/60 border border-slate-800">
                       <div className="flex justify-between text-xs">
                         <span className="text-slate-400">Veredito do Laudo:</span>
-                        <span className="font-bold text-emerald-400 flex items-center gap-1">
-                          {vehicleStatusValue(car.laudoStatus)}
+                        <span className={`font-bold flex items-center gap-1 ${laudoColorClass}`}>
+                          {formatLaudoStatusLabel(car.laudoStatus)}
                         </span>
                       </div>
                       <div className="flex justify-between text-xs">
@@ -606,7 +620,8 @@ export default function VehicleComparatorModal({
                         <span className="font-medium text-slate-300">{vehicleStatusValue(car.specs?.pintura)}</span>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                   {selectedVehicles.length === 1 && (
                     <div 
                       onClick={() => { setSelectorOpenSlot(1); setSelectorSearch(''); }}

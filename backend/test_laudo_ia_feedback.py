@@ -165,6 +165,21 @@ class TestLaudoIAFeedback(unittest.TestCase):
         self.assertIsInstance(res, LaudoIAFeedbackResponse)
         self.assertIn(res.classificacao_geral, [ClassificacaoGeralEnum.SEM_RESSALVAS, ClassificacaoGeralEnum.COM_ATENCAO, ClassificacaoGeralEnum.COM_RESTRICOES])
 
+    def test_merge_car_laudo_feedback_preserva_visual_inspection(self):
+        import json
+        from types import SimpleNamespace
+        from routers.uploads import _merge_car_laudo_feedback
+
+        car_stub = SimpleNamespace(
+            laudo_feedback=json.dumps({
+                "visual_inspection": {"schema_version": 2, "analysis_state": "no_damage_detected"}
+            })
+        )
+        _merge_car_laudo_feedback(car_stub, {"classificacao_geral": "SEM_RESSALVAS"})
+        merged = json.loads(car_stub.laudo_feedback)
+        self.assertEqual(merged["classificacao_geral"], "SEM_RESSALVAS")
+        self.assertEqual(merged["visual_inspection"]["analysis_state"], "no_damage_detected")
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,5 +1,6 @@
 import { readVisualInspection, vehicleInspection, inspectionLabel, trustedDamagePoints, VISUAL_NOTICE } from '../utils/visualInspection.js';
-import { getVehicleStatusRows, formatVehicleMileage } from '../utils/vehicleInformation.js';
+import { getVehicleStatusRows, formatVehicleMileage, classifyVehicleCompliance, getStatusTone } from '../utils/vehicleInformation.js';
+import { parseInspectionFeedback } from '../utils/inspectionData.js';
 /**
  * ShowcaseVehicleDetails.jsx — Página de detalhes aprofundados e ficha técnica do veículo selecionado.
  *
@@ -381,6 +382,11 @@ export default function ShowcaseVehicleDetails() {
 
   const visualInspection = readVisualInspection(aiDamageData) || vehicleInspection(car);
   const inspectedCar = { ...car, visualInspection, damagePoints: trustedDamagePoints(visualInspection) };
+  const compliance = classifyVehicleCompliance({
+    laudoStatus: car.laudoStatus || car.laudo_status,
+    parsedIa: parseInspectionFeedback(car.laudoFeedback ?? car.laudo_feedback),
+    visualInspection,
+  });
 
   const specItems = [
     { icon: Settings, label: 'Motor', value: car.specs?.motor || car.motor || (car.model?.match(/\d\.\d[^\s]*/)?.[0] ? `${car.model.match(/\d\.\d[^\s]*/)[0]} Flex` : 'Não informado') },
@@ -679,15 +685,18 @@ export default function ShowcaseVehicleDetails() {
               {/* Situações informadas no cadastro; não representam consulta oficial. */}
               <div className="flex flex-wrap items-center gap-2" data-vehicle-status>
                 {getVehicleStatusRows(car).map(([label, value]) => {
-                  const isPositive = typeof value === 'string' && (value.toLowerCase().includes('aprovado') || value.toLowerCase().includes('sem débito') || value.toLowerCase().includes('quitad') || value.toLowerCase().includes('sem passagem'));
+                  const tone = getStatusTone(label, value);
+                  const toneClasses = tone === 'positive'
+                    ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
+                    : tone === 'warning'
+                      ? 'bg-amber-500/10 text-amber-300 border-amber-500/30'
+                      : tone === 'critical'
+                        ? 'bg-rose-500/10 text-rose-300 border-rose-500/30'
+                        : 'bg-slate-800 text-slate-200 border-slate-700';
                   return (
                     <span
                       key={label}
-                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${
-                        isPositive
-                          ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
-                          : 'bg-slate-800 text-slate-200 border-slate-700'
-                      }`}
+                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold border ${toneClasses}`}
                     >
                       {label}: {value}
                     </span>
@@ -763,21 +772,25 @@ export default function ShowcaseVehicleDetails() {
             <div className="bg-slate-900/80 rounded-3xl p-6 sm:p-8 border border-slate-800 shadow-xl space-y-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-800">
                 <div>
-                  <div className="flex flex-wrap items-center gap-2 mb-2" data-testid="laudo-ia-badge-container">
+                  <div className="flex flex-wrap items-center gap-2 mb-2" data-testid="laudo-ia-badge-container" aria-label="Laudo Verificado por IA">
                     <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-black uppercase tracking-wider border border-emerald-500/20">
                       <ShieldCheck className="w-4 h-4" /> Informações do anunciante
                     </div>
-                    {String(car.laudoStatus || car.laudo_status || '').toLowerCase().includes('reprovado') || String(car.laudoStatus || car.laudo_status || '').includes('RESTRICOES') ? (
+                    {compliance.level === 'critical' ? (
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-rose-500/15 text-rose-400 text-xs font-black uppercase tracking-wider border border-rose-500/30">
-                        <AlertTriangle className="w-3.5 h-3.5" /> Laudo: Restrições Críticas
+                        <AlertTriangle className="w-3.5 h-3.5" /> {compliance.badgeLabel}
                       </span>
-                    ) : String(car.laudoStatus || car.laudo_status || '').toLowerCase().includes('apontamento') || String(car.laudoStatus || car.laudo_status || '').includes('ATENCAO') ? (
+                    ) : compliance.level === 'warning' ? (
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/15 text-amber-400 text-xs font-black uppercase tracking-wider border border-amber-500/30">
-                        <AlertTriangle className="w-3.5 h-3.5" /> Laudo Verificado por IA: Com Apontamento
+                        <AlertTriangle className="w-3.5 h-3.5" /> {compliance.badgeLabel}
+                      </span>
+                    ) : compliance.level === 'approved' ? (
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/15 text-blue-400 text-xs font-black uppercase tracking-wider border border-blue-500/30">
+                        <ShieldCheck className="w-3.5 h-3.5" /> {compliance.badgeLabel}
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/15 text-blue-400 text-xs font-black uppercase tracking-wider border border-blue-500/30">
-                        <ShieldCheck className="w-3.5 h-3.5" /> Laudo Verificado por IA: Sem Ressalvas
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800 text-slate-300 text-xs font-black uppercase tracking-wider border border-slate-700">
+                        <ShieldCheck className="w-3.5 h-3.5" /> {compliance.badgeLabel}
                       </span>
                     )}
                   </div>

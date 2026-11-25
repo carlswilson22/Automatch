@@ -48,6 +48,17 @@ except ImportError:
 ALLOWED_LAUDO_EXTENSIONS = {".pdf", ".jpg", ".jpeg", ".png", ".mp4", ".webm", ".mov"}
 ALLOWED_VIDEO_EXTENSIONS = {".mp4", ".webm", ".mov", ".m4v"}
 MAX_LAUDO_SIZE_BYTES = 15 * 1024 * 1024  # 15 MB para laudos/fotos
+
+
+def _merge_car_laudo_feedback(car_db: models.Car, patch: Dict[str, Any]) -> None:
+    """Preserves existing laudo_feedback keys (such as visual_inspection) when updating JSON payload."""
+    try:
+        previous = json.loads(car_db.laudo_feedback or "{}")
+    except (ValueError, TypeError):
+        previous = {}
+    if not isinstance(previous, dict):
+        previous = {}
+    car_db.laudo_feedback = json.dumps({**previous, **patch}, ensure_ascii=False)
 MAX_VIDEO_SIZE_BYTES = 50 * 1024 * 1024  # 50 MB para vídeo pericial de até 20s
 
 
@@ -151,13 +162,7 @@ async def upload_laudo(
         if car_id and db:
             car_db = db.query(models.Car).filter(models.Car.id == car_id).first()
             if car_db:
-                try:
-                    previous = json.loads(car_db.laudo_feedback or "{}")
-                except (ValueError, TypeError):
-                    previous = {}
-                if not isinstance(previous, dict):
-                    previous = {}
-                car_db.laudo_feedback = json.dumps({**previous, **feedback}, ensure_ascii=False)
+                _merge_car_laudo_feedback(car_db, feedback)
                 db.commit()
         return {
             "status": "success", "id": file_id, "filename": safe_filename,
@@ -263,7 +268,7 @@ async def upload_laudo(
             if car_db:
                 car_db.laudo_url = f"/api/v1/laudos/files/{safe_filename}"
                 car_db.laudo_status = laudo_ia_result.get("classificacao_geral", "SEM_RESSALVAS")
-                car_db.laudo_feedback = json.dumps(laudo_ia_result, ensure_ascii=False)
+                _merge_car_laudo_feedback(car_db, laudo_ia_result)
                 db.commit()
         except Exception as e:
             db.rollback()
