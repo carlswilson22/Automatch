@@ -180,6 +180,60 @@ class TestLaudoIAFeedback(unittest.TestCase):
         self.assertEqual(merged["classificacao_geral"], "SEM_RESSALVAS")
         self.assertEqual(merged["visual_inspection"]["analysis_state"], "no_damage_detected")
 
+    def test_upload_laudo_pdf_com_car_id_sem_chassi_ou_mileage_no_modelo(self):
+        """Regressão: Car SQLAlchemy não possui .chassi nem .mileage; upload com car_id não pode dar HTTP 500."""
+        from fastapi.testclient import TestClient
+        from main import app
+        from database import SessionLocal
+        import models, security
+
+        db = SessionLocal()
+        user = db.query(models.User).filter(models.User.email == "admin@automatch.com").first()
+        created_user = False
+        if not user:
+            user = models.User(
+                id="test-upload-user",
+                name="Upload Tester",
+                email="upload_tester@automatch.com",
+                hashed_password=security.hash_password("TestPass123!"),
+                role="admin",
+                token_version=0,
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+            created_user = True
+        token = security.create_access_token({"sub": user.id, "email": user.email, "role": user.role, "ver": user.token_version or 0})
+        car = models.Car(brand="Honda", model="Civic", year=2023, km=15000, price=140000, image="/images/FotoCorollaCross.jpg", user_id=user.id)
+        db.add(car)
+        db.commit()
+        db.refresh(car)
+        car_id = car.id
+        user_id = user.id
+        db.close()
+
+        pdf_bytes = _criar_pdf_sintetico("LAUDO CAUTELAR - APROVADO", ["PLACA: ABC1234", "APROVADO SEM RESSALVAS"])
+        client = TestClient(app)
+        try:
+            res = client.post(
+                "/api/v1/laudos/upload",
+                headers={"Authorization": f"Bearer {token}"},
+                files={"file": ("laudo.pdf", pdf_bytes, "application/pdf")},
+                data={"car_id": car_id},
+            )
+            self.assertEqual(res.status_code, 200, res.text)
+        finally:
+            cleanup = SessionLocal()
+            target = cleanup.query(models.Car).filter(models.Car.id == car_id).first()
+            if target:
+                cleanup.delete(target)
+            if created_user:
+                u = cleanup.query(models.User).filter(models.User.id == user_id).first()
+                if u:
+                    cleanup.delete(u)
+            cleanup.commit()
+            cleanup.close()
+
 
 if __name__ == "__main__":
     unittest.main()

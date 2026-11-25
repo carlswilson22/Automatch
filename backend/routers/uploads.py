@@ -231,12 +231,15 @@ async def upload_laudo(
     if car_id and db:
         car_db = db.query(models.Car).filter(models.Car.id == car_id).first()
         if car_db:
-            car_ctx["plate"] = plate or car_db.plate or ""
-            car_ctx["chassi"] = chassi or car_db.chassi or ""
-            car_ctx["brand"] = brand or car_db.brand or ""
-            car_ctx["model"] = model or car_db.model or ""
-            car_ctx["year"] = year or str(car_db.year or "2024")
-            car_ctx["km"] = km or str(car_db.mileage or car_db.km or "0")
+            car_ctx["plate"] = plate or getattr(car_db, "plate", None) or ""
+            car_ctx["chassi"] = chassi or getattr(car_db, "chassi", None) or ""
+            car_ctx["brand"] = brand or getattr(car_db, "brand", None) or ""
+            car_ctx["model"] = model or getattr(car_db, "model", None) or ""
+            car_ctx["year"] = year or str(getattr(car_db, "year", None) or "2024")
+            car_km = getattr(car_db, "mileage", None)
+            if car_km is None:
+                car_km = getattr(car_db, "km", None)
+            car_ctx["km"] = km or str(car_km if car_km is not None else "0")
 
     laudo_ia_result = None
     try:
