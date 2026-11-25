@@ -54,7 +54,7 @@ Ver [causas, mudanças e evidências](docs/manutencao-avisos-2026-11-17.md).
 Removidos 15 módulos frontend sem consumidores, quatro dependências e o legado
 de pneus/acústica (componentes, rotas e funções). A auditoria de imports passou
 para `npm test`; os 85 módulos restantes são alcançáveis. Mídia, fixtures,
-licenças, histórico e recursos ativos preservados. Ver [relatório](docs/limpeza-arquivos-2026-11-18.md).
+licenças, histórico e recursos ativos preservados (detalhes no [changelog](CHANGELOG.md)).
 
 ## Pendências atuais da demonstração
 

@@ -15,7 +15,7 @@ homologação integral. Mediu métricas exploratórias de treino em dados provis
 Quinze módulos sem consumidores foram retirados, incluindo telas antigas e os
 componentes legados de pneus/acústica. As rotas e funções correspondentes desses
 dois recursos também foram removidas. Auditoria: 85 módulos alcançáveis e cinco
-dependências de execução utilizadas. Ver [relatório](limpeza-arquivos-2026-11-18.md).
+dependências de execução utilizadas (ver [changelog](../CHANGELOG.md)).
 
 ## Manutenção anterior do frontend
 
@@ -111,6 +111,6 @@ homologação nas condições de uso.
 - Manter limpeza de avisos de manutenção com testes proporcionais à mudança.
 - Validar manualmente layout, teclado, acessibilidade e fluidez dos fluxos.
 
-Fontes de detalhe: [arquitetura](arquitetura.md), [banco](../DOCUMENTACAO_BANCO_DE_DADOS.md),
+Fontes de detalhe: [arquitetura](arquitetura.md), [banco](DOCUMENTACAO_BANCO_DE_DADOS.md),
 [segurança](../SECURITY.md), [backlog](../BACKLOG.md) e
 [testes](testes-e-evidencias.md).

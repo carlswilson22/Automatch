@@ -22,10 +22,11 @@ Merge e push das main aguardam confirmação, conforme instrução específica d
 | [Estado atual](estado-atual.md) | Recursos ativos, demonstrações, integrações e exclusões |
 | [Requisitos](requisitos.md) | RF/RNF com situação e critérios verificáveis |
 | [Arquitetura](arquitetura.md) | Componentes, dados, serviços e limites de implantação |
-| [Banco de dados](../DOCUMENTACAO_BANCO_DE_DADOS.md) | Entidades, relações e migrações |
-| [Escopo dos arquivos](../ESCOPO_DOS_ARQUIVOS.md) | Inventário de arquivos técnicos e responsabilidades |
+| [Banco de dados](DOCUMENTACAO_BANCO_DE_DADOS.md) | Entidades, relações e migrações |
+| [Escopo dos arquivos](ESCOPO_DOS_ARQUIVOS.md) | Inventário de arquivos técnicos e responsabilidades |
 | [Configuração e execução](configuracao-e-execucao.md) | Docker, ambiente local, produção e arquivos `.env` |
 | [Testes e evidências](testes-e-evidencias.md) | Comandos, resultados históricos e limites de verificação |
+| [Análise da suíte de testes](analise-relevancia-testes.md) | Auditoria de relevância e estrutura dos 46 arquivos de teste |
 | [Backlog](../BACKLOG.md) | Pendências reais, sem marcar integração simulada como concluída |
 | [Sincronização dos repositórios](sincronizacao-repositorios.md) | Publicação principal e secundária somente na `main` |
 | [Contribuição](../CONTRIBUTING.md) | Fluxo de alteração, documentação e validação |
@@ -34,7 +35,7 @@ Merge e push das main aguardam confirmação, conforme instrução específica d
 
 ## Limpeza de arquivos — 18/11/2026
 
-[Relatório de remoções e preservações](limpeza-arquivos-2026-11-18.md): 15 módulos
+Remoção registrada em 18/11/2026 (ver [changelog](../CHANGELOG.md)): 15 módulos
 sem uso, quatro dependências e duas funcionalidades legadas retiradas. Auditoria
 permanente de imports adicionada ao `npm test`; documentação histórica preservada.
 
@@ -56,6 +57,7 @@ Ver [evidências e limites](testes-e-evidencias.md). Sem deploy ou reformulaçã
 - [Reuniões](reunioes/README.md): atas preservadas, sem inventar novas reuniões.
 - [Protótipo](prototipo/README.md): referência visual e links informados do Figma.
 - [Auditoria de 16/11/2026](auditoria-2026-11-16.md): correções e verificações anteriores.
+- Entregáveis acadêmicos consolidados: [Documentação Automatch](<Documentação Automatch .pdf>), [Documento de Requisitos](Documento_de_Requisitos.pdf), [Documentação 11 Etapas](<Documentação 11 Etapas.pdf>) e [Arquitetura de Software Automatch](<Documento Arquitetura de Software Automatch.docx>).
 - Demais auditorias e relatórios de teste possuem aviso de registro histórico.
   Datas, participantes, métricas e aprovações antigas não constituem nova
   execução de testes, certificação ou descrição automática da versão atual.

@@ -7,7 +7,7 @@ reformulação do banco; conferência visual e de acessibilidade permanece manua
 
 **Limpeza de 18/11/2026:** retirados 15 módulos sem uso e quatro dependências.
 Auditoria de imports sem órfãos, lint sem avisos e testes dos fluxos mantidos
-aprovados. Ver [o que foi removido e preservado](docs/limpeza-arquivos-2026-11-18.md).
+aprovados (ver histórico no [changelog](CHANGELOG.md)).
 
 Documentação revisada em **18/11/2026**, com melhorias demonstrativas sobre a base `444bc09`.
 Projeto Integrador de Análise e Desenvolvimento de Sistemas do CEUB.

@@ -1,6 +1,6 @@
 # Revisão de pendências da demonstração — 17/11/2026
 
-> Complemento de 18/11/2026: a [limpeza posterior](limpeza-arquivos-2026-11-18.md)
+> Complemento de 18/11/2026: a limpeza posterior registrada no [changelog](../CHANGELOG.md)
 > retirou componentes legados e atualizou as evidências; este registro descreve a etapa anterior.
 
 Código examinado: `ffe60e226c81e6a44b45191456faa62788cabda2`, confirmado na

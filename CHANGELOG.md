@@ -21,7 +21,7 @@
 - `npm test` agora confere módulos alcançáveis e dependências de execução usadas.
 - Testes dos recursos aposentados retirados; contratos ativos preservados com
   284 testes frontend, 111 unittest e cinco jornadas aprovados, lint sem avisos
-  e build local. Detalhes em [limpeza](docs/limpeza-arquivos-2026-11-18.md).
+  e build local.
 - Histórico/licenças preservados e links de código antigo fixados ao commit anterior.
   Mesma atualização destinada às duas `main`, sem deploy.
 

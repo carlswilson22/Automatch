@@ -39,7 +39,7 @@ Consolidação das **Sprints 06, 07 e 08** (Milestones `v2.4.0`, `v2.5.0` e `v2.
 
 ## Links Principais
 - **Repositório**: `CAMPUSCEUB/ADS-AUTOMATCH`
-- **Catálogo de Escopo**: [ESCOPO_DOS_ARQUIVOS.md](../ESCOPO_DOS_ARQUIVOS.md)
+- **Catálogo de Escopo**: [ESCOPO_DOS_ARQUIVOS.md](../docs/ESCOPO_DOS_ARQUIVOS.md)
 - **Relatórios de Sprint**: [sprint-06](../sprints/sprint-06.md), [sprint-07](../sprints/sprint-07.md) e [sprint-08](../sprints/sprint-08.md)
 - **ADRs Registrados**: [docs/decisoes/](../docs/decisoes/README.md)
 - **Matriz de Requisitos**: [docs/requisitos.md](../docs/requisitos.md)

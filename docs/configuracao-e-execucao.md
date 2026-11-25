@@ -100,7 +100,7 @@ docker compose --env-file .env.production -f docker-compose.prod.yml up -d --bui
 Esse exemplo não certifica implantação pronta. Conferir migrações em ambiente
 controlado, backup/restauração, mídia persistente, permissões, monitoramento e
 segredos. `migrate.py` aplica migrações sem seed/reset; bancos legados exigem
-análise da revisão, conforme [banco](../DOCUMENTACAO_BANCO_DE_DADOS.md).
+análise da revisão, conforme [banco](DOCUMENTACAO_BANCO_DE_DADOS.md).
 
 A configuração atual de Nginx de produção escuta HTTP em 80; publicação da
 porta 443 não instala certificado nem configura TLS. Definir HTTPS na

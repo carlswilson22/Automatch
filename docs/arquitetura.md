@@ -93,7 +93,7 @@ Escala horizontal requer compartilhar scheduler/limitadores e revisar concorrên
 Não há certificação WCAG AAA, integridade absoluta ou meta universal de latência.
 
 Os [ADRs](decisoes/README.md) preservam decisões históricas com complementos.
-Ver [estado atual](estado-atual.md), [banco](../DOCUMENTACAO_BANCO_DE_DADOS.md),
+Ver [estado atual](estado-atual.md), [banco](DOCUMENTACAO_BANCO_DE_DADOS.md),
 [execução](configuracao-e-execucao.md) e [segurança](../SECURITY.md).
 
 O repositório principal conta com deploy automatizado da demonstração no GitHub Pages a cada commit integrado na branch `main` (com disparo manual como contingência). Não há reformulação de entidades/migrações de banco antes de nova autorização.
