@@ -16,7 +16,6 @@ import base64
 import logging
 from enum import Enum
 from typing import Dict, Any, List, Optional, Union
-import httpx
 from pydantic import BaseModel, Field
 
 logger = logging.getLogger("automatch")
@@ -156,36 +155,31 @@ async def avaliar_laudo_com_ia(
                 "}\n"
             )
 
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
-            body = {
-                "contents": [{
-                    "parts": [
-                        {"text": prompt},
-                        {"inlineData": {"mimeType": mimetype, "data": b64_content}}
-                    ]
-                }],
-                "generationConfig": {
-                    "temperature": 0.1,
-                    "maxOutputTokens": 1024,
-                    "responseMimeType": "application/json"
-                }
-            }
+            from services.ai_service import call_gemini_generate
 
-            async with httpx.AsyncClient(timeout=6.0) as client:
-                res = await client.post(url, json=body)
-                if res.status_code == 200:
-                    payload = res.json()
-                    cands = payload.get("candidates", [])
-                    if cands:
-                        text_res = cands[0].get("content", {}).get("parts", [{}])[0].get("text", "")
-                        clean_text = text_res.strip()
-                        if clean_text.startswith("```"):
-                            clean_text = re.sub(r"^```(?:json)?", "", clean_text)
-                            clean_text = re.sub(r"```$", "", clean_text).strip()
-                        parsed = json.loads(clean_text)
-                        return LaudoIAFeedbackResponse(**parsed)
+            contents = [{
+                "parts": [
+                    {"text": prompt},
+                    {"inline_data": {"mime_type": mimetype, "data": b64_content}}
+                ]
+            }]
+
+            text_res = await call_gemini_generate(
+                gemini_key,
+                contents,
+                max_tokens=1024,
+                temperature=0.1,
+                response_mime_type="application/json",
+            )
+            if text_res:
+                clean_text = text_res.strip()
+                if clean_text.startswith("```"):
+                    clean_text = re.sub(r"^```(?:json)?", "", clean_text)
+                    clean_text = re.sub(r"```$", "", clean_text).strip()
+                parsed = json.loads(clean_text)
+                return LaudoIAFeedbackResponse(**parsed)
         except Exception as e:
-            logger.warning("Falha na chamada ao Gemini 1.5 Flash: %s. Acionando motor heurístico.", e)
+            logger.warning("Falha na auditoria Gemini de laudo: %s. Acionando motor heurístico.", e)
 
     # Fallback Heurístico Resiliente (Offline)
     raw_text = extrair_texto_pdf_basico(file_bytes) if mimetype == "application/pdf" else ""

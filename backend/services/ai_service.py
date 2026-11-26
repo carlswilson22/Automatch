@@ -100,7 +100,8 @@ async def call_gemini_generate(
     contents: list,
     max_tokens: int = 350,
     temperature: float = 0.2,
-    system_prompt: Optional[str] = None
+    system_prompt: Optional[str] = None,
+    response_mime_type: Optional[str] = None,
 ) -> Optional[str]:
     """
     Chamada assíncrona robusta para o Google Gemini API (v1beta).
@@ -135,6 +136,8 @@ async def call_gemini_generate(
             "temperature": temperature
         }
     }
+    if response_mime_type:
+        body["generationConfig"]["responseMimeType"] = response_mime_type
     if system_prompt:
         body["system_instruction"] = {"parts": [{"text": system_prompt}]}
 

@@ -28,6 +28,7 @@ from fastapi.responses import StreamingResponse
 from security_guard import RateLimiter
 
 from services.ai_service import (
+    GEMINI_MODELS,
     preprocess_and_compress_image,
     call_gemini_generate,
     stream_gemini_generate,
@@ -266,7 +267,7 @@ async def chat_automatch(payload: ChatRequest, request: Request) -> Dict[str, An
         contents.append({"role": "user", "parts": [{"text": user_msg}]})
         result = await call_gemini_generate(api_key, contents, max_tokens=200, temperature=0.3, system_prompt=system_prompt)
         if result:
-            return {"status": "success", "modelo": "gemini-1.5-flash", "resposta": result}
+            return {"status": "success", "modelo": GEMINI_MODELS[0], "resposta": result}
 
     reply = generate_semantic_reply(user_msg, car_context)
     return {"status": "success", "modelo": "resposta-local-cadastro", "origem": "cadastro", "is_simulado": True, "resposta": reply}

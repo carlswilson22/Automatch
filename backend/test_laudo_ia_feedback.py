@@ -234,6 +234,34 @@ class TestLaudoIAFeedback(unittest.TestCase):
             cleanup.commit()
             cleanup.close()
 
+    def test_avaliar_laudo_usa_call_gemini_generate_json(self):
+        """Verifica que avaliar_laudo_com_ia reutiliza call_gemini_generate com response_mime_type JSON."""
+        import json
+        from unittest.mock import AsyncMock, patch
+
+        fake_json = json.dumps({
+            "classificacao_geral": "SEM_RESSALVAS",
+            "conferencia_dados": {
+                "placa": {"valor_laudo": "ABC1234", "match": True},
+                "chassi": {"valor_laudo": "9BWZZZ", "match": True},
+                "marca_modelo": {"valor_laudo": "Toyota Corolla", "match": True},
+                "ano": {"valor_laudo": "2024", "match": True},
+                "quilometragem": {"valor_laudo": 12000, "match_aproximado": True},
+            },
+            "pontos_atencao_riscos": [],
+            "resumo_executivo": "Laudo aprovado sem ressalvas via Gemini unificado.",
+        })
+        pdf_bytes = _criar_pdf_sintetico("LAUDO CAUTELAR", ["PLACA: ABC1234"])
+        car_ctx = {"plate": "ABC1234", "chassi": "9BWZZZ", "brand": "Toyota", "model": "Corolla", "year": "2024", "km": 12000}
+
+        with patch.dict("os.environ", {"GEMINI_API_KEY": "fake-key"}), \
+             patch("services.ai_service.call_gemini_generate", new_callable=AsyncMock, return_value=fake_json) as mock_gem:
+            res = asyncio.run(avaliar_laudo_com_ia(pdf_bytes, "application/pdf", car_ctx))
+            self.assertEqual(res.classificacao_geral, ClassificacaoGeralEnum.SEM_RESSALVAS)
+            self.assertEqual(res.resumo_executivo, "Laudo aprovado sem ressalvas via Gemini unificado.")
+            self.assertTrue(mock_gem.called)
+            self.assertEqual(mock_gem.call_args.kwargs.get("response_mime_type"), "application/json")
+
 
 if __name__ == "__main__":
     unittest.main()
