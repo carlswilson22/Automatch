@@ -20,6 +20,7 @@ Merge e push das main aguardam confirmação, conforme instrução específica d
 | Documento | Finalidade |
 | --- | --- |
 | [Estado atual](estado-atual.md) | Recursos ativos, demonstrações, integrações e exclusões |
+| [Documentação e Arquitetura v2.0](documentacao-projeto-arquitetura-v2.md) | Documento consolidado v2.0 revisado e alinhado ao código |
 | [Requisitos](requisitos.md) | RF/RNF com situação e critérios verificáveis |
 | [Arquitetura](arquitetura.md) | Componentes, dados, serviços e limites de implantação |
 | [Banco de dados](DOCUMENTACAO_BANCO_DE_DADOS.md) | Entidades, relações e migrações |
@@ -57,7 +58,7 @@ Ver [evidências e limites](testes-e-evidencias.md). Sem deploy ou reformulaçã
 - [Reuniões](reunioes/README.md): atas preservadas, sem inventar novas reuniões.
 - [Protótipo](prototipo/README.md): referência visual e links informados do Figma.
 - [Auditoria de 16/11/2026](auditoria-2026-11-16.md): correções e verificações anteriores.
-- Entregáveis acadêmicos consolidados: [Documentação Automatch](<Documentação Automatch .pdf>), [Documento de Requisitos](Documento_de_Requisitos.pdf), [Documentação 11 Etapas](<Documentação 11 Etapas.pdf>) e [Arquitetura de Software Automatch](<Documento Arquitetura de Software Automatch.docx>).
+- Entregáveis acadêmicos consolidados: [Documentação Automatch](<Documentação Automatch .pdf>), [Documento de Requisitos](Documento_de_Requisitos.pdf), [Relatório 11 Etapas CEUB](Automatch_Relatorio_11_Etapas_CEUB.pdf) e [Documento Arquitetura de Software Automatch](<Documento Arquitetura de Software Automatch.pdf>).
 - Demais auditorias e relatórios de teste possuem aviso de registro histórico.
   Datas, participantes, métricas e aprovações antigas não constituem nova
   execução de testes, certificação ou descrição automática da versão atual.
