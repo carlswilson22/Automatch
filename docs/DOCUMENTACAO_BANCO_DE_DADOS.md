@@ -71,7 +71,8 @@ opcional. Consultar as FKs/migrações antes de implementar exclusões.
 O ponto de entrada recomendado é `backend/migrate.py`, que aplica
 `alembic upgrade head` sem apagar tabelas ou executar seed. A cadeia inclui
 baseline, consistência de tipos, índices/FKs, papéis, valores B2B,
-`006_session_revocation` e `007_persist_price_alerts`.
+`006_session_revocation`, `007_persist_price_alerts` e
+`008_safe_account_defaults`.
 
 Com ambiente/banco de destino corretamente configurados e backup conferido,
 no diretório `backend`:

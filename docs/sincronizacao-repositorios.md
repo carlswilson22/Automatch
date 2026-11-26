@@ -57,5 +57,4 @@ um robô de espelhamento ou token entre organizações. O workflow de Pages
 continua restrito ao principal; CI e permissões devem ser conferidos em cada
 repositório. Ver [CONTRIBUTING](../CONTRIBUTING.md).
 
-Nesta etapa não há deploy. O workflow de Pages está somente manual; não o
-acionar ao sincronizar commits. Reformulação do banco requer nova autorização.
+O workflow de Pages (`.github/workflows/static.yml`) do repositório principal possui Continuous Deployment (CD) automatizado para commits na `main` que alterem `frontend/**` ou o próprio workflow, mantendo `workflow_dispatch` como contingência manual. No repositório secundário (`CAMPUSCEUB/ADS-AUTOMATCH`), nenhum deploy de Pages deve ser executado. Reformulação do banco requer nova autorização.

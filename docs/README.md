@@ -1,6 +1,6 @@
 # Documentação do Automatch
 
-Revisão documental: **19/11/2026**. Auditoria e correções sobre a base `f45498b`.
+Revisão documental: **26/11/2026**. Alinhamento da documentação v2.0, inventário e referências sobre a base atual do repositório.
 O principal é [carlswilson22/Automatch](https://github.com/carlswilson22/Automatch);
 o secundário é [CAMPUSCEUB/ADS-AUTOMATCH](https://github.com/CAMPUSCEUB/ADS-AUTOMATCH).
 Ambos devem receber a mesma atualização na `main`; outras branches do secundário
@@ -13,7 +13,7 @@ permanecem intactas.
 - [Treinamento experimental](treinamento-avarias-2026-11-19.md).
 - [Cronograma canônico](../shared/pericial-timeline.json).
 
-Merge e push das main aguardam confirmação, conforme instrução específica desta auditoria. Nenhum deploy.
+Registro histórico preservado; revisões posteriores em 26/11/2026 consolidaram o escopo v2.0 e a sincronização das duas `main` (ver [documentação v2.0](documentacao-projeto-arquitetura-v2.md)).
 
 ## Referências atuais
 
@@ -58,7 +58,8 @@ Ver [evidências e limites](testes-e-evidencias.md). Sem deploy ou reformulaçã
 - [Reuniões](reunioes/README.md): atas preservadas, sem inventar novas reuniões.
 - [Protótipo](prototipo/README.md): referência visual e links informados do Figma.
 - [Auditoria de 16/11/2026](auditoria-2026-11-16.md): correções e verificações anteriores.
-- Entregáveis acadêmicos consolidados: [Documentação Automatch](<Documentação Automatch .pdf>), [Documento de Requisitos](Documento_de_Requisitos.pdf), [Relatório 11 Etapas CEUB](Automatch_Relatorio_11_Etapas_CEUB.pdf) e [Documento Arquitetura de Software Automatch](<Documento Arquitetura de Software Automatch.pdf>).
+- Entregáveis acadêmicos históricos (snapshots anteriores à v2.0; consultar [Documentação e Arquitetura v2.0](documentacao-projeto-arquitetura-v2.md), [Requisitos](requisitos.md) e [Backlog](../BACKLOG.md) como fontes vigentes): [Documentação Automatch (v1.5)](<Documentação Automatch .pdf>), [Documento de Requisitos (v1.5)](Documento_de_Requisitos.pdf), [Relatório 11 Etapas CEUB](Automatch_Relatorio_11_Etapas_CEUB.pdf) e [Documento Arquitetura de Software Automatch](<Documento Arquitetura de Software Automatch.pdf>).
+- Artefatos experimentais e mapeamentos em `docs/`: [mapa de ângulos periciais](pericial-angle-map.json), [resultados do catálogo scanner](scanner-catalogo-resultados.csv), [manifesto de treino de avarias](damage-training-manifest.json), [resultados de treino](damage-training-results.json), [avaliação HTTP](damage-http-evaluation-summary.json), [avaliação DamagedCars](damage-damagedcars-evaluation-summary.json) e [prompts de imagens](damage-image-prompts.json).
 - Demais auditorias e relatórios de teste possuem aviso de registro histórico.
   Datas, participantes, métricas e aprovações antigas não constituem nova
   execução de testes, certificação ou descrição automática da versão atual.

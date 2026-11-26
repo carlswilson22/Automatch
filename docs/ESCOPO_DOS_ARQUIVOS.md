@@ -28,7 +28,7 @@ componentes de UI foram preservados quando possuem consumidores.
 | [.github/ISSUE_TEMPLATE/pesquisa.yml](../.github/ISSUE_TEMPLATE/pesquisa.yml) | Arquivo técnico/configuração; consultar o conteúdo e seus consumidores. |
 | [.github/ISSUE_TEMPLATE/requisito.yml](../.github/ISSUE_TEMPLATE/requisito.yml) | Arquivo técnico/configuração; consultar o conteúdo e seus consumidores. |
 | [.github/workflows/ci.yml](../.github/workflows/ci.yml) | Testes frontend/backend, migrações PostgreSQL/SQLite e builds Docker. |
-| [.github/workflows/static.yml](../.github/workflows/static.yml) | Build/testes e Pages manual, restrito ao repositório principal; não executar nesta etapa. |
+| [.github/workflows/static.yml](../.github/workflows/static.yml) | Build/testes e deploy contínuo (CD) no GitHub Pages em pushes na `main` do principal (+ `workflow_dispatch` manual). |
 | [.gitignore](../.gitignore) | Arquivo técnico/configuração; consultar o conteúdo e seus consumidores. |
 | [.markdownlint.json](../.markdownlint.json) | Arquivo técnico/configuração; consultar o conteúdo e seus consumidores. |
 | [docker-compose.prod.yml](../docker-compose.prod.yml) | Serviços de produção, volumes, PostgreSQL e um worker backend. |
@@ -279,11 +279,25 @@ continuam no histórico Git; histórico de limpeza no [changelog](../CHANGELOG.m
 | [frontend/scripts/check-source-usage.mjs](../frontend/scripts/check-source-usage.mjs) | Auditoria de imports/dependências a partir da aplicação; executada por `npm test`. |
 | [backend/test_cleanup_regressions.py](../backend/test_cleanup_regressions.py) | Contrato HTTP da retirada de pneus/acústica e preservação da análise visual. |
 
-## Arquivos da auditoria — 19/11/2026
+## Arquivos incorporados após 18/11/2026 (complemento 19–26/11/2026)
 
-- `shared/pericial-timeline.json`: fonte única das fases e tomadas; consumidores gerados para os contextos separados.
-- `scripts/sync_pericial_timeline.py`: gera/confere consumidores; `scripts/generate_demo_videos.py`: MP4 e manifestos por anúncio.
-- `backend/services/inspection_contract.py` e `frontend/src/utils/visualInspection.js`: evidência, estado e consumo coerente da inspeção visual.
-- `backend/profile_repair.py`, `demo_media_repair.py`, `maintenance_cli.py` e CLIs: reparos com guardas, backup e reversão explícitos.
-- `backend/tools/`: treino, servidor experimental restrito à cópia, casos HTTP e avaliação exploratória; não importados no produto nem acionados no CI.
-- `docs/damage-training-manifest.json`: proveniência, marcações provisórias e separação por veículo. Imagens sintéticas grandes e pesos ficam fora do Git.
+Preservando o retrato histórico da limpeza `7fd2315` acima, os arquivos abaixo passaram a compor o repositório entre `19/11` e `26/11/2026`:
+
+| Arquivo | Responsabilidade / limite |
+| --- | --- |
+| [shared/pericial-timeline.json](../shared/pericial-timeline.json) | Fonte única das fases e tomadas de 20,0 s do vídeo pericial. |
+| [scripts/sync_pericial_timeline.py](../scripts/sync_pericial_timeline.py) | Gera e confere consumidores sincronizados para frontend e backend. |
+| [scripts/generate_demo_videos.py](../scripts/generate_demo_videos.py) | Gera os vídeos MP4 e manifestos JSON de demonstração por anúncio. |
+| [scripts/e2e-real-usecase-test.mjs](../scripts/e2e-real-usecase-test.mjs) | Roteiro E2E de jornada real. |
+| [scripts/verify_database_readonly.sql](../scripts/verify_database_readonly.sql) | Consultas somente leitura para inspeção de consistência no PostgreSQL. |
+| [backend/alembic/versions/008_safe_account_defaults.py](../backend/alembic/versions/008_safe_account_defaults.py) | Migração de padrões seguros de papel/subperfil de contas. |
+| [backend/pericial_timeline.py](../backend/pericial_timeline.py) | Consumidor backend gerado a partir do cronograma canônico. |
+| [backend/services/inspection_contract.py](../backend/services/inspection_contract.py) | Contrato v2 de inspeção visual (`inconclusive` sem detector calibrado). |
+| [backend/profile_repair.py](../backend/profile_repair.py), [backend/repair_profiles.py](../backend/repair_profiles.py), [backend/demo_media_repair.py](../backend/demo_media_repair.py), [backend/repair_demo_media.py](../backend/repair_demo_media.py), [backend/maintenance_cli.py](../backend/maintenance_cli.py) | Utilitários de reparo e manutenção com guardas, backup e reversão explícitos. |
+| [backend/test_cleanup_regressions.py](../backend/test_cleanup_regressions.py), [backend/test_damage_experiments.py](../backend/test_damage_experiments.py), [backend/test_database_repairs.py](../backend/test_database_repairs.py), [backend/test_demo_media_repair.py](../backend/test_demo_media_repair.py), [backend/test_pericial_timeline.py](../backend/test_pericial_timeline.py), [backend/test_visual_evidence.py](../backend/test_visual_evidence.py) | Regressões de limpeza, cronograma, contrato visual v2, reparos e experimentos. |
+| `backend/tools/` ([damage_provenance.py](../backend/tools/damage_provenance.py), [damage_usecase_server.py](../backend/tools/damage_usecase_server.py), [evaluate_damage_models_http.py](../backend/tools/evaluate_damage_models_http.py), [run_damage_usecases.py](../backend/tools/run_damage_usecases.py), [sanitize_db_cli.py](../backend/tools/sanitize_db_cli.py), [train_damage_experiment.py](../backend/tools/train_damage_experiment.py)) | Ferramentas experimentais/diagnóstico; não importadas no produto nem executadas no CI. |
+| [frontend/src/data/pericialTimeline.generated.js](../frontend/src/data/pericialTimeline.generated.js) | Consumidor frontend gerado a partir do cronograma canônico. |
+| [frontend/src/utils/visualInspection.js](../frontend/src/utils/visualInspection.js) | Leitura e normalização de evidência visual no frontend segundo o contrato v2. |
+| [frontend/tests/test_laudo_visual_inconclusivo.mjs](../frontend/tests/test_laudo_visual_inconclusivo.mjs) | Teste de contrato visual para estado `inconclusive` na UI. |
+| [docs/documentacao-projeto-arquitetura-v2.md](documentacao-projeto-arquitetura-v2.md) | Documentação consolidada Versão 2.0 alinhada ao código atual. |
+| [docs/damage-training-manifest.json](damage-training-manifest.json) e relatórios de avaliação (`docs/damage-*.json`, `docs/pericial-angle-map.json`, `docs/scanner-catalogo-resultados.csv`) | Proveniência, marcações provisórias e dados experimentais; pesos e datasets pesados ficam fora do Git. |

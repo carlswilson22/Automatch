@@ -1,41 +1,35 @@
-# Template de ADR
-
-## Título
-
-Refatoração e adição de funcionalidades
+# ADR-XXX: `<Título da Decisão Arquitetural>`
 
 ## Status
 
-Aprovado
+`<Proposto | Aprovado | Substituído | Obsoleto>`
 
 ## Data
 
-15/09/26
+`AAAA-MM-DD` (`DD/MM/AAAA`)
 
 ## Contexto
 
-As funcionalidades de vizualização de carros curtidos, visão pericial não estavam agindo conforme o planejado; Será adicionado a função de visão pericial em vídeo de 15s que será colocado dentro do anuncio de qualquer veículo e recebimento de feedback da ia após inserção de laudo cautelar
+`<Descrever o problema técnico, restrições do projeto e motivadores que exigiram a decisão.>`
 
 ## Decisão
 
-Após a equipe discutir sobre o contexto e o status do problema, a equipe decidiu seguir com a resolução do contexto
+`<Descrever de forma objetiva a solução adotada e os módulos/interfaces envolvidos.>`
 
 ## Alternativas consideradas
 
-Não teve outras alternativas consideradas
+- `<Alternativa A>` — motivo pelo qual foi descartada.
+- `<Alternativa B>` — motivo pelo qual foi descartada.
 
 ## Consequências
 
-Melhoria das funcionalidades e status do sistema
+- **Positivas:** `<benefícios arquiteturais ou operacionais esperados.>`
+- **Riscos / Trade-offs:** `<limitações, custos de manutenção ou dependências introduzidas.>`
 
 ## Links relacionados
 
-- **Issue relacionada:** [#2 - [ADR] Refatoração e adição de funcionalidades](https://github.com/CAMPUSCEUB/ADS-AUTOMATCH/issues/2)
-- **Pull Request:** [#3 - feat(docs): atas de reunião, ADRs e melhorias no sistema](https://github.com/CAMPUSCEUB/ADS-AUTOMATCH/pull/3)
-- **Ata de Reunião Associada:** [docs/reunioes/template-reuniao.md](https://github.com/CAMPUSCEUB/ADS-AUTOMATCH/blob/main/docs/reunioes/template-reuniao.md)
-- **Documento de Arquitetura:** [docs/arquitetura.md](https://github.com/CAMPUSCEUB/ADS-AUTOMATCH/blob/main/docs/arquitetura.md)
-- **Documento de Requisitos:** [docs/requisitos.md](https://github.com/CAMPUSCEUB/ADS-AUTOMATCH/blob/main/docs/requisitos.md)
-- **Relatório de Sprint 03:** [sprints/sprint-03.md](https://github.com/CAMPUSCEUB/ADS-AUTOMATCH/blob/main/sprints/sprint-03.md)
+- **Issue / PR relacionados:** `<links ou referências reais quando aplicável>`
+- **Documentação vigente:** [Estado atual](../estado-atual.md), [Arquitetura](../arquitetura.md) e [Requisitos](../requisitos.md)
 
 ## Rastreabilidade e limites da atualização
 
@@ -44,6 +38,6 @@ Melhoria das funcionalidades e status do sistema
 - Evidência executada: comando, ambiente, resultado, avisos e limitações.
 - Serviços externos: identificar uso real, mock ou indisponibilidade.
 - Não inventar participantes, aprovações, métricas ou execução de testes.
-- Publicação: confirmar main principal e main secundária; preservar outras branches do secundário.
+- Publicação: confirmar `main` principal e `main` secundária; preservar outras branches do secundário.
 
-Modelo revisado em 17/11/2026. Consultar o [índice atual](../README.md).
+Modelo revisado em 26/11/2026. Consultar o [índice atual](../README.md).

@@ -142,7 +142,7 @@ para resolver um aviso.
 ## CI e publicação
 
 `ci.yml` possui jobs de backend, frontend, migrações PostgreSQL/SQLite e builds
-Docker. `static.yml` testa/compila/publica o frontend Pages somente no principal e por acionamento manual. Não acionar nesta etapa; commits não fazem deploy.
+Docker. `static.yml` testa/compila/publica o frontend Pages automaticamente no repositório principal a cada push na `main` que altere `frontend/**` ou `.github/workflows/static.yml`, mantendo `workflow_dispatch` como contingência manual; no secundário não executa deploy de Pages.
 São workflows separados: uma execução de Pages não comprova, por si só, sucesso
 de todos os jobs do backend. Conferir status por commit nos dois repositórios.
 A [sincronização](sincronizacao-repositorios.md) não replica segredos ou permissões.
